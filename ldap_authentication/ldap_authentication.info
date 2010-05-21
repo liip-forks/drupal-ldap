@@ -1,0 +1,7 @@
+; $Id$
+name = Authentication
+description = Implements LDAP authentication
+package = Lightweight Directory Access Protocol
+dependencies[] = ldap_api
+dependencies[] = user
+core = 6.x

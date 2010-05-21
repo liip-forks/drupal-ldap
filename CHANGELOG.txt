@@ -1,0 +1,10 @@
+// $Id$
+
+LDAP Module 0.x
+=====================
+Version 0.1-UNSTABLE
+=====================
+
+- Created and populated the basic directory structure.
+- Initial CVS import.
+

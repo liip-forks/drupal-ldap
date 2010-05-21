@@ -1,0 +1,40 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * This module provides LDAP-based access control (roles)
+ */
+
+/**
+ * Implementation of hook_init().
+ */
+function ldap_authorization_init() {
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function ldap_authorization_theme() {
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function ldap_authorization_menu() {
+  $items = array();
+  $items['admin/settings/ldap/authorization'] = array(
+    'title' => 'Authorization',
+    'description' => 'Configure LDAP authorization',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'ldap_authorization.admin.inc',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('administer site configuration'),
+    'weight' => 1,
+  );
+
+  return $items;
+}
+
+
+// vim:fenc=utf-8:ft=php:ai:si:ts=2:sw=2:et:
