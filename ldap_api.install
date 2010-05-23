@@ -10,6 +10,8 @@
  * Implementation of hook_install().
  */
 function ldap_api_install() {
+  variable_set('ldap_api_encryption','none');
+  variable_set('ldap_api_require_ssl_for_credentails',0);
   drupal_install_schema('ldap_api');
 }
 
@@ -17,8 +19,28 @@ function ldap_api_install() {
  * Implementation of hook_uninstall().
  */
 function ldap_api_uninstall() {
+  variable_del('ldap_api_encryption');
+  variable_del('ldap_api_require_ssl_for_credentails');
   drupal_uninstall_schema('ldap_api');
 }
+
+/**
+ * Implementation of hook_requirements().
+ */
+function ldap_api_requirements($phase) {
+  $requirements = array();
+  $requirements['ldap_extension_loaded']['title'] = t('LDAP Extension Loaded');
+  if(extension_loaded('ldap')) {
+    $requirements['ldap_extension_loaded']['value'] = t('Passed');
+    $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_OK;
+  } else {
+    $requirements['ldap_extension_loaded']['value'] = t('Failed');
+    $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_ERROR;
+    $requirements['ldap_extension_loaded']['description'] = t('No LDAP Extension is loaded for PHP, so LDAP API will not work properly.');
+  }
+  return $requirements;
+}
+
 
 /**
  * Implementation of hook_schema().

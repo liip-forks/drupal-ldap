@@ -1,6 +1,20 @@
 ; $Id$
-name = API
-description = An LDAP API that can be used by other modules.
+name = "API"
+description = "An LDAP API that can be used by other modules."
 package = "Lightweight Directory Access Protocol"
-php = 5.0
-core = 6.x
+core = 7.x
+
+files[] = ldap_api.admin.inc
+files[] = ldap_api.admin.js
+files[] = ldap_api.install
+files[] = ldap_api.module
+files[] = ldap_api.servers.inc
+files[] = ldap_api.settings.inc
+files[] = ldap_api.status.inc
+
+
+
+
+
+
+

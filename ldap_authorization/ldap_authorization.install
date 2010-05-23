@@ -10,21 +10,21 @@
  * Implementation of hook_install().
  */
 function ldap_authorizaton_install() {
-  drupal_install_schema('ldap_authorization');
+  //drupal_install_schema('ldap_authorization');
 }
 
 /**
  * Implementation of hook_uninstall().
  */
 function ldap_authorization_uninstall() {
-  drupal_uninstall_schema('ldap_authorization');
+ // drupal_uninstall_schema('ldap_authorization');
 }
 
 /**
  * Implementation of hook_schema().
  */
-function ldap_authorization_schema() {
-}
+//function ldap_authorization_schema() {
+//}
 
 
 
