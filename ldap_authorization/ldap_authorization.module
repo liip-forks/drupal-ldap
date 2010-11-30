@@ -3,38 +3,223 @@
 
 /**
  * @file
- * This module provides LDAP-based access control (roles)
+ * ldap authorization module
+ *
+ * @todo add caching
+ * @todo support exportables
+ * @todo unit testing
+ * @todo delete confirm form
  */
 
-/**
- * Implementation of hook_init().
- */
-function ldap_authorization_init() {
-}
-
-/**
- * Implementation of hook_theme().
- */
-function ldap_authorization_theme() {
-}
+define('LDAP_AUTHORIZATION_PROJECT_TAG', 'ldap_authorization');
+define('LDAP_AUTHORIZATION_USER_LDAP_NOT_FOUND', 101);
+define('LDAP_AUTHORIZATION_USER_NOT_LDAP_AUTHENTICATED', 102);
+define('LDAP_AUTHORIZATION_MAP_NOT_CONF_FOR_LOGON', 103);
+define('LDAP_AUTHORIZATION_NO_LDAP_SERVERS', 'ldap_authorization_no_ldap_servers');
 
 /**
  * Implementation of hook_menu().
  */
 function ldap_authorization_menu() {
-  $items = array();
-  $items['admin/settings/ldap/authorization'] = array(
-    'title' => 'Authorization',
-    'description' => 'Configure LDAP authorization',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'file' => 'ldap_authorization.admin.inc',
-    'page callback' => 'drupal_get_form',
+
+ $items[LDAP_API_MENU_BASE_PATH .'/authorization'] = array(
+    'title' => t('4. Authorization'),
+    'description' => t('Map User LDAP properties to Authorizations'),
+    'page callback' => 'ldap_authorizations_admin_index',
+    'page arguments' => array(),
     'access arguments' => array('administer site configuration'),
-    'weight' => 1,
+    'file' => 'ldap_authorization.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 3,
   );
 
+  $items[LDAP_API_MENU_BASE_PATH .'/authorization/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+ $items[LDAP_API_MENU_BASE_PATH .'/authorization/update'] = array(
+    'title' => t('update'),
+    'description' => t('Update an ldap authorization mapping'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_authorization_admin_form', LDAP_API_MENU_BASE_PATH_PARTS + 2, 'update', LDAP_API_MENU_BASE_PATH_PARTS + 3),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
+    'weight' => 3,
+    'file' => 'ldap_authorization.admin.inc',
+  );
+
+ $items[LDAP_API_MENU_BASE_PATH .'/authorization/delete'] = array(
+    'title' => t('delete'),
+    'description' => t('Delete an ldap authorization mapping'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_authorization_admin_form', LDAP_API_MENU_BASE_PATH_PARTS + 2, 'delete', LDAP_API_MENU_BASE_PATH_PARTS + 3),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
+    'weight' => 3,
+    'file' => 'ldap_authorization.admin.inc',
+  );
+
+
+  $items[LDAP_API_MENU_BASE_PATH .'/authorization/test'] = array(
+    'title' => t('test'),
+    'description' => t('Test an ldap authorization mapping'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_authorization_mapping_test_form', LDAP_API_MENU_BASE_PATH_PARTS + 2, 'test', LDAP_API_MENU_BASE_PATH_PARTS + 3),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
+    'weight' => 3,
+    'file' => 'ldap_authorization.admin.mapping_test.inc',
+  );
+
+
+  $consumers = ldap_authorization_get_consumers();
+  //print_r($consumers); die;
+  foreach ($consumers as $consumer_type => $consumer) {
+    $items[LDAP_API_MENU_BASE_PATH .'/authorization/add/'. $consumer_type] = array(
+      'title' => t('Add !name Mapping', array('!name' => $consumer['consumer_name'])),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('ldap_authorization_admin_form', NULL, 'add', $consumer_type),
+      'access arguments' => array('administer site configuration'),
+      'type' => MENU_LOCAL_TASK + MENU_IS_LOCAL_ACTION,
+      'weight' => 4,
+      'file' => 'ldap_authorization.admin.inc',
+    );
+  }
   return $items;
 }
 
+/**
+ * Implements hook_user_login() login operation.
+ */
+function ldap_authorization_user_login(&$edit, $user) {
+  ldap_authorizations_user_authorizations($user, 'set', NULL, 'logon');
+}
 
-// vim:fenc=utf-8:ft=php:ai:si:ts=2:sw=2:et:
+/**
+ * Invokes hook_ldap_authorization_maps_alter() in every module.
+ *
+ * We cannot use module_invoke() for this, because the arguments need to
+ * be passed by reference.
+ */
+function ldap_authorization_maps_alter_invoke(&$user, &$user_ldap_entry, &$ldap_server, &$ldap_authz_map_config, &$proposed_ldap_authorizations, $op) {
+  foreach (module_implements('ldap_authorization_maps_alter') as $module) {
+    $function = $module . '_ldap_authorization_maps_alter';
+    $function($user, $user_ldap_entry, $ldap_server, $ldap_authz_map_config, $proposed_ldap_authorizations,  $op);
+  }
+}
+  
+
+/**
+ * implements hook_ldap_authorization_maps_alter to suggest authorization ids to grant (drupal roles in this case)
+ *
+ * @param object $user drupal user object
+ *
+ * @param array $user_ldap_entry is ldap data from ldap entry which drupal user is mapped to
+ *
+ * @param object $ldap_server
+ *
+ * @param array $ldap_authz_map_config is the particular ldap authorization mapping in use.
+ *
+ * @param array $authz_ids.  any new authorization ids (drupal user role names in this case) in form array('rolename1', 'rolename2',....)
+ *
+ * @param string $op = 'set' or 'query'  
+ * 
+ */
+function ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_entry, &$ldap_server, &$ldap_authz_map_config, &$authz_ids, $op) {
+  require_once('ldap_authorization.inc');
+  _ldap_authorization_ldap_authorization_maps_alter($user, $user_ldap_entry, $ldap_server, $ldap_authz_map_config, $authz_ids,  $op);
+}
+
+
+function ldap_authorization_theme() {
+  return array(
+    'ldap_authorization_test_results' => array(
+      'variables' => array('data' => NULL),
+      'render element' => 'element',
+      'file' => 'ldap_authorization.theme.inc'
+    ),
+    'ldap_authorization_admin_index' => array(
+      'variables' => array('mappings' => NULL, 'consumers' => NULL),
+      'render element' => 'element',
+      'file' => 'ldap_authorization.theme.inc'
+    ),
+  );
+}
+
+/**
+ *
+ * @param <type> $param of form 'map_id' => <map_id> or 'consumer_type' => <consumer_type>
+ * @return consumer object
+ */
+function ldap_authorization_get_consumer_object($param) {
+    extract($param);
+    $consumers = ldap_authorization_get_consumers();
+    if (@$map_id) {
+      require_once('LdapAuthorizationMappingAdmin.class.php');
+      $mappings = LdapAuthorizationMappingAdmin::getMappings($map_id);
+     // $mapping = $mappings[$map_id];
+      $consumer_type = $mappings[$map_id]->consumerType;
+    }
+  // print "<pre>- $consumer_type - "; print_r($consumers);
+    if (isset($consumers[$consumer_type])) {
+      $consumer = $consumers[$consumer_type];
+      require_once(drupal_get_path('module', $consumer['consumer_module']) . '/' . $consumer['consumer_class_file']);
+      $class = $consumer['consumer_class_name'];
+      $consumer = new $class();
+     // print_r($consumer);
+      return $consumer;
+    } else {
+      return FALSE;
+    }
+
+}
+/*
+ *  return authorization mappings
+ *
+ * @param $map_id id of mapping
+ * @param $consumer_type
+ * @param boolean $flatten. if only on element in array, return sub array.
+ *
+ * @return array of mapping configuration keyed on map_id
+ */
+function ldap_authorizations_mappings($map_id = null, $consumer_type = NULL, $flatten = FALSE) {
+  require_once('LdapAuthorizationMappingAdmin.class.php');
+  return LdapAuthorizationMappingAdmin::getMappings($map_id, $consumer_type, $flatten);
+}
+
+function ldap_authorization_get_consumers($consumer_type = NULL) {
+  static $consumers;
+  if (!is_array($consumers)) {
+    $consumers = module_invoke_all('ldap_authorization_consumer');
+  }
+
+  return ($consumer_type) ? $consumers[$consumer_type] : $consumers;
+
+}
+
+
+
+
+
+
+/**
+ * @rationale need not be called from hook_user, so this function separated out
+ * so it can be called from a batch synchronization process for example
+ */    
+function ldap_authorizations_user_authorizations(&$user, $op = 'query', $mapping_id = NULL, $context = NULL) {
+  require_once('ldap_authorization.inc');
+ // print "<pre>";
+  $new_authorizations = _ldap_authorizations_user_authorizations($user, $op, $mapping_id, $context);
+ // print_r($user); print_r($new_authorizations);  print_r(user_roles()); die;
+  
+  // @rationale hooks invoked for grant and revoke should make actual changes in roles, og membership, etc
+  //  but user_save here is for saving $user->data['ldap_authorizations']
+ // if ($op == 'set' ) {
+ //   $user = user_save($user);
+ // }
+
+//  print "<pre>"; print_r($user); die;
+  return $new_authorizations;
+}
+

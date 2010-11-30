@@ -9,23 +9,18 @@
 /**
  * Implementation of hook_install().
  */
-function ldap_authorizaton_install() {
-  drupal_install_schema('ldap_authorization');
+function ldap_authorization_install() {
+
 }
 
 /**
  * Implementation of hook_uninstall().
  */
 function ldap_authorization_uninstall() {
-  drupal_uninstall_schema('ldap_authorization');
-}
-
-/**
- * Implementation of hook_schema().
- */
-function ldap_authorization_schema() {
+  $result = db_query('DELETE FROM {variables} WHERE name like "ldap_authorization_%"');
 }
 
 
 
-// vim:fenc=utf-8:ft=php:ai:si:ts=2:sw=2:et:
+
+

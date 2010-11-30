@@ -1,6 +1,14 @@
 ; $Id$
-name = Authorization
-description = Implements LDAP authorization (previously LDAP Groups)
-package = Lightweight Directory Access Protocol
-dependencies[] = ldap_api
-core = 6.x
+name = LDAP Authorization
+description = "Implements LDAP authorization (previously LDAP Groups)"
+package = "Lightweight Directory Access Protocol"
+dependencies[] = ldap_api_temp
+dependencies[] = ldap_servers
+core = 7.x
+
+files[] = ldap_authorization.install
+files[] = ldap_authorization.module
+files[] = ldap_authorization.admin.inc
+configure = admin/config/people/ldap/authorization
+
+
