@@ -1,0 +1,19 @@
+; $Id$
+name = LDAP Servers
+description = "Implements LDAP Server Configuration"
+package = "Lightweight Directory Access Protocol"
+dependencies[] = ldap_api_temp
+core = 7.x
+
+files[] = ldap_servers.install
+files[] = ldap_servers.module
+files[] = ldap_servers.inc
+files[] = ldap_servers.admin.inc
+files[] = LdapServer.class.php
+files[] = LdapServerAdmin.class.php
+files[] = ldap_servers.theme.inc
+files[] = ldap_servers.test_form.inc
+
+configure = admin/config/people/ldap/servers
+
+

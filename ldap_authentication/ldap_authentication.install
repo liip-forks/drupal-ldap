@@ -10,22 +10,13 @@
  * Implementation of hook_install().
  */
 function ldap_authentication_install() {
-  drupal_install_schema('ldap_authentication');
+
 }
 
 /**
  * Implementation of hook_uninstall().
  */
 function ldap_authentication_uninstall() {
-  drupal_uninstall_schema('ldap_authentication');
+  //$result = db_query('DELETE FROM {variables} WHERE name like "ldap_authentication_%"');  
 }
 
-/**
- * Implementation of hook_schema().
- */
-function ldap_authentication_schema() {
-}
-
-
-
-// vim:fenc=utf-8:ft=php:ai:si:ts=2:sw=2:et:

@@ -14,7 +14,8 @@ function theme_ldap_authorization_admin_index(&$variables) {
   );
 
   if (count($mappings)) {
-    foreach($mappings as $map_id => $mapping) {
+    //dpm($mappings);
+    foreach($mappings as $mapping_id => $mapping) {
       $consumer = ldap_authorization_get_consumer_object(array('consumer_type' => $mapping->consumerType));
       if ($consumer) {
          $actions =  ' | '. l('update', LDAP_API_MENU_BASE_PATH .'/authorization/update/'. $mapping->mappingID) . ' | ' .

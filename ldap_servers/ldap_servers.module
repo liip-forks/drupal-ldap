@@ -1,0 +1,141 @@
+<?php
+// $Id$
+
+/**
+ * this list is mostly irrelevant if ldap_servers is in the ldap_api and has a different code base:
+ * @todo fix ldap servers  menu such that breadcrumbs  appear on test form, enable confirm, disable confirm
+ * @todo fix delete server
+ */
+
+
+function ldap_servers_menu() {
+  $menu_offset = 4;
+  $items['admin/config/people/ldap/servers'] = array(
+    'title' => '2. Servers',
+    'page callback' => 'ldap_servers_edit_index',
+    'weight' => -1,
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_servers.admin.inc',
+  );
+
+  $items['admin/config/people/ldap/servers/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  $items['admin/config/people/ldap/servers/add'] = array(
+    'title' => 'Add LDAP Server Configuration',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_servers_admin_form', $menu_offset + 1),
+    'type' => MENU_LOCAL_TASK + MENU_IS_LOCAL_ACTION,
+    'weight' => 3,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_servers.admin.inc',
+  );
+
+ $items['admin/config/people/ldap/servers/test'] = array(
+    'title' => 'Test LDAP Server Configuraion',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_servers_test_form', $menu_offset + 1, $menu_offset + 2),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_servers.test_form.inc',
+  );
+ 
+ 
+$items['admin/config/people/ldap/servers/edit'] = array(
+    'title' => 'Edit LDAP Server Configuration',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_servers_admin_form', $menu_offset + 1, $menu_offset + 2),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_servers.admin.inc',
+  );
+
+
+  
+$items['admin/config/people/ldap/servers/delete'] = array(
+    'title' => 'Delete LDAP Server',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_servers_admin_delete', $menu_offset + 2),
+    'type' =>  MENU_CALLBACK +  MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_servers.admin.inc',
+  );  
+    
+  $items['admin/config/people/ldap/servers/enable'] = array(
+    'title' => 'Enable LDAP Server',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
+    'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_servers.admin.inc',
+  );   
+    
+  $items['admin/config/people/ldap/servers/disable'] = array(
+    'title' => 'Enable LDAP Server',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
+    'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_servers.admin.inc',
+  );
+
+
+
+  return $items;
+}
+
+
+function ldap_servers_theme() {
+  return array(
+    'ldap_servers_list' => array(
+      'variables' => array('ldap_servers' => NULL, 'actions' => TRUE, 'type' => 'table'),
+      'render element' => 'element',
+      'file' => 'ldap_servers.theme.inc'
+    ),
+    'ldap_servers_server' => array(
+      'variables' => array('ldap_server' => NULL, 'actions' => FALSE, 'type' => 'detail'),
+      'render element' => 'element',
+      'file' => 'ldap_servers.theme.inc'
+    ),
+
+  );
+}
+
+function ldap_servers_cache_clear() {
+  $discard = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE);
+}
+/**
+ *
+ * return ldap server conf objects
+ * 
+ * @param alphanum $sid
+ * @param enum $type 'all', 'enabled', 
+ * @param boolean $flatten signifies if array or single object returned.  Only works if sid is specified
+ * @param boolean $reset do not use cached or static result
+ * @return array of server conf object keyed on sid or single server conf object (if flatten == TRUE) 
+ */
+function ldap_servers_get_servers($sid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
+   require_once('ldap_servers.inc');
+   return _ldap_servers_get_servers($sid, $type, $flatten, $reset);
+}
+
+
+function ldap_servers_fields() {
+  require_once('ldap_servers.inc');
+  return _ldap_servers_fields();
+}
+
+function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL) {
+   require_once('ldap_servers.inc');
+   return _ldap_servers_get_user_ldap_data($drupal_user, $sid);
+}
+
+
+
+
+
+
+

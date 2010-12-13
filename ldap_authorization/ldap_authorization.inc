@@ -48,9 +48,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
         $authorizations[$mapping_id] = LDAP_AUTHORIZATION_USER_LDAP_NOT_FOUND;
         continue;
       } 
-
-      $ldap_servers = ldap_servers_get_servers_conf($mapping->sid);
-      $ldap_server = $ldap_servers[$mapping->sid];
+      $ldap_server = ldap_servers_get_servers($mapping->sid, 'enabled', TRUE);
       $user_edit = array(); // all user data is stored here until user_save is called.
       $proposed_ldap_authorizations = array();
       /**
@@ -102,14 +100,14 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
          * 3.A.  Determine what authorizations have been granted in the past
          * if regrantLdapProvisionedDefault is false
          * and remove them
-         *
+         * 
          */
-        if (isset($user->data['ldap_authorizations'][$mapping->consumerType]) && $mapping->regrantLdapProvisionedDefault === FALSE) {
+        if (isset($user->data['ldap_authorizations'][$mapping->consumerType]) && $mapping->regrantLdapProvisioned === FALSE) {
           $existing_ldap_authorizations = $user->data['ldap_authorizations'][$mapping->consumerType];
           $creates = array_diff($filtered_ldap_authorizations, $existing_ldap_authorizations);
         } else {
           $existing_ldap_authorizations = array();
-          $creates = $filtered_ldap_authorizations
+          $creates = $filtered_ldap_authorizations;
 
         }
 

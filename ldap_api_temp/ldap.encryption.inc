@@ -89,7 +89,7 @@ function _ldap_api_encrypt_types($type = 'all') {
 
 function _ldap_api_encrypt($clear_txt, $enc_type = NULL) {
 
-  print "clear_txt = $clear_txt, enc_type = $enc_type";
+ // print "clear_txt = $clear_txt, enc_type = $enc_type";
   if (!$enc_type) {
     $enc_type = variable_get('ldap_api_encryption' , LDAP_API_ENC_TYPE_BLOWFISH);
   }

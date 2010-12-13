@@ -15,7 +15,7 @@
 function ldap_authorizations_admin_index() {
   require_once('LdapAuthorizationMappingAdmin.class.php');
   $mappings = LdapAuthorizationMappingAdmin::getMappings();
-  $consumers = ldap_authorization_get_consumers();
+  $consumers = ldap_authorization_get_consumers( NULL, TRUE);
   if (!is_array($consumers) || count($consumers) == 0) {
     drupal_set_message('No authorization consumer modules are enabled.  Enable
       LDAP Authorization Drupal Roles, OG LDAP, or another LDAP Authorization consuming module','warning');
@@ -32,32 +32,32 @@ function ldap_authorizations_admin_index() {
  *
  * @param <type> $form
  * @param <type> $form_state
- * @param string $map_id unique identifier for authorization mapping
+ * @param string $mapping_id unique identifier for authorization mapping
  * @param string $op add, update, delete
  * @param string $consumer_type drupal_roles, og_group, etc.  Only needed for adds
  * @return array drupal form array
  */
-function ldap_authorization_admin_form($form, &$form_state, $map_id = NULL, $op = NULL, $consumer_type = NULL) {
+function ldap_authorization_admin_form($form, &$form_state, $mapping_id = NULL, $op = NULL, $consumer_type = NULL) {
     require_once('LdapAuthorizationMappingAdmin.class.php');
-    $consumers = ldap_authorization_get_consumers($consumer_type);
+    $consumers = ldap_authorization_get_consumers($consumer_type, TRUE);
     if ($op == 'add') {
       if (!$consumer_type || (count($consumers) == 0)) {
         drupal_set_message(t('Bad URL with incorrect authorization type'), 'error'); 
       } else {
-        $mapping = new LdapAuthorizationMappingAdmin(check_plain($map_id), TRUE, NULL, $consumer_type, $consumers['consumer_module']);
+        $mapping = new LdapAuthorizationMappingAdmin(NULL, TRUE, NULL, $consumer_type, $consumers['consumer_module']);
       }
     } elseif ($op == 'update' || $op == 'delete') {
-       if ($mapping = new LdapAuthorizationMappingAdmin(check_plain($map_id), FALSE)) {
+       if ($mapping = new LdapAuthorizationMappingAdmin(check_plain($mapping_id), FALSE)) {
 
        } else {
-         drupal_set_message(t('Bad LDAP Authorization Mapping URL.  No mapping for mapping id = !id', array('!id' => $map_id)), 'error');
+         drupal_set_message(t('Bad LDAP Authorization Mapping URL.  No mapping for mapping id = !id', array('!id' => $mapping_id)), 'error');
          drupal_goto(LDAP_API_MENU_BASE_PATH .'/authorization');
        }
     }
 
-    $servers = ldap_servers_get_servers_conf();
+    $servers = ldap_servers_get_servers(NULL, 'enabled');
     foreach ($servers as $sid => $server) {
-      $server_options[$sid] = $server['name'];
+      $server_options[$sid] = $server->name;
     }
 
     return $mapping->drupalForm($server_options, $op);
@@ -73,7 +73,7 @@ function ldap_authorization_admin_form_validate($form, &$form_state) {
 
   require_once('LdapAuthorizationMappingAdmin.class.php');
   // create as new simply for validation
-  $mapping = new LdapAuthorizationMappingAdmin($values['map_id'], TRUE, $values['sid'], $consumer->consumerType, $consumer->consumerModule);
+  $mapping = new LdapAuthorizationMappingAdmin($values['mapping_id'], TRUE, $values['sid'], $consumer->consumerType, $consumer->consumerModule);
   $errors = $mapping->drupalFormValidate($op, $values);
   foreach ($errors as $error_name => $error_text) {
 
@@ -89,10 +89,10 @@ function ldap_authorization_admin_form_validate($form, &$form_state) {
  */
 
 function ldap_authorization_admin_form_submit($form, &$form_state) {
-   list($consumer, $op, $op_past, $new, $values)  = _ldap_authorization_admin_parse_form($form, $form_state);
+  list($consumer, $op, $op_past, $new, $values)  = _ldap_authorization_admin_parse_form($form, $form_state);
  
   require_once('LdapAuthorizationMappingAdmin.class.php');
-  $mapping = new LdapAuthorizationMappingAdmin($values['map_id'], $new, $values['sid'], $consumer->consumerType, $consumer->consumerModule);
+  $mapping = new LdapAuthorizationMappingAdmin($values['mapping_id'], $new, $values['sid'], $consumer->consumerType, $consumer->consumerModule);
   $mapping->drupalFormSubmit($op, $values);  // add form data to object and save or create
 
   if ($mapping->hasError == FALSE) {

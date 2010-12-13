@@ -8,9 +8,6 @@
  */
 define('LDAP_API_CURRENT_API_MODULE', 'ldap_api_temp');
 
-
-
-
 define('LDAP_API_PROJECT_TAG', 'ldap');
 define('LDAP_API_API_MODULE_TAG', 'ldap_api');
 define('LDAP_API_MENU_BASE_PATH', 'admin/config/people/ldap');
@@ -135,7 +132,7 @@ function ldap_api_temp_permission() {
 
 function ldap_api_temp_menu() {
 
-  $items[LDAP_API_MENU_BASE_PATH] = array(
+  $items['admin/config/people/ldap'] = array(
     'title' => 'LDAP Configuration',
     'description' => 'LDAP authentication, authorization, provisioning, ect.',
     'page callback' => 'drupal_get_form',
@@ -144,7 +141,7 @@ function ldap_api_temp_menu() {
     'file' => 'ldap_api.settings.inc',
   );
   
-  $items[LDAP_API_MENU_BASE_PATH .'/settings'] = array(
+  $items['admin/config/people/ldap/settings'] = array(
     'title' => '1. Settings',
     'weight' => -2,
     'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -154,8 +151,26 @@ function ldap_api_temp_menu() {
 }
 
 
+function ldap_api_temp_ldaps_option_array() {
+  $options = array();
+  $options['none'] = "-- Select LDAP Type --";
+  require_once('ldap.functions.inc');
+  foreach (ldap_api_get_ldap_defaults() as $type => $defaults) {
+    $options[$type] = $defaults['name'];
+  }
+  return $options;
+}
 
 
+function ldap_temp_api_disable_http_check(&$form) {
+ if (variable_get('ldap_api_require_ssl_for_credentails', 1) == 1 && $_SERVER['HTTPS'] != 'on') {
+   $form['#prefix'] = t('This form is disable because it must be submitted from https.
+                        Try changing the url in your browser to start with &quot;https&quot;
+                        ');
+  // $form['#disabled'] = TRUE;
+ }
+ 
+}
 
 
 function ldap_api_ldap_extension_summary($op = 'data') {

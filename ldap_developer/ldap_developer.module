@@ -1,0 +1,242 @@
+<?php
+
+
+
+/**
+ * Implementation of hook_menu().
+ */
+function ldap_developer_menu() {
+  
+  $root = 'admin/config/people/ldap/ldap_developer';
+  $items['admin/config/people/ldap/ldap_developer'] = array(
+    'title' => '5. Developer',
+    'page callback' => 'ldap_developer_tasks',
+    'weight' => 8,
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer ldap modules'),
+  );
+
+  $items['admin/config/people/ldap/ldap_developer/splash'] = array(
+    'title' => 'splash',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/config/people/ldap/ldap_developer/overwrite_config'] = array(
+    'title' => 'Overwrite Config Data',
+    'page callback' => 'ldap_developer_reset_config',
+    'page arguments' => array('overwrite', $root),
+    'weight' => 4,
+    'access arguments' => array('administer ldap modules'),
+    'description' => 'Add ldap developer test dataset, overwrite existing content if exists.',
+  );
+   
+
+  
+  $items['admin/config/people/ldap/ldap_developer/uninstall'] = array(
+    'title' => 'Disable and Uninstall ldap modules',
+    'page callback' => 'ldap_developer_clean_slate',
+    'page arguments' => array('uninstall', $root),
+    'weight' => 4,
+    'access arguments' => array('administer ldap modules'),
+  );
+  
+  $items['admin/config/people/ldap/ldap_developer/repopulate'] = array(
+    'title' => 'Disable, Uninstall, Enable, and Populate ldap modules',
+    'page callback' => 'ldap_developer_clean_slate',
+    'page arguments' => array('repopulate', $root),
+    'weight' => 4,
+    'access arguments' => array('administer ldap modules'),
+  );
+  
+  return $items;
+}
+
+
+function ldap_developer_tasks() {
+  
+  $menu = ldap_developer_menu();
+  
+  foreach ($menu as $path => $item) {
+    if (!isset($item['type'])) {
+      $description = (isset($item['description'])) ? $item['description'] : "";
+      $items[] = l($item['title'], $path) . '<br/>' . $description; 
+    }
+  }
+  
+  $list = array('items'=> $items , 'title' => 'Developer Functions', 'type' => 'ul', 'attributes' => array());
+  $content =  theme_item_list($list);
+  return $content; 
+  
+}
+
+function ldap_developer_clean_slate($op = 'repopulate', $redirect = NULL) {
+  
+  $modules = ldap_developer_modules();
+  module_disable(array_reverse($modules));
+  drupal_set_message('Disabled Modules: '. join(', ', array_reverse($modules)), 'status');
+  $modules = ldap_developer_modules(); // array('ldap_authorization_drupal_role', 'ldap_authorization', 'ldap_servers', 'ldap_authentication'); // , , , );
+  drupal_uninstall_modules(array_reverse($modules));
+  drupal_set_message('Uninstalled Modules: '. join(', ', array_reverse($modules)), 'status');
+ if ($op == 'repopulate') {
+   foreach(ldap_developer_modules() as $module) {
+     if (!module_exists($module)) {
+       module_enable(array($module));
+       drupal_set_message('Enabled: '. $module, 'status');
+     }
+   }
+   
+
+   ldap_developer_reset_config($op);  // populate
+  }
+  drupal_set_message('All caches flushed', 'status');
+  drupal_flush_all_caches();
+  if ($redirect) {
+    drupal_goto($redirect);
+  }
+  return "ldap_developer_clean_slate op=$op";
+
+}
+
+function ldap_developer_modules() {
+  return array('ldap_api_temp', 'ldap_servers', 'ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role');
+  
+}
+function ldap_developer_reset_config($op = NULL, $redirect = NULL) {
+  
+  $populated = array();
+  foreach (ldap_developer_modules() as $module) {
+    if (module_exists($module)) {
+      ldap_developer_populate_config($module, $op);
+      $populated[] = $module;
+    }
+  }
+  if (count($populated) == 0) {
+    drupal_set_message('No module data populated because no ldap modules enabled.', 'warning');
+  }
+  if ($redirect) {
+    drupal_goto($redirect);
+  }
+  
+}
+
+/**
+ *
+ * @param type $module module name
+ * 
+ */
+function ldap_developer_populate_config($module, $op = NULL) {
+  drupal_set_message('Populated Config Data: '. $module  .", op=$op", 'status');
+  switch ($module) {
+    
+    case 'ldap_api_temp':
+      require_once(drupal_get_path('module', 'ldap_api_temp').'/ldap_api_temp.module');
+      variable_set('ldap_api_encryption', LDAP_API_ENC_TYPE_BLOWFISH);
+      variable_set('ldap_api_require_ssl_for_credentails', TRUE);   
+    break;
+  
+  
+    case 'ldap_servers':
+      require_once(drupal_get_path('module', 'ldap_servers').'/ldap_servers.module');
+      require_once(drupal_get_path('module', 'ldap_servers') .'/LdapServerAdmin.class.php');
+      $ldap_server = new LdapServerAdmin('uiuc_ad');
+     // print $ldap_server->inDatabase; die;
+       if ((!$ldap_server->inDatabase) || $op == 'overwrite') { 
+        $ldap_server->name = 'UIUC AD';
+        $ldap_server->type = 'ad';
+        $ldap_server->status = 1;
+        $ldap_server->address ='ad.uiuc.edu';
+        $ldap_server->port = 389;
+        $ldap_server->tls = FALSE;
+        $ldap_server->basedn = array('ou=campus accounts,dc=ad,dc=uiuc,dc=edu','ou=education,dc=ad,dc=uiuc,dc=edu');
+        $ldap_server->binddn = NULL;
+        $ldap_server->bindpw_new = NULL; 
+        $ldap_server->user_attr = 'sAMAccountName';
+        $ldap_server->mail_attr = 'mail';
+        $ldap_server->ldapToDrupalUserPhp = NULL;
+        $ldap_server->testingDrupalUsername = 'jbarclay';
+        $op = ($ldap_server->inDatabase) ? 'update' : 'insert';
+        $ldap_server->save($op);   
+      }
+    break;
+
+  
+    case 'ldap_authentication':
+      require_once(drupal_get_path('module', 'ldap_authentication').'/ldap_authentication.module');
+      require_once(drupal_get_path('module', 'ldap_authentication') .'/LdapAuthenticationConfAdmin.class.php');
+      
+      $ldap_authentication_conf = new LdapAuthenticationConfAdmin();
+      if ((! $ldap_authentication_conf->inDatabase) || $op == 'overwrite') {  // only populate if already uninstalled
+        $ldap_authentication_conf->sids = array('uiuc_ad');
+        $ldap_authentication_conf->authenticationMode = LDAP_AUTHENTICATION_MIXED; //  LDAP_AUTHENTICATION_MIXED or LDAP_AUTHENTICATION_EXCLUSIVE
+        $ldap_authentication_conf->logonFormHideResetPassword = TRUE;
+        $ldap_authentication_conf->logonFormHideCreateAccount = TRUE;
+        $ldap_authentication_conf->loginConflictResolve = LDAP_AUTHENTICATION_CONFLICT_LOG; //LDAP_AUTHENTICATION_CONFLICT_LOG or LDAP_AUTHENTICATION_CONFLICT_RESOLVE
+
+        $ldap_authentication_conf->allowOnlyIfTextInDn = array('jbarclay');
+        $ldap_authentication_conf->excludeIfTextInDn = array('ou=evil', 'ou=bad');
+        $ldap_authentication_conf->allowTestPhp = NULL;
+        $ldap_authentication_conf->ldapUsersRequireAdminApproval = FALSE;
+        $ldap_authentication_conf->ldapUsersDontCreateAutomatically = FALSE;
+        $ldap_authentication_conf->emailOption = LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE; //  LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE or LDAP_AUTHENTICATION_EMAIL_ALLOW_DRUPAL_EMAIL or LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE
+        $ldap_authentication_conf->save();   
+      }
+     break;
+     
+    case 'ldap_authorization':
+      require_once(drupal_get_path('module', 'ldap_authorization').'/ldap_authorization.module');
+      require_once(drupal_get_path('module', 'ldap_authorization_drupal_role').'/ldap_authorization_drupal_role.module');
+      require_once(drupal_get_path('module', 'ldap_authorization') .'/LdapAuthorizationMappingAdmin.class.php');
+      // ($_mid, $_new = FALSE, $_sid = NULL, $_consumer_type = NULL, $_consumer_module = NULL)
+      $ldap_authorization_conf = new LdapAuthorizationMappingAdmin('active_directory', TRUE, 'uiuc_ad', 'drupal_role', 'ldap_authorization_drupal_role');
+      
+      if ((! $ldap_authorization_conf->inDatabase) || $op == 'overwrite') {  // only populate if already uninstalled
+        
+        $ldap_authorization_conf->sid = 'uiuc_ad';
+        $ldap_authorization_conf->consumerModule = 'ldap_authorization_drupal_role'; // id of module providing consumer
+        //$ldap_authorization_conf->consumerType = ;
+                
+        $ldap_authorization_conf->description = 'AD to Drupal Role Mapping';
+        $ldap_authorization_conf->status = 1;
+        $ldap_authorization_conf->onlyApplyToLdapAuthenticated = TRUE;
+
+        $ldap_authorization_conf->deriveFromDn = TRUE;  
+        $ldap_authorization_conf->deriveFromDnAttr = 'ou';
+
+        $ldap_authorization_conf->deriveFromAttr = TRUE;  
+        $ldap_authorization_conf->deriveFromAttrAttr = array('memberOf');
+
+        $ldap_authorization_conf->deriveFromEntry = FALSE; 
+        $ldap_authorization_conf->deriveFromEntryEntries = NULL;
+        $ldap_authorization_conf->deriveFromEntryAttr = NULL;
+
+        $ldap_authorization_conf->mappings = array(
+          array('CN=ED IT NAG Staff,OU=PeopleGroups,OU=Education,DC=ad,DC=uiuc,DC=edu', 'administrator'),
+          array('Campus Accounts', 'Campus Accounts'),
+          array('CN=ED IT NAG Staff,OU=PeopleGroups,OU=Education,DC=ad,DC=uiuc,DC=edu', 'bsides'),
+         );
+ 
+        
+        $ldap_authorization_conf->synchToLdap = FALSE;
+        
+        $ldap_authorization_conf->synchOnLogon = TRUE;
+        $ldap_authorization_conf->synchManually = TRUE;
+                
+                
+        $ldap_authorization_conf->useMappingsAsFilter = TRUE; 
+
+        $ldap_authorization_conf->revokeLdapProvisioned = TRUE;
+        $ldap_authorization_conf->revokeNonLdapProvisioned = FALSE;
+        $ldap_authorization_conf->regrantLdapProvisioned = TRUE;
+        $ldap_authorization_conf->createTargets = TRUE;
+
+        $ldap_authorization_conf->save();   
+        
+       
+       }
+      
+     break;     
+     
+     
+  }
+
+}

@@ -11,13 +11,13 @@
  *
  * @param <type> $form
  * @param <type> $form_state
- * @param string $map_id  unique identifier for authorization mapping
+ * @param string $mapping_id  unique identifier for authorization mapping
  * @return array drupal form array
  */
 
 
-function ldap_authorization_mapping_test_form($form, &$form_state, $map_id) {
-  $consumer = ldap_authorization_get_consumer_object(array('map_id' => $map_id));
+function ldap_authorization_mapping_test_form($form, &$form_state, $mapping_id) {
+  $consumer = ldap_authorization_get_consumer_object(array('mapping_id' => $mapping_id));
   $consumer_tokens = $consumer->tokens();
 
   if (isset($_SESSION['ldap_authorization_test_result'])) {
@@ -38,9 +38,9 @@ function ldap_authorization_mapping_test_form($form, &$form_state, $map_id) {
     );
 
 
-    $form['map_id'] = array(
+    $form['mapping_id'] = array(
       '#type' => 'hidden',
-      '#default_value' => $map_id,
+      '#default_value' => $mapping_id,
     );
 
    
@@ -86,8 +86,8 @@ function ldap_authorization_mapping_test_form_validate($form, &$form_state) {
 
 
 function ldap_authorization_mapping_test_form_submit($form, &$form_state) {
-  $map_id = $form_state['values']['map_id'];
-  $consumer = ldap_authorization_get_consumer_object(array('map_id' => $map_id));
+  $mapping_id = $form_state['values']['mapping_id'];
+  $consumer = ldap_authorization_get_consumer_object(array('mapping_id' => $mapping_id));
   $consumer_tokens = $consumer->tokens();
 
   $results = array();
@@ -114,17 +114,18 @@ function ldap_authorization_mapping_test_form_submit($form, &$form_state) {
 
   foreach ($user_names as $username) {
     if ($username) {  // ingore user 0
-      if ($user = user_load_by_name($username)) {
-        $new_authorizations = ldap_authorizations_user_authorizations($user, 'query', $map_id, 'logon');
-        $results[$username]['authorizations'] = $new_authorizations;
-      } else {
-        $results[$username]['message'] = t('Failed to find user with username %username.', array('%username' => $username));
+      if (!$user = user_load_by_name($username)) {
+        $user = new stdClass();
+        $user->name = $username;
       }
+      $new_authorizations = ldap_authorizations_user_authorizations($user, 'query', $mapping_id, 'logon');
+      $results[$username]['authorizations'] = $new_authorizations;
+  
     }
   }
-  $mapping = ldap_authorizations_mappings($map_id, NULL, TRUE);
+  $mapping = ldap_authorizations_mappings($mapping_id, NULL, TRUE);
   $table =  theme('ldap_authorization_test_results', array('data' => $results, 'consumer' => $consumer, 'mapping' => $mapping));
   $_SESSION['ldap_authorization_test_result'] = $table;
-  $form_state['redirect'] = LDAP_API_MENU_BASE_PATH .'/authorization/test/'. $map_id;
+  $form_state['redirect'] = LDAP_API_MENU_BASE_PATH .'/authorization/test/'. $mapping_id;
 
 }

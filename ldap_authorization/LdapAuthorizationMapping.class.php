@@ -67,27 +67,76 @@ class LdapAuthorizationMapping {
    * Load Method
    */
   function load($_mid, $_new = FALSE, $_sid = NULL, $_consumer_type = NULL, $_consumer_module = NULL) {
-    if (!is_scalar($_mid)) {
+    if (!is_scalar($_mid)  && $_new == FALSE) {
       return;      
     }
+    if ($_consumer_type == '' && $_new == TRUE) {
+      return;      
+    }
+    
     $this->consumerType = $_consumer_type;
     $this->consumerModule = $_consumer_module;
     $this->mappingID = $_mid;
     $this->sid = $_sid;
+    
+    
     if ($_new) {
       $this->inDatabase = FALSE;
-      return;
-    }
-    $this->inDatabase = TRUE;
-    $saved = variable_get("ldap_authorization_map_". $this->mappingID, array());
-    foreach ($this->saveable as $property) {
-      if (isset($saved[$property])) {
-        $this->{$property} = $saved[$property];
-      }
-      
+    } else {
+      $this->inDatabase = TRUE;
+      $this->loadFromDb();
+    //  $saved = variable_get("ldap_authorization_map_". $this->mappingID, array());
+    //  foreach ($this->saveable as $property) {
+     //   if (isset($saved[$property])) {
+    //      $this->{$property} = $saved[$property];
+    //    }
+   //   }
     }
   }
 
+  
+  protected function  loadFromDb() {
+    $select = db_select('ldap_authorization', 'ldap_authorization');
+    $select->fields('ldap_authorization');
+    $select->condition('ldap_authorization.mapping_id',  $this->mappingID);
+
+    $mapping = $select->execute()->fetchObject();
+
+    if (!$mapping) {
+      $this->inDatabase = FALSE;
+      return;
+    }
+
+    $this->sid = $mapping->sid;
+    $this->consumerType = $mapping->consumer_type;
+    $this->consumerModule = $mapping->consumer_module;
+    $this->description = $mapping->description;
+    $this->status = (bool)$mapping->status;
+    $this->onlyApplyToLdapAuthenticated  = (bool)(@$mapping->only_ldap_authenticated);
+
+    $this->deriveFromDn  = (bool)(@$mapping->derive_from_dn);
+    $this->deriveFromDnAttr = $mapping->derive_from_dn_attr;
+
+    $this->deriveFromAttr  = (bool)($mapping->derive_from_attr);
+    $this->deriveFromAttrAttr =  $this->linesToArray($mapping->derive_from_attr_attr);
+
+    $this->deriveFromEntry  = (bool)(@$mapping->derive_from_entry);
+    $this->deriveFromEntryEntries = $this->linesToArray($mapping->derive_from_entry_entries);
+    $this->deriveFromEntryAttr = $mapping->derive_from_entry_attr;
+
+    $this->mappings = $this->pipeListToArray($mapping->mappings);
+    $this->useMappingsAsFilter  = (bool)(@$mapping->use_filter);
+
+    $this->synchToLdap = (bool)(@$mapping->synch_to_ldap);
+    $this->synchOnLogon = (bool)(@$mapping->synch_on_logon);
+    $this->synchManually = (bool)(@$mapping->synch_manually);
+    $this->regrantLdapProvisioned = (bool)(@$mapping->regrant_ldap_provisioned);
+    $this->revokeLdapProvisioned = (bool)(@$mapping->revoke_ldap_provisioned);
+    $this->revokeNonLdapProvisioned = (bool)(@$mapping->revoke_non_ldap_provisioned);
+    $this->createTargets = (bool)(@$mapping->create_targets);
+
+    
+  }
   /**
    * Destructor Method
    */
@@ -127,6 +176,29 @@ class LdapAuthorizationMapping {
     
   );
   
+  
+    protected function linesToArray($lines) {
+    $lines = trim($lines);
+
+     if ($lines) {
+       $array = explode("\n", $lines);
+     }
+     else {
+       $array = array();
+     }
+
+     return $array;
+  }  protected function pipeListToArray($mapping_list_txt) {
+    $result_array = array();
+    foreach ((trim($mapping_list_txt) ? explode("\n", trim($mapping_list_txt)) : array()) as $line) {
+      if (count($mapping = explode('|', trim($line))) == 2) {
+       $result_array[] = array(trim($mapping[0]), trim($mapping[1]));
+      }
+    }
+    return $result_array;
+  }
 }
+
+
 
 

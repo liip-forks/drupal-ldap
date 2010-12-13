@@ -9,6 +9,9 @@
  * @todo support exportables
  * @todo unit testing
  * @todo delete confirm form
+ * @todo fix ldap authorization  menu such that breadcrumbs appear on test form, update form, delete confirm form
+ * @todo fix delete server
+ 
  */
 
 define('LDAP_AUTHORIZATION_PROJECT_TAG', 'ldap_authorization');
@@ -21,8 +24,8 @@ define('LDAP_AUTHORIZATION_NO_LDAP_SERVERS', 'ldap_authorization_no_ldap_servers
  * Implementation of hook_menu().
  */
 function ldap_authorization_menu() {
-
- $items[LDAP_API_MENU_BASE_PATH .'/authorization'] = array(
+$menu_offset = 4;
+ $items['admin/config/people/ldap/authorization'] = array(
     'title' => t('4. Authorization'),
     'description' => t('Map User LDAP properties to Authorizations'),
     'page callback' => 'ldap_authorizations_admin_index',
@@ -33,27 +36,27 @@ function ldap_authorization_menu() {
     'weight' => 3,
   );
 
-  $items[LDAP_API_MENU_BASE_PATH .'/authorization/list'] = array(
+  $items['admin/config/people/ldap/authorization/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   
- $items[LDAP_API_MENU_BASE_PATH .'/authorization/update'] = array(
+ $items['admin/config/people/ldap/authorization/update'] = array(
     'title' => t('update'),
     'description' => t('Update an ldap authorization mapping'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_authorization_admin_form', LDAP_API_MENU_BASE_PATH_PARTS + 2, 'update', LDAP_API_MENU_BASE_PATH_PARTS + 3),
+    'page arguments' => array('ldap_authorization_admin_form', $menu_offset + 2, 'update', $menu_offset + 3),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
     'weight' => 3,
     'file' => 'ldap_authorization.admin.inc',
   );
 
- $items[LDAP_API_MENU_BASE_PATH .'/authorization/delete'] = array(
+ $items['admin/config/people/ldap/authorization/delete'] = array(
     'title' => t('delete'),
     'description' => t('Delete an ldap authorization mapping'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_authorization_admin_form', LDAP_API_MENU_BASE_PATH_PARTS + 2, 'delete', LDAP_API_MENU_BASE_PATH_PARTS + 3),
+    'page arguments' => array('ldap_authorization_admin_form', $menu_offset + 2, 'delete', $menu_offset + 3),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
     'weight' => 3,
@@ -61,11 +64,11 @@ function ldap_authorization_menu() {
   );
 
 
-  $items[LDAP_API_MENU_BASE_PATH .'/authorization/test'] = array(
+  $items['admin/config/people/ldap/authorization/test'] = array(
     'title' => t('test'),
     'description' => t('Test an ldap authorization mapping'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_authorization_mapping_test_form', LDAP_API_MENU_BASE_PATH_PARTS + 2, 'test', LDAP_API_MENU_BASE_PATH_PARTS + 3),
+    'page arguments' => array('ldap_authorization_mapping_test_form', $menu_offset + 2, 'test', $menu_offset + 3),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
     'weight' => 3,
@@ -73,10 +76,10 @@ function ldap_authorization_menu() {
   );
 
 
-  $consumers = ldap_authorization_get_consumers();
+  $consumers = ldap_authorization_get_consumers(NULL, TRUE);
   //print_r($consumers); die;
   foreach ($consumers as $consumer_type => $consumer) {
-    $items[LDAP_API_MENU_BASE_PATH .'/authorization/add/'. $consumer_type] = array(
+    $items['admin/config/people/ldap/authorization/add/'. $consumer_type] = array(
       'title' => t('Add !name Mapping', array('!name' => $consumer['consumer_name'])),
       'page callback' => 'drupal_get_form',
       'page arguments' => array('ldap_authorization_admin_form', NULL, 'add', $consumer_type),
@@ -149,25 +152,25 @@ function ldap_authorization_theme() {
 
 /**
  *
- * @param <type> $param of form 'map_id' => <map_id> or 'consumer_type' => <consumer_type>
+ * @param <type> $param of form 'mapping_id' => <mapping_id> or 'consumer_type' => <consumer_type>
  * @return consumer object
  */
 function ldap_authorization_get_consumer_object($param) {
+
+  
     extract($param);
-    $consumers = ldap_authorization_get_consumers();
-    if (@$map_id) {
+    $consumers = ldap_authorization_get_consumers(NULL, TRUE);
+
+    if (@$mapping_id) {
       require_once('LdapAuthorizationMappingAdmin.class.php');
-      $mappings = LdapAuthorizationMappingAdmin::getMappings($map_id);
-     // $mapping = $mappings[$map_id];
-      $consumer_type = $mappings[$map_id]->consumerType;
+      $mappings = LdapAuthorizationMappingAdmin::getMappings($mapping_id);
+      $consumer_type = $mappings[$mapping_id]->consumerType;
     }
-  // print "<pre>- $consumer_type - "; print_r($consumers);
-    if (isset($consumers[$consumer_type])) {
+    if (@$consumer_type) {
       $consumer = $consumers[$consumer_type];
       require_once(drupal_get_path('module', $consumer['consumer_module']) . '/' . $consumer['consumer_class_file']);
       $class = $consumer['consumer_class_name'];
       $consumer = new $class();
-     // print_r($consumer);
       return $consumer;
     } else {
       return FALSE;
@@ -177,23 +180,22 @@ function ldap_authorization_get_consumer_object($param) {
 /*
  *  return authorization mappings
  *
- * @param $map_id id of mapping
+ * @param $mapping_id id of mapping
  * @param $consumer_type
  * @param boolean $flatten. if only on element in array, return sub array.
  *
- * @return array of mapping configuration keyed on map_id
+ * @return array of mapping configuration keyed on mapping_id
  */
-function ldap_authorizations_mappings($map_id = null, $consumer_type = NULL, $flatten = FALSE) {
+function ldap_authorizations_mappings($mapping_id = null, $consumer_type = NULL, $flatten = FALSE) {
   require_once('LdapAuthorizationMappingAdmin.class.php');
-  return LdapAuthorizationMappingAdmin::getMappings($map_id, $consumer_type, $flatten);
+  return LdapAuthorizationMappingAdmin::getMappings($mapping_id, $consumer_type, $flatten);
 }
 
-function ldap_authorization_get_consumers($consumer_type = NULL) {
+function ldap_authorization_get_consumers($consumer_type = NULL, $reset = FALSE) {
   static $consumers;
-  if (!is_array($consumers)) {
+  if ($reset || !is_array($consumers)) {
     $consumers = module_invoke_all('ldap_authorization_consumer');
   }
-
   return ($consumer_type) ? $consumers[$consumer_type] : $consumers;
 
 }

@@ -114,8 +114,6 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
    
   public function authorizationUserDataSync(&$user, &$ldap_entry) {
       $actual_authorizations = $this->listAuthorizations($user);
-     // dpm($actual_authorizations);
-    //  print_r($user->data); print $this->consumerType; die;
       if (isset($user->data['ldap_authorizations'][$this->consumerType])) {
         $user_data_authorizations = $user->data['ldap_authorizations'][$this->consumerType];
       } else {

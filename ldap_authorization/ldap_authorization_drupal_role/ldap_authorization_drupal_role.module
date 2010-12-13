@@ -27,6 +27,6 @@ function ldap_authorization_drupal_role_ldap_authorization_consumer() {
 }
 
 function ldap_authorization_drupal_role_init() {
- // global $user;  dpm($user);
+
 }
 

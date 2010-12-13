@@ -7,41 +7,64 @@
  */
 
 /**
- * Implementation of hook_init().
+ * @todo fix advanced help for ../ldap/authentication settings page
+ * @todo ldapUsersRequireAdminApproval is in the config, but is not implemented
+ * @todo ldapUsersDontCreateAutomatically is in the config, but is not implemented
+ * @todo the ability for an admin to create an account and tag it as ldap
+ *       this would just need an extension to the user admin interface and some more permissions
+     
+ * 
  */
-function ldap_authentication_init() {
-}
+define('LDAP_AUTHENTICATION_PROJECT_TAG', 'ldap');
 
-/**
- * Implementation of hook_theme().
- */
-function ldap_authentication_theme() {
-}
+define('LDAP_AUTHENTICATION_MIXED',           1);
+define('LDAP_AUTHENTICATION_EXCLUSIVE',      2);
+
+define('LDAP_AUTHENTICATION_CONFLICT_LOG',         1);
+define('LDAP_AUTHENTICATION_CONFLICT_RESOLVE',    2);
+
+define('LDAP_AUTHENTICATION_EMAIL_ALLOW_DRUPAL_EMAIL',      1);
+define('LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE',   2);
+define('LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE',  3);
+
+
 
 /**
  * Implementation of hook_menu().
  */
 function ldap_authentication_menu() {
   $items = array();
-  $items['admin/settings/ldap/authentication'] = array(
-    'title' => 'Authentication',
-    'description' => 'Configure LDAP Authentication',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'file' => 'ldap_authentication.admin.inc',
-    'page callback' => 'drupal_get_form',
-    'access arguments' => array('administer site configuration'),
-    'weight' => 1,
-  );
 
+  $items['admin/config/people/ldap/authentication'] = array(
+    'title' => t('3. Authentication'),
+    'description' => t('Configure LDAP Authentication'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_authentication_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+    'file' => 'ldap_authentication.admin.inc',
+  );
+  
   return $items;
 }
 
+
+/**
+ * Implements hook_ldap_api_permission().
+ */
+function ldap_authentication_ldap_api_permission() {
+  return array('ldap_authentication' =>  'LDAP Authentication: Invervenes in authentication process to allow authentication against LDAP servers.');
+}
+
+    
 /**
  * Implementation of hook_help().
  */
+
 function ldap_authentication_help($path, $arg) {
   switch ($path) {
-    case 'admin/ldap/authentication':
+    case 'admin/config/people/ldap/authentication':
       $output = '<p>'. t('Some help text goes here.') .'</p>';
       return $output;
 
@@ -52,8 +75,8 @@ function ldap_authentication_help($path, $arg) {
 }
 
 /**
-  * Implementation of hook_info().
-  */
+ * Implementation of hook_info().
+ */
 function ldap_authentication_info($field = 0) {
   $info['name']= 'ldap_authentication';
   $info['protocol'] = 'LDAP';
@@ -66,131 +89,144 @@ function ldap_authentication_info($field = 0) {
 }
 
 /**
-  * Implementation of hook_user().
-  */
-function ldap_user($op, &$edit, &$account, $category = NULL) {
-  switch ($op) {
-    case 'update':
-      if ($category == 'account' && isset($account->ldap_authentified)) {
-        // LDAP Authentication is NEVER to be cached in Drupal's DB.
-        $edit['pass'] = user_password();
-      }
-      break;
+ * get LdapAuthenticationConf object
+ *
+ * @return object LdapAuthenticationConf object if configured, otherwise FALSE
+ * 
+ */
+
+function ldap_authentication_get_valid_conf() {
+  static $auth_conf;
+  if (is_object($auth_conf)) {
+    return $auth_conf;
+  }
+  require_once('LdapAuthenticationConf.class.php');
+  $auth_conf = new LdapAuthenticationConf();
+  return ($auth_conf->inDatabase) ? $auth_conf : FALSE;
+
+}
+
+/**
+ * Implementation of hook_menu_alter().
+ */
+function ldap_authentication_menu_alter(&$items) {
+  if ($auth_conf = ldap_authentication_get_valid_conf()) {
+    if ($auth_conf->logonFormHideCreateAccount) {
+      unset($items['user/password']);
+    }
+    if ($auth_conf->logonFormHideResetPassword) {
+      unset($items['user/register']);
+    } 
   }
 }
 
 /**
  * Implementation of hook_form_alter().
  */
-function ldap_authenticate_form_alter(&$form, $form_state, $form_id) {
-  switch ($form_id) {
-    case 'user_login_block':
-    case 'user_login':
-      $form['#validate'] = array('ldap_authentication_login_authenticate_validate');
-      break;
-    case 'user_register':
-      if (isset($_SESSION['ldap']['values'])) {
-        // Auto-registration failed, attempt to prefill fields.
-        $form['name']['#default_value'] = $_SESSION['ldap']['values']['name'];
-        $form['mail']['#default_value'] = $_SESSION['ldap']['values']['mail'];
-      }
-      break;
-  }
-  return $form;
-}
+function ldap_authentication_form_alter(&$form, $form_state, $form_id) {
 
-/**
- * Replacement for user_authenticate_validate().
- */
-function ldap_authentication_login_authenticate_validate($form, &$form_state) {
-  ldap_authenticate($form_state['values']);
 }
 
 
 /**
- * Authenticate a user or attempt registration.
+ * Implementation of hook_form_FORM_ID_alter() for user_register
  */
-function ldap_authentication($user, $form_values = array()) {
-  global $user;
 
-  $uid = $form_values['name'];
-  $passwd = trim($form_values['pass']);
+function ldap_authentication_form_user_register_alter(&$form, $form_state) {
+  
+}
 
-  // Search for user using authmap
-  $account = user_external_load($identity);
+/**
+ * Implementation of hook_form_FORM_ID_alter() for user_profile_form
+ */
+function ldap_authentication_form_user_profile_form_alter(&$form, $form_state) {
+  require_once('ldap_authentication.inc');
+  _ldap_authentication_form_user_profile_form_alter($form, $form_state, 'user_login');
+  
+}
 
-  //But failover to Drupal internal
-  if ($account = 0) {
-    $account = user_load($identity);
-  }
 
-  if (isset($account->uid)) {
-    if (!variable_get('user_email_verification', TRUE) || $account->login) {
-      user_external_login($account, $_SESSION['ldap']['user_login_values']);
-    }
-    else {
-      drupal_set_message(t('You must validate your email address for this account before logging.'));
-    }
-  }
-  elseif (variable_get('user_register', 1)) {
-    // Get Info from LDAP
-    $response = _ldap_authentication_user_load()
+/**
+ * Implementation of hook_form_FORM_ID_alter() for user_login
+ */
+function ldap_authentication_form_user_login_alter(&$form, &$form_state) {
+  require_once('ldap_authentication.inc');
+  _ldap_authentication_login_form_alter($form, $form_state, 'user_login');
+  
+}
 
-    // Register new user
-    $form_state['redirect'] = NULL;
-    $form_state['values']['name'] = 
-    $form_state['values']['mail'] = (empty($response['openid.sreg.email'])) ? '' : $response['openid.sreg.email'];
-    $form_state['values']['pass']  = user_password();
-    $form_state['values']['status'] = variable_get('user_register', 1) == 1;
-    $form_state['values']['response'] = $response;
-    $form_state['values']['auth_openid'] = $identity;
+/**
+ * Implementation of hook_form_FORM_ID_alter() for user_login_block
+ */
+function ldap_authentication_form_user_login_block_alter(&$form, &$form_state) {
+  require_once('ldap_authentication.inc');
+  _ldap_authentication_login_form_alter($form, $form_state, 'user_login_block');
+  
+}
 
-    if (empty($response['openid.sreg.email']) && empty($response['openid.sreg.nickname'])) {
-      drupal_set_message(t('Please complete the registration by filling out the form below. If you already have an account, you can <a href="@login">log in</a> now and add your OpenID under "My account".', array('@login' => url('user/login'))), 'warning');
-      $success = FALSE;
-    }
-    else {
-      $form = drupal_retrieve_form('user_register', $form_state);
-      drupal_prepare_form('user_register', $form, $form_state);
-      drupal_validate_form('user_register', $form, $form_state);
-      $success = !form_get_errors();
-      if (!$success) {
-        drupal_set_message(t('Account registration using the information provided by your OpenID provider failed due to the reasons listed below. Please complete the registration by filling out the form below. If you already have an account, you can <a href="@login">log in</a> now and add your OpenID under "My account".', array('@login' => url('user/login'))), 'warning');
-        // Append form validation errors below the above warning.
-        $messages = drupal_get_messages('error');
-        foreach ($messages['error'] as $message) {
-          drupal_set_message( $message, 'error');
-        }
-      }
-    }
-    if (!$success) {
-      // We were unable to register a valid new user, redirect to standard
-      // user/register and prefill with the values we received.
-      $_SESSION['openid']['values'] = $form_state['values'];
-      // We'll want to redirect back to the same place.
-      $destination = drupal_get_destination();
-      unset($_REQUEST['destination']);
-      drupal_goto('user/register', $destination);
-    }
-    else {
-      unset($form_state['values']['response']);
-      $account = user_save('', $form_state['values']);
-      // Terminate if an error occured during user_save().
-      if (!$account) {
-        drupal_set_message(t("Error saving user account."), 'error');
-        drupal_goto();
-      }
-      user_external_login($account);
-    }
-    drupal_redirect_form($form, $form_state['redirect']);
-  }
-  else {
-    drupal_set_message(t('Only site administrators can create new user accounts.'), 'error');
-  }
-  drupal_goto();
+/**
+ * validate function for user logon forms.
+*/
+function ldap_authentication_user_login_authenticate_validate($form, &$form_state) {
+  require_once('ldap_authentication.inc');
+  _ldap_authentication_user_login_authenticate_validate($form_state);
+}
+
+/**
+ * submit function for user logon forms
+ */
+function ldap_authentication_login_form_submit(&$form, $form_state) {
+  require_once('ldap_authentication.inc');
+  _ldap_authentication_login_form_submit($form, $form_state);
+
 }
 
 
 
+/**
+ * Implements hook_user_login().
+ *
+ * The user just logged in.
+ * 
+ */
 
-// vim:fenc=utf-8:ft=php:ai:si:ts=2:sw=2:et:
+function ldap_authentication_user_login(&$edit, $account) {
+  
+}
+
+
+/**
+ * Implements hook_user_presave().
+ *  A user account is about to be created or updated.
+ */
+
+function ldap_authentication_user_presave(&$edit, $account, $category = NULL) {
+  
+}
+
+
+/**
+ * Implements hook_user_insert().
+ *
+ * A user account was created.
+ * The module should save its custom additions to the user object into the database.
+ */
+
+function ldap_authentication_user_insert(&$edit, $account, $category) {
+  
+}
+
+
+/**
+ *  Implements hook_user_update().
+ *  
+ *  A user account was updated.
+ *  Modules may use this hook to update their user data in a custom storage after a user account has been updated.
+ */
+
+
+function ldap_authentication_user_update($edit, $user, $category) {
+  
+}
+
+
