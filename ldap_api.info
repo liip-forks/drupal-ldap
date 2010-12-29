@@ -1,6 +1,0 @@
-; $Id$
-name = API
-description = An LDAP API that can be used by other modules.
-package = "Lightweight Directory Access Protocol"
-php = 5.0
-core = 6.x
