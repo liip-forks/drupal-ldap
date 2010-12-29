@@ -55,13 +55,21 @@ function ldap_authentication_menu() {
  */
 
 function ldap_authentication_help($path, $arg) {
+  
+  $authentication_help = t('LDAP authentication allows authentication against an LDAP server.  It
+        may be used alongside other authentication means such as built in drupal authentication,
+        open id, etc.  More detailed help is available on drupal.org at !helplink.',
+          array(
+            '!helplink' => l(LDAP_SERVERS_DRUPAL_HELP_URL, LDAP_SERVERS_DRUPAL_HELP_URL),
+          ));
+  
   switch ($path) {
     case 'admin/config/people/ldap/authentication':
-      $output = '<p>'. t('Some help text goes here.') .'</p>';
+      $output = '<p>'. $authentication_help.'</p>';
       return $output;
 
     case 'admin/help#ldap_authentication':
-      $output = '<p>'. t('LDAP can also provide Authentication.') .'</p>';
+      $output = '<p>'. $authentication_help .'</p>';
       return $output;
   }
 }

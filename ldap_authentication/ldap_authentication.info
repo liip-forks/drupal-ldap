@@ -4,7 +4,7 @@ description = "Implements LDAP authentication"
 package = "Lightweight Directory Access Protocol"
 dependencies[] = ldap_servers
 core = 7.x
-
+configure = admin/config/people/ldap/authentication
 files[] = LdapAuthenticationConf.class.php
 files[] = LdapAuthenticationConfAdmin.class.php
 

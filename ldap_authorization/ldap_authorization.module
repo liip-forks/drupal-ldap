@@ -225,3 +225,23 @@ function ldap_authorizations_user_authorizations(&$user, $op = 'query', $mapping
   return $new_authorizations;
 }
 
+function ldap_authorization_help($path, $arg) {
+  
+  $authorization_help = t('LDAP authorization allows LDAP data such as group memberships, 
+    user attributes, etc to determine user authorization (drupal roles, organic group memberships,
+    etc.  Without additional modules, it only works with Drupal roles.
+    More detailed help is available on drupal.org at !helplink.',
+          array(
+            '!helplink' => l(LDAP_SERVERS_DRUPAL_HELP_URL, LDAP_SERVERS_DRUPAL_HELP_URL),
+          ));
+  
+  switch ($path) {
+    case 'admin/config/people/ldap/authorization':
+      $output = '<p>'. $authorization_help.'</p>';
+      return $output;
+
+    case 'admin/help#ldap_authorization':
+      $output = '<p>'. $authorization_help .'</p>';
+      return $output;
+  }
+}

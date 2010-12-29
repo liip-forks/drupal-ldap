@@ -18,5 +18,6 @@ function ldap_authentication_install() {
  */
 function ldap_authentication_uninstall() {
   //$result = db_query('DELETE FROM {variables} WHERE name like "ldap_authentication_%"');  
+  variable_del('ldap_authentication_conf');
 }
 

@@ -13,7 +13,7 @@ function ldap_developer_menu() {
     'page callback' => 'ldap_developer_tasks',
     'weight' => 8,
     'type' => MENU_LOCAL_TASK,
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
   );
 
   $items['admin/config/people/ldap/ldap_developer/splash'] = array(
@@ -26,7 +26,7 @@ function ldap_developer_menu() {
     'page callback' => 'ldap_developer_reset_config',
     'page arguments' => array('overwrite', $root),
     'weight' => 4,
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
     'description' => 'Add ldap developer test dataset, overwrite existing content if exists.',
   );
    
@@ -37,7 +37,7 @@ function ldap_developer_menu() {
     'page callback' => 'ldap_developer_clean_slate',
     'page arguments' => array('uninstall', $root),
     'weight' => 4,
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
   );
   
   $items['admin/config/people/ldap/ldap_developer/repopulate'] = array(
@@ -45,7 +45,7 @@ function ldap_developer_menu() {
     'page callback' => 'ldap_developer_clean_slate',
     'page arguments' => array('repopulate', $root),
     'weight' => 4,
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
   );
   
   return $items;
@@ -151,6 +151,11 @@ function ldap_developer_populate_config($module, $op = NULL) {
         $ldap_server->mail_attr = 'mail';
         $ldap_server->ldapToDrupalUserPhp = NULL;
         $ldap_server->testingDrupalUsername = 'jbarclay';
+        global $myldap;
+        if ($myldap) {
+          require_once($myldap); 
+          // $myldap is a global variable set in settings.php pointing to a file with additional ldap server properties
+        }
         $op = ($ldap_server->inDatabase) ? 'update' : 'insert';
         $ldap_server->save($op);   
       }
@@ -194,7 +199,7 @@ function ldap_developer_populate_config($module, $op = NULL) {
                 
         $ldap_authorization_conf->description = 'AD to Drupal Role Mapping';
         $ldap_authorization_conf->status = 1;
-        $ldap_authorization_conf->onlyApplyToLdapAuthenticated = TRUE;
+        $ldap_authorization_conf->onlyApplyToLdapAuthenticated = FALSE;
 
         $ldap_authorization_conf->deriveFromDn = TRUE;  
         $ldap_authorization_conf->deriveFromDnAttr = 'ou';
@@ -236,4 +241,26 @@ function ldap_developer_populate_config($module, $op = NULL) {
      
   }
 
+}
+
+
+/**
+ * Implementation of hook_help().
+ */
+
+function ldap_developer_help($path, $arg) {
+  
+  $help = t('LDAP Developer is just for people coding and testing the ldap modules.
+    It will not ship with the final release package and should not be enabled 
+    in normal usage.');
+  
+  switch ($path) {
+    case 'admin/config/people/ldap/developer':
+      $output = '<p>'. $help.'</p>';
+      return $output;
+
+    case 'admin/help#ldap_developer':
+      $output = '<p>'. $help .'</p>';
+      return $output;
+  }
 }
