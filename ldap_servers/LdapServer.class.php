@@ -109,7 +109,7 @@ class LdapServer {
     }
     if (isset($server_record['bindpw']) && $server_record['bindpw'] != '') {
       $this->bindpw = $server_record['bindpw'];
-      $this->bindpw = ldap_api_decrypt($this->bindpw);
+      $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
    
   }

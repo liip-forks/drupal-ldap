@@ -1,5 +1,5 @@
 <?php
-
+// $Id$
 /**
  * LDAP Server Admin Class
  */
@@ -69,7 +69,7 @@ class LdapServerAdmin extends LdapServer {
       $entry[$field_name] = $this->{$property_name};
     }
     if ($this->bindpw_new) {
-      $entry['bindpw'] =  ldap_api_encrypt($this->bindpw_new);
+      $entry['bindpw'] =  ldap_servers_encrypt($this->bindpw_new);
     } elseif ($this->bindpw_clear) {
       $entry['bindpw'] = NULL;
     }
@@ -166,7 +166,7 @@ $form['#prefix'] = t($form['#prefix']);
   
   $form['server']['type'] = array(
     '#type' => 'select',
-    '#options' =>  ldap_api_temp_ldaps_option_array(),
+    '#options' =>  ldap_servers_ldaps_option_array(),
     '#title' => t('LDAP Server Type'),
     '#default_value' => $this->type,
     '#description' => t('This field is informative.  It\'s purpose is to assist with default values and give validation warnings.'),
