@@ -93,7 +93,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
     
    }
  
-  ldap_temp_api_disable_http_check($form);
+  ldap_servers_disable_http_check($form);
  
  
 

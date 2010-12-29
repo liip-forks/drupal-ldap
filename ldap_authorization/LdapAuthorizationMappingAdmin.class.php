@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * @file
@@ -108,16 +109,14 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
   }
 
   static function getMappings($mapping_id = NULL, $consumer_type = NULL, $flatten = FALSE, $class = 'LdapAuthorizationMapping') {
-    $select = db_select('variable', 'variable');
-    $select->fields('variable');
+    $select = db_select('ldap_authorization','ldap_authorization');
+    $select->fields('ldap_authorization');
     if ($mapping_id) {
-       $select->condition('variable.name', 'ldap_authorization_map_'. $mapping_id);
-    } else {
-      $select->where("variable.name like 'ldap_authorization_map%'");
-    }
+       $select->condition('ldap_authorization.mapping_id', $mapping_id);
+    } 
 
     try {
-      $mapping_vars = $select->execute()->fetchAllAssoc('name',  PDO::FETCH_ASSOC);
+      $mapping_vars = $select->execute()->fetchAllAssoc('mapping_id',  PDO::FETCH_ASSOC);
     }
     catch(Exception $e) {
       drupal_set_message(t('db index query failed. Message = %message, query= %query',
@@ -126,12 +125,9 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     }
 
     $mappings = array();
-    foreach ($mapping_vars as $var_name => $mapping) {
-      $mapping_saved_data = variable_get($var_name);
-      if (module_exists($mapping_saved_data['consumerModule'])) {
-        $parts = explode("ldap_authorization_map_", $var_name);
-        $_map_id = $parts[1];
-        $mappings[$_map_id] = ($class == 'LdapAuthorizationMapping') ? new LdapAuthorizationMapping($_map_id) : new LdapAuthorizationMappingAdmin($_map_id);
+    foreach ($mapping_vars as $_mapping_id => $mapping) {
+      if (module_exists($mapping['consumer_module'])) {
+        $mappings[$_mapping_id] = ($class == 'LdapAuthorizationMapping') ? new LdapAuthorizationMapping($_mapping_id) : new LdapAuthorizationMappingAdmin($_mapping_id);
       }
     }
     if ($flatten && $mapping_id && count($mappings) == 1) {

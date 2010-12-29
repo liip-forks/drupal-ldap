@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /** 
  * return all desired authorizations for a given user based on ldap authorization mapping and filtering rules
@@ -215,7 +216,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
         
       }
-    //  $attributes = ldap_api_retrieveMultiAttribute($user_ldap_entry['ldap_dn'], $attribute);
+    //  $attributes = ldap_servers_retrieveMultiAttribute($user_ldap_entry['ldap_dn'], $attribute);
     //  $attrib_authorizations = array_combine($attrib_authorizations, $attrib_authorizations);
      $debug['Strategy groups in user attributes']  = array(
           'attributes' => $mapping->deriveFromAttrAttr,

@@ -1,3 +1,5 @@
+// $Id$
+
 name = LDAP Authorization - Drupal Roles
 description = "Implements LDAP authorization mapping to drupal roles"
 package = "Lightweight Directory Access Protocol"
@@ -7,7 +9,6 @@ configure = admin/config/people/ldap/authorization
 files[] = LdapAuthorizationConsumerDrupalRole.class.php
 files[] = ldap_authorization_drupal_role.module
 files[] = ldap_authorization_drupal_role.inc
-
 
 
 

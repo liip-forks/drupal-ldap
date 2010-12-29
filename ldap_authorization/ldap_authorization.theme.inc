@@ -1,6 +1,5 @@
 <?php
 
-
 function theme_ldap_authorization_admin_index(&$variables) {
   extract($variables);  //
 
@@ -18,9 +17,9 @@ function theme_ldap_authorization_admin_index(&$variables) {
     foreach($mappings as $mapping_id => $mapping) {
       $consumer = ldap_authorization_get_consumer_object(array('consumer_type' => $mapping->consumerType));
       if ($consumer) {
-         $actions =  ' | '. l('update', LDAP_API_MENU_BASE_PATH .'/authorization/update/'. $mapping->mappingID) . ' | ' .
-            l('delete', LDAP_API_MENU_BASE_PATH .'/authorization/delete/'. $mapping->mappingID) . ' | ' .
-            l('test', LDAP_API_MENU_BASE_PATH .'/authorization/test/'. $mapping->mappingID) . ' | ';
+         $actions =  ' | '. l('update', LDAP_SERVERS_MENU_BASE_PATH .'/authorization/update/'. $mapping->mappingID) . ' | ' .
+            l('delete', LDAP_SERVERS_MENU_BASE_PATH .'/authorization/delete/'. $mapping->mappingID) . ' | ' .
+            l('test', LDAP_SERVERS_MENU_BASE_PATH .'/authorization/test/'. $mapping->mappingID) . ' | ';
 
       } else {
         $actions = "Failed to create consumer object for !consumer_name.  Make sure appropriate module is enabled.";
@@ -68,8 +67,8 @@ function theme_ldap_authorization_test_results($variables) {
       } else {
         foreach ($result as $consumer_type => $authorization) {
           foreach ($authorization as $mapping_id => $result) {
-            $map_link = l($mapping->mappingID, LDAP_API_MENU_BASE_PATH .'/authorization/update/'. $mapping->mappingID);
-            $server_link = l($mapping->sid, LDAP_API_MENU_BASE_PATH .'/servers/edit/'. $mapping->sid);
+            $map_link = l($mapping->mappingID, LDAP_SERVERS_MENU_BASE_PATH .'/authorization/update/'. $mapping->mappingID);
+            $server_link = l($mapping->sid, LDAP_SERVERS_MENU_BASE_PATH .'/servers/edit/'. $mapping->sid);
             if (is_array($result)) {
               $authorizations =  theme_item_list(array('items' => $result, 'title' => NULL, 'type' => 'ul', 'attributes' => array()));
             } else {

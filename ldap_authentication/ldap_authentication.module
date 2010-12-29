@@ -49,15 +49,7 @@ function ldap_authentication_menu() {
   return $items;
 }
 
-
-/**
- * Implements hook_ldap_api_permission().
- */
-function ldap_authentication_ldap_api_permission() {
-  return array('ldap_authentication' =>  'LDAP Authentication: Invervenes in authentication process to allow authentication against LDAP servers.');
-}
-
-    
+ 
 /**
  * Implementation of hook_help().
  */

@@ -24,4 +24,3 @@ function ldap_authorization_drupal_role_uninstall() {
 
 
 
-

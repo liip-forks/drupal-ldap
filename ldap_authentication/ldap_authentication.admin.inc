@@ -47,7 +47,7 @@ function ldap_authentication_admin_form_submit($form, &$form_state) {
 
   if ($auth_conf->hasError == FALSE) {
     drupal_set_message(t('LDAP Authentication configuration saved'), 'status');
-    drupal_goto(LDAP_API_MENU_BASE_PATH .'/authentication');
+    drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/authentication');
   } else {
     form_set_error($auth_conf->errorName, $auth_conf->errorMsg);
     $auth_conf->clearError();

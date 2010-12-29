@@ -1,5 +1,5 @@
 <?php
-
+// $Id$
 /**
  * Description of LdapAuthenticationConfAdmin
  *
@@ -70,7 +70,8 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
   protected $ldapUsersDontCreateAutomaticallyDescription = "Do not create Drupal accounts
     for LDAP authenticated users. Allow existing Drupal accounts to authenticate via LDAP.
-    With this option, user accounts using LDAP authentication will need to be created before a user logs on.";
+    With this option, user accounts using LDAP authentication will need to be created before 
+    a user logs on. .";
 
 
    /**
@@ -121,6 +122,16 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
 
   public function drupalForm() {
+    
+    if (count($this->authenticationServersOptions) == 0) {
+      $message = ldap_servers_no_enabled_servers_msg('configure LDAP Authentication');
+      $form['intro'] = array(
+        '#type' => 'item',
+        '#markup' => t('<h1>LDAP Authentication Settings</h1>') . $message,
+      );
+      return $form;
+    }
+    
     $tokens = array();  // not sure what the tokens would be for this form?
 
     $form['intro'] = array(

@@ -2,7 +2,6 @@
 name = LDAP Authorization
 description = "Implements LDAP authorization (previously LDAP Groups)"
 package = "Lightweight Directory Access Protocol"
-dependencies[] = ldap_api_temp
 dependencies[] = ldap_servers
 core = 7.x
 
@@ -18,5 +17,6 @@ files[] = ldap_authorization.theme.inc
 
 
 configure = admin/config/people/ldap/authorization
+
 
 

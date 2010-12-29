@@ -2,7 +2,6 @@
 name = LDAP Authentication
 description = "Implements LDAP authentication"
 package = "Lightweight Directory Access Protocol"
-dependencies[] = ldap_api_temp
 dependencies[] = ldap_servers
 core = 7.x
 
@@ -13,6 +12,3 @@ files[] = ldap_authentication.admin.inc
 files[] = ldap_authentication.inc
 files[] = ldap_authentication.install
 files[] = ldap_authentication.module
-
-
-

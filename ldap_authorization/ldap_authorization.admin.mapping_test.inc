@@ -126,6 +126,6 @@ function ldap_authorization_mapping_test_form_submit($form, &$form_state) {
   $mapping = ldap_authorizations_mappings($mapping_id, NULL, TRUE);
   $table =  theme('ldap_authorization_test_results', array('data' => $results, 'consumer' => $consumer, 'mapping' => $mapping));
   $_SESSION['ldap_authorization_test_result'] = $table;
-  $form_state['redirect'] = LDAP_API_MENU_BASE_PATH .'/authorization/test/'. $mapping_id;
+  $form_state['redirect'] = LDAP_SERVERS_MENU_BASE_PATH .'/authorization/test/'. $mapping_id;
 
 }

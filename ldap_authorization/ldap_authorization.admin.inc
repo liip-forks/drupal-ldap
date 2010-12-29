@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * @file
@@ -15,14 +16,25 @@
 function ldap_authorizations_admin_index() {
   require_once('LdapAuthorizationMappingAdmin.class.php');
   $mappings = LdapAuthorizationMappingAdmin::getMappings();
+  
+  // check for authorization consumer modules
   $consumers = ldap_authorization_get_consumers( NULL, TRUE);
   if (!is_array($consumers) || count($consumers) == 0) {
     drupal_set_message('No authorization consumer modules are enabled.  Enable
       LDAP Authorization Drupal Roles, OG LDAP, or another LDAP Authorization consuming module','warning');
   }
  
-  return theme('ldap_authorization_admin_index',
+   // check for ldap server configurations
+  $servers = ldap_servers_get_servers(NULL, 'enabled');
+  // dpm(array('servers' => $servers, 'consumers' => $consumers, 'mappings' => $mappings));
+  
+  if (count($servers) == 0) {
+      $message =  ldap_servers_no_enabled_servers_msg('ldap authorization can be set up'); 
+      return $message;
+    } else {
+      return theme('ldap_authorization_admin_index',
         array('mappings' => $mappings, 'consumers' => $consumers));
+    }
 }
 
 
@@ -51,16 +63,23 @@ function ldap_authorization_admin_form($form, &$form_state, $mapping_id = NULL, 
 
        } else {
          drupal_set_message(t('Bad LDAP Authorization Mapping URL.  No mapping for mapping id = !id', array('!id' => $mapping_id)), 'error');
-         drupal_goto(LDAP_API_MENU_BASE_PATH .'/authorization');
+         drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/authorization');
        }
     }
 
     $servers = ldap_servers_get_servers(NULL, 'enabled');
-    foreach ($servers as $sid => $server) {
-      $server_options[$sid] = $server->name;
+    
+    if (count($servers) == 0) {
+      drupal_goto('admin/config/people/ldap/authorization');
+    } else {
+      foreach ($servers as $sid => $server) {
+        $server_options[$sid] = $server->name;
+      }
+      return  $mapping->drupalForm($server_options, $op);
     }
 
-    return $mapping->drupalForm($server_options, $op);
+
+
 
 }
 
@@ -97,7 +116,7 @@ function ldap_authorization_admin_form_submit($form, &$form_state) {
 
   if ($mapping->hasError == FALSE) {
     drupal_set_message(t('LDAP Authorization %name !verb', array('!verb' => $op_past, '%name' => $values['description'])), 'status');
-    drupal_goto(LDAP_API_MENU_BASE_PATH .'/authorization');
+    drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/authorization');
   } else {
     form_set_error($mapping->errorName, $mapping->errorMsg);
     $mapping->clearError();

@@ -1,4 +1,5 @@
 <?php
+// $Id$
 /* 
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -78,8 +79,8 @@ class LdapAuthenticationConf {
       $this->inDatabase = FALSE;
     }
     
-    $this->apiPrefs['requireHttps'] = variable_get('ldap_api_require_ssl_for_credentails', 1);
-    $this->apiPrefs['encryption'] = variable_get('ldap_api_encryption', NULL);
+    $this->apiPrefs['requireHttps'] = variable_get('ldap_servers_require_ssl_for_credentails', 1);
+    $this->apiPrefs['encryption'] = variable_get('ldap_servers_encryption', NULL);
   }
 
   /**
