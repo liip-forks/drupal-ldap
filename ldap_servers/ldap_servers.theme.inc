@@ -1,4 +1,5 @@
 <?php
+// $Id$
 /**
  * Returns HTML for ldap servers list.
  *
@@ -15,11 +16,11 @@ function theme_ldap_servers_list($variables) {
 
   $table = array(
     'header' => array("Name", "Type", "Enabled", "Server Address"),
-    'attributes' => array('id' => 'ldap_api_servers', 'class' => 'data'),
+    'attributes' => array('id' => 'ldap_servers_servers', 'class' => 'data'),
     'colgroups' => array(),
     'sticky' => FALSE,
     'empty' => '',
-    'caption' => 'LDAP API Server Configurations',
+    'caption' => 'LDAP Server Configurations',
   );
 
   if ($actions) {
@@ -36,10 +37,10 @@ function theme_ldap_servers_list($variables) {
           );
       if ($actions) {
         $switch = ($ldap_server->status ) ? 'disable' : 'enable';
-        $actions =  ' | '. l('update', LDAP_API_MENU_BASE_PATH .'/servers/edit/'. $sid) . ' | ' .
-            l('delete', LDAP_API_MENU_BASE_PATH .'/servers/delete/'. $sid) . ' | ' .
-            l('test', LDAP_API_MENU_BASE_PATH .'/servers/test/'. $sid) . ' | ' .
-            l($switch, LDAP_API_MENU_BASE_PATH .'/servers/'. $switch .'/'. $sid) . ' | ';
+        $actions =  ' | '. l('update', LDAP_SERVERS_MENU_BASE_PATH .'/servers/edit/'. $sid) . ' | ' .
+            l('delete', LDAP_SERVERS_MENU_BASE_PATH .'/servers/delete/'. $sid) . ' | ' .
+            l('test', LDAP_SERVERS_MENU_BASE_PATH .'/servers/test/'. $sid) . ' | ' .
+            l($switch, LDAP_SERVERS_MENU_BASE_PATH .'/servers/'. $switch .'/'. $sid) . ' | ';
 
 
         $row[] = $actions;
@@ -78,10 +79,10 @@ function theme_ldap_servers_server($variables) {
 
   if ($actions) {
     $switch = ($ldap_server->status) ? 'disable' : 'enable';
-    $properties[] =   ' | '. l('update', LDAP_API_MENU_BASE_PATH .'/servers/edit/'. $sid) . ' | ' .
-        l('delete', LDAP_API_MENU_BASE_PATH .'/servers/delete/'. $sid) . ' | ' .
-        l('test', LDAP_API_MENU_BASE_PATH .'/servers/test/'. $sid) . ' | ' .
-        l($switch, LDAP_API_MENU_BASE_PATH .'/servers/'. $switch .'/'. $sid) . ' | ';
+    $properties[] =   ' | '. l('update', LDAP_SERVERS_MENU_BASE_PATH .'/servers/edit/'. $sid) . ' | ' .
+        l('delete', LDAP_SERVERS_MENU_BASE_PATH .'/servers/delete/'. $sid) . ' | ' .
+        l('test', LDAP_SERVERS_MENU_BASE_PATH .'/servers/test/'. $sid) . ' | ' .
+        l($switch, LDAP_SERVERS_MENU_BASE_PATH .'/servers/'. $switch .'/'. $sid) . ' | ';
   }
 
   $output = theme_item_list(

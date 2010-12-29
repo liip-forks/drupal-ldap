@@ -75,7 +75,7 @@ function ldap_servers_admin_form_submit($form, &$form_state) {
   
   if ($server->hasError == FALSE) {
     drupal_set_message(t('LDAP Server %name !verb', array('!verb' => $op, '%name' => $server->name)), 'status');
-    drupal_goto(LDAP_API_MENU_BASE_PATH .'/servers');
+    drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/servers');
   } else {
     form_set_error($server->errorName, $server->errorMsg);
     $server->clearError();
@@ -116,14 +116,14 @@ function ldap_servers_admin_delete($form, &$form_state, $op = NULL, $sid = NULL)
     return confirm_form(
       $form,
       'Delete Confirmation Form',
-      LDAP_API_MENU_BASE_PATH .'/servers/list',
+      LDAP_SERVERS_MENU_BASE_PATH .'/servers/list',
         '<p>'. t('Are you sure you want to delete the LDAP server named <em><strong>%name</strong></em> ?', array('%name' => $ldap_server->name)) . '</p><p>' .
         t('This action cannot be undone.') . '</p>',
       t('Delete'),
       t('Cancel')
     );
   }
-  drupal_goto(LDAP_API_MENU_BASE_PATH .'/servers/list');
+  drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/servers/list');
 }
 
 /**
@@ -147,7 +147,7 @@ function ldap_servers_admin_delete_submit($form, &$form_state) {
      drupal_set_message(t('LDAP Server delete cancelled.'), 'status');
   }
   ldap_servers_cache_clear();
-  drupal_goto(LDAP_API_MENU_BASE_PATH .'/servers/list');
+  drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/servers/list');
 }
 
 
@@ -187,7 +187,7 @@ function ldap_servers_admin_enable_disable($form, &$form_state, $action = NULL, 
     return confirm_form(
       $form,
       t('Are you sure you want to ') . t($action). t(' the LDAP server named <em><strong>%name</strong></em>?', array('%name' =>  $ldap_server->name)),
-      LDAP_API_MENU_BASE_PATH . '/servers/list',
+      LDAP_SERVERS_MENU_BASE_PATH . '/servers/list',
       t('<p></p>'),
       t($action),
       t('Cancel')
@@ -205,7 +205,7 @@ function ldap_servers_admin_enable_disable_submit($form, &$form_state) {
   $status = ($values['action'] == 'enable') ? 1 : 0;
   if ($values['confirm'] && $sid) {
 
-    $form_state['redirect'] = LDAP_API_MENU_BASE_PATH .'/servers';
+    $form_state['redirect'] = LDAP_SERVERS_MENU_BASE_PATH .'/servers';
 
     $entry = array(
         'sid' => $sid,

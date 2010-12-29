@@ -1,5 +1,5 @@
 <?php
-
+; $Id$
 
 /**
  * Implements the LDAP server test page.
@@ -126,14 +126,13 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   $title =  t('Test %name LDAP Server Configuration', array('%name' => $ldap_server->name));
   $message =  theme_item_list(   array('items' => $results, 'title' => $title, 'type' => 'ul', 'attributes' => array()));
   drupal_set_message("<form>" . $message . "</form>", ($has_errors) ? 'error' : 'status');
-  $form_state['redirect'] = LDAP_API_MENU_BASE_PATH ."/servers/test/$sid";
+  $form_state['redirect'] = LDAP_SERVERS_MENU_BASE_PATH ."/servers/test/$sid";
 
 }
 
 
 function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw) {
- // require_once(drupal_get_path('module', LDAP_API_CURRENT_API_MODULE) .'/ldap.server.inc');
-  //   $ldap_server = new ldap_server($sid);
+
      $errors = false;
      $results = array();
    

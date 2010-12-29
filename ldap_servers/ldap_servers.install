@@ -10,14 +10,23 @@
  * Implementation of hook_install().
  */
 function ldap_servers_install() {
- // drupal_install_schema('ldap_servers');
+  variable_set('ldap_servers_encryption','none');
+  variable_set('ldap_servers_require_ssl_for_credentails',0);
+  
+  if (! ($key = variable_get('ldap_servers_encrypt_key', NULL))) {
+    require_once('ldap_servers.encryption.inc');
+    $key = ldap_servers_random_salt(10);
+    variable_set('ldap_servers_encrypt_key', $key);
+  }
+  
 }
 
 /**
  * Implementation of hook_uninstall().
  */
 function ldap_servers_uninstall() {
-
+  variable_del('ldap_servers_encryption');
+  variable_del('ldap_servers_require_ssl_for_credentails');
  // require_once('LdapServerAdmin.class.php');
  // $servers = LdapServerAdmin::getLdapServerObjects(NULL, NULL, 'LdapServerAdmin');
  // foreach($servers as $sid => $ldap_server) {
@@ -28,7 +37,24 @@ function ldap_servers_uninstall() {
 //  drupal_uninstall_schema('ldap_servers');
   
 }
-
+/**
+ * Implementation of hook_requirements().
+ */
+function ldap_servers_requirements($phase) {
+  $requirements = array();
+  $requirements['ldap_extension_loaded']['title'] = t('LDAP Extension Loaded');
+  if(extension_loaded('ldap')) {
+    $requirements['ldap_extension_loaded']['value'] = t('Passed');
+    $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_OK;
+  } else {
+    $requirements['ldap_extension_loaded']['value'] = t('Failed');
+    $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_ERROR;
+    $requirements['ldap_extension_loaded']['description'] = t('No LDAP Extension is loaded for PHP, so LDAP will not work properly.');
+  }
+  
+  // check that ldapauth not installed.
+  return $requirements;
+}
 
 /**
  * Implementation of hook_schema().
