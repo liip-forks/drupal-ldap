@@ -5,6 +5,7 @@
 define('LDAP_SERVERS_PROJECT_TAG', 'ldap');
 define('LDAP_SERVERS_MENU_BASE_PATH', 'admin/config/people/ldap');
 define('LDAP_SERVERS_MENU_BASE_PATH_PARTS', 4); // for argument offsets
+define('LDAP_SERVERS_DRUPAL_HELP_URL', 'http://drupal.org/node/997082');
 
 define('LDAP_SERVERS_ENC_TYPE_MD5', 1);
 define('LDAP_SERVERS_ENC_TYPE_CRYPT', 2);
@@ -103,7 +104,7 @@ function ldap_servers_menu() {
     'description' => 'LDAP authentication, authorization, provisioning, ect.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_settings'),
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.settings.inc',
   );
   
@@ -119,7 +120,7 @@ function ldap_servers_menu() {
     'page callback' => 'ldap_servers_edit_index',
     'weight' => -1,
     'type' => MENU_LOCAL_TASK,
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
 
@@ -134,7 +135,7 @@ function ldap_servers_menu() {
     'page arguments' => array('ldap_servers_admin_form', $menu_offset + 1),
     'type' => MENU_LOCAL_TASK + MENU_IS_LOCAL_ACTION,
     'weight' => 3,
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
 
@@ -143,7 +144,7 @@ function ldap_servers_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_test_form', $menu_offset + 1, $menu_offset + 2),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.test_form.inc',
   );
  
@@ -153,7 +154,7 @@ $items['admin/config/people/ldap/servers/edit'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_form', $menu_offset + 1, $menu_offset + 2),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
 
@@ -164,7 +165,7 @@ $items['admin/config/people/ldap/servers/delete'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_delete', $menu_offset + 2),
     'type' =>  MENU_CALLBACK +  MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );  
     
@@ -173,7 +174,7 @@ $items['admin/config/people/ldap/servers/delete'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
     'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );   
     
@@ -182,7 +183,7 @@ $items['admin/config/people/ldap/servers/delete'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
     'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
-    'access arguments' => array('administer ldap modules'),
+    'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
 
@@ -190,6 +191,7 @@ $items['admin/config/people/ldap/servers/delete'] = array(
 
   return $items;
 }
+
 
 
 function ldap_servers_theme() {
@@ -297,6 +299,28 @@ function ldap_servers_no_enabled_servers_msg($action) {
         );
       drupal_set_message($message, 'warning');
       return $message;
+  }
+}
+
+function ldap_servers_help($path, $arg) {
+  
+  $servers_help = t('LDAP Servers stores LDAP server configurations so other modules
+    can connect to them and leverage their data.  LDAP authentication and LDAP authorization
+    are two such modules.  LDAP Servers is a placeholder module whose functionility will 
+    be replaced by LDAP API within the same LDAP project.
+    More detailed help is available on drupal.org at !helplink.',
+          array(
+            '!helplink' => l(LDAP_SERVERS_DRUPAL_HELP_URL, LDAP_SERVERS_DRUPAL_HELP_URL),
+          ));
+  
+  switch ($path) {
+    case 'admin/config/people/ldap/servers':
+      $output = '<p>'. $servers_help.'</p>';
+      return $output;
+
+    case 'admin/help#ldap_servers':
+      $output = '<p>'. $servers_help .'</p>';
+      return $output;
   }
 }
 

@@ -151,10 +151,10 @@ function ldap_developer_populate_config($module, $op = NULL) {
         $ldap_server->mail_attr = 'mail';
         $ldap_server->ldapToDrupalUserPhp = NULL;
         $ldap_server->testingDrupalUsername = 'jbarclay';
-        global $myldap;
+        global $myldap; // $myldap is a global variable set in settings.php pointing to a file with additional ldap server properties
         if ($myldap) {
           require_once($myldap); 
-          // $myldap is a global variable set in settings.php pointing to a file with additional ldap server properties
+          
         }
         $op = ($ldap_server->inDatabase) ? 'update' : 'insert';
         $ldap_server->save($op);   
