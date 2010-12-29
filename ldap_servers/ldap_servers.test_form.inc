@@ -1,5 +1,5 @@
 <?php
-; $Id$
+//; $Id$
 
 /**
  * Implements the LDAP server test page.
