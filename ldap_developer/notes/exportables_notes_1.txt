@@ -1,0 +1,7 @@
+
+
+http://drupal.org/node/928026
+
+implement with ctools api
+
+- presets could be based on type of ldap server, but probably best to have no presets

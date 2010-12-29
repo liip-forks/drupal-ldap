@@ -1,0 +1,3 @@
+
+Flow chart of ldap_authentication logon process:
+http://www.gliffy.com/publish/2362004
