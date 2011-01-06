@@ -19,7 +19,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
    */
  // public $consumer_type = 'drupal_role';
   public $consumerType = 'drupal_role';
-  public $consumerModule = 'ldap_authorization_example';
+  public $consumerModule = 'ldap_authorization_drupal_role';
 
   public $name = 'drupal role';  // e.g. drupal role, og group
   public $namePlural = 'drupal roles'; // e.g. drupal roles, og groups

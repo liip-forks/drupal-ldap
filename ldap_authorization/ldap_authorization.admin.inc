@@ -26,7 +26,7 @@ function ldap_authorizations_admin_index() {
  
    // check for ldap server configurations
   $servers = ldap_servers_get_servers(NULL, 'enabled');
-  // dpm(array('servers' => $servers, 'consumers' => $consumers, 'mappings' => $mappings));
+   //dpm(array('servers' => $servers, 'consumers' => $consumers, 'mappings' => $mappings));
   
   if (count($servers) == 0) {
       $message =  ldap_servers_no_enabled_servers_msg('ldap authorization can be set up'); 

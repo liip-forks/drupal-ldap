@@ -25,9 +25,11 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
     * make sure ldap_autentication is configured and valid first
    */
  
-   if (!$auth_conf = ldap_authentication_get_valid_conf()) {
+  if (!$auth_conf = ldap_authentication_get_valid_conf()) {
     return;
-   }
+  } elseif (!$auth_conf->enabled_servers()) {
+    return;
+  }
 
    /**
     *
@@ -124,8 +126,8 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
 function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
  
  if (!$auth_conf = ldap_authentication_get_valid_conf()) {
-  return FALSE;
- }
+   return FALSE;
+ } 
  
  $name = $form_state['values']['name'];
  $pass = $form_state['values']['pass'];

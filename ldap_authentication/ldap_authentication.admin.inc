@@ -44,7 +44,12 @@ function ldap_authentication_admin_form_submit($form, &$form_state) {
   require_once('LdapAuthenticationConfAdmin.class.php');
   $auth_conf = new LdapAuthenticationConfAdmin();
   $auth_conf->drupalFormSubmit($form_state['values']);  // add form data to object and save or create
-
+ 
+  if (!$auth_conf->enabled_servers()) {
+    drupal_set_message(t('No LDAP servers are enabled for authentication, 
+      so no LDAP Authentication can take place.  This essentially disables
+      LDAP Authentication.'),'warning');
+  }
   if ($auth_conf->hasError == FALSE) {
     drupal_set_message(t('LDAP Authentication configuration saved'), 'status');
     drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/authentication');

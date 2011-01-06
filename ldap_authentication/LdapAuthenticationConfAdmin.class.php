@@ -158,7 +158,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
    $form['logon']['authenticationServers'] = array(
       '#type' => 'checkboxes',
       '#title' => t('Authentication LDAP Server Configurations'),
-      '#required' => 1,
+      '#required' => FALSE,
       '#default_value' => $this->sids,
       '#options' => $this->authenticationServersOptions,
       '#description' => $this->authenticationServersDescription

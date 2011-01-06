@@ -56,7 +56,10 @@ class LdapAuthenticationConf {
     'ldapUsersDontCreateAutomatically',
   );
   
- 
+  /** are any ldap servers that are enabled associated with ldap authentication **/
+  public function enabled_servers() {
+    return !(count(array_filter(array_values($this->sids))) == 0);
+  }
   function __construct() {
     $this->load();
   }
@@ -130,8 +133,8 @@ class LdapAuthenticationConf {
      */
     if (count($this->allowOnlyIfTextInDn)) {
       foreach($this->allowOnlyIfTextInDn as $test) {
-          print "<hr/>test = $test" . $ldap_user['dn'];
-          print "pos=" . strpos($ldap_user['dn'], $test);
+         // print "<hr/>test = $test" . $ldap_user['dn'];
+         // print "pos=" . strpos($ldap_user['dn'], $test);
         if ( strpos($ldap_user['dn'], $test) !== FALSE) {
           return TRUE;
         }
