@@ -66,6 +66,17 @@ LDAP Authentication Sequence Diagram:  http://www.gliffy.com/publish/2362004/
 
 LDAP Authorization Sequence Diagram:  http://www.gliffy.com/publish/2318063/
 
+============================================================
+Revisions
+============================================================
+
+7.x-1.0-unstable3
+- #1018968, #1016284 "ldap_authorization_example" text fixed
+- added check for uid==1 in ldap to make sure that uid=1 is not using ldap authentication
+- #1017578, #1005358  mixed mode authentication failed for user 1 fixed.
+- #1017282 uninitialized array gives warning.  I'd like to get rid of all these types of warnings.
+- #807420 initial exportables/features code added.  needs testing.  not sure if ldap_servers_encrypt_key variable should be exportable
+- starter working with coder module cleanup (spacing, translation, etc)
 
 
 

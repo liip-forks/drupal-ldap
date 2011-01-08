@@ -125,6 +125,9 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
  */
 function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
  
+ if ($form_state['uid']) {
+   return;  // already passed previous authentication validation
+ }
  if (!$auth_conf = ldap_authentication_get_valid_conf()) {
    return FALSE;
  } 
@@ -133,11 +136,15 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
  $pass = $form_state['values']['pass'];
  $account = user_load_by_name($name);
  if (is_object($account)) {
-   $account_exists = TRUE;
-   $user_data = $account->data;
-   $authmaps = user_get_authmaps($name);
-   $ldap_authentication_authmap = (boolean)(isset($authmaps['ldap_authentication']));
-   $no_authmaps = (boolean)(count($authmaps));
+   if ($account->uid == 1) {
+     return FALSE;
+   } else {
+     $account_exists = TRUE;
+     $user_data = $account->data;
+     $authmaps = user_get_authmaps($name);
+     $ldap_authentication_authmap = (boolean)(isset($authmaps['ldap_authentication']));
+     $no_authmaps = (boolean)(count($authmaps));
+   }
  } else {
    $account_exists = FALSE;
  }

@@ -1,5 +1,13 @@
 <?php
 // $Id$
+
+
+/**
+ * @file
+ * theming functions for ldap_servers module
+ *
+ */
+
 /**
  * Returns HTML for ldap servers list.
  *
@@ -28,7 +36,7 @@ function theme_ldap_servers_list($variables) {
   }
 
   if (count($ldap_servers)) {
-    foreach($ldap_servers as $sid => $ldap_server ) {
+    foreach ($ldap_servers as $sid => $ldap_server ) {
       $row =  array(
         $ldap_server->name,
         $ldap_server->type,
@@ -37,10 +45,10 @@ function theme_ldap_servers_list($variables) {
           );
       if ($actions) {
         $switch = ($ldap_server->status ) ? 'disable' : 'enable';
-        $actions =  ' | '. l('update', LDAP_SERVERS_MENU_BASE_PATH .'/servers/edit/'. $sid) . ' | ' .
-            l('delete', LDAP_SERVERS_MENU_BASE_PATH .'/servers/delete/'. $sid) . ' | ' .
-            l('test', LDAP_SERVERS_MENU_BASE_PATH .'/servers/test/'. $sid) . ' | ' .
-            l($switch, LDAP_SERVERS_MENU_BASE_PATH .'/servers/'. $switch .'/'. $sid) . ' | ';
+        $actions =  ' | ' . l(t('update'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $sid) . ' | ' .
+            l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $sid) . ' | ' .
+            l(t('test'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/test/' . $sid) . ' | ' .
+            l($switch, LDAP_SERVERS_MENU_BASE_PATH . '/servers/' . $switch . '/' . $sid) . ' | ';
 
 
         $row[] = $actions;
@@ -48,7 +56,8 @@ function theme_ldap_servers_list($variables) {
 
       $table['rows'][] = $row;
     }
-  } else {
+  } 
+  else {
     $table['rows'] = array();
   }
   $output = theme('table', $table);
@@ -74,15 +83,15 @@ function theme_ldap_servers_server($variables) {
   require_once('LdapServer.class.php');
   $properties = array();
   foreach (LdapServer::field_to_properties_map() as $field_name => $property_name) {
-      $properties[] = "$field_name = ". $ldap_server->$property_name; // $value";
+      $properties[] = "$field_name = " . $ldap_server->$property_name; // $value";
   }
 
   if ($actions) {
     $switch = ($ldap_server->status) ? 'disable' : 'enable';
-    $properties[] =   ' | '. l('update', LDAP_SERVERS_MENU_BASE_PATH .'/servers/edit/'. $sid) . ' | ' .
-        l('delete', LDAP_SERVERS_MENU_BASE_PATH .'/servers/delete/'. $sid) . ' | ' .
-        l('test', LDAP_SERVERS_MENU_BASE_PATH .'/servers/test/'. $sid) . ' | ' .
-        l($switch, LDAP_SERVERS_MENU_BASE_PATH .'/servers/'. $switch .'/'. $sid) . ' | ';
+    $properties[] =  ' | ' . l(t('update'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $sid) . ' | ' .
+        l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $sid) . ' | ' .
+        l(t('test'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/test/' . $sid) . ' | ' .
+        l($switch, LDAP_SERVERS_MENU_BASE_PATH . '/servers/' . $switch . '/' . $sid) . ' | ';
   }
 
   $output = theme_item_list(

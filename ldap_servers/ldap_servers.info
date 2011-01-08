@@ -23,4 +23,7 @@ files[] = ldap_servers.status.inc
 
 configure = admin/config/people/ldap/servers
 
+features[variable][] = "ldap_servers_encryption"
+features[variable][] = "ldap_servers_require_ssl_for_credentials"
+features[variable][] = "ldap_servers_encrypt_key"
 

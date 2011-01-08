@@ -116,7 +116,7 @@ class ldap_server {
     //return LDAP_CONNECT_ERROR;
    // print $this->address;
     if (!$con = ldap_connect($this->address, $this->port)) {
-      watchdog('user', 'LDAP Connect failure to '. $this->address .':'. $this->port);
+      watchdog('user', 'LDAP Connect failure to ' . $this->address . ':' . $this->port);
       return LDAP_CONNECT_ERROR;
     }
 
@@ -139,7 +139,8 @@ class ldap_server {
         return LDAP_CONNECT_ERROR;
       }
       elseif (!ldap_start_tls($con)) {
-        watchdog('user', t("Could not start TLS. (Error %errno: %error).", array('%errno' => ldap_errno($con), '%error' => ldap_error($con))));
+        $msg =  t("Could not start TLS. (Error %errno: %error).", array('%errno' => ldap_errno($con), '%error' => ldap_error($con)));
+        watchdog('user', $msg);
         return LDAP_CONNECT_ERROR;
       }
     }
@@ -186,7 +187,8 @@ class ldap_server {
     if (!$this->connection) {
       // never bound or not currently bound, so no need to disconnect
       //watchdog('ldap', 'LDAP disconnect failure from '. $this->server_addr . ':' . $this->port);
-    } else {
+    } 
+    else {
        ldap_unbind($this->connection);
        $this->connection = NULL;
     }
@@ -233,7 +235,7 @@ class ldap_server {
     foreach (explode("\r\n", $this->basedn) as $basedn) {
       if (empty($basedn)) continue;
   
-      $filter = $this->user_attr .'='. $drupal_user_name;
+      $filter = $this->user_attr . '=' . $drupal_user_name;
     //   print "filter";
     //   print_r($filter);
     //  print "basedn = $basedn";

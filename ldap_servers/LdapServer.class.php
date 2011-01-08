@@ -68,9 +68,7 @@ class LdapServer {
     'testing_drupal_username'  => 'testingDrupalUsername'
     );
     
-    //     'bindpw'  => 'bindpw' ,
   }
-   
 
   /**
    * Constructor Method
@@ -96,7 +94,8 @@ class LdapServer {
     
     if ($server_record) {
       $this->inDatabase = TRUE;
-    } else {
+    } 
+    else {
       // @todo throw error
     }
     foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
@@ -111,7 +110,6 @@ class LdapServer {
       $this->bindpw = $server_record['bindpw'];
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
-   
   }
 
   /**
@@ -166,7 +164,7 @@ class LdapServer {
     //return LDAP_CONNECT_ERROR;
    // print $this->address;
     if (!$con = ldap_connect($this->address, $this->port)) {
-      watchdog('user', 'LDAP Connect failure to '. $this->address .':'. $this->port);
+      watchdog('user', 'LDAP Connect failure to ' . $this->address . ':' . $this->port);
       return LDAP_CONNECT_ERROR;
     }
 
@@ -189,7 +187,8 @@ class LdapServer {
         return LDAP_CONNECT_ERROR;
       }
       elseif (!ldap_start_tls($con)) {
-        watchdog('user', t("Could not start TLS. (Error %errno: %error).", array('%errno' => ldap_errno($con), '%error' => ldap_error($con))));
+        $msg =  t("Could not start TLS. (Error %errno: %error).", array('%errno' => ldap_errno($con), '%error' => ldap_error($con)));
+        watchdog('user', $msg);
         return LDAP_CONNECT_ERROR;
       }
     }
@@ -235,9 +234,10 @@ class LdapServer {
     if (!$this->connection) {
       // never bound or not currently bound, so no need to disconnect
       //watchdog('ldap', 'LDAP disconnect failure from '. $this->server_addr . ':' . $this->port);
-    } else {
-       ldap_unbind($this->connection);
-       $this->connection = NULL;
+    } 
+    else {
+      ldap_unbind($this->connection);
+      $this->connection = NULL;
     }
   }
 
@@ -259,7 +259,8 @@ class LdapServer {
     if ($basedn == NULL) {
       if (count($this->basedn) == 1) {
         $basedn = $this->basedn[0];
-      } else {
+      } 
+      else {
         return FALSE;
       }
     }
@@ -290,7 +291,7 @@ class LdapServer {
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
   
-      $filter = $this->user_attr .'='. $drupal_user_name;
+      $filter = $this->user_attr . '=' . $drupal_user_name;
 
       $result = $this->search($filter, $basedn);
 

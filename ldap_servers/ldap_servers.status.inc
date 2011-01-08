@@ -1,5 +1,12 @@
 <?php
 // $Id$
+
+/**
+ * @file
+ * mostly depracated and outgrowths of ldap help module.  needs a looking over
+ *
+ */
+
 /**
  * implements hook_ldap_servers_status
  */
@@ -22,20 +29,21 @@ function _ldap_servers_ldap_servers_status() {
 
 function ldap_servers_version($op) {
   $version_info = ldap_servers_version_info();
-  return "CVS TAG: ". $version_info['cvs_tag'] .  ", RELEASE DATE: ". $version_info['release_date'];
+  return "CVS TAG: " . $version_info['cvs_tag'] . ", RELEASE DATE: " . $version_info['release_date'];
 }
 
 
 function _ldap_servers_ldap_extension_summary($op) {
   
-  include_once(drupal_get_path('module', 'system') .'/system.admin.inc');
+  include_once(drupal_get_path('module', 'system') . '/system.admin.inc');
   
   $data = _ldap_servers_get_ldap_settings();
-  foreach($data as $title => $value) {
+  foreach ($data as $title => $value) {
     if (! is_array($value)) {
       if ($op  == 'text') {
         $text .= "${title}: ${value}\n";
-      } else {
+      } 
+      else {
         $status[] = array('title' => $title, 'value' => $value);
       }
     }
@@ -64,15 +72,15 @@ function ldap_servers_drupal_dot_org($op) {
   $add_issue_url = "http://drupal.org/node/add/project-issue/$project_tag";
   $issues_url = "http://drupal.org/project/issues/$project_tag";
   $project_page = "http://drupal.org/project/$project_tag";
-  $issue_start_body_prepulate = urlencode("\n\n\nINSTALL INFO:\nLDAP VERSION: ". $ldap_servers_info ."\n". ldap_servers_ldap_extension_summary('text'));
+  $issue_start_body_prepulate = urlencode("\n\n\nINSTALL INFO:\nLDAP VERSION: " . $ldap_servers_info . "\n" . ldap_servers_ldap_extension_summary('text'));
   
   
   // see url syntax at: http://drupal.org/files/issues/512824_drupalorg_project_get_fixup.patch
-  $links[] = l('LDAP Project Page', $project_page);
-  $links[] = l('View Active Bug Reports', $issues_url . "?text=&status=Open&priorities=All&categories=bug&version=All&component=All");
-  $links[] = l('View Active Support Requests', $issues_url . "?text=&status=Open&priorities=All&categories=support&version=All&component=All");
-  $links[] = l('Start Bug Report Issue (prepopulated with helpful data)', $add_issue_url . "?categories=bug&version=${version}&body=${issue_start_body_prepulate}");
-  $links[] = l('Start Support Request Issue (prepopulated with helpful data)', $add_issue_url . "?categories=support&version=${version}&body=${issue_start_body_prepulate}");
+  $links[] = l(t('LDAP Project Page'), $project_page);
+  $links[] = l(t('View Active Bug Reports'), $issues_url . "?text=&status=Open&priorities=All&categories=bug&version=All&component=All");
+  $links[] = l(t('View Active Support Requests'), $issues_url . "?text=&status=Open&priorities=All&categories=support&version=All&component=All");
+  $links[] = l(t('Start Bug Report Issue (prepopulated with helpful data))', $add_issue_url . "?categories=bug&version=${version}&body=${issue_start_body_prepulate}");
+  $links[] = l(t('Start Support Request Issue (prepopulated with helpful data))', $add_issue_url . "?categories=support&version=${version}&body=${issue_start_body_prepulate}");
   return theme_item_list($links);
   
 }
@@ -89,7 +97,8 @@ function _ldap_servers_get_ldap_settings() {
   // set status array to be converted into html table.
   if ($phpinfo['Apache Environment']) {
     $php_settings['SERVER_SOFTWARE'] = $phpinfo['Apache Environment']['SERVER_SOFTWARE'];
-  } elseif ( $_SERVER["SERVER_SOFTWARE"]) {
+  } 
+  elseif ( $_SERVER["SERVER_SOFTWARE"]) {
      $php_settings['SERVER_SOFTWARE'] = $_SERVER["SERVER_SOFTWARE"];
   }
   
@@ -99,7 +108,7 @@ function _ldap_servers_get_ldap_settings() {
   }
 
   $modules = system_get_module_data();
-  $ldapmodules = array('ldapauth', 'ldapgroups', 'ldapdata', 'ldaphelp','ldap_server','ldap_authn','ldap_authz');
+  $ldapmodules = array('ldapauth', 'ldapgroups', 'ldapdata', 'ldaphelp', 'ldap_server', 'ldap_authn', 'ldap_authz');
   foreach ( $ldapmodules as $ldapmodule) {
     $php_settings[$ldapmodule]['status'] = $modules[$ldapmodule]->status;
     $php_settings[$ldapmodule]['schema_version'] = $modules[$ldapmodule]->schema_version;

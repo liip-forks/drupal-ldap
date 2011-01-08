@@ -68,7 +68,6 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
         $this->inDatabase = TRUE;
       }
 
-    //variable_set("ldap_authorization_map_". $this->mappingID, $save);
   }
 
   public $fields;
@@ -586,6 +585,13 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
               'not null' => TRUE
           )
        ),
+      'numeric_mapping_id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary ID field for the table.  Only used internally.',
+        'no export' => TRUE,
+        ),
       'sid' => array(
         'schema' => array(
           'type' => 'varchar',

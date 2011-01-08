@@ -1,8 +1,12 @@
 <?php
 // $Id$
+
 /**
+ * @file
  * LDAP Server Admin Class
+ *
  */
+
 
 require_once('LdapServer.class.php');
 
@@ -24,8 +28,7 @@ class LdapServerAdmin extends LdapServer {
     $servers = $select->execute()->fetchAllAssoc('sid',  PDO::FETCH_ASSOC);
 
   }
- 
-  catch(Exception $e) {
+  catch (Exception $e) {
     drupal_set_message(t('server index query failed. Message = %message, query= %query',
       array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
     return array();
@@ -42,25 +45,25 @@ class LdapServerAdmin extends LdapServer {
   }
 
   protected function populateFromDrupalForm($op, $values) {
-   $this->inDatabase = ($op == 'update');
-   $this->sid = trim($values['sid']);
-   $this->name = trim($values['name']);
-   $this->status = ($values['status']) ? 1 : 0;
-   $this->type = trim($values['type']);
-   $this->address = trim($values['address']);
-   $this->port = trim($values['port']);
-   $this->tls = trim($values['tls']);
-   $this->binddn = trim($values['binddn']);
-   if (trim($values['bindpw'])) {
-     $this->bindpw_new = trim($values['bindpw']);
-   }
-   $this->tls = trim($values['tls']);
-   $this->basedn = $this->linesToArray(trim($values['basedn']));
-   $this->user_attr = trim($values['user_attr']);
-   $this->mail_attr = trim($values['mail_attr']);
-   $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
-   $this->testingDrupalUsername = trim($values['testing_drupal_username']);
-   
+    $this->inDatabase = ($op == 'update');
+    $this->sid = trim($values['sid']);
+    $this->name = trim($values['name']);
+    $this->status = ($values['status']) ? 1 : 0;
+    $this->type = trim($values['type']);
+    $this->address = trim($values['address']);
+    $this->port = trim($values['port']);
+    $this->tls = trim($values['tls']);
+    $this->binddn = trim($values['binddn']);
+    if (trim($values['bindpw'])) {
+      $this->bindpw_new = trim($values['bindpw']);
+    }
+    $this->tls = trim($values['tls']);
+    $this->basedn = $this->linesToArray(trim($values['basedn']));
+    $this->user_attr = trim($values['user_attr']);
+    $this->mail_attr = trim($values['mail_attr']);
+    $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
+    $this->testingDrupalUsername = trim($values['testing_drupal_username']);
+
   }
 
   public function save($op) {
@@ -70,7 +73,8 @@ class LdapServerAdmin extends LdapServer {
     }
     if ($this->bindpw_new) {
       $entry['bindpw'] =  ldap_servers_encrypt($this->bindpw_new);
-    } elseif ($this->bindpw_clear) {
+    } 
+    elseif ($this->bindpw_clear) {
       $entry['bindpw'] = NULL;
     }
 
@@ -80,24 +84,23 @@ class LdapServerAdmin extends LdapServer {
     if ($op == 'update') {
 
       try {
-          $count = db_update('ldap_servers')
-           ->fields($entry)
-           ->condition('sid', $entry['sid'])
-           ->execute();
+        $count = db_update('ldap_servers')
+        ->fields($entry)
+        ->condition('sid', $entry['sid'])
+        ->execute();
       }
-      catch(Exception $e) {
+      catch (Exception $e) {
         drupal_set_message(t('db update failed. Message = %message, query= %query',
-          array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
+        array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
       }
     }
     else {
- 
       try {
         $ret = db_insert('ldap_servers')
-           ->fields($entry)
-           ->execute();
+        ->fields($entry)
+        ->execute();
       }
-      catch(Exception $e) {
+      catch (Exception $e) {
         drupal_set_message(t('db insert failed. Message = %message, query= %query',
           array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
       }
@@ -108,17 +111,15 @@ class LdapServerAdmin extends LdapServer {
 
   }
   
-
- public function delete($sid) {
+  public function delete($sid) {
     if ($sid == $this->sid) {
       $this->inDatabase = FALSE;
-       return db_delete('ldap_servers')->condition('sid', $sid)->execute();
-    } else {
+      return db_delete('ldap_servers')->condition('sid', $sid)->execute();
+    } 
+    else {
       return FALSE;
     }
-    
- }
- 
+  }
   public function drupalForm($op) {
     
     $form['#prefix'] = <<<EOF
@@ -227,8 +228,8 @@ $form['#prefix'] = t($form['#prefix']);
   );
 
   if ( $form['binding']['bindpw']) {
-       $form['binding']['bindpw']['#description'] = t('<p>Leave emtpy to leave password unchanged.</p>');
-    }
+    $form['binding']['bindpw']['#description'] = t('<p>Leave emtpy to leave password unchanged.</p>');
+  }
 
   $form['users'] = array(
     '#type' => 'fieldset',
@@ -244,7 +245,7 @@ $form['#prefix'] = t($form['#prefix']);
     '#default_value' => $this->arrayToLines($this->basedn),
     '#cols' => 50,
     '#rows' => 6,
-    '#description' => t('What DNs have user accounts relavant to this configuration? ') . "e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>  " . t('Enter one per line in case if you need more than one.'),
+    '#description' => t('What DNs have user accounts relavant to this configuration?') . " e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>  " . t('Enter one per line in case if you need more than one.'),
   );
   
   $form['users']['user_attr'] = array(
@@ -272,7 +273,7 @@ $form['#prefix'] = t($form['#prefix']);
     '#description' => t('Enter PHP to transform Drupal username to the value of the UserName attribute.  Careful, bad PHP code here will break your site. If left empty, no name transformation will be done. Change following example code to enable transformation:<br /><code>return $name;</code>'),
   );
   
- $form['users']['testing_drupal_username'] = array(
+  $form['users']['testing_drupal_username'] = array(
     '#type' => 'textfield',
     '#title' => t('Testing Drupal Username'),
     '#default_value' => $this->testingDrupalUsername,
@@ -284,7 +285,6 @@ $form['#prefix'] = t($form['#prefix']);
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save configuration'),
-   
   );
   
   $action = ($op == 'add') ? 'Add' : 'Update';
@@ -307,7 +307,8 @@ $form['#prefix'] = t($form['#prefix']);
       if (!$this->sid) {
         $errors['server_id_missing'] = 'Server id missing from delete form.';
       }
-    } else {
+    } 
+    else {
       $this->populateFromDrupalForm($op, $values);
       $errors = $this->validate($op);
     }
@@ -333,56 +334,58 @@ $form['#prefix'] = t($form['#prefix']);
 
   
     if (!is_numeric($this->port)) {
-       $errors['port'] =  t('The TCP/IP port must be an integer.');
+      $errors['port'] =  t('The TCP/IP port must be an integer.');
     }
     return $errors;
   }
   
 public function drupalFormSubmit($op, $values) {
 
-   $this->populateFromDrupalForm($op, $values);
-   
-   if ($values['clear_bindpw']) {
-     $this->bindpw_clear = NULL;
-   }
+  $this->populateFromDrupalForm($op, $values);
 
-   if ($op == 'delete') {
-     $this->delete();
-   } else { // add or update
-      try {
-        $save_result = $this->save($op);
-      }
-      catch(Exception $e) {
-        $this->errorName = 'Save Error';
-        $this->errorMsg = t('Failed to save object.  Your form data was not saved.');
-        $this->hasError = TRUE;
-      }
-   }
+  if ($values['clear_bindpw']) {
+    $this->bindpw_clear = NULL;
+  }
+
+  if ($op == 'delete') {
+    $this->delete();
+  } 
+  else { // add or update
+    try {
+      $save_result = $this->save($op);
+    }
+    catch (Exception $e) {
+      $this->errorName = 'Save Error';
+      $this->errorMsg = t('Failed to save object.  Your form data was not saved.');
+      $this->hasError = TRUE;
+    }
+  }
 } 
 
 
 
   protected function arrayToLines($array) {
-       $lines = "";
-       if (is_array($array)) {
-         $lines = join("\n", $array);
-       }  elseif (is_array(@unserialize($array))) {
-         $lines = join("\n", unserialize($array));
-       }
-       return $lines;
-     }
+    $lines = "";
+    if (is_array($array)) {
+      $lines = join("\n", $array);
+    }  
+    elseif (is_array(@unserialize($array))) {
+      $lines = join("\n", unserialize($array));
+    }
+    return $lines;
+  }
 
   protected function linesToArray($lines) {
     $lines = trim($lines);
 
-     if ($lines) {
-       $array = explode("\n", $lines);
-     }
-     else {
-       $array = array();
-     }
+    if ($lines) {
+      $array = explode("\n", $lines);
+    }
+    else {
+      $array = array();
+    }
 
-     return $array;
+    return $array;
   }
 
 }

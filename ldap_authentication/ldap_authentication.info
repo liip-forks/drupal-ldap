@@ -12,3 +12,7 @@ files[] = ldap_authentication.admin.inc
 files[] = ldap_authentication.inc
 files[] = ldap_authentication.install
 files[] = ldap_authentication.module
+
+features[variable][] = "ldap_authentication_conf"
+
+

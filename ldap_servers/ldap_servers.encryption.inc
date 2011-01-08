@@ -8,7 +8,7 @@
  * http://stackoverflow.com/questions/2448256/php-mcrypt-encrypting-decrypting-file
  */
 
-define('LDAP_SERVERS_MODE','CTR');
+define('LDAP_SERVERS_MODE', 'CTR');
 /**
  * Return a random salt of a given length for crypt-style passwords
  *
@@ -20,10 +20,7 @@ define('LDAP_SERVERS_MODE','CTR');
  *
  */
 function ldap_servers_random_salt( $length ) {
-  $possible = '0123456789'.
-              'abcdefghijklmnopqrstuvwxyz'.
-              'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
-              './';
+  $possible = '0123456789' . 'abcdefghijklmnopqrstuvwxyz' . 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' . './';
   $salt = "";
 
   mt_srand((double)microtime() * 1000000);
@@ -38,6 +35,7 @@ function ldap_servers_random_salt( $length ) {
 function _ldap_servers_encrypt_types($type = 'all') {
 
   $hashes = array();
+  $encrypts = array();
   if (extension_loaded('mcrypt')) {  // only support with extension
 
     /**
@@ -107,7 +105,7 @@ function _ldap_servers_encrypt($clear_txt, $enc_type = NULL) {
         mcrypt_generic_init($td, $key, $iv);
         $crypttext = mcrypt_generic($td, $clear_txt);
         mcrypt_generic_deinit($td);
-        $cipher_txt = $iv.$crypttext;
+        $cipher_txt = $iv . $crypttext;
       break;
 
     default: // Cleartext

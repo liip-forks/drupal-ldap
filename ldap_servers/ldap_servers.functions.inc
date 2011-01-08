@@ -1,11 +1,12 @@
 <?php
 // $Id$
-/***
- *
- *  these are functions that don't belong in server object
- *
- **/
 
+
+/**
+ * @file 
+ * collection of functions that don't belong in server object
+ *
+ */
 
 function _ldap_servers_testldap($ldap, $sid) {
 // given an ldap array with parameters, or class object, or $sid from ldap_servers,
@@ -18,14 +19,14 @@ function _ldap_servers_baddn($dn, $dn_name) {
   $result = array();
   $valid_attr_name = '[a-zA-Z\d\s]';
   $valid_attr_values = '[a-zA-Z\d\s]';
-  $regex = '/^('. $valid_attr_name .'*\='. $valid_attr_values .'*[,]{1})*('. $valid_attr_name .'*\='. $valid_attr_values .'*){1}$/';
+  $regex = '/^(' . $valid_attr_name . '*\=' . $valid_attr_values . '*[,]{1})*(' . $valid_attr_name . '*\=' . $valid_attr_values . '*){1}$/';
   // $target = "CN=Schema A1, CN2 =Configuration,DC=ad,DC=uiuc,DC=edu";
   // $target = "ou=education,dc=ad,dc=uiuc,dc=edu";
   $match = (preg_match($regex, $dn)) ? TRUE : FALSE;
   $result['boolean'] = $match;
   if (!$match) {
-    $result['text'] = "Invalid format for:<br/> <code><strong>". htmlspecialchars($dn)
-    ."</strong><code><br/> One cause may be editing $dn_name with a wysiwyg editor which leaves html.";
+    $result['text'] = "Invalid format for:<br/> <code><strong>" . htmlspecialchars($dn)
+    . "</strong><code><br/> One cause may be editing $dn_name with a wysiwyg editor which leaves html.";
 
   }
   return $result;

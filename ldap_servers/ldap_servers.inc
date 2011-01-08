@@ -1,5 +1,13 @@
 <?php
 // $Id$
+
+
+/**
+ * @file 
+ * collection of functions that don't belong in server object
+ *
+ */
+
 function _ldap_servers_get_user_ldap_data($drupal_user, $sid) {
 
   $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;

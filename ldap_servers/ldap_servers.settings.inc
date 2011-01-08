@@ -1,12 +1,18 @@
 <?php
 // $Id$
 
+/**
+ * @file
+ * admin interface for general ldap api settings
+ *
+ */
+
 function ldap_servers_settings() {
   
   require_once('ldap_servers.functions.inc');
   
   if (! ldap_servers_ldap_extension_loaded()) {
-    drupal_set_message("PHP LDAP Extension is not loaded.", "warning");
+    drupal_set_message(t('PHP LDAP Extension is not loaded.'), "warning");
   }
   
   $form['#title'] = "Configure LDAP Preferences";
@@ -40,7 +46,7 @@ function ldap_servers_settings() {
 
 function ldap_servers_settings_submit($form, &$form_state) {
   if ($form_state['submitted']) {
-    watchdog('ldap','LDAP SERVERS settings updated.');
+    watchdog('ldap', 'LDAP SERVERS settings updated.');
   }
 }
 

@@ -10,8 +10,8 @@
  * Implementation of hook_install().
  */
 function ldap_servers_install() {
-  variable_set('ldap_servers_encryption','none');
-  variable_set('ldap_servers_require_ssl_for_credentails',0);
+  variable_set('ldap_servers_encryption', 'none');
+  variable_set('ldap_servers_require_ssl_for_credentails', 0);
   
   if (! ($key = variable_get('ldap_servers_encrypt_key', NULL))) {
     require_once('ldap_servers.encryption.inc');
@@ -44,10 +44,11 @@ function ldap_servers_uninstall() {
 function ldap_servers_requirements($phase) {
   $requirements = array();
   $requirements['ldap_extension_loaded']['title'] = t('LDAP Extension Loaded');
-  if(extension_loaded('ldap')) {
+  if (extension_loaded('ldap')) {
     $requirements['ldap_extension_loaded']['value'] = t('Passed');
     $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_OK;
-  } else {
+  } 
+  else {
     $requirements['ldap_extension_loaded']['value'] = t('Failed');
     $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_ERROR;
     $requirements['ldap_extension_loaded']['description'] = t('No LDAP Extension is loaded for PHP, so LDAP will not work properly.');
@@ -62,11 +63,29 @@ function ldap_servers_requirements($phase) {
  */
 function ldap_servers_schema() {
    $schema['ldap_servers'] = array(
+    'export' => array(
+       'key' => 'sid',
+       'key name' => 'Server ID',
+       'identifier' => 'ldap_servers_conf',
+        'api' => array(
+          'owner' => 'ldap_servers',
+          'api' => 'ldap_servers',
+          'minimum_version' => 1,
+          'current_version' => 1,
+         ),
+    ),
     'fields' => array(
       'sid' => array(
         'type' => 'varchar',
         'length' => 20,
         'not null' => TRUE,
+      ),
+     'numeric_sid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary ID field for the table.  Only used internally.',
+        'no export' => TRUE,
       ),
       'name' => array(
         'type' => 'varchar',
@@ -110,6 +129,7 @@ function ldap_servers_schema() {
       'bindpw' => array(
         'type' => 'varchar',
         'length' => 255,
+        'no export' => TRUE,
       ),        
         
       'user_attr' => array(
@@ -141,7 +161,7 @@ function ldap_servers_schema() {
         'default' => 0,
       ),
     ),
-    'primary key' => array('sid'),
+    'primary key' => array('numeric_sid'),
     'unique keys' => array('name' => array('name')),
   );
    
