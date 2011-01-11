@@ -586,11 +586,13 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           )
        ),
       'numeric_mapping_id' => array(
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => 'Primary ID field for the table.  Only used internally.',
-        'no export' => TRUE,
+          'schema' => array(
+            'type' => 'serial',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+            'description' => 'Primary ID field for the table.  Only used internally.',
+            'no export' => TRUE,
+           ),
         ),
       'sid' => array(
         'schema' => array(

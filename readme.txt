@@ -78,5 +78,10 @@ Revisions
 - #807420 initial exportables/features code added.  needs testing.  not sure if ldap_servers_encrypt_key variable should be exportable
 - starter working with coder module cleanup (spacing, translation, etc)
 
+7.x-1.0-unstable4
+- fixed schema issue in ldap authorization #1021478
+- fixed issue when ldap authentication was before drupal authentication and created false error messsage.  #1021612, #1009990
+- fixed undefined $name_attr warning.  #1021636
+
 
 

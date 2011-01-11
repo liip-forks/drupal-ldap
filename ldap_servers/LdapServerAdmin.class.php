@@ -179,7 +179,8 @@ $form['#prefix'] = t($form['#prefix']);
     '#default_value' => $this->address,
     '#size' => 50,
     '#maxlength' => 255,
-    '#description' => t('The domain name or IP address of your LDAP Server.'),
+    '#description' => t('The domain name or IP address of your LDAP Server such as "ad.unm.edu". For SSL
+        use the form ldaps://DOMAIN such as "ldaps://ad.unm.edu"'),
     '#required' => TRUE,
   );
   $form['server']['port'] = array(

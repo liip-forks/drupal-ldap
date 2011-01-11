@@ -77,6 +77,7 @@ function ldap_developer_clean_slate($op = 'repopulate', $redirect = NULL) {
   $modules = ldap_developer_modules(); // array('ldap_authorization_drupal_role', 'ldap_authorization', 'ldap_servers', 'ldap_authentication'); // , , , );
   drupal_uninstall_modules(array_reverse($modules));
   drupal_set_message('Uninstalled Modules: '. join(', ', array_reverse($modules)), 'status');
+  
  if ($op == 'repopulate') {
    foreach(ldap_developer_modules() as $module) {
      if (!module_exists($module)) {
@@ -88,6 +89,7 @@ function ldap_developer_clean_slate($op = 'repopulate', $redirect = NULL) {
 
    ldap_developer_reset_config($op);  // populate
   }
+ 
   drupal_set_message('All caches flushed', 'status');
   drupal_flush_all_caches();
   if ($redirect) {

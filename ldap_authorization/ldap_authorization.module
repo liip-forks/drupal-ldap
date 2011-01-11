@@ -201,27 +201,13 @@ function ldap_authorization_get_consumers($consumer_type = NULL, $reset = FALSE)
 }
 
 
-
-
-
-
 /**
  * @rationale need not be called from hook_user, so this function separated out
  * so it can be called from a batch synchronization process for example
  */    
 function ldap_authorizations_user_authorizations(&$user, $op = 'query', $mapping_id = NULL, $context = NULL) {
   require_once('ldap_authorization.inc');
- // print "<pre>";
   $new_authorizations = _ldap_authorizations_user_authorizations($user, $op, $mapping_id, $context);
- // print_r($user); print_r($new_authorizations);  print_r(user_roles()); die;
-  
-  // @rationale hooks invoked for grant and revoke should make actual changes in roles, og membership, etc
-  //  but user_save here is for saving $user->data['ldap_authorizations']
- // if ($op == 'set' ) {
- //   $user = user_save($user);
- // }
-
-//  print "<pre>"; print_r($user); die;
   return $new_authorizations;
 }
 

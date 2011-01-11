@@ -42,12 +42,13 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
     * 
     * as articulated above user_login_default_validators() in user.module
     * 
+    * without any other external authentication modules, this array will start out as:
+    *    array('user_login_name_validate', 'user_login_authenticate_validate', 'user_login_final_validate')
     */
-    
+
      if (@in_array('user_login_authenticate_validate', $form['#validate'])) {
       $new_validation_sequence = array();
       foreach ($form['#validate'] as $validate_function_name) {
-       $new_validation_sequence[] = $validate_function_name;
        if ($validate_function_name == 'user_login_authenticate_validate') {
          if ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_MIXED) {
            // if mixed mode, allow drupal authentication first
@@ -55,14 +56,18 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
            $new_validation_sequence[] = 'ldap_authentication_user_login_authenticate_validate';
          }
          elseif ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_EXCLUSIVE) { 
+           // see drupal.org/node/1009990 and drupal.org/node/1022362 
+           // change back when fixed.
            // if ldap exclusive do ldap authentication first and don't allow to proceed unless uid = 1
-           $new_validation_sequence[] = 'ldap_authentication_user_login_authenticate_validate';
            $new_validation_sequence[] = 'user_login_authenticate_validate';
+           $new_validation_sequence[] = 'ldap_authentication_user_login_authenticate_validate';
          }
          else { // misconfigured ldap authentication, restore to original validation sequence
           $new_validation_sequence[] = 'user_login_authenticate_validate';
          }
-         
+       } 
+       else {
+         $new_validation_sequence[] = $validate_function_name;
        }
       }
       $form['#validate'] = $new_validation_sequence;
@@ -125,7 +130,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
  */
 function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
  
- if ($form_state['uid']) {
+ if (isset($form_state['uid']) && is_integer($form_state['uid'])) {
    return;  // already passed previous authentication validation
  }
  if (!$auth_conf = ldap_authentication_get_valid_conf()) {
@@ -282,11 +287,11 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     user_login_submit(array(), $fake_form_state);
     global $user;
     $form_state['uid'] = $user->uid;
-    return TRUE;
+    return;
    
  } // next ldap server
  
- return FALSE;
+ return;
 }
 
 

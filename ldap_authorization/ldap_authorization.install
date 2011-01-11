@@ -29,6 +29,7 @@ function ldap_authorization_schema() {
   $schema['ldap_authorization'] = array(
     'export' => array(
        'key' => 'mapping_id',
+       'key name' => 'Mapping ID',
        'identifier' => 'ldap_authorization_conf',
         'api' => array(
           'owner' => 'ldap_authorization',
@@ -49,14 +50,14 @@ function ldap_authorization_schema() {
     );
   
   require_once('LdapAuthorizationMappingAdmin.class.php');
+    
   $fields = LdapAuthorizationMappingAdmin::fields();
   foreach ($fields as $name => $props) {
     if (isset($props['schema'])) {
        $schema['ldap_authorization']['fields'][$name] = $props['schema'];
     }
   }
-  
-  //print "<pre>"; print_r($schema); //die;
+
   return $schema;
 
 }
