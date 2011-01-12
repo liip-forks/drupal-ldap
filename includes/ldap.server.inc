@@ -7,6 +7,7 @@
  *
  */
 
+
 /**
  * LDAP Server Class
  *
@@ -24,7 +25,7 @@ class ldap_server {
   private $binddn = FALSE; // Default to an anonymous bind.
   private $bindpw = FALSE; // Default to an anonymous bind.
   protected $connection;
-  const properties = array('sid', 'name', 'address', 'port', 'tls', 'basedn', 'binddn', 'bindpw');
+  protected $properties = array('sid', 'name', 'address', 'port', 'tls', 'basedn', 'binddn', 'bindpw');
 
   /**
    * Constructor Method
@@ -96,17 +97,11 @@ class ldap_server {
       return;
     }
 
-    ldap_set_option($con, LDAP_OPT_PROTOCOL_VERSION, 3);
     ldap_set_option($con, LDAP_OPT_REFERRALS, 0);
 
     // Use TLS if we are configured and able to.
     if ($this->tls) {
-      ldap_get_option($con, LDAP_OPT_PROTOCOL_VERSION, $vers);
-      if ($vers == -1) {
-        watchdog('user', 'Could not get LDAP protocol version.');
-        return;
-      }
-      if ($vers != 3) {
+      if (!ldap_set_option($con, LDAP_OPT_PROTOCOL_VERSION, 3)) {
         watchdog('user', 'Could not start TLS, only supported by LDAP v3.');
         return;
       }
@@ -205,6 +200,15 @@ class ldap_server {
  *   These functions operate on the server class while not quite fitting
  *   within the class.
  */
+function ldap_api_get_servers_by_object() {
+  $items = array();
 
+  $result = db_query("SELECT sid FROM {ldap_servers} ORDER BY weight ascending");
+  while ($server = db_fetch_object($result)) {
+    $servers[] = new server($server);
+  }
+
+  return $items;
+}
 
 // vim:fenc=utf-8:ft=php:ai:si:ts=2:sw=2:et:
