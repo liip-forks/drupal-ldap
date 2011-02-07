@@ -1,0 +1,10 @@
+; $Id$
+
+http://drupal.org/node/928026
+ldap_servers_encrypt_key
+
+
+implement with ctools api and strongarm for variables
+
+- presets could be based on type of ldap server, but probably best to have no presets
+- probably need to create db table for exportables to work well with with ldap_authentication configuration

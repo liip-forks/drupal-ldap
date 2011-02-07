@@ -1,0 +1,200 @@
+LDAP Authentication Tests (LDAP_authen)
+
+==============================================
+User Logon Tests (ULT)
+-----------------------
+setup: none
+-----------------------
+Tests: see MM and EM tests below
+-----------------------
+ULT.user1.goodpwd  authenticate as user 1
+ULT.user1.badpwd   authenticate as user 1 with wrong password
+ULT.drupal.goodpwd  authenticate as drupal user
+ULT.drupal.badpwd  authenticate as drupal user with wrong password
+ULT.ldap.newaccount.goodpwd  authenticate as ldap user with no existing account
+ULT.ldap.newaccount  authenticate as ldap user with wrong password
+ULT.ldap.existingacct.goodpwd authenticate as ldap user with existing ldap authmapped account
+ULT.ldap.existingacct.badpwd  authenticate as ldap user with existing ldap authmapped account with wrong password
+
+
+==============================================
+Mixed Mode Tests (MM)
+-----------------------
+setup:
+1.  Create 3 users: ldap user, drupal user, and user 1
+2.  set to mixed mode (MM)
+-----------------------
+Tests and Desired Results:
+
+LDAP_authen.MM.ULT.user1.goodpwd -- result: Successful logon as user 1
+LDAP_authen.MM.ULT.user1.badpwd  -- result: Drupal logon error message.
+LDAP_authen.MM.ULT.drupal.goodpwd - result: Successful logon
+LDAP_authen.MM.ULT.drupal.badpwd - result: Drupal logon error message.
+LDAP_authen.MM.ULT.ldap.newaccount.goodpwd - result: Successful logon, with user record created and authmapped to ldap
+LDAP_authen.MM.ULT.ldap.newaccount.badpwd - result: Drupal logon error message.
+LDAP_authen.MM.ULT.existingacct.goodpwd - result: Successful logon.
+LDAP_authen.MM.ULT.existingacct.badpwd - result: Drupal logon error message.
+==============================================
+setup:
+1.  Create 3 users: ldap user, drupal user, and user 1
+2.  set to exclusive mode (EM)
+-----------------------
+Tests and Desired Results:
+
+LDAP_authen.EM.ULT.user1.goodpwd -- result: Successful logon as user 1
+LDAP_authen.EM.ULT.user1.badpwd -- result: Drupal logon error message.
+LDAP_authen.EM.ULT.drupal.goodpwd -- result: Drupal logon error message.
+LDAP_authen.EM.ULT.drupal.badpwd-- result:  Drupal logon error message.
+LDAP_authen.EM.ULT.ldap.newaccount.goodpwd -- result:  Successful logon, with user record created and authmapped to ldap
+LDAP_authen.EM.ULT.ldap.newaccount.badpwd  -- result:  Drupal logon error message.
+LDAP_authen.MM.ULT.existingacct.goodpw -- result:  Successful logon.
+LDAP_authen.MM.ULT.existingacct.badpw -- result:  Drupal logon error message.
+
+==============================================
+Whitelist Tests (WL)
+-----------------------
+key: 
+
+- allow[match], exclude[match] = text match allowed of excluded list
+- allow[miss], exclude[miss]   = no match
+- php[true], php[false] = php evaluates to true or false
+
+-----------------------
+Tests: 
+-----------------------
+single option used in whitelists:
+LDAP_authen.WL.allow[match] -- authenticate success
+LDAP_authen.WL.allow[miss] -- authenticate fail
+LDAP_authen.WL.exclude[match] -- authenticate fail
+LDAP_authen.WL.exclude[miss] -- authenticate success
+LDAP_authen.WL.php[true] -- authenticate success
+LDAP_authen.WL.php[false] -- authenticate fail
+
+multiple options used in whitelist:
+LDAP_authen.WL.allow[match].exclude[match] -- authenticate fail
+LDAP_authen.WL.allow[match].exclude[miss] -- authenticate success
+LDAP_authen.WL.exclude[match].* - authenticate fail
+LDAP_authen.WL.exclude[match].php[false] - authenticate fail
+LDAP_authen.WL.php[false].* - authenticate fail
+
+==============================================
+Account Conflict Tests (AC) from "Existing Drupal User Account Conflict"
+-----------------------
+key: 
+
+disallow and allow: option selected
+drupal - username exists as non ldap associated drupal account
+ldap - username exists in ldap
+noconflict1.  drupal user exists, but is ldap associated (authmapped)
+conflict.  a non ldap drupal account exists and the username if found in ldap
+
+-----------------------
+Tests: 
+-----------------------
+LDAP_authen.AC.disallow.drupal - no conflict, no action taken
+LDAP_authen.AC.disallow.ldap - no conflict, no action taken
+LDAP_authen.AC.disallow.ldap.drupal - conflict logged and user authentication fails
+LDAP_authen.AC.allow.drupal - no conflict, no action taken
+LDAP_authen.AC.allow.ldap - no conflict, no action taken
+LDAP_authen.AC.allow.ldap.drupal - user authmapped to ldap
+
+==============================================
+Account Creation Tests (ACreate) from "Existing Drupal User Account Conflict"
+-----------------------
+
+Test by logging in with LDAP authenticated user with no existing account.
+
+LDAP_authen.ACreate.user_settings.Admin -- desired result:  no account created, user fails to logon
+LDAP_authen.ACreate.user_settings.Visitors -- desired result:  acount created and ldap authmapped
+LDAP_authen.ACreate.user_settings.AdminWithApproval -- desired result:  no account created, user fails to logon.  Acount should be created via account request form 
+LDAP_authen.ACreate.ldap -- desired result:  acount created and ldap authmapped
+
+================================================
+User Forms User Interface (UFUI) Tests
+================================================
+setup:
+
+1. Toggle email user interface options on admin/config/people/ldap/authentication
+  EMAIL=allow
+  EMAIL=hide
+  EMAIL=disable
+
+2. Toggle register accounts account settings at admin/config/accounts/settings
+  REGACCT.admin
+  REGACCT.visitors
+  REGACCT.visitors_w_approv
+
+3. Try with 4 types of users:  
+  anon = anonymous user
+  user1 = authenticated user 1
+  drupal = authenticated drupal user
+  ldap = authenticated ldap user
+-------------------------
+Tests and Desired Results
+-------------------------
+Edit User Profile Form (/user/NN/edit), form id = user_profile_form
+-------------------------
+LDAP_authen.user_profile_form.user1.password -- result: password fields and email address fields visible
+LDAP_authen.user_profile_form.drupal.password -- result: password fields visible
+LDAP_authen.user_profile_form.ldap.password -- result: password fields hidden
+
+
+LDAP_authen.user_profile_form.EMAIL=allow.* email field functions -- result: email field visible for all users
+LDAP_authen.user_profile_form.EMAIL=hide.ldap email field hidden -- result: email field hidden for ldap users
+LDAP_authen.user_profile_form.EMAIL=disable.ldap -- result: email field disabled but visible for ldap users
+
+-------------------------
+User Logon block and logon forms (/user ), form_id = user_login_block and form_id = user_login
+-------------------------
+
+LDAP_authen.login_forms.MM.anon  -- result: visible request new password link
+LDAP_authen.login_forms.EM.anon  -- result: hidden link or link to ldap help page
+
+** note:  Create new account link available based on user settings at admin/config/accounts/settings
+and not controlled by ldap module at all.
+
+-------------------------
+Password Reset/Request New Form (user/password), form id = user_pass
+-------------------------
+LDAP_authen.reset.anon -- result: form visible from url for all anonymous users
+LDAP_authen.reset.anon.EM  -- result: warning if ldap exclusive mode saying only works/available for user 1/admin and link to user ldap help page if link exists
+LDAP_authen.reset.ldap.validation.ldap -- result: validation error thrown if resetting password of ldap authenticated user
+LDAP_authen.reset.validation.user1 -- result: successfully able to reset password.
+
+-------------------------
+User Register Form (user/register), form id = user_register_form
+- controlled by admin/config/accounts/settings and not affected by ldap modules.
+
+
+
+
+==================================
+Unit Tests that can be automated
+==================================
+
+Action: install ldap_authentication
+Result: none
+
+Action: Configure ldap_authentication configuration
+Assert: LdapAuthenticationConf properties match configuration
+
+Action: instantiate LdapAuthenticationConf and LdapAuthenticationConfAdmin classes
+Assert: success
+
+Action: populate LdapAuthenticationConf properties, save, and load
+Assert: object has correct properties
+
+Action: populate LdapAuthenticationConfAdmin from form array, save, and load
+Assert: object has correct properties
+
+Action: populate LdapAuthenticationConfAdmin from form array with various validation problems
+Assert: validation errors thrown
+
+Action: uninstall
+Assert: configuration is deleted
+
+
+binding with service account
+binding with user's account
+
+

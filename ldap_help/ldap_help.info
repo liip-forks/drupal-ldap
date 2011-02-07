@@ -1,0 +1,10 @@
+; $Id$
+name = "LDAP Help"
+description = LDAP Help for configuration and reporting issues.
+package = "Lightweight Directory Access Protocol"
+core = 7.x
+dependencies[] = ldap_servers
+
+
+
+

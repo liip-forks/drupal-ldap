@@ -1,0 +1,21 @@
+; $Id$
+name = "LDAP API"
+description = "An LDAP API that can be used by other modules. 
+DO NOT ENABLE LDAP API. LDAP API conflicts with LDAP Servers
+  which is a temporary API for getting LDAP Authentication and Authorization 
+  working. They have yet to be merged and will create problems.
+  It is only in HEAD for developers."
+package = "Lightweight Directory Access Protocol"
+core = 7.x
+
+files[] = ldap_api.admin.inc
+files[] = ldap_api.admin.js
+files[] = ldap_api.install
+files[] = ldap_api.module
+files[] = ldap_api.theme.inc
+files[] = ldap_help.inc
+files[] = ldap_server.admin.inc
+files[] = ldap_server.theme.inc
+files[] = ldap_settings.inc
+files[] = ldap_status.inc
+files[] = ldap_placeholder.inc

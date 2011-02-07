@@ -1,0 +1,310 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * This this the main LDAP API module.
+ *
+ * This module will make the ldap API available to other modules.
+ * Designed to provide a light but flexible assortment of functions
+ * and constants, with more functionality in additional files that
+ * are not loaded unless other modules specifically include them.
+ *
+ * @see http://datatracker.ietf.org/doc/rfc4510/
+ * @see http://datatracker.ietf.org/doc/rfc4511/
+ * @see http://datatracker.ietf.org/doc/rfc4512/
+ * @see http://datatracker.ietf.org/doc/rfc4513/
+ * @see http://datatracker.ietf.org/doc/rfc4514/
+ * @see http://datatracker.ietf.org/doc/rfc4515/
+ * @see http://datatracker.ietf.org/doc/rfc4516/
+ * @see http://datatracker.ietf.org/doc/rfc4517/
+ * @see http://datatracker.ietf.org/doc/rfc4518/
+ * @see http://datatracker.ietf.org/doc/rfc4519/
+ */
+
+define('LDAP_API_PROJECT_TAG', 'ldap');
+define('LDAP_API_MENU_BASE_PATH', 'admin/config/ldap');
+define('LDAP_API_MENU_BASE_PATH_PARTS', 3); // for argument offsets
+
+
+/**
+ * Implementation of hook_init().
+ */
+
+/**
+ * Implementation of hook_theme().
+ */
+function ldap_api_theme() {
+  return array(
+    'ldap_api_admin_edit' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'ldap_api.theme.inc'
+    ),
+    'ldap_api_ldap_attribute' => array(
+      'arguments' => array('value' => NULL, 'type' => NULL),
+      'file' => 'ldap_api.theme.inc'
+    ),
+    'ldap_api_server_list_form' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'ldap_servers.theme.inc'
+    ),
+  );
+}
+
+/**
+ * Advertise the current ldap_api state
+ */
+function ldap_api_version_info($attr_name = NULL) {  // see http://drupal.org/node/93999
+  $version_info = array(
+    'core_compatibility' => 7,
+    'major' => 1,
+    'patch_level' => 0,
+    'extra' => 'alpha1',
+    'drupal_org_release_nid' => 796422,
+    'maturity' => 'alpha',
+    'cvs_tag' => 'DRUPAL-7--1-0-ALPHA1',
+    'release_date' => '2010/05/016 07:20:17',
+  );
+  
+  return ($attr_name) ? $version_info[$attr_name] : $version_info;
+}
+
+/**
+ * Advertise the current ldap_api version
+ */
+function ldap_api_release() {
+  return 1.0;
+}
+
+/**
+ * implements hook_ldap_api_status
+ */
+
+function ldap_api_ldap_api_status() {
+  
+  require_once('ldap_api.status.inc');
+  $statuses['version']['title'] = 'LDAP API Version';
+  $statuses['version']['markup'] = ldap_api_version('html');
+
+  $statuses['ldap_extension_summary']['title'] = 'This server\'s PHP LDAP extension';
+  $statuses['ldap_extension_summary']['markup'] = ldap_api_ldap_extension_summary('html');
+  
+  $statuses['modules']['title'] = 'Modules Using LDAP API';
+  $statuses['modules']['markup'] = ldap_api_modules('html');
+  
+  $statuses['drupal_dot_org']['title'] = 'LDAP API on drupal.org';
+  $statuses['drupal_dot_org']['markup'] = ldap_api_drupal_dot_org('html');
+  
+  return $statuses;
+}
+
+/**
+ * Implement hook_help().
+ */
+function ldap_api_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#ldap_api':
+      $output = '<p>' . t('The LDAP API module is a used by other modules to leverage LDAP Servers for authentication, authorization,
+        and directory data.  LDAP API module provides only LDAP functions and the ability to define an LDAP server.
+        Other LDAP modules leverage this module for functionality such as authentication, authorization, directory querying.') . '</p>';
+      $output .= '<p>' . t('For more information, see the  <a href="@ldap_api_project">LDAP API project page</a>.', array('@ldap_api_project' => 'http://drupal.org/project/ldap_api')) . '</p>';
+      return $output;
+    
+    case LDAP_API_MENU_BASE_PATH:
+    case LDAP_API_MENU_BASE_PATH . './settings':
+      $output = '<p>' . t('These settings are advisory in nature.  Other LDAP modules have the ability to use these preferences, but are not required to.') . '</p>';
+      return $output;
+    
+    case LDAP_API_MENU_BASE_PATH . '/servers':
+    case LDAP_API_MENU_BASE_PATH . '/servers/list':
+      $output = '<p>' . t('Each LDAP server configuration below may be used by other modules such as LDAP AuthZ, LDAP AuthN, LDAP Groups, etc.') .'</p>';
+      $output .= '<p>' . t('More than one LDAP server configuration can exist for a physical LDAP server. This is useful when you need different configuration options for different LDAP modules such as different base dns for authentication and authorization. For example, you might not enter any binding credentials in "Authentication Server"
+and use that for authentication since the users credentials can be used for binding.  A second configuration "Authorization Server" might include binding credentials
+and only be used for authorization.  Yet another server, "Provisioning Server," may have fewer base DNs and the credentials of a more powerful service account and may
+be used to generated ldap accounts or groups.');
+      return $output;
+  }
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function ldap_api_perm(){
+  return array('Add/Edit LDAP Servers','Delete LDAP Servers');
+}
+
+/**
+ * Implement hook_permission().
+ */
+function ldap_api_permission() {
+  return array(
+    'add edit ldap servers' => array(
+      'title' => t('Add/Edit LDAP Servers') . VERSION,
+      'description' => t('Create or edit LDAP configurations.'),
+      'restrict access' => TRUE,
+    ),
+    'delete ldap servers' => array(
+      'title' => t('Delete LDAP Servers') . VERSION,
+      'description' => t('Delete LDAP Servers.'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+
+function ldap_api_menu() {
+  $items = array();
+  $items[LDAP_API_MENU_BASE_PATH] = array(
+    'title' => 'Directory Services',
+    'description' => 'LDAP authentication, authorization, provisioning, ect.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_api_settings'),
+    'access arguments' => array('administer ldap modules'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'ldap_settings.inc',
+  );
+  
+  $items[LDAP_API_MENU_BASE_PATH .'/settings'] = array(
+    'title' => 'Global Settings',
+    'weight' => -2,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items[LDAP_API_MENU_BASE_PATH .'/servers'] = array(
+    'title' => 'Servers',
+    'page callback' => 'ldap_api_servers_list',
+    'weight' => -1,
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_server.admin.inc',
+  );
+
+  $items[LDAP_API_MENU_BASE_PATH .'/servers/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  $items[LDAP_API_MENU_BASE_PATH .'/servers/add'] = array(
+    'title' => 'Add LDAP Server Configuration',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_api_servers_admin_form', LDAP_API_MENU_BASE_PATH_PARTS + 2),
+    'type' => MENU_LOCAL_TASK + MENU_IS_LOCAL_ACTION,
+    'weight' => 3,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_server.admin.inc',
+  );
+
+$items[LDAP_API_MENU_BASE_PATH .'/servers/edit'] = array(
+    'title' => 'Edit LDAP Server Configuraion',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_api_servers_admin_form', LDAP_API_MENU_BASE_PATH_PARTS + 1, LDAP_API_MENU_BASE_PATH_PARTS + 2),
+    'type' => MENU_CALLBACK ,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_server.admin.inc',
+  );
+ 
+$items[LDAP_API_MENU_BASE_PATH .'/servers/delete'] = array(
+    'title' => 'Delete LDAP Server',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_api_servers_admin_delete', LDAP_API_MENU_BASE_PATH_PARTS + 2),
+    'type' =>  MENU_CALLBACK,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_server.admin.inc',
+  );  
+    
+  $items[LDAP_API_MENU_BASE_PATH .'/servers/enable'] = array(
+    'title' => 'Enable LDAP Server',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_api_servers_admin_enable_disable', LDAP_API_MENU_BASE_PATH_PARTS + 1, LDAP_API_MENU_BASE_PATH_PARTS + 2),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_server.admin.inc',
+  );   
+    
+  $items[LDAP_API_MENU_BASE_PATH .'/servers/disable'] = array(
+    'title' => 'Enable LDAP Server',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_api_servers_admin_enable_disable', LDAP_API_MENU_BASE_PATH_PARTS + 1, LDAP_API_MENU_BASE_PATH_PARTS + 2),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer ldap modules'),
+    'file' => 'ldap_server.admin.inc',
+  );
+
+ $items[LDAP_API_MENU_BASE_PATH .'/help'] = array(
+    'title' => 'Help',
+    'description' => 'Advanced Help with LDAP.',
+    'page callback' => 'ldap_api_placeholder',
+    'page arguments' => array(LDAP_API_MENU_BASE_PATH_PARTS + 1),
+    'access arguments' => array('administer ldap modules'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'ldap_placeholder.inc',
+  );
+
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_cron().
+ */
+function ldap_api_cron() {
+}
+
+// handy until devel for d7 is stable
+if (! function_exists('dpm')) {
+  function dpm($content, $heading = null) {
+    if ($heading) {print "<h2>$heading</h2>";}
+    print "<pre>";
+    print_r($content);
+    print "</pre>";
+  }
+}
+
+
+
+/**
+ * get one or more ldap_api_server objects
+ *
+ * @param $server
+ *   - integer representing server id,
+ *   - or name => value array of server parameters,
+ *   - or instantiated server object
+ *   - or NULL signifying find all servers configured
+ *   
+ * @param $module
+ *   if present, only return servers which a module has enabled.
+ *
+ * @param $reset
+ *   clear any cached servers
+ *   
+ * @return
+ *   Array of ldap_server objects
+ *   or single server object if server id passed in
+ */
+
+function ldap_api_get_server_objects($server = NULL, $module = NULL, $reset = FALSE) {
+  require_once('includes/ldap.functions.inc');
+  return _ldap_api_get_server_objects($server, $module, $reset);
+}
+
+function ldap_api_ldap_extension_summary($op = 'data') {
+  require_once('ldap_api.status.inc');
+  return _ldap_api_ldap_extension_summary($op);
+}
+
+function ldap_api_encrypt($text) {
+  require_once('includes/ldap.functions.inc');
+  return _ldap_api_encrypt($text);
+}
+
+function ldap_api_decrypt($encrypted, $encryption) {
+  require_once('includes/ldap.functions.inc');
+  return _ldap_api_decrypt($encrypted, $encryption);
+}
+
+function ldap_api_ldap_extension_loaded() {
+  return extension_loaded('ldap');
+}
+
+
+// vim:fenc=utf-8:ft=php:ai:si:ts=2:sw=2:et:

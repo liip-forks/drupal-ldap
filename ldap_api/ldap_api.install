@@ -1,0 +1,203 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Install, update and uninstall functions for the LDAP API module.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function ldap_api_install() {
+  variable_set('ldap_api_encryption','none');
+  variable_set('ldap_api_require_ssl_for_credentails',0);
+  
+  $schema = _ldap_api_schema();
+  _drupal_schema_initialize($schema, 'ldap_api', FALSE);
+
+  foreach ($schema as $name => $table) {
+    db_create_table($name, $table);
+  }
+
+  
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function ldap_api_uninstall() {
+  variable_del('ldap_api_encryption');
+  variable_del('ldap_api_require_ssl_for_credentails');
+}
+
+/**
+ * Implementation of hook_requirements().
+ */
+function ldap_api_requirements($phase) {
+  $requirements = array();
+  $requirements['ldap']['title'] = t('LDAP Version');
+  if(extension_loaded('ldap')) {
+    $requirements['ldap']['value'] = t('Loaded');
+    $requirements['ldap']['severity'] = REQUIREMENT_OK;
+  } else {
+    $requirements['ldap']['value'] = t('Not installed');
+    $requirements['ldap']['severity'] = REQUIREMENT_ERROR;
+    $requirements['ldap']['description'] = t('The LDAP extension to PHP could not be found. LDAP API and related sub-modules will not work properly.');
+  }
+  return $requirements;
+}
+
+
+/**
+ * Implementation of hook_schema().
+ */
+function _ldap_api_schema() {
+  $schema['ldap_servers'] = array(
+    'fields' => array(
+      'sid' => array(
+        'type' => 'serial',
+        'size' => 'tiny',
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'address' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'port' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 389,
+      ),
+      'tls' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'basedn' => array(
+        'type' => 'text',
+      ),
+      'binddn' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'bindpw' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'active' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+      'weight' =>  array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('sid'),
+    'unique keys' => array('name' => array('name')),
+  );
+  $schema['ldap_options'] = array(
+    'fields' => array(
+      'oid' => array(
+        'type' => 'serial',
+        'size' => 'tiny',
+        'not null' => TRUE,
+      ),
+      'module' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'key' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'value' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('oid'),
+  );
+  $schema['ldap_cache'] = array(
+    'description' => 'Cache table for caching DN mappings and other LDAP specific things.',
+    'fields' => array(
+      'cid' => array(
+        'description' => 'Primary Key: Unique cache ID.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'data' => array(
+        'description' => 'A collection of data to cache.',
+        'type' => 'blob',
+        'not null' => FALSE,
+        'size' => 'big'),
+      'expire' => array(
+        'description' => 'A Unix timestamp indicating when the cache entry should expire, or 0 for never.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0),
+      'created' => array(
+        'description' => 'A Unix timestamp indicating when the cache entry was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0),
+      'headers' => array(
+        'description' => 'Any custom HTTP headers to be added to cached data.',
+        'type' => 'text',
+        'not null' => FALSE),
+      'serialized' => array(
+        'description' => 'A flag to indicate whether content is serialized (1) or not (0).',
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => 0)
+      ),
+    'indexes' => array('expire' => array('expire')),
+    'primary key' => array('cid'),
+  );
+  $schema['ldap_mapping'] = array(
+    'fields' => array(
+      'mid' => array(
+        'type' => 'serial',
+        'size' => 'tiny',
+        'not null' => TRUE,
+      ),
+      'field' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'attribute' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'module' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('mid'),
+  );
+  return $schema;
+}
+
+
+
+// vim:fenc=utf-8:ft=php:ai:si:ts=2:sw=2:et:

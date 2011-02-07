@@ -1,0 +1,70 @@
+<?php
+// $Id$
+/**
+ * @file
+ * The ldaphelp module is a module to help admins debug ldap_integration modules.
+ *
+ */
+
+
+
+/**
+ * Implementation of hook_init().
+ */
+function ldap_help_init() {
+  drupal_add_css(drupal_get_path('module', 'ldap_help') .'/ldap_help.css', 'module');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function ldap_help_menu() {
+  $items = array();
+  $items['admin/config/people/ldap/help'] = array(
+    'title' => t('Help'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 9,
+    'description' => t('Debugging and Configuration Help with LDAP'),
+    'file' => 'ldap_help.resources.inc',
+    'page callback' => 'ldap_help_main',
+    'access arguments' => array('administer site configuration'),
+  );
+  
+  $items['admin/config/people/ldap/help/intro'] = array(
+    'title' => 'Resources',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+    
+  $items['admin/config/people/ldap/help/status'] = array(
+    'title' => t('Status'),
+    'description' => t('LDAP status page'),
+    'page callback' => 'ldap_help_status',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'ldap_help.status.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 4,
+  );
+
+  $items['admin/config/people/ldap/help/watchdog'] = array(
+    'title' => t('Watchdog'),
+    'description' => t('LDAP watchdog logs'),
+    'page callback' => 'ldap_help_watchdog',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'ldap_help.watchdog.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 5,
+  );
+  
+    $items['admin/config/people/ldap/help/issues'] = array(
+    'title' => t('Issue Reporting'),
+    'description' => t('Creating LDAP Issue Queue Items'),
+    'page callback' => 'ldap_help_issues',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'ldap_help.issues.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 7,
+  );
+    
+
+  return $items;
+}

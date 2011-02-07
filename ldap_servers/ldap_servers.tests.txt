@@ -1,0 +1,27 @@
+LDAP Servers Tests (LDAP_servers)
+
+==============================================
+HTTPS
+-----------------------
+Tests and desired results.
+-----------------------
+
+LDAP_servers.HTTPS.user_profile_form.overhttps
+LDAP_servers.HTTPS.user_profile_form.overhttp
+LDAP_servers.HTTPS.user_login_block.overhttps
+LDAP_servers.HTTPS.user_login_block.overhttp
+LDAP_servers.HTTPS.user_login.overhttps
+LDAP_servers.HTTPS.user_login.overhttp
+
+
+-------------------------
+Encryption (ENCR)
+-------------------------
+Tests and desired results.
+-----------------------
+LDAP_servers.ENCR.on -- desired result:  password encypted in db
+LDAP_servers.ENCR.off -- desired result:  password encypted in db
+LDAP_servers.ENCR.mcrypt.off -- desired result:  password encypt checkbox not visible and suggestion to enable it.
+LDAP_servers.ENCR.off.on -- desired result:  when encyrption turned on pwd is encypted, and still works
+LDAP_servers.ENCR.on.off -- desired result:  when encyrption turned off pwd is dencypted, and still works
+

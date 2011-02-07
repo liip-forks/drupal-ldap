@@ -1,0 +1,10 @@
+; $Id$
+name = LDAP Developer
+description = "Only of use to people developing LDAP Module.  Will not be in final release."
+package = "Lightweight Directory Access Protocol"
+core = 7.x
+configure = admin/config/development/ldap_developer
+files[] = ldap_developer.module
+
+
+
