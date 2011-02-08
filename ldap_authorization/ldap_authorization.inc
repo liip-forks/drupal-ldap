@@ -29,6 +29,7 @@
  *   
  */
 
+
 function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $context) {
 
   $debug = array('function' => '_ldap_authorizations_user_authorizations', 'user' => $user, 'op' =>  $op, 'ldap_mapping_id' => $_mapping_id );
@@ -41,7 +42,8 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
         $authorizations[$ldap_mapping_id] = LDAP_AUTHORIZATION_MAP_NOT_CONF_FOR_LOGON;
         continue;
       }
-      if ($mapping->onlyApplyToLdapAuthenticated  && (!isset($user->data['ldap_authentified']) || $user->data['ldap_authentified'] == FALSE)) {
+      $ldap_authenticated = ldap_authentication_ldap_authenticated($user);
+      if ($mapping->onlyApplyToLdapAuthenticated  && !$ldap_authenticated) {
         $authorizations[$mapping_id] = LDAP_AUTHORIZATION_USER_NOT_LDAP_AUTHENTICATED;
         continue;
       }
@@ -206,11 +208,16 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   if ($mapping->deriveFromAttr) {
     foreach ($mapping->deriveFromAttrAttr as $attribute) {
       if (isset($user_ldap_entry['attr'][strtolower($attribute)])) {
-        foreach ($user_ldap_entry['attr'][strtolower($attribute)] as $i => $value) {
-          if ($i != 'count') {
-            $derive_from_attr_authorizations[$value] = $value;
-          }
+        // patch 1050944
+        for($i = 0; $i < $user_ldap_entry['attr'][strtolower($attribute)]['count']; $i++) {
+          $derive_from_attr_authorizations[$user_ldap_entry['attr'][strtolower($attribute)][$i]] = $user_ldap_entry['attr'][strtolower($attribute)][$i];
         }
+        // remove below after above patch proves itself
+      //  foreach ($user_ldap_entry['attr'][strtolower($attribute)] as $i => $value) {
+       //   if ($i != 'count') {
+        //   $derive_from_attr_authorizations[$value] = $value;
+        //  }
+       // }
         
         //array_merge($authz_ids, $attrib_authorizations);  // do outside of loop
 

@@ -1,5 +1,5 @@
 <?php
-
+// $Id$
 
 function theme_ldap_authorization_admin_index(&$variables) {
   extract($variables);  //
