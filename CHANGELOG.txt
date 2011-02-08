@@ -28,7 +28,9 @@ password reset links, account creation links, etc. Many of the combinations made
 articulated in the ldap authentication settings form and ldap_authentication.tests.txt
 - ldap_authentication: moved request account and password reset link hide/show logic from theming layer to menu/permission layer.
 makes more sense and reduced code alot.
-- another trip through drupal code module
+- another trip through drupal code module\
+- ldap_authorization: #1026138 bug that didn't remove past ldap applied roles #1026138
+- ldap_authorization: fixed 1 case insensitivity issue; may be more.  target role mappings are case sensitive in php, but not in mysql.
 
 
 ==================
