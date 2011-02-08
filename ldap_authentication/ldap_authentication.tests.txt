@@ -91,12 +91,12 @@ conflict.  a non ldap drupal account exists and the username if found in ldap
 -----------------------
 Tests: 
 -----------------------
-LDAP_authen.AC.disallow.drupal - no conflict, no action taken
-LDAP_authen.AC.disallow.ldap - no conflict, no action taken
-LDAP_authen.AC.disallow.ldap.drupal - conflict logged and user authentication fails
-LDAP_authen.AC.allow.drupal - no conflict, no action taken
-LDAP_authen.AC.allow.ldap - no conflict, no action taken
-LDAP_authen.AC.allow.ldap.drupal - user authmapped to ldap
+LDAP_authen.AcctConflict.disallow.drupal - no conflict, no action taken
+LDAP_authen.AcctConflict.disallow.ldap - no conflict, no action taken
+LDAP_authen.AcctConflict.disallow.ldap.drupal - conflict logged and user authentication fails
+LDAP_authen.AcctConflict.allow.drupal - no conflict, no action taken
+LDAP_authen.AcctConflict.allow.ldap - no conflict, no action taken
+LDAP_authen.AcctConflict.allow.ldap.drupal - user authmapped to ldap
 
 ==============================================
 Account Creation Tests (ACreate) from "Existing Drupal User Account Conflict"
@@ -104,10 +104,10 @@ Account Creation Tests (ACreate) from "Existing Drupal User Account Conflict"
 
 Test by logging in with LDAP authenticated user with no existing account.
 
-LDAP_authen.ACreate.user_settings.Admin -- desired result:  no account created, user fails to logon
-LDAP_authen.ACreate.user_settings.Visitors -- desired result:  acount created and ldap authmapped
-LDAP_authen.ACreate.user_settings.AdminWithApproval -- desired result:  no account created, user fails to logon.  Acount should be created via account request form 
-LDAP_authen.ACreate.ldap -- desired result:  acount created and ldap authmapped
+LDAP_authen.AcctCreate.user_settings.Admin -- desired result:  no account created, user fails to logon
+LDAP_authen.AcctCreate.user_settings.Visitors -- desired result:  acount created and ldap authmapped
+LDAP_authen.AcctCreate.user_settings.AdminWithApproval -- desired result:  no account created, user fails to logon.  Acount should be created via account request form 
+LDAP_authen.AcctCreate.ldap -- desired result:  acount created and ldap authmapped
 
 ================================================
 User Forms User Interface (UFUI) Tests
