@@ -90,7 +90,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
       }
       $debug['filtered_ldap_authorizations'] = $filtered_ldap_authorizations;
 
-
+  
       if ($op == 'set') {
 
         $consumer =  ldap_authorization_get_consumer_object(array('consumer_type' =>  $mapping->consumerType));
@@ -105,15 +105,19 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
          * and remove them
          * 
          */
+        $deug['consumer'] = $consumer;
+
+        
+        $initial_existing_ldap_authorizations = array_keys($user->data['ldap_authorizations'][$mapping->consumerType]);
         if (isset($user->data['ldap_authorizations'][$mapping->consumerType]) && $mapping->regrantLdapProvisioned === FALSE) {
-          $existing_ldap_authorizations = $user->data['ldap_authorizations'][$mapping->consumerType];
+          $existing_ldap_authorizations = $initial_existing_ldap_authorizations;
           $creates = array_diff($filtered_ldap_authorizations, $existing_ldap_authorizations);
         } else {
           $existing_ldap_authorizations = array();
           $creates = $filtered_ldap_authorizations;
 
         }
-
+        $debug['creates'] = $creates;
          /**
          * 3.C.  query or create existing authorization target ids (drupal roles, og groups etc)
          */
@@ -133,27 +137,36 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
         /**
          * 3.E. Do grants 
          */
-       
+
         $consumer->authorizationGrant($user, $user_edit, $grants, $ldap_entry, FALSE);
         $debug['user_edit after authorizationGrant'] = $user_edit;
+        
+        
         /**
          *  3.F take away any authorizations not in proposed authorization,
          *      but previously granted by ldap
          */
         $revokes_result = array();
+        $debug["mapping-revokeLdapProvisioned"] = $mapping->revokeLdapProvisioned;
+        $debug["filtered_ldap_authorizations"] =  $filtered_ldap_authorizations;
+        $debug["existing_ldap_authorizations"] =  $initial_existing_ldap_authorizations;
+        $debug["array diff"] =  array_diff($initial_existing_ldap_authorizations, $filtered_ldap_authorizations);
+
         if ($mapping->revokeLdapProvisioned) {
-          $revokes = array_diff($existing_ldap_authorizations, $filtered_ldap_authorizations);
+          $revokes = array_diff($initial_existing_ldap_authorizations, $filtered_ldap_authorizations);
           if (count($revokes)) {
             $consumer->authorizationRevoke($user, $user_edit, $revokes, $ldap_entry, FALSE);
           }
         }
+
         $debug['user_edit after authorizationRevoke'] = $user_edit;
-        
+
         /**
          *  3.G  save user object and user data
          */
 
         $debug['user_edit to save'] = $user_edit;
+
         $user = user_save($user, $user_edit);
       
     

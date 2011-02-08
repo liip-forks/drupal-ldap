@@ -50,8 +50,24 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     //  determine existing drupal roles
   $existing_roles = $this->getAvailableTargetIDs();
 
-  //  take diff to find which roles do not already exist
-  $roles_to_create = array_diff($creates, $existing_roles);
+  //  take diff to find which roles do not already exist. because
+  //  sql field is case insensitive, need to loop through
+  $role_to_create = NULL;
+  $roles_to_create = array();
+  foreach ($creates as $desired_role) {
+    $create = TRUE;
+    foreach ($existing_roles as $existing_role) {
+      if (strtolower($existing_role) == strtolower($desired_role)) {
+        $create = FALSE;
+      }
+    }
+    if ($create) {
+      $roles_to_create[] = $desired_role;
+    }
+  }
+  
+
+ // $roles_to_create = array_diff($creates, $existing_roles); // ends up attempting to create duplicate entries.
 
   // create each role that is needed
   foreach ($roles_to_create as $i => $role_name) {
@@ -77,6 +93,11 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
    }
 
   protected function roleGrantsAndRevokes($op, &$user, &$user_edit, $target_ids, &$ldap_entry, $user_save) {
+    
+    $debug = array(
+        'op' => $op, 'user' => $user, 'user_edit' => $user_edit, 'target_ids' => $target_ids, 
+        'ldap_entry' => $ldap_entry, 'user_save' => $user_save,
+        );
 
     if (!is_array($target_ids)) {
        $target_ids = array($target_ids);
@@ -92,16 +113,19 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
           }
         }
      }
-
+    
     if ($op == 'grant') {
       $user_edit['roles'] = $user->roles + $change_roles;
     } elseif ($op == 'revoke') {
+      $debug['user->roles'] = $user->roles;
+      $debug['change_roles'] = $change_roles;
+      $debug['array_diff'] = array_diff_assoc($user->roles, $change_roles);
+      
       $user_edit['roles'] = array_diff_assoc($user->roles, $change_roles);
     }
     if ($user_save) {
      $user = user_save($user, $user_edit);
     }
-
 
    }
   public function authorizationRevoke(&$user, &$user_edit, $target_ids, &$ldap_entry, $user_save = TRUE) {

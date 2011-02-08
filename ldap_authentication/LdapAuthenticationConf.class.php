@@ -14,12 +14,12 @@ class LdapAuthenticationConf {
   public $sids = array();  // server configuration ids being used for authentication
   public $servers = array(); // ldap server object
   public $inDatabase = FALSE;
-  public $authenticationMode = LDAP_AUTHENTICATION_MIXED;
+  public $authenticationMode = LDAP_AUTHENTICATION_MODE_DEFAULT;
   public $ldapUserHelpLinkUrl;
-  public $ldapUserHelpLinkText = "Account Help";       
-  public $loginConflictResolve = LDAP_AUTHENTICATION_CONFLICT_LOG;
+  public $ldapUserHelpLinkText = LDAP_AUTHENTICATION_HELP_LINK_TEXT_DEFAULT;       
+  public $loginConflictResolve = LDAP_AUTHENTICATION_CONFLICT_RESOLVE_DEFAULT;
   public $acctCreation = LDAP_AUTHENTICATION_ACCT_CREATION_DEFAULT;
-  public $emailOption = LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE;
+  public $emailOption = LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT;
   public $apiPrefs = array();
   public $createLDAPAccounts; // should an drupal account be created when an ldap user authenticates
   public $createLDAPAccountsAdminApproval; // create them, but as blocked accounts

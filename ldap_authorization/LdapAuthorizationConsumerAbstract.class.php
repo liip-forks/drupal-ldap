@@ -145,7 +145,6 @@ class LdapAuthorizationConsumerAbstract {
      print $target_id;
      $results[$target_id] = $this->_authorizationGrant($user, $user_edit, $target_id, $ldap_entry);
    }
-//print "<pre>results $user_save"; print_r($target_ids); print_r($results); print_r($user); print_r($user_edit); die;
    if ($user_save) {
      user_save($user, $user_edit);
    }

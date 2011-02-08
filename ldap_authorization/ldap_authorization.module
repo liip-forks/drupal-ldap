@@ -77,7 +77,6 @@ $menu_offset = 4;
 
 
   $consumers = ldap_authorization_get_consumers(NULL, TRUE);
-  //print_r($consumers); die;
   foreach ($consumers as $consumer_type => $consumer) {
     $items['admin/config/people/ldap/authorization/add/'. $consumer_type] = array(
       'title' => t('Add !name Mapping', array('!name' => $consumer['consumer_name'])),
