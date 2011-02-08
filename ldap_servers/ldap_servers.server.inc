@@ -255,8 +255,9 @@ class ldap_server {
       // characters' case.
       // This was contributed by Dan "Gribnif" Wilga, and described
       // here: http://drupal.org/node/87833
-      if (!isset($match[$this->user_attr][0])) {
-        $name_attr = drupal_strtolower($this->user_attr);
+      $name_attr = $this->user_attr;
+      if (!isset($match[$name_attr][0])) {
+        $name_attr = drupal_strtolower($name_attr);
         if (!isset($match[$name_attr][0]))
           continue;
       }
