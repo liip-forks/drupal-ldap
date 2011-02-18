@@ -107,8 +107,13 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
          */
         $deug['consumer'] = $consumer;
 
-        
-        $initial_existing_ldap_authorizations = array_keys($user->data['ldap_authorizations'][$mapping->consumerType]);
+        if (isset($user->data['ldap_authorizations'][$mapping->consumerType]) && is_array($user->data['ldap_authorizations'][$mapping->consumerType])) {
+          $initial_existing_ldap_authorizations = array_keys($user->data['ldap_authorizations'][$mapping->consumerType]);
+        }
+        else {
+          $initial_existing_ldap_authorizations = array();
+        }
+      
         if (isset($user->data['ldap_authorizations'][$mapping->consumerType]) && $mapping->regrantLdapProvisioned === FALSE) {
           $existing_ldap_authorizations = $initial_existing_ldap_authorizations;
           $creates = array_diff($filtered_ldap_authorizations, $existing_ldap_authorizations);
