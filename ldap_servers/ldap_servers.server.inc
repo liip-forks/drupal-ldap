@@ -245,7 +245,7 @@ class ldap_server {
   
       // Must find exactly one user for authentication to.
       if ($result['count'] != 1) {
-        watchdog('ldapauth', "Error: %num_matches users found with $%filter under %basedn.", array('%num_matches' => $result['count'], '%filter' => $filter, '%basedn' => $basedn), WATCHDOG_ERROR);
+        watchdog('ldapauth', "Error: %num_matches users found with $%filter under %basedn.", array('%num_matches' => $result['count'], '%filter' => $filter, '%basedn' => $basedn), array(), WATCHDOG_ERROR);
         continue;
       }
       $match = $result[0];
