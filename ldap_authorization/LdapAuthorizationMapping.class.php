@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * class to encapsulate an ldap entry to authorization target ids mapping configuration

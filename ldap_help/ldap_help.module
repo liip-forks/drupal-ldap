@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * The ldaphelp module is a module to help admins debug ldap_integration modules.

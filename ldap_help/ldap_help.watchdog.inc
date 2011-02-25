@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 function ldap_help_watchdog() {
 

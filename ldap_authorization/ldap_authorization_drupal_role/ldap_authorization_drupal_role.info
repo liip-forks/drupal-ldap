@@ -1,4 +1,3 @@
-;$Id$
 
 name = LDAP Authorization - Drupal Roles
 description = "Implements LDAP authorization mapping to drupal roles"

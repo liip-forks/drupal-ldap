@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * status file for ldaphelp module

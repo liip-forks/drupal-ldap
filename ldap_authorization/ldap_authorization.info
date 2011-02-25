@@ -1,4 +1,3 @@
-; $Id$
 name = LDAP Authorization
 description = "Implements LDAP authorization (previously LDAP Groups)"
 package = "Lightweight Directory Access Protocol"

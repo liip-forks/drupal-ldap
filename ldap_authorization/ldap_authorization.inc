@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /** 
  * return all desired authorizations for a given user based on ldap authorization mapping and filtering rules

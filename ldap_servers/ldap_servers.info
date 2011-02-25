@@ -1,4 +1,3 @@
-; $Id$
 name = LDAP Servers
 description = "Implements LDAP Server Configuration"
 package = "Lightweight Directory Access Protocol"
