@@ -1,4 +1,5 @@
 <?php
+// $Id: LdapAuthorizationMappingAdmin.class.php,v 1.6.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file
@@ -13,10 +14,10 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
 
 
   public function save() {
-    
+
     $op = $this->inDatabase ? 'update' : 'insert';
 
-    $values['mapping_id'] = $this->mappingID;  
+    $values['mapping_id'] =  drupal_strtolower($this->mappingID);
     $values['sid'] = $this->sid;
     $values['consumer_type'] = $this->consumerType;
     $values['consumer_module'] = $this->consumerModule;
@@ -39,7 +40,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     $values['revoke_non_ldap_provisioned'] = (int)$this->revokeNonLdapProvisioned;
     $values['create_targets'] = (int)$this->createTargets;
     $values['regrant_ldap_provisioned'] = (int)$this->regrantLdapProvisioned;
-    
+
      if ($op == 'update') {
         try {
             $count = db_update('ldap_authorization')
@@ -80,7 +81,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     } else {
       return FALSE;
     }
-    
+
  }
   public function __construct($_mid, $_new = FALSE, $_sid = NULL, $_consumer_type = NULL, $_consumer_module = NULL) {
     parent::__construct($_mid, $_new, $_sid, $_consumer_type, $_consumer_module);
@@ -107,11 +108,12 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
   }
 
   static function getMappings($mapping_id = NULL, $consumer_type = NULL, $flatten = FALSE, $class = 'LdapAuthorizationMapping') {
+    $mapping_id = drupal_strtolower($mapping_id);
     $select = db_select('ldap_authorization','ldap_authorization');
     $select->fields('ldap_authorization');
     if ($mapping_id) {
        $select->condition('ldap_authorization.mapping_id', $mapping_id);
-    } 
+    }
 
     try {
       $mapping_vars = $select->execute()->fetchAllAssoc('mapping_id',  PDO::FETCH_ASSOC);
@@ -124,6 +126,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
 
     $mappings = array();
     foreach ($mapping_vars as $_mapping_id => $mapping) {
+      $_mapping_id = drupal_strtolower($_mapping_id);
       if (module_exists($mapping['consumer_module'])) {
         $mappings[$_mapping_id] = ($class == 'LdapAuthorizationMapping') ? new LdapAuthorizationMapping($_mapping_id) : new LdapAuthorizationMappingAdmin($_mapping_id);
       }
@@ -131,13 +134,14 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     if ($flatten && $mapping_id && count($mappings) == 1) {
       return $mappings[$mapping_id];
     } else {
+     // dpm($mappings);
       return $mappings;
     }
   }
 
   public function drupalForm($server_options, $op) {
 
-   
+
     $consumer_tokens = $this->consumer->tokens();
     $form['intro'] = array(
         '#type' => 'item',
@@ -338,7 +342,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
       '#description' => t('Enter a list of LDAP groups and their !consumer_name mappings, one per line with a | delimiter.
         Should be in the form [ldap group]|[!consumer_name] such as:
         <br/>cn=ED IT NAG Staff,DC=ad,DC=uiuc,DC=edu|admin
-        <br/>cn=Ed Webs UIUC Webmasters,DC=ad,DC=uiuc,DC=edu|committee member'),
+        <br/>cn=Ed Webs UIUC Webmasters,DC=ad,DC=uiuc,DC=edu|committee member', $consumer_tokens),
     );
     $form['filter_and_mappings']['use_filter'] = array(
       '#type' => 'checkbox',
@@ -354,8 +358,8 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
         '#markup' => t('', $consumer_tokens),
     );
 
-
-   $form['advanced_intro'] = array(
+/**
+  $form['advanced_intro'] = array(
         '#type' => 'item',
         '#title' => t('IV.A. Map in both directions.', $consumer_tokens),
         '#markup' => t('', $consumer_tokens),
@@ -371,6 +375,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
         needs to writeable, the right side of the mappings list must be unique, and I.B or I.C.
         derivation must be used.', $consumer_tokens),
     );
+**/
 
     $synchronization_modes = array();
     if ($this->synchOnLogon)  {
@@ -487,7 +492,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     } elseif (!$this->inDatabase  && !$this->mappingID) {  // new and no mappingID given
         $errors['mapping_id'] = t('Mapping ID is required');
     } elseif (!$this->inDatabase && $this->getMappings($this->mappingID)) {
-        $errors['mapping_id'] = t('Mapping ID %mapping_id is not unique.', array('%mapping_id' => $this->mappingID)); 
+        $errors['mapping_id'] = t('Mapping ID %mapping_id is not unique.', array('%mapping_id' => $this->mappingID));
     }
 
    // are correct values available for selected mapping approach
@@ -549,7 +554,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     $this->revokeLdapProvisioned = (bool)(@$values['synchronization_actions']['revoke_ldap_provisioned']);
     $this->revokeNonLdapProvisioned = (bool)(@$values['synchronization_actions']['revoke_non_ldap_provisioned']);
     $this->createTargets = (bool)(@$values['synchronization_actions']['create_targets']);
-  
+
 }
 
   public function drupalFormSubmit($op, $values) {
@@ -615,7 +620,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
             'not null' => TRUE,
          )
        ),
-      
+
       'description' => array(
         'schema' => array(
           'type' => 'varchar',
@@ -718,7 +723,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
       'synchronization_actions'  => array(
          'form_default' =>  array('revoke_ldap_provisioned', 'create_targets'),
        ),
-        
+
       'synch_to_ldap'  => array(
         'schema' => array(
           'type' => 'int',
@@ -761,7 +766,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           'not null' => TRUE,
           'default' => '0',
          ),
-      ),  
+      ),
      'create_targets'  => array(
         'schema' => array(
           'type' => 'int',
@@ -806,6 +811,3 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
 
 
 }
-
-
-

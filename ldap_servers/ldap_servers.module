@@ -1,4 +1,5 @@
 <?php
+// $Id: ldap_servers.module,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 
 define('LDAP_SERVERS_PROJECT_TAG', 'ldap');
@@ -18,6 +19,12 @@ define('LDAP_SERVERS_ENC_TYPE_SALTED_SHA', 9);
 define('LDAP_SERVERS_ENC_TYPE_CLEARTEXT', 10);
 define('LDAP_SERVERS_CYPHER_MODE', 'cfb', 12);
 
+define('LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT', 1);
+define('LDAP_SERVERS_BIND_METHOD_USER', 2);
+define('LDAP_SERVERS_BIND_METHOD_ANON', 3);
+define('LDAP_SERVERS_BIND_METHOD_DEFAULT', 1);
+
+define('LDAP_FAIL', -1);
 
 define('LDAP_SUCCESS', 0x00);
 define('LDAP_OPERATIONS_ERROR', 0x01);
@@ -97,7 +104,7 @@ define('LDAP_REFERRAL_LIMIT_EXCEEDED', 0x61);
 
 function ldap_servers_menu() {
   $menu_offset = 4;
-  
+
   $items['admin/config/people/ldap'] = array(
     'title' => 'LDAP Configuration',
     'description' => 'LDAP authentication, authorization, provisioning, ect.',
@@ -106,14 +113,14 @@ function ldap_servers_menu() {
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.settings.inc',
   );
-  
+
   $items['admin/config/people/ldap/settings'] = array(
     'title' => '1. Settings',
     'weight' => -2,
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  
+
   $items['admin/config/people/ldap/servers'] = array(
     'title' => '2. Servers',
     'page callback' => 'ldap_servers_edit_index',
@@ -127,13 +134,23 @@ function ldap_servers_menu() {
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  
+
   $items['admin/config/people/ldap/servers/add'] = array(
     'title' => 'Add LDAP Server Configuration',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_servers_admin_form', $menu_offset + 1),
-    'type' => MENU_LOCAL_TASK + MENU_IS_LOCAL_ACTION,
+    'page arguments' => array('ldap_servers_admin_form', 'add'),
+    'type' => MENU_LOCAL_TASK + MENU_CONTEXT_INLINE,
     'weight' => 3,
+    'access arguments' => array('administer site configuration'),
+    'file' => 'ldap_servers.admin.inc',
+  );
+
+
+   $items['admin/config/people/ldap/servers/edit'] = array(
+    'title' => 'Edit LDAP Server Configuration',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_servers_admin_form', 'edit', $menu_offset + 2),
+    'type' => MENU_LINKS_TO_PARENT + MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
@@ -142,43 +159,36 @@ function ldap_servers_menu() {
     'title' => 'Test LDAP Server Configuraion',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_test_form', $menu_offset + 1, $menu_offset + 2),
-    'type' => MENU_CALLBACK,
+    'type' => MENU_LINKS_TO_PARENT + MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.test_form.inc',
   );
-  
-  $items['admin/config/people/ldap/servers/edit'] = array(
-    'title' => 'Edit LDAP Server Configuration',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_servers_admin_form', $menu_offset + 1, $menu_offset + 2),
-    'type' => MENU_CALLBACK,
-    'access arguments' => array('administer site configuration'),
-    'file' => 'ldap_servers.admin.inc',
-  );
+
+
 
 $items['admin/config/people/ldap/servers/delete'] = array(
     'title' => 'Delete LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_delete', $menu_offset + 2),
-    'type' =>  MENU_CALLBACK +  MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
+    'type' =>  MENU_CALLBACK + MENU_LINKS_TO_PARENT,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
-  );  
-    
+  );
+
   $items['admin/config/people/ldap/servers/enable'] = array(
     'title' => 'Enable LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
-    'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
+    'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT ,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
-  );   
-    
+  );
+
   $items['admin/config/people/ldap/servers/disable'] = array(
     'title' => 'Enable LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
-    'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT + MENU_IS_LOCAL_ACTION,
+    'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
@@ -206,7 +216,7 @@ function ldap_servers_theme() {
       'variables' => array('site_name' => NULL, 'site_mail' => FALSE, 'site_contact_link' => FALSE),
       'render element' => 'element',
       'file' => 'ldap_servers.theme.inc'
-    ),     
+    ),
 
   );
 }
@@ -217,12 +227,12 @@ function ldap_servers_cache_clear() {
 /**
  *
  * return ldap server conf objects
- * 
+ *
  * @param alphanum $sid
- * @param enum $type 'all', 'enabled', 
+ * @param enum $type 'all', 'enabled',
  * @param boolean $flatten signifies if array or single object returned.  Only works if sid is specified
  * @param boolean $reset do not use cached or static result
- * @return array of server conf object keyed on sid or single server conf object (if flatten == TRUE) 
+ * @return array of server conf object keyed on sid or single server conf object (if flatten == TRUE)
  */
 function ldap_servers_get_servers($sid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
   require_once('ldap_servers.inc');
@@ -251,10 +261,12 @@ function ldap_servers_ldaps_option_array() {
   return $options;
 }
 
+
+
 /**
  * disable a logon form if ldap preferences exclude http logon forms
- * 
- * @param drupal logon form array $form 
+ *
+ * @param drupal logon form array $form
  */
 function ldap_servers_disable_http_check(&$form) {
 
@@ -267,7 +279,7 @@ function ldap_servers_disable_http_check(&$form) {
 
     $form['#prefix'] = theme('ldap_servers_https_required', $tokens);
     $form['#disabled'] = TRUE;
-  } 
+  }
 }
 
 function ldap_servers_ldap_extension_summary($op = 'data') {
@@ -300,7 +312,7 @@ function ldap_servers_no_enabled_servers_msg($action) {
   if (count($servers) == 0) {
 
     $message = 'At least one ldap server must configured and <em>enabled</em> before' .
-      $action . '. Please go to ' . l('admin/config/people/ldap/servers', 'admin/config/people/ldap/servers') . ' to configure an LDAP server'; 
+      $action . '. Please go to ' . l('admin/config/people/ldap/servers', 'admin/config/people/ldap/servers') . ' to configure an LDAP server';
 
     drupal_set_message($message, 'warning');
     return $message;
@@ -308,16 +320,16 @@ function ldap_servers_no_enabled_servers_msg($action) {
 }
 
 function ldap_servers_help($path, $arg) {
-  
+
   $servers_help = t('LDAP Servers stores LDAP server configurations so other modules
     can connect to them and leverage their data.  LDAP authentication and LDAP authorization
-    are two such modules.  LDAP Servers is a placeholder module whose functionility will 
+    are two such modules.  LDAP Servers is a placeholder module whose functionility will
     be replaced by LDAP API within the same LDAP project.
     More detailed help is available on drupal.org at !helplink.',
       array(
         '!helplink' => l(LDAP_SERVERS_DRUPAL_HELP_URL, LDAP_SERVERS_DRUPAL_HELP_URL),
       ));
-  
+
   switch ($path) {
     case 'admin/config/people/ldap/servers':
       $output = '<p>' . $servers_help . '</p>';
@@ -329,5 +341,45 @@ function ldap_servers_help($path, $arg) {
   }
 }
 
+function ldap_servers_get_ldap_defaults($type = NULL) {
 
+  $ldap['default']['name'] = t('Default LDAP');
+  $ldap['default']['description'] = "";
+  $ldap["default"]['server']['port'] = 389;
+  $ldap["default"]['server']['tls'] = 1;
+  $ldap["default"]['server']['encrypted'] = 0;
+  $ldap["default"]['user']['mail_attr'] = 'mail';
+
+    // http://msdn.microsoft.com/en-us/library/aa705886(VS.85).aspx
+  $ldap['ad']['name'] = t('Active Directory LDAP');
+  $ldap['ad']['description'] = t('Microsoft Active Directory');
+  $ldap["ad"]['server']['port'] = 389;
+  $ldap["ad"]['server']['tls'] = 1;
+  $ldap["ad"]['server']['encrypted'] = 0;
+  $ldap["ad"]['user']['user_attr'] = 'sAMAccountName';
+  $ldap["ad"]['user']['mail_attr'] = 'mail';
+  $ldap['ad']['person_object_class'] = 'person';
+  $ldap['ad']['fingerprint_attribute'] = 'mS-DS-CreatorSID';
+
+  // http://www.novell.com/documentation/edir873/index.html?page=/documentation/edir873/edir873/data/h0000007.html
+  $ldap['novell_edir']['name'] = t('Novell eDirectory LDAP');
+  $ldap['novell_edir']['description'] = t('Novell eDirectory LDAP');
+  $ldap["novell_edir"]['server']['port'] = 389;
+  $ldap["novell_edir"]['server']['tls'] = 1;
+  $ldap["novell_edir"]['server']['encrypted'] = 0;
+  $ldap["novell_edir"]['user']['user_attr'] = 'uid';
+  $ldap["novell_edir"]['user']['mail_attr'] = 'mail';
+  $ldap['novell_edir']['person_object_class'] = 'person';
+
+  $ldap['openldap']['name'] = t('openLDAP LDAP');
+  $ldap['openldap']['description'] = t('openLDAP default configuration');
+  $ldap["openldap"]['server']['port'] = 389;
+  $ldap["openldap"]['server']['tls'] = 1;
+  $ldap["openldap"]['server']['encrypted'] = 0;
+  $ldap["openldap"]['user']['user_attr'] = 'cn';
+  $ldap["openldap"]['user']['mail_attr'] = 'mail';
+  $ldap['openldap']['person_object_class'] = 'person';
+
+  return ($type) ? $ldap[$type] : $ldap;
+}
 

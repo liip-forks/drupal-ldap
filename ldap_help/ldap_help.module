@@ -1,4 +1,5 @@
 <?php
+// $Id: ldap_help.module,v 1.1.2.1 2011/02/08 06:14:20 johnbarclay Exp $
 /**
  * @file
  * The ldaphelp module is a module to help admins debug ldap_integration modules.
@@ -28,12 +29,12 @@ function ldap_help_menu() {
     'page callback' => 'ldap_help_main',
     'access arguments' => array('administer site configuration'),
   );
-  
+
   $items['admin/config/people/ldap/help/intro'] = array(
     'title' => 'Resources',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-    
+
   $items['admin/config/people/ldap/help/status'] = array(
     'title' => t('Status'),
     'description' => t('LDAP status page'),
@@ -53,7 +54,7 @@ function ldap_help_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 5,
   );
-  
+
     $items['admin/config/people/ldap/help/issues'] = array(
     'title' => t('Issue Reporting'),
     'description' => t('Creating LDAP Issue Queue Items'),
@@ -63,7 +64,29 @@ function ldap_help_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 7,
   );
-    
+
 
   return $items;
+}
+
+function ldap_help_form_ldap_servers_settings_alter(&$form, &$form_state) {
+  $form['watchdog_detail'] = array('#type' => 'fieldset', '#title' => t('Log detailed LDAP Actions'));
+  $form['watchdog_detail']['watchdog_detail'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enabled Detailed LDAP Watchdog logging.  This is generally for
+       debugging and reporting issues with the ldap modules and should not be left
+       on.'),
+    '#default_value' => variable_get('ldap_help_watchdog_detail', 0),
+  );
+  $form['#submit'][] = 'ldap_help_watchdog_detail_submit';
+}
+
+
+function ldap_help_watchdog_detail_submit($form, &$form_state) {
+  if ($form_state['submitted']) {
+    $watchdog_detail = $form_state['values']['watchdog_detail'];
+    if ($watchdog_detail != variable_get('ldap_help_watchdog_detail', 0)) {
+      variable_set('ldap_help_watchdog_detail', $watchdog_detail);
+    }
+  }
 }

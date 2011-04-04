@@ -1,3 +1,4 @@
+;$Id: ldap_authorization_drupal_role.info,v 1.4 2010/12/29 04:51:11 johnbarclay Exp $
 
 name = LDAP Authorization - Drupal Roles
 description = "Implements LDAP authorization mapping to drupal roles"

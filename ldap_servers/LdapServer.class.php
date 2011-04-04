@@ -1,4 +1,5 @@
 <?php
+// $Id: LdapServer.class.php,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file
@@ -11,7 +12,7 @@
  *
  *  This class is used to create, work with, and eventually destroy ldap_server
  * objects.
- * 
+ *
  * @todo make bindpw protected
  */
 class LdapServer {
@@ -29,9 +30,11 @@ class LdapServer {
   public $address;
   public $port = 389;
   public $tls = FALSE;
+  public $bind_method = 0;
   public $basedn = array();
   public $binddn = FALSE; // Default to an anonymous bind.
   public $bindpw = FALSE; // Default to an anonymous bind.
+  public $user_dn_expression;
   public $user_attr;
   public $mail_attr;
   public $ldapToDrupalUserPhp;
@@ -40,7 +43,7 @@ class LdapServer {
   public $errorMsg = NULL;
   public $hasError = FALSE;
   public $errorName = NULL;
-  
+
   public $inDatabase = FALSE;
 
   public function clearError() {
@@ -48,7 +51,7 @@ class LdapServer {
     $this->errorMsg = NULL;
     $this->errorName = NULL;
   }
-  
+
   protected $connection;
   // direct mapping of db to object properties
   public static function field_to_properties_map() {
@@ -59,14 +62,16 @@ class LdapServer {
     'address'  => 'address',
     'port'  => 'port',
     'tls'  => 'tls',
+    'bind_method' => 'bind_method',
     'basedn'  => 'basedn',
-    'binddn'  => 'binddn' ,
+    'binddn'  => 'binddn',
+    'user_dn_expression' => 'user_dn_expression',
     'user_attr'  => 'user_attr',
     'mail_attr'  => 'mail_attr',
     'ldap_to_drupal_user'  => 'ldapToDrupalUserPhp',
     'testing_drupal_username'  => 'testingDrupalUsername'
     );
-    
+
   }
 
   /**
@@ -74,7 +79,7 @@ class LdapServer {
    */
   function __construct($sid) {
     if (!is_scalar($sid)) {
-      return;      
+      return;
     }
 
     $this->sid = $sid;
@@ -90,10 +95,10 @@ class LdapServer {
       return;
     }
     $server_record = $server_record[$sid];
-    
+
     if ($server_record) {
       $this->inDatabase = TRUE;
-    } 
+    }
     else {
       // @todo throw error
     }
@@ -144,7 +149,7 @@ class LdapServer {
    *   The line number the error was raised at.
    *
    * @param array errcontext
-   *   An array of every variable that existed in the scope the error was 
+   *   An array of every variable that existed in the scope the error was
    *   triggered in.
    *
    * @return bool
@@ -160,8 +165,6 @@ class LdapServer {
    */
   function connect() {
 
-    //return LDAP_CONNECT_ERROR;
-   // print $this->address;
     if (!$con = ldap_connect($this->address, $this->port)) {
       watchdog('user', 'LDAP Connect failure to ' . $this->address . ':' . $this->port);
       return LDAP_CONNECT_ERROR;
@@ -200,11 +203,11 @@ class LdapServer {
 
   /**
 	 * Bind (authenticate) against an active LDAP database.
-	 * 
+	 *
 	 * @param $userdn
 	 *   The DN to bind against. If NULL, we use $this->binddn
 	 * @param $pass
-	 *   The password search base. If NULL, we use $this->bindpw 
+	 *   The password search base. If NULL, we use $this->bindpw
    *
    * @return
    *   Result of bind; TRUE if successful, FALSE otherwise.
@@ -217,6 +220,7 @@ class LdapServer {
       watchdog('ldap', "LDAP bind failure for user %user. Not connected to LDAP server.", array('%user' => $userdn));
       return LDAP_CONNECT_ERROR;
     }
+
 
     if (!@ldap_bind($this->connection, $userdn, $pass)) {
       watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", array('%user' => $userdn, '%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
@@ -233,7 +237,7 @@ class LdapServer {
     if (!$this->connection) {
       // never bound or not currently bound, so no need to disconnect
       //watchdog('ldap', 'LDAP disconnect failure from '. $this->server_addr . ':' . $this->port);
-    } 
+    }
     else {
       ldap_unbind($this->connection);
       $this->connection = NULL;
@@ -258,7 +262,7 @@ class LdapServer {
     if ($basedn == NULL) {
       if (count($this->basedn) == 1) {
         $basedn = $this->basedn[0];
-      } 
+      }
       else {
         return FALSE;
       }
@@ -269,7 +273,7 @@ class LdapServer {
     if ($result && ldap_count_entries($this->connection, $result)) {
       return ldap_get_entries($this->connection, $result);
     }
-  
+
     return $result;
   }
 
@@ -288,29 +292,29 @@ class LdapServer {
 
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
-  
+
       $filter = $this->user_attr . '=' . $drupal_user_name;
 
       $result = $this->search($filter, $basedn);
 
       if (!$result) continue;
-  
+
       // Must find exactly one user for authentication to.
       if ($result['count'] != 1) {
         $count = $result['count'];
-        watchdog('ldap_authentication', "Error:  $count users found with $filter under $basedn.", WATCHDOG_ERROR);
+        watchdog('ldap_authentication', "Error:  $count users found with $filter under $basedn.", array(), WATCHDOG_ERROR);
         continue;
       }
       $match = $result[0];
-  
+
       // These lines serve to fix the attribute name in case a
       // naughty server (i.e.: MS Active Directory) is messing the
       // characters' case.
       // This was contributed by Dan "Gribnif" Wilga, and described
       // here: http://drupal.org/node/87833
       $name_attr = $this->user_attr;
-      if (!isset($match[$this->user_attr][0])) {
-      $name_attr = drupal_strtolower($this->user_attr);
+      if (!isset($match[$name_attr][0])) {
+        $name_attr = drupal_strtolower($name_attr);
         if (!isset($match[$name_attr][0]))
           continue;
       }
@@ -335,6 +339,8 @@ class LdapServer {
       }
     }
   }
+
+
+
+
 }
-
-

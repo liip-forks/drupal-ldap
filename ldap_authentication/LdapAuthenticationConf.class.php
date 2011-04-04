@@ -1,4 +1,5 @@
 <?php
+// $Id: LdapAuthenticationConf.class.php,v 1.4.2.2 2011/02/08 20:05:41 johnbarclay Exp $
 
 /**
  * @file
@@ -141,7 +142,7 @@ class LdapAuthenticationConf {
      */
     if (count($this->allowOnlyIfTextInDn)) {
       foreach ($this->allowOnlyIfTextInDn as $test) {
-        if ( strpos(drupal_strtolower($ldap_user['dn']), drupal_strtolower($test)) !== FALSE) {
+        if (strpos(drupal_strtolower($ldap_user['dn']), drupal_strtolower($test)) !== FALSE) {
           return TRUE;
         }
       }

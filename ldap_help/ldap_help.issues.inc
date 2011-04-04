@@ -1,4 +1,5 @@
 <?php
+// $Id: ldap_help.issues.inc,v 1.1.2.1 2011/02/08 06:14:20 johnbarclay Exp $
 
 function ldap_help_issues() {
 

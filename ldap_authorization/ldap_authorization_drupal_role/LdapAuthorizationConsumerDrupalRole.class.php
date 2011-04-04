@@ -1,4 +1,5 @@
 <?php
+// $Id: LdapAuthorizationConsumerDrupalRole.class.php,v 1.3.2.1 2011/02/08 20:05:42 johnbarclay Exp $
 
 
 
@@ -6,7 +7,7 @@
  * @file
  * abstract class to represent an ldap_authorization consumer
  * such as drupal_role, og_group, etc.
- * 
+ *
  */
 require_once(drupal_get_path('module','ldap_authorization') .'/LdapAuthorizationConsumerAbstract.class.php');
 class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstract {
@@ -56,6 +57,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
   foreach ($creates as $desired_role) {
     $create = TRUE;
     foreach ($existing_roles as $existing_role) {
+    //  print "desired_role=$desired_role ,existing_role=$existing_role";
       if (strtolower($existing_role) == strtolower($desired_role)) {
         $create = FALSE;
       }
@@ -64,7 +66,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
       $roles_to_create[] = $desired_role;
     }
   }
-  
+
 
  // $roles_to_create = array_diff($creates, $existing_roles); // ends up attempting to create duplicate entries.
 
@@ -92,9 +94,9 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
    }
 
   protected function roleGrantsAndRevokes($op, &$user, &$user_edit, $target_ids, &$ldap_entry, $user_save) {
-    
+
     $debug = array(
-        'op' => $op, 'user' => $user, 'user_edit' => $user_edit, 'target_ids' => $target_ids, 
+        'op' => $op, 'user' => $user, 'user_edit' => $user_edit, 'target_ids' => $target_ids,
         'ldap_entry' => $ldap_entry, 'user_save' => $user_save,
         );
 
@@ -112,14 +114,14 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
           }
         }
      }
-    
+
     if ($op == 'grant') {
       $user_edit['roles'] = $user->roles + $change_roles;
     } elseif ($op == 'revoke') {
       $debug['user->roles'] = $user->roles;
       $debug['change_roles'] = $change_roles;
       $debug['array_diff'] = array_diff_assoc($user->roles, $change_roles);
-      
+
       $user_edit['roles'] = array_diff_assoc($user->roles, $change_roles);
     }
     if ($user_save) {
@@ -134,7 +136,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
   public function listAuthorizations(&$user) {
    return array_values($user->roles);
   }
-   
+
   public function authorizationUserDataSync(&$user, &$ldap_entry) {
       $actual_authorizations = $this->listAuthorizations($user);
       if (isset($user->data['ldap_authorizations'][$this->consumerType])) {
@@ -151,7 +153,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
 
       $user_edit['data'] = $user->data;
      foreach ($user_data_authorizations as $target_id => $discard) {
-        if (in_array($target_id, $actual_authorizations)) 
+        if (in_array($target_id, $actual_authorizations))
           $user_edit['data']['ldap_authorizations'][$this->consumerType][$target_id] = $user_data_authorizations[$target_id];
         }
       }
@@ -159,7 +161,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
 
       $user = user_save($user, $user_edit);
     * **/
-  
-     
+
+
    }
 }

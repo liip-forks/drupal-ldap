@@ -1,4 +1,5 @@
 <?php
+// $Id: ldap_servers.test_form.inc,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 
 /**
@@ -80,6 +81,12 @@ $form['#prefix'] .= theme('ldap_servers_server', $variables);
  */
 function ldap_servers_test_form_validate($form, &$form_state) {
   $values = $form_state['values'];
+  if (!$values['sid']) {
+    form_set_error(NULL, t('No server id found in form'));
+  }
+  elseif (!$ldap_server = ldap_servers_get_servers($values['sid'], 'all', TRUE)) {
+    form_set_error(NULL, t('Failed to create server object for server with server id=%sid', array('%sid' => $values['sid'])));
+  }
 }
 
 /**

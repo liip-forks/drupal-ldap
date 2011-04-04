@@ -1,4 +1,5 @@
 <?php
+// $Id: LdapServerAdmin.class.php,v 1.6 2011/01/12 21:51:37 npiacentine Exp $
 
 /**
  * @file
@@ -35,9 +36,9 @@ class LdapServerAdmin extends LdapServer {
   foreach ($servers as $sid => $server) {
     $servers[$sid] = ($class == 'LdapServer') ? new LdapServer($sid) : new LdapServerAdmin($sid);
   }
-  
+
   return $servers;
-  
+
 }
   function __construct($sid) {
     parent::__construct($sid);
@@ -52,11 +53,12 @@ class LdapServerAdmin extends LdapServer {
     $this->address = trim($values['address']);
     $this->port = trim($values['port']);
     $this->tls = trim($values['tls']);
+    $this->bind_method = trim($values['bind_method']);
     $this->binddn = trim($values['binddn']);
     if (trim($values['bindpw'])) {
       $this->bindpw_new = trim($values['bindpw']);
     }
-    $this->tls = trim($values['tls']);
+    $this->user_dn_expression = trim($values['user_dn_expression']);
     $this->basedn = $this->linesToArray(trim($values['basedn']));
     $this->user_attr = trim($values['user_attr']);
     $this->mail_attr = trim($values['mail_attr']);
@@ -66,20 +68,20 @@ class LdapServerAdmin extends LdapServer {
   }
 
   public function save($op) {
-  
+
     foreach ($this->field_to_properties_map() as $field_name => $property_name) {
       $entry[$field_name] = $this->{$property_name};
     }
     if ($this->bindpw_new) {
       $entry['bindpw'] =  ldap_servers_encrypt($this->bindpw_new);
-    } 
+    }
     elseif ($this->bindpw_clear) {
       $entry['bindpw'] = NULL;
     }
 
-    
-    $entry['basedn'] = serialize($entry['basedn']); 
+    $entry['basedn'] = serialize($entry['basedn']);
     $entry['tls'] = (int)$entry['tls'];
+   // dpm($op); dpm($entry);
     if ($op == 'update') {
 
       try {
@@ -103,29 +105,31 @@ class LdapServerAdmin extends LdapServer {
         drupal_set_message(t('db insert failed. Message = %message, query= %query',
           array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
       }
-      
+
       $this->inDatabase = TRUE;
     }
-    
+
 
   }
-  
+
   public function delete($sid) {
     if ($sid == $this->sid) {
       $this->inDatabase = FALSE;
       return db_delete('ldap_servers')->condition('sid', $sid)->execute();
-    } 
+    }
     else {
       return FALSE;
     }
   }
   public function drupalForm($op) {
-    
+
     $form['#prefix'] = <<<EOF
-<p>Setup an LDAP server configuration to be used by other modules such as LDAP AuthZ, LDAP AuthN, LDAP Groups, etc.</p>
+<p>Setup an LDAP server configuration to be used by other modules such as LDAP Authentication,
+LDAP Authorization, etc.</p>
 <p>More than one LDAP server configuration can exist for a physical LDAP server.
-This is useful when you need different configuration options for different LDAP modules
-such as different base dns for authentication and authorization.</p> 
+Multiple configurations for the same physical ldap server are useful in cases such as: (1) different
+base dns for authentication and authorization and (2) non anonymous bind users with different privileges
+for different purposes.</p>
 EOF;
 
 $form['#prefix'] = t($form['#prefix']);
@@ -156,14 +160,14 @@ $form['#prefix'] = t($form['#prefix']);
     '#maxlength' => 255,
     '#required' => TRUE,
   );
-  
+
   $form['server']['status'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enabled'),
     '#default_value' => $this->status,
     '#description' => t('Disable in order to keep configuration without having it active.'),
   );
-  
+
   $form['server']['type'] = array(
     '#type' => 'select',
     '#options' =>  ldap_servers_ldaps_option_array(),
@@ -171,7 +175,7 @@ $form['#prefix'] = t($form['#prefix']);
     '#default_value' => $this->type,
     '#description' => t('This field is informative.  It\'s purpose is to assist with default values and give validation warnings.'),
     '#required' => FALSE,
-  ); 
+  );
   $form['server']['address'] = array(
     '#type' => 'textfield',
     '#title' => t('LDAP server'),
@@ -197,23 +201,53 @@ $form['#prefix'] = t($form['#prefix']);
     '#description' => t('Secure the connection between the Drupal and the LDAP servers using TLS.<br /><em>Note: To use START-TLS, you must set the LDAP Port to 389.</em>'),
   );
 
-  $form['binding'] = array(
+  $form['bind_method'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Server Binding Credentials (or Service Account)'),
-    '#description' => t('<p>Some LDAP configurations (specially common in <strong>Active Directory</strong> setups) restrict anonymous searches.</p><p>If your LDAP setup does not allow anonymous searches, or these are restricted in such a way that login names for users cannot be retrieved as a result of them, then you have to specify here a DN//password pair that will be used for these searches.</p><p>For security reasons, this pair should belong to an LDAP account with stripped down permissions.</p>'),
+    '#title' => t('Binding Method.'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
-  
-  $form['binding']['binddn'] =  array(
+
+  $form['bind_method']['bind_method'] = array(
+    '#type' => 'radios',
+    '#title' => t('Binding Method for Searches (such as finding user object or their group memberships)'),
+    '#default_value' => ($this->bind_method) ? $this->bind_method : LDAP_SERVERS_BIND_METHOD_DEFAULT,
+    '#options' => array(
+      LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT => 'Service Account Bind.  Use credentials in following section to
+      bind to ldap.  This option is usually a best practice. Service account is entered in next section.',
+
+      LDAP_SERVERS_BIND_METHOD_USER => 'Bind with Users Credentials.  Use users\' entered credentials
+      to bind to LDAP.  This is only useful for modules that work during user logon such
+      as ldap authentication and ldap authorization.  This option is not a best practice in most cases.
+      The users dn must be of the form "cn=[username],[base dn]" for this option to work.',
+      LDAP_SERVERS_BIND_METHOD_ANON => 'Anonymous Bind. Use no credentials to bind to ldap server.
+      Will not work on most ldaps.',
+    ),
+    '#required' => TRUE,
+  );
+
+  $form['binding_service_acct'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Service Account Binding Credentials'),
+    '#description' => t('<p>Required when "Service Account Bind" selected above. </p>
+      <p>Some LDAP configurations (specially common in <strong>Active Directory</strong>
+      setups) restrict anonymous searches.</p><p>If your LDAP setup does not allow anonymous searches,
+      or these are restricted in such a way that login names for users cannot be retrieved as a result
+      of them, you have to specify a service account DN//password pair that will be used for these searches.</p>
+      <p>For security reasons, this pair should belong to an LDAP account with stripped down permissions.</p>'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['binding_service_acct']['binddn'] =  array(
     '#type' => 'textfield',
     '#title' => t('DN for non-anonymous search'),
     '#default_value' => $this->binddn,
     '#size' => 80,
     '#maxlength' => 255,
   );
-  
-  $form['binding']['bindpw'] = array(
+
+  $form['binding_service_acct']['bindpw'] = array(
     '#type' => 'password',
     '#title' => t('Password for non-anonymous search'),
     '#size' => 20,
@@ -221,24 +255,25 @@ $form['#prefix'] = t($form['#prefix']);
     '#default_value' => "",
   );
 
-  $form['binding']['clear_bindpw'] = array(
+  $form['binding_service_acct']['clear_bindpw'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Clear existing password from database'),
+    '#title' => t('Clear existing password from database.  Check this when switching away from service account binding.'),
     '#default_value' => 0,
   );
 
-  if ( $form['binding']['bindpw']) {
-    $form['binding']['bindpw']['#description'] = t('<p>Leave emtpy to leave password unchanged.</p>');
+  if ( $form['binding_service_acct']['bindpw']) {
+    $form['binding_service_acct']['bindpw']['#description'] = t('<p>Leave emtpy to leave password unchanged.</p>');
   }
 
   $form['users'] = array(
     '#type' => 'fieldset',
     '#title' => t('LDAP User to Drupal User Relationship'),
-    '#description' => t('How are LDAP user entries found based on Drupal username or email?  And vice-versa?  Needed for LDAP AuthZ and LDAP AuthN functionality.'),
+    '#description' => t('How are LDAP user entries found based on Drupal username or email?  And vice-versa?
+       Needed for LDAP Authentication and Authorization functionality.'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
-  
+
   $form['users']['basedn'] = array(
     '#type' => 'textarea',
     '#title' => t('Base DNs for LDAP user entries'),
@@ -247,32 +282,46 @@ $form['#prefix'] = t($form['#prefix']);
     '#rows' => 6,
     '#description' => t('What DNs have user accounts relavant to this configuration?') . " e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>  " . t('Enter one per line in case if you need more than one.'),
   );
-  
+
   $form['users']['user_attr'] = array(
     '#type' => 'textfield',
     '#title' => t('UserName attribute'),
     '#default_value' => $this->user_attr,
     '#size' => 30,
     '#maxlength' => 255,
-    '#description' => t('The attribute that holds the users\' login name. (eg. <em style="font-style: normal; padding: 1px 3px; border: 1px solid #8888CC; background-color: #DDDDFF">cn</em> for eDir or <em style="font-style: normal; padding: 1px 3px; border: 1px solid #8888CC; background-color: #DDDDFF">sAMAccountName</em> for Active Directory).'),
+    '#description' => t('The attribute that holds the users\' login name. (eg. <code>cn</code> for eDir or <code>sAMAccountName</code> for Active Directory).'),
   );
+
+  $form['users']['user_dn_expression'] =  array(
+    '#type' => 'textfield',
+    '#title' => t('Expression for user DN. Required when "Bind with Users Credentials" method selected.'),
+    '#default_value' => $this->user_dn_expression,
+    '#size' => 80,
+    '#maxlength' => 255,
+    '#description' => t('%username and %basedn are valid tokens in the expression.
+      Typically it will be:<br/> <code>cn=%username,%basedn</code>
+       which might evaluate to <code>cn=jdoe,ou=campus accounts,dc=ad,dc=mycampus,dc=edu</code>
+       Base DNs are entered above.'),
+  );
+
+
   $form['users']['mail_attr'] = array(
     '#type' => 'textfield',
     '#title' => t('Email attribute'),
     '#default_value' => $this->mail_attr,
     '#size' => 30,
     '#maxlength' => 255,
-    '#description' => t('The attribute that holds the users\' email address. (eg. <em style="font-style: normal; padding: 1px 3px; border: 1px solid #8888CC; background-color: #DDDDFF">mail</em>).'),
+    '#description' => t('The attribute that holds the users\' email address. (eg. <code>mail</code>).'),
   );
   $form['users']['ldap_to_drupal_user'] = array(
     '#type' => 'textarea',
     '#title' => t('PHP to transform login name from Drupal to LDAP'),
-    '#default_value' => $this->ldapToDrupalUserPhp, 
+    '#default_value' => $this->ldapToDrupalUserPhp,
     '#cols' => 25,
     '#rows' => 5,
     '#description' => t('Enter PHP to transform Drupal username to the value of the UserName attribute.  Careful, bad PHP code here will break your site. If left empty, no name transformation will be done. Change following example code to enable transformation:<br /><code>return $name;</code>'),
   );
-  
+
   $form['users']['testing_drupal_username'] = array(
     '#type' => 'textfield',
     '#title' => t('Testing Drupal Username'),
@@ -286,7 +335,7 @@ $form['#prefix'] = t($form['#prefix']);
     '#type' => 'submit',
     '#value' => t('Save configuration'),
   );
-  
+
   $action = ($op == 'add') ? 'Add' : 'Update';
   $form['submit'] = array(
     '#type' => 'submit',
@@ -296,10 +345,10 @@ $form['#prefix'] = t($form['#prefix']);
 
 
   return $form;
-    
+
   }
-  
-  
+
+
   public function drupalFormValidate($op, $values)  {
     $errors = array();
 
@@ -307,14 +356,14 @@ $form['#prefix'] = t($form['#prefix']);
       if (!$this->sid) {
         $errors['server_id_missing'] = 'Server id missing from delete form.';
       }
-    } 
+    }
     else {
       $this->populateFromDrupalForm($op, $values);
       $errors = $this->validate($op);
     }
     return $errors;
   }
-  
+
   protected function validate($op) {
     $errors = array();
     if ($op == 'add') {
@@ -323,22 +372,97 @@ $form['#prefix'] = t($form['#prefix']);
         foreach ($ldap_servers as $sid => $ldap_server) {
           if ($this->name == $ldap_server->name) {
             $errors['name'] = t('An LDAP server configuration with the  name %name already exists.', array('%name' => $this->name));
-          } 
+          }
           elseif ($this->sid == $ldap_server->sid) {
             $errors['sid'] = t('An LDAP server configuration with the  id %sid  already exists.', array('%sid' => $this->sid));
           }
         }
       }
-      
+
     }
 
-  
+
     if (!is_numeric($this->port)) {
       $errors['port'] =  t('The TCP/IP port must be an integer.');
     }
+
+    $result = ldap_baddn($this->binddn, t('Service Account DN'));
+    if ($result['boolean'] == FALSE) {
+      $errors['binddn'] =  $result['text'];
+    }
+
+    foreach ($this->basedn as $basedn) {
+      $result = ldap_baddn($basedn, t('User Base DN'));
+      if ($result['boolean'] == FALSE) {
+        $errors['basedn'] =  $result['text'];
+      }
+    }
+
+    $result = ldap_badattr($this->user_attr, t('User attribute'));
+    if ($result['boolean'] == FALSE) {
+      $errors['user_attr'] =  $result['text'];
+    }
+
+    $result = ldap_badattr($this->mail_attr, t('Mail attribute'));
+    if ($result['boolean'] == FALSE) {
+      $errors['mail_attr'] =  $result['text'];
+    }
+
+    if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_USER && !$this->user_dn_expression) {
+      $errors['user_dn_expression'] =  t('When using "Bind with Users Credentials", Expression for user DN is required');
+    }
+
+    if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT && !$this->binddn) {
+      $errors['binddn'] =  t('When using "Bind with Service Account", Bind DN is required.');
+    }
+
+    if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT && !$this->bindpw) {
+      $errors['bindpw'] =  t('When using "Bind with Service Account", Bind password is required.');
+    }
+
     return $errors;
   }
-  
+
+public function drupalFormWarnings($op, $values)  {
+    $errors = array();
+
+    if ($op == 'delete') {
+      if (!$this->sid) {
+        $errors['server_id_missing'] = 'Server id missing from delete form.';
+      }
+    }
+    else {
+      $this->populateFromDrupalForm($op, $values);
+      $warnings = $this->warnings($op);
+    }
+    return $warnings;
+  }
+
+
+protected function warnings($op) {
+
+    $warnings = array();
+    if ($this->type) {
+      $defaults = ldap_servers_get_ldap_defaults($this->type);
+      if ($defaults['user']['user_attr'] && ($this->user_attr != $defaults['user']['user_attr'])) {
+        $tokens = array('%name' => $defaults['name'], '%default' => $defaults['user']['user_attr'], '%user_attr' => $this->user_attr);
+        $warnings['user_attr'] =  t('The standard UserName attribute in %name is %default.  You have %user_attr. This may be correct
+          for your particular LDAP.', $tokens);
+      }
+
+      if ($defaults['user']['mail_attr'] && ($this->mail_attr != $defaults['user']['mail_attr'])) {
+        $tokens = array('%name' => $defaults['name'], '%default' => $defaults['user']['user_attr'], '%mail_attr' => $this->mail_attr);
+        $warnings['mail_attr'] =  t('The standard mail attribute in %name is %default.  You have %mail_attr.  This may be correct
+          for your particular LDAP.', $tokens);
+      }
+    }
+    if (!$this->status) {
+      $warnings['$status'] =  t('This server configuration is currently disabled.');
+    }
+
+    return $warnings;
+  }
+
 public function drupalFormSubmit($op, $values) {
 
   $this->populateFromDrupalForm($op, $values);
@@ -349,7 +473,7 @@ public function drupalFormSubmit($op, $values) {
 
   if ($op == 'delete') {
     $this->delete($this);
-  } 
+  }
   else { // add or update
     try {
       $save_result = $this->save($op);
@@ -360,7 +484,7 @@ public function drupalFormSubmit($op, $values) {
       $this->hasError = TRUE;
     }
   }
-} 
+}
 
 
 
@@ -368,7 +492,7 @@ public function drupalFormSubmit($op, $values) {
     $lines = "";
     if (is_array($array)) {
       $lines = join("\n", $array);
-    }  
+    }
     elseif (is_array(@unserialize($array))) {
       $lines = join("\n", unserialize($array));
     }
@@ -379,15 +503,15 @@ public function drupalFormSubmit($op, $values) {
     $lines = trim($lines);
 
     if ($lines) {
-      $array = explode("\n", $lines);
+      $array = preg_split('/[\n\r]+/', $lines);
+      foreach ($array as $i => $value) {
+        $array[$i] = trim($value);
+      }
     }
     else {
       $array = array();
     }
-
     return $array;
   }
 
 }
-
-

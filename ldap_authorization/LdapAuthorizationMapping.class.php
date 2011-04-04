@@ -1,4 +1,5 @@
 <?php
+// $Id: LdapAuthorizationMapping.class.php,v 1.3 2010/12/29 01:37:46 johnbarclay Exp $
 /**
  * @file
  * class to encapsulate an ldap entry to authorization target ids mapping configuration
@@ -59,7 +60,7 @@ class LdapAuthorizationMapping {
    * Constructor Method
    */
   function __construct($_mid, $_new = FALSE, $_sid = NULL, $_consumer_type = NULL, $_consumer_module = NULL) {
-
+    
     $this->load($_mid, $_new, $_sid, $_consumer_type, $_consumer_module);
   }
   /**
@@ -75,7 +76,7 @@ class LdapAuthorizationMapping {
     
     $this->consumerType = $_consumer_type;
     $this->consumerModule = $_consumer_module;
-    $this->mappingID = $_mid;
+    $this->mappingID = drupal_strtolower($_mid);
     $this->sid = $_sid;
     
     
@@ -176,20 +177,28 @@ class LdapAuthorizationMapping {
   );
   
   
-    protected function linesToArray($lines) {
+  protected function linesToArray($lines) {
     $lines = trim($lines);
 
-     if ($lines) {
-       $array = explode("\n", $lines);
-     }
-     else {
-       $array = array();
-     }
-
-     return $array;
-  }  protected function pipeListToArray($mapping_list_txt) {
+    if ($lines) {
+      $array = preg_split('/[\n\r]+/', $lines);
+      foreach ($array as $i => $value) {
+        $array[$i] = trim($value);
+      }
+    }
+    else {
+      $array = array();
+    }
+    return $array;
+  }
+  
+  
+  
+  
+  protected function pipeListToArray($mapping_list_txt) {
     $result_array = array();
-    foreach ((trim($mapping_list_txt) ? explode("\n", trim($mapping_list_txt)) : array()) as $line) {
+    $mappings = preg_split('/[\n\r]+/', $mapping_list_txt);
+    foreach ($mappings as $line) {
       if (count($mapping = explode('|', trim($line))) == 2) {
        $result_array[] = array(trim($mapping[0]), trim($mapping[1]));
       }

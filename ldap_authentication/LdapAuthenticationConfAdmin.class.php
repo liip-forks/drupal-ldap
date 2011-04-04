@@ -1,4 +1,5 @@
 <?php
+// $Id: LdapAuthenticationConfAdmin.class.php,v 1.4.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file
@@ -342,7 +343,10 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $lines = trim($lines);
 
     if ($lines) {
-      $array = explode("\n", $lines);
+      $array = preg_split('/[\n\r]+/', $lines);
+      foreach ($array as $i => $value) {
+        $array[$i] = trim($value);
+      }
     }
     else {
       $array = array();

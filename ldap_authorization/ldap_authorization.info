@@ -1,3 +1,4 @@
+; $Id: ldap_authorization.info,v 1.1.4.2 2011/02/08 06:01:00 johnbarclay Exp $
 name = LDAP Authorization
 description = "Implements LDAP authorization (previously LDAP Groups)"
 package = "Lightweight Directory Access Protocol"

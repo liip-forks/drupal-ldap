@@ -1,4 +1,5 @@
 <?php
+// $Id: ldap_authorization.admin.mapping_test.inc,v 1.3 2010/12/29 01:37:46 johnbarclay Exp $
 
 /**
  * @file
@@ -27,8 +28,8 @@ function ldap_authorization_mapping_test_form($form, &$form_state, $mapping_id) 
 
     unset($_SESSION['ldap_authorization_test_result']);
   }
-    
-    
+
+
     $form['intro'] = array(
         '#type' => 'item',
         '#markup' => t('<h1>Test LDAP to !consumer_name Mapping Configuration</h1>
@@ -42,7 +43,7 @@ function ldap_authorization_mapping_test_form($form, &$form_state, $mapping_id) 
       '#default_value' => $mapping_id,
     );
 
-   
+
     $form['usernames'] = array(
       '#type' => 'textarea',
       '#title' => t('Drupal usernames to test !consumer_shortName mapping results for.  One per line.', $consumer_tokens),
@@ -62,7 +63,7 @@ function ldap_authorization_mapping_test_form($form, &$form_state, $mapping_id) 
       '#type' => 'submit',
       '#value' => 'test',
     );
-    
+
   return $form;
 }
 
@@ -71,7 +72,7 @@ function ldap_authorization_mapping_test_form($form, &$form_state, $mapping_id) 
  * validate handler for the ldap_authorization_mapping_test
  */
 function ldap_authorization_mapping_test_form_validate($form, &$form_state) {
-  
+
   $values = $form_state['values'];
   if (!($values['usernames'] || $values['random_users'])) {
     form_set_error('No options chosen', t('Usernames must be given or random users checked.'));
@@ -90,7 +91,7 @@ function ldap_authorization_mapping_test_form_submit($form, &$form_state) {
   $consumer_tokens = $consumer->tokens();
 
   $results = array();
-  $users_listed = explode("\n", $form_state['values']['usernames']);
+  $users_listed = $array = preg_split('/[\n\r]+/', $form_state['values']['usernames']);
   $random_users = array();
   $_SESSION['ldap_authorization_mapping_test_form']['random_users'] = $form_state['values']['random_users'];
   $_SESSION['ldap_authorization_mapping_test_form']['usernames'] = $form_state['values']['usernames'];
@@ -107,24 +108,32 @@ function ldap_authorization_mapping_test_form_submit($form, &$form_state) {
         array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
       return "";
     }
-    
+
   }
   $user_names = array_unique(array_merge(array_keys($random_users),$users_listed));
-
+  $i = 0;
   foreach ($user_names as $username) {
-    if ($username) {  // ingore user 0
+    if ($username) {
       if (!$user = user_load_by_name($username)) {
+        // if not existing user, create fake user assumed to be ldap authenticated
         $user = new stdClass();
         $user->name = $username;
+        $user->ldap_test = TRUE;
+        $user->ldap_authenticated = TRUE;
       }
-      $new_authorizations = ldap_authorizations_user_authorizations($user, 'query', $mapping_id, 'logon');
+      $new_authorizations = ldap_authorizations_user_authorizations($user, 'test_query', $mapping_id, 'logon');
       $results[$username]['authorizations'] = $new_authorizations;
-  
+      $i++;
+      if ($i == 10) {
+        break;
+      }
+
     }
   }
   $mapping = ldap_authorizations_mappings($mapping_id, NULL, TRUE);
   $table =  theme('ldap_authorization_test_results', array('data' => $results, 'consumer' => $consumer, 'mapping' => $mapping));
+ // dpm($results); dpm($table);
   $_SESSION['ldap_authorization_test_result'] = $table;
-  $form_state['redirect'] = LDAP_SERVERS_MENU_BASE_PATH .'/authorization/test/'. $mapping_id;
+  $form_state['redirect'] = LDAP_SERVERS_MENU_BASE_PATH .'/authorization/test_'. $mapping_id;
 
 }
