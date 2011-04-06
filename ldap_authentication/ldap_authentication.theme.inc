@@ -27,11 +27,11 @@ function theme_ldap_authentication_user_login_block_links($variables) {
   }
   if ($show_reset_pwd) {
     $items[] = l(t('Request new password'), 'user/password', array('attributes' => array('title' => t('Request new password via e-mail.'))));
-  } 
+  }
   elseif ($auth_conf->ldapUserHelpLinkUrl) {
     $items[] = l(t($auth_conf->ldapUserHelpLinkText), $auth_conf->ldapUserHelpLinkUrl);
   }
-  
+
   $output = theme('item_list', array('items' => $items));
   return $output;
 }
@@ -51,15 +51,15 @@ function theme_ldap_authentication_user_pass_message($variables) {
       need to reset their passwords');
     if ($auth_conf->ldapUserHelpLinkUrl) {
       $msg .=  ' ' . t('at') . ' ' . l(t($auth_conf->ldapUserHelpLinkText), $auth_conf->ldapUserHelpLinkUrl) . '.';
-    } 
+    }
     else {
       $msg .=  ' ' . t('with one of your organizations password management sites.');
     }
-  } 
+  }
   else { // mixed mode
     $msg = ""; // warning will come up on validation.  we do not know if the user is ldap authenticated or not until they submit form.
   }
-  
+
   return $msg;
 }
 
@@ -75,15 +75,14 @@ function theme_ldap_authentication_user_pass_message($variables) {
 function theme_ldap_authentication_user_pass_validate_ldap_authenticated($variables) {
   extract($variables);
   // already know user exists and is ldap authenticated
-  
+
   if ($auth_conf->ldapUserHelpLinkUrl) {
     $msg = t('You may not reset your password here.  You must reset your password via the directions at')
     . ' ' . l(t($auth_conf->ldapUserHelpLinkText), $auth_conf->ldapUserHelpLinkUrl);
-  } 
+  }
   else {
-    $msg = t('You may not reset your password here.  You must reset your password via one of your 
+    $msg = t('You may not reset your password here.  You must reset your password via one of your
       organization\'s password management sites.');
   }
   return $msg;
 }
-  

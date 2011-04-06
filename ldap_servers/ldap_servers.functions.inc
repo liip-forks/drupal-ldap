@@ -6,6 +6,39 @@
  * collection of functions that don't belong in server object
  */
 
+
+
+/**
+ * returns new user account if created, otherwise integer error message such
+ * as LDAP_CREATE_ACCOUNT_ALREADY_EXISTS, LDAP_CREATE_ERROR
+ *
+ */
+function ldap_create_drupal_account($name, $mail, $dn, $sid, $edit = array()) {
+
+  $edit['name'] = $name;
+  $edit['pass'] = user_password(20);
+  $edit['mail'] = $mail;
+  $edit['init'] = $mail;
+  $edit['status'] = 1;
+
+  // save 'init' data to know the origin of the ldap authentication provisioned account
+  $edit['data']['ldap_authentication']['init'] = array(
+    'sid'  => $sid,
+    'dn'   => $dn,
+    'mail' => $mail,
+  );
+
+  if (!$account = user_save( NULL, $edit)) {
+    drupal_set_message(t('User account creation failed because of system problems.'), 'error');
+    return FALSE;
+  }
+  else {
+    user_set_authmaps($account, array('authname_ldap_authentication' => $name));
+  }
+  return $account;
+}
+
+
 /**
   * Modify an LDAP Entry
   */
@@ -74,5 +107,3 @@ function ldap_badattr($attr, $attr_name) {
   }
   return $result;
 }
-
-

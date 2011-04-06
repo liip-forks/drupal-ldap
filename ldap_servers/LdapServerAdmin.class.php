@@ -386,9 +386,11 @@ $form['#prefix'] = t($form['#prefix']);
       $errors['port'] =  t('The TCP/IP port must be an integer.');
     }
 
-    $result = ldap_baddn($this->binddn, t('Service Account DN'));
-    if ($result['boolean'] == FALSE) {
-      $errors['binddn'] =  $result['text'];
+    if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) { // Only for service account
+      $result = ldap_baddn($this->binddn, t('Service Account DN'));
+      if ($result['boolean'] == FALSE) {
+        $errors['binddn'] =  $result['text'];
+      }
     }
 
     foreach ($this->basedn as $basedn) {

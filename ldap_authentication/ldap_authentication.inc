@@ -343,29 +343,13 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
      *       a little tweak to add user->data and mail etc as parameters would make it more useful
      *       for external authentication modules
      */
-
-    $edit = array(
-      'name' => $name,
-      'pass' => user_password(20),
-      'mail' => $ldap_user['mail'],
-      'init' => $ldap_user['mail'],
-      'status' => 1,
-    );
-
-    // save 'init' data to know the origin of the ldap authentication provisioned account
-    $edit['data']['ldap_authentication']['init'] = array(
-      'sid'  => $sid,
-      'dn'   => $ldap_user['dn'],
-      'mail' => $ldap_user['mail'],
-    );
-
-    if (!$account = user_save( NULL, $edit)) {
-      drupal_set_message(t('User account creation failed because of system problems.'), 'error');
-      return FALSE;
+    require_once(drupal_get_path('module','ldap_servers') .'/ldap_servers.functions.inc');
+    $account = ldap_create_drupal_account($name, $ldap_user['mail'], $ldap_user['dn'], $sid);
+    if ($account === FALSE) {
+      // need to throw error that account was not created
     }
-    else {
-      user_set_authmaps($account, array('authname_ldap_authentication' => $name));
-    }
+
+
   }
   else {  // account already exists
     if ($ldap_authentication_authmap == FALSE) {  // LDAP_authen.AC.disallow.ldap.drupal

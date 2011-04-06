@@ -16,5 +16,3 @@ files[] = ldap_authentication.admin.inc
 
 
 features[variable][] = "ldap_authentication_conf"
-
-
