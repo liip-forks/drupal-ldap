@@ -81,29 +81,50 @@ function ldap_create_drupal_account($name, $mail, $dn, $sid, $edit = array()) {
     return $status;
   }
 
+/**
+ *
+ *  this attempts to find bad dns, but should only be used as warningswe
+ *  as the ldap spec allows for any old character to be escaped and ldap
+ *  implementations may not follow the spec.
+ *
+ *  http://www.ietf.org/rfc/rfc2253.txt
+ *
+ */
 function ldap_baddn($dn, $dn_name) {
   $result = array();
-  $valid_attr_name = '[a-zA-Z\d\s]';
-  $valid_attr_values = '[\-a-zA-Z\d\s]';
+  $valid_attr_name = '[_a-zA-Z\d\s]';
+  $valid_attr_values = '[_\-a-zA-Z\d\s]';
   $regex = '/^(' . $valid_attr_name . '*\=' . $valid_attr_values . '*[,]{1})*(' . $valid_attr_name . '*\=' . $valid_attr_values . '*){1}$/';
   $match = (preg_match($regex, $dn)) ? TRUE : FALSE;
   $result['boolean'] = $match;
   if (!$match) {
     $tokens = array('%dn' => htmlspecialchars($dn), '%dn_name' => $dn_name);
-    $result['text'] = t('Invalid format for:<br/> <code><strong>%dn</strong><code>.', $tokens);
+    $result['text'] = t('Possible invalid format for:<br/> <code><strong>%dn</strong><code>.  The format may be correct for
+      your ldap, but please double check.', $tokens);
   }
   return $result;
 }
 
+/**
+ *
+ *  this attempts to find bad dns, but should only be used as warningswe
+ *  as the ldap spec allows for any old character to be escaped and ldap
+ *  implementations may not follow the spec.
+ *
+ *  http://www.ietf.org/rfc/rfc2253.txt
+ *
+ */
+
 function ldap_badattr($attr, $attr_name) {
   $result = array();
-  $valid_attr_name = '[a-zA-Z\d\s]';
+  $valid_attr_name = '[_a-zA-Z\d\s]';
   $regex = '/^(' . $valid_attr_name . '){1,}$/';
   $match = (preg_match($regex, $attr)) ? TRUE : FALSE;
   $result['boolean'] = $match;
   if (!$match) {
     $tokens = array('%attr' => htmlspecialchars($attr), '%attr_name' => $attr_name);
-    $result['text'] = t('Invalid format for %attr_name:<br/> <code><strong>%attr</strong><code>', $tokens);
+    $result['text'] = t('Possible invalid format for %attr_name:<br/> <code><strong>%attr</strong><code>
+      The format may be correct for your ldap, but please double check.', $tokens);
   }
   return $result;
 }

@@ -386,30 +386,6 @@ $form['#prefix'] = t($form['#prefix']);
       $errors['port'] =  t('The TCP/IP port must be an integer.');
     }
 
-    if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) { // Only for service account
-      $result = ldap_baddn($this->binddn, t('Service Account DN'));
-      if ($result['boolean'] == FALSE) {
-        $errors['binddn'] =  $result['text'];
-      }
-    }
-
-    foreach ($this->basedn as $basedn) {
-      $result = ldap_baddn($basedn, t('User Base DN'));
-      if ($result['boolean'] == FALSE) {
-        $errors['basedn'] =  $result['text'];
-      }
-    }
-
-    $result = ldap_badattr($this->user_attr, t('User attribute'));
-    if ($result['boolean'] == FALSE) {
-      $errors['user_attr'] =  $result['text'];
-    }
-
-    $result = ldap_badattr($this->mail_attr, t('Mail attribute'));
-    if ($result['boolean'] == FALSE) {
-      $errors['mail_attr'] =  $result['text'];
-    }
-
     if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_USER && !$this->user_dn_expression) {
       $errors['user_dn_expression'] =  t('When using "Bind with Users Credentials", Expression for user DN is required');
     }
@@ -459,7 +435,31 @@ protected function warnings($op) {
       }
     }
     if (!$this->status) {
-      $warnings['$status'] =  t('This server configuration is currently disabled.');
+      $warnings['status'] =  t('This server configuration is currently disabled.');
+    }
+
+    if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) { // Only for service account
+      $result = ldap_baddn($this->binddn, t('Service Account DN'));
+      if ($result['boolean'] == FALSE) {
+        $warnings['binddn'] =  $result['text'];
+      }
+    }
+
+    foreach ($this->basedn as $basedn) {
+      $result = ldap_baddn($basedn, t('User Base DN'));
+      if ($result['boolean'] == FALSE) {
+        $warnings['basedn'] =  $result['text'];
+      }
+    }
+
+    $result = ldap_badattr($this->user_attr, t('User attribute'));
+    if ($result['boolean'] == FALSE) {
+      $warnings['user_attr'] =  $result['text'];
+    }
+
+    $result = ldap_badattr($this->mail_attr, t('Mail attribute'));
+    if ($result['boolean'] == FALSE) {
+      $warnings['mail_attr'] =  $result['text'];
     }
 
     return $warnings;
