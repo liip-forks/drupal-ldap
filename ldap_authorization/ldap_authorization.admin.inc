@@ -48,31 +48,27 @@ function ldap_authorizations_admin_index() {
  * @param string $consumer_type drupal_roles, og_group, etc.  Only needed for adds
  * @return array drupal form array
  */
-function ldap_authorization_admin_form($form, &$form_state, $mapping_id = NULL, $op = NULL, $consumer_type = NULL) {
+function ldap_authorization_admin_form($form, &$form_state, $consumer_type, $op = NULL) {
     require_once('LdapAuthorizationMappingAdmin.class.php');
-    $consumers = ldap_authorization_get_consumers($consumer_type, TRUE);
+  //  $consumer_object = ldap_authorization_get_consumer_object(array('consumer_type' => $consumer_type));
+    $consumer = ldap_authorization_get_consumers($consumer_type, TRUE);
+    // mappings may be null or a mapping object
+    $mapping = LdapAuthorizationMappingAdmin::getMappings(NULL, $consumer_type, TRUE);
+
     if ($op == 'add') {
-      if (!$consumer_type || (count($consumers) == 0)) {
-        drupal_set_message(t('Bad URL with incorrect authorization type'), 'error');
-      } else {
-        $mappings = LdapAuthorizationMappingAdmin::getMappings();
-        foreach ($mappings as $mapping_id => $mapping) {
-          if ($mapping->consumerType == $consumer_type) {
-            $duplicate = $mapping;
-          }
-        }
-        if ($duplicate) {
-          $tokens = array('%consumer_type' => $consumer_type, '%mapping_id' => $duplicate->mappingID);
-          drupal_set_message(t('Only one mapping is allowed per consumer type.
-            %mapping_id already exists for the cosumer type %consumer_type.  Please edit that mapping.', $tokens),'warning');
-          drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/authorization');
-        }
-        else {
-          $mapping = new LdapAuthorizationMappingAdmin(NULL, TRUE, NULL, $consumer_type, $consumers['consumer_module']);
-        }
+      if (is_object($mapping) && $mapping->consumerType == $consumer_type) {
+        $tokens = array('%consumer_type' => $consumer_type, '%mapping_id' => $mapping->mappingID);
+        drupal_set_message(t('Only one mapping is allowed per consumer type.
+          %mapping_id already exists for the cosumer type %consumer_type.  Please edit that mapping.', $tokens),'warning');
+        drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/authorization');
       }
+      else {
+        $mapping = new LdapAuthorizationMappingAdmin(NULL, TRUE, NULL, $consumer_type, $consumer['consumer_module']);
+        print "<pre>"; print_r($mapping); 
+      }
+
     } elseif ($op == 'update' || $op == 'delete') {
-       if ($mapping = new LdapAuthorizationMappingAdmin(check_plain($mapping_id), FALSE)) {
+       if ($mapping = new LdapAuthorizationMappingAdmin(check_plain($mapping->mappingID), FALSE)) {
 
        } else {
          drupal_set_message(t('Bad LDAP Authorization Mapping URL.  No mapping for mapping id = !id', array('!id' => $mapping_id)), 'error');

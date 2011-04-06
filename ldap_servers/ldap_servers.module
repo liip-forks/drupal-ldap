@@ -150,7 +150,7 @@ function ldap_servers_menu() {
     'title' => 'Edit LDAP Server Configuration',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_form', 'edit', $menu_offset + 2),
-    'type' => MENU_LINKS_TO_PARENT + MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
@@ -159,7 +159,7 @@ function ldap_servers_menu() {
     'title' => 'Test LDAP Server Configuraion',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_test_form', $menu_offset + 1, $menu_offset + 2),
-    'type' => MENU_LINKS_TO_PARENT + MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.test_form.inc',
   );
@@ -170,7 +170,7 @@ $items['admin/config/people/ldap/servers/delete'] = array(
     'title' => 'Delete LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_delete', $menu_offset + 2),
-    'type' =>  MENU_CALLBACK + MENU_LINKS_TO_PARENT,
+    'type' =>  MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
@@ -179,7 +179,7 @@ $items['admin/config/people/ldap/servers/delete'] = array(
     'title' => 'Enable LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
-    'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT ,
+    'type' => MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
@@ -188,7 +188,7 @@ $items['admin/config/people/ldap/servers/delete'] = array(
     'title' => 'Enable LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
-    'type' => MENU_CALLBACK + MENU_LINKS_TO_PARENT,
+    'type' => MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
@@ -382,4 +382,3 @@ function ldap_servers_get_ldap_defaults($type = NULL) {
 
   return ($type) ? $ldap[$type] : $ldap;
 }
-

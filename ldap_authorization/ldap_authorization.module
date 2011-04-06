@@ -48,24 +48,24 @@ function ldap_authorization_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  foreach ($mappings as $mapping_id => $mapping) {
+ // foreach ($mappings as $mapping_id => $mapping) {
 
-    $items['admin/config/people/ldap/authorization/update_'. $mapping_id] = array(
+    $items['admin/config/people/ldap/authorization/update'] = array(
        'title' => t('update'),
        'description' => t('Update an ldap authorization mapping'),
        'page callback' => 'drupal_get_form',
-       'page arguments' => array('ldap_authorization_admin_form', $mapping_id, 'update', $mapping->consumerType),
+       'page arguments' => array('ldap_authorization_admin_form', 6, 'update'),
        'access arguments' => array('administer site configuration'),
        'type' => MENU_CALLBACK,
        'weight' => 3,
        'file' => 'ldap_authorization.admin.inc',
      );
 
-    $items['admin/config/people/ldap/authorization/delete_'. $mapping_id] = array(
+    $items['admin/config/people/ldap/authorization/delete'] = array(
        'title' => t('delete'),
        'description' => t('Delete an ldap authorization mapping'),
        'page callback' => 'drupal_get_form',
-       'page arguments' => array('ldap_authorization_admin_form', $mapping_id, 'delete', $mapping->consumerType),
+       'page arguments' => array('ldap_authorization_admin_form', 6, 'delete'),
        'access arguments' => array('administer site configuration'),
        'type' => MENU_CALLBACK,
        'weight' => 3,
@@ -73,21 +73,21 @@ function ldap_authorization_menu() {
      );
 
 
-     $items['admin/config/people/ldap/authorization/test_'. $mapping_id] = array(
+     $items['admin/config/people/ldap/authorization/test'] = array(
        'title' => t('test'),
        'description' => t('Test an ldap authorization mapping'),
        'page callback' => 'drupal_get_form',
-       'page arguments' => array('ldap_authorization_mapping_test_form', $mapping_id, 'test', $mapping->consumerType),
+       'page arguments' => array('ldap_authorization_mapping_test_form', 6, 'test'),
        'access arguments' => array('administer site configuration'),
        'type' =>  MENU_CALLBACK,
        'weight' => 3,
        'file' => 'ldap_authorization.admin.mapping_test.inc',
      );
 
-  }
+ // }
 
   foreach ($consumers as $consumer_type => $consumer) {
-    $items['admin/config/people/ldap/authorization/add_'. $consumer_type] = array(
+    $items['admin/config/people/ldap/authorization/add/'. $consumer_type] = array(
       'title' => t('Add !name Mapping', array('!name' => $consumer['consumer_name'])),
       'page callback' => 'drupal_get_form',
       'page arguments' => array('ldap_authorization_admin_form', NULL, 'add', $consumer_type),

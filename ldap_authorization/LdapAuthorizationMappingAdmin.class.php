@@ -83,6 +83,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     }
 
  }
+ 
   public function __construct($_mid, $_new = FALSE, $_sid = NULL, $_consumer_type = NULL, $_consumer_module = NULL) {
     parent::__construct($_mid, $_new, $_sid, $_consumer_type, $_consumer_module);
 
@@ -114,6 +115,9 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     if ($mapping_id) {
        $select->condition('ldap_authorization.mapping_id', $mapping_id);
     }
+     if ($consumer_type) {
+       $select->condition('ldap_authorization.consumer_type', $consumer_type);
+    }
 
     try {
       $mapping_vars = $select->execute()->fetchAllAssoc('mapping_id',  PDO::FETCH_ASSOC);
@@ -131,10 +135,17 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
         $mappings[$_mapping_id] = ($class == 'LdapAuthorizationMapping') ? new LdapAuthorizationMapping($_mapping_id) : new LdapAuthorizationMappingAdmin($_mapping_id);
       }
     }
-    if ($flatten && $mapping_id && count($mappings) == 1) {
+    if ($flatten && count($mappings) != 1) {
+      return FALSE;
+    }
+    elseif ($flatten && $mapping_id) {
       return $mappings[$mapping_id];
-    } else {
-     // dpm($mappings);
+    }
+    elseif ($flatten && $consumer_type) {
+      $mapping_vals = array_values($mappings);
+      return $mapping_vals[0];
+    }
+    else {
       return $mappings;
     }
   }

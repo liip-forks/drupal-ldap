@@ -5,7 +5,7 @@ function theme_ldap_authorization_admin_index(&$variables) {
   extract($variables);  //
 
   $table = array(
-    'header' => array("Mapping ID", "LDAP Server ID", "Description", "Module", "Consumer Type", "Enabled","Actions"),
+    'header' => array('LDAP Server ID', 'Description', 'Module', 'Consumer Type', 'Enabled', 'Actions'),
     'attributes' => array('id' => 'ldap_authorization_mappings', 'class' => 'data'),
     'colgroups' => array(),
     'sticky' => FALSE,
@@ -18,9 +18,9 @@ function theme_ldap_authorization_admin_index(&$variables) {
     foreach($mappings as $mapping_id => $mapping) {
       $consumer = ldap_authorization_get_consumer_object(array('consumer_type' => $mapping->consumerType));
       if ($consumer) {
-         $actions =  ' | '. l('update', LDAP_SERVERS_MENU_BASE_PATH .'/authorization/update_'. $mapping->mappingID) . ' | ' .
-            l('delete', LDAP_SERVERS_MENU_BASE_PATH .'/authorization/delete_'. $mapping->mappingID) . ' | ' .
-            l('test', LDAP_SERVERS_MENU_BASE_PATH .'/authorization/test_'. $mapping->mappingID) . ' | ';
+         $actions =  ' | '. l('update', LDAP_SERVERS_MENU_BASE_PATH .'/authorization/update/'. $mapping->consumerType) . ' | ' .
+            l('delete', LDAP_SERVERS_MENU_BASE_PATH .'/authorization/delete/'. $mapping->consumerType) . ' | ' .
+            l('test', LDAP_SERVERS_MENU_BASE_PATH .'/authorization/test/'. $mapping->consumerType) . ' | ';
 
       } else {
         $actions = "Failed to create consumer object for !consumer_name.  Make sure appropriate module is enabled.";
@@ -29,7 +29,6 @@ function theme_ldap_authorization_admin_index(&$variables) {
       $consumer_name = (isset($consumers[$mapping->consumerType]['consumer_name'])) ? $consumers[$mapping->consumerType]['consumer_name']
         : t("module providing type %name disabled", array('%name' => $mapping->consumerType));
       $table['rows'][] = array(
-        $mapping->mappingID,
         $mapping->sid,
         $mapping->description,
         $mapping->consumerModule,
