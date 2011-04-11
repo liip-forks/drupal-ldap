@@ -12,30 +12,35 @@
  */
 define('LDAP_AUTHENTICATION_PROJECT_TAG', 'ldap');
 
-define('LDAP_AUTHENTICATION_MIXED',           1);
-define('LDAP_AUTHENTICATION_EXCLUSIVE',      2);
-define('LDAP_AUTHENTICATION_MODE_DEFAULT',      1);
+define('LDAP_AUTHENTICATION_MIXED',        1);
+define('LDAP_AUTHENTICATION_EXCLUSIVE',    2);
+define('LDAP_AUTHENTICATION_MODE_DEFAULT', 1);
 
-define('LDAP_AUTHENTICATION_CONFLICT_LOG',         1);
-define('LDAP_AUTHENTICATION_CONFLICT_RESOLVE',    2);
+define('LDAP_AUTHENTICATION_CONFLICT_LOG',             1);
+define('LDAP_AUTHENTICATION_CONFLICT_RESOLVE',         2);
 define('LDAP_AUTHENTICATION_CONFLICT_RESOLVE_DEFAULT', 2);
 
-define('LDAP_AUTHENTICATION_EMAIL_ALLOW_DRUPAL_EMAIL',      1);
-define('LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE',   2);
-define('LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE',  3);
-define('LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT',  3);
+define('LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY',  1);
+define('LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE',         2);
+define('LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE',        3);
+define('LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DEFAULT',        1);
 
-define('LDAP_AUTHENTICATION_RESULT_FAIL_CONNECT', 1);
-define('LDAP_AUTHENTICATION_RESULT_FAIL_BIND', 2);
-define('LDAP_AUTHENTICATION_RESULT_FAIL_FIND', 3);
-define('LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED', 4);
+define('LDAP_AUTHENTICATION_EMAIL_ALLOW_DRUPAL_EMAIL', 1);
+define('LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE',       2);
+define('LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE',      3);
+define('LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT',      3);
+
+define('LDAP_AUTHENTICATION_RESULT_FAIL_CONNECT',     1);
+define('LDAP_AUTHENTICATION_RESULT_FAIL_BIND',        2);
+define('LDAP_AUTHENTICATION_RESULT_FAIL_FIND',        3);
+define('LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED',  4);
 define('LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS', 5);
-define('LDAP_AUTHENTICATION_RESULT_SUCCESS', 6);
-define('LDAP_AUTHENTICATION_RESULT_FAIL_GENERIC', 7);
+define('LDAP_AUTHENTICATION_RESULT_SUCCESS',          6);
+define('LDAP_AUTHENTICATION_RESULT_FAIL_GENERIC',     7);
 
-define('LDAP_AUTHENTICATION_ACCT_CREATION_DEFAULT', 4);
+define('LDAP_AUTHENTICATION_ACCT_CREATION_DEFAULT',                4);
 define('LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP', 1);
-define('LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR', 4);
+define('LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR',          4);
 
 define('LDAP_AUTHENTICATION_HELP_LINK_TEXT_DEFAULT', 'Logon Help');
 
@@ -235,14 +240,11 @@ function ldap_authentication_form_user_pass_alter(&$form, $form_state) {
       );
 
   // need to insert before user_pass_validate
-  //print "<pre>"; print_r($form['#validate']);
   array_unshift($form['#validate'], 'ldap_authentication_user_pass_validate');
-  //print "<pre>"; print_r($form['#validate']); die;
 }
 
 
 function ldap_authentication_user_pass_validate(&$form_state) {
- // print "<pre>"; print_r($form_state); die;
   $name_or_mail = trim($form_state['name']['#value']);
   if ($account = user_load_by_mail($name_or_mail)) {
 

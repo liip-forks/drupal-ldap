@@ -2,7 +2,13 @@
 // $Id: ldap_authorization.inc,v 1.3.2.3 2011/02/18 15:06:09 johnbarclay Exp $
 
 /**
- * return all desired authorizations for a given user based on ldap authorization mapping and filtering rules
+ * @file
+ *  bulk of authorization code executed to determine a users authorizations
+ */
+
+
+/**
+ * return all desired authorizations for a given user
  *
 
  * @param object $user
@@ -12,8 +18,6 @@
  *   test_query -- don't grant authorization, just query and return authorizations.  assume user is ldap authenticated and exists
  *   query -- don't grant authorization, just query and return authorizations
  *
- * @param string $_mapping_id
- *   if empty, will check all mappings
  *
  * @param string $context  'logon'
  *
@@ -24,21 +28,21 @@
  *   TRUE if servers configured but no roles derived from ldap
  *   array of potential authorizations (user may or may not already have these)
  *
- *   by reference $user->data[<mapping id>][<authorization_id>] = array();
+ *   by reference $user->data[<consumer_type>][<authorization_id>] = array();
  *      e.g.   $var['drupal_role']['content_admin'] = array('rid' => 4)
  *      e.g.   $var['og_membership']['bakers club'] = array('expires' => '01/01/2012');
  *
  */
 
 
-function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $context) {
+function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $context) {
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $authorizations = array();
+  $notifications = array();
   $watchdog_tokens = array('%username' => $user->name);
-  $consumers = ldap_authorization_get_consumers();
-  $mappings = ldap_authorizations_mappings($_mapping_id);
-
+  $consumers = ldap_authorization_get_consumers($consumer_type);
+  $servers = ldap_servers_get_servers( NULL, 'enabled', TRUE);
 
   /**
    * user 1 not used in ldap authorization.  this is a design decision.
@@ -47,7 +51,8 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
     if ($detailed_watchdog_log) {
       watchdog('ldap_authorization', '%username : ldap_authorization not applied to user 1', $watchdog_tokens, WATCHDOG_DEBUG);
     }
-    return LDAP_AUTHORIZATION_NOT_APPLY_USER_1;
+    $notifications['all'] = LDAP_AUTHORIZATION_NOT_APPLY_USER_1;
+    return array($authorizations, $notifications);
   }
 
   /**
@@ -55,63 +60,80 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
    */
   if ($op == 'test_query' && @$user->ldap_test == TRUE) {
     $ldap_authenticated = $user->ldap_authenticated;  // property 'ldap_authenticated' only exists for fake user objects
-  } else {
+  }
+  else {
     $ldap_authenticated = (boolean)(module_exists('ldap_authentication') && ldap_authentication_ldap_authenticated($user));
   }
   $watchdog_tokens['%ldap_authenticated'] = ($ldap_authenticated) ? 'yes' : 'no';
 
 
 
-  foreach ($mappings as $mapping_id => $mapping) {
+  foreach ($consumers as $consumer_type => $consumer) {
 
     /**
-    * each consumer type has only one mapping and each mapping has only one ldap server id (sid)
+    * each consumer type has only one consumer conf and each consumer conf has only one ldap server id (sid)
     * so there is a one-to-one-to-one relationship between:
     *   - consumer object ($consumer),
     *   - server object ($ldap_server),
-    *   - and mapping object ($mapping).
+    *   - and consumer conf object.
     *
     *  @todo 7.x-2.x so this insides of this loop probably belong in the consumer mapping abstract class
     *   as well as the function _ldap_authorizations_user_authorizations_set
     *
     */
 
-    $consumer_type = $mapping->consumerType;
-    $consumer = ldap_authorization_get_consumer_object(array('consumer_type' =>  $consumer_type));
+    $consumer = ldap_authorization_get_consumer_object($consumer_type);
     $proposed_ldap_authorizations = array();
-    $watchdog_tokens['%mapping_id'] = $mapping_id;
     $watchdog_tokens['%consumer_type'] = $consumer_type;
+    $watchdog_tokens['%sid'] = $consumer->consumerConf->sid;
+
+    if (! is_object($consumer->consumerConf)) {
+      if ($detailed_watchdog_log) {
+        watchdog('ldap_authorization', '%username : consumer type  %consumer_type has no
+          configuration set.', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
+      continue;
+    }
 
     if ($detailed_watchdog_log) {
-      watchdog('ldap_authorization', '%username : testing with mapping %mapping_id
-        of consumer type consumer_type. ldap authenticated=%ldap_authenticated', $watchdog_tokens, WATCHDOG_DEBUG);
+      watchdog('ldap_authorization', '%username : testing with
+         consumer type %consumer_type. ldap authenticated=%ldap_authenticated', $watchdog_tokens, WATCHDOG_DEBUG);
     }
 
-    if ($context == 'logon' && !$mapping->synchOnLogon) {
-      $authorizations[$consumer_type] = LDAP_AUTHORIZATION_MAP_NOT_CONF_FOR_LOGON;
+    if ($context == 'logon' && !$consumer->consumerConf->synchOnLogon) {
+      $notifications[$consumer_type][] = LDAP_AUTHORIZATION_MAP_NOT_CONF_FOR_LOGON;
       if ($detailed_watchdog_log) {
-        watchdog('ldap_authorization', '%username : mapping %mapping_id no set to run on user logon.', $watchdog_tokens, WATCHDOG_DEBUG);
+        watchdog('ldap_authorization', '%username : %consumer_type no set to run on user logon.', $watchdog_tokens, WATCHDOG_DEBUG);
       }
       continue;
     }
 
-    if ($mapping->onlyApplyToLdapAuthenticated  && !$ldap_authenticated  && $op != 'test_query') {
+    if ($consumer->consumerConf->onlyApplyToLdapAuthenticated  && !$ldap_authenticated  && $op != 'test_query') {
       if ($detailed_watchdog_log) {
-        watchdog('ldap_authorization', '%username : mapping %mapping_id not used because it is set to be applied only to ldap authenticated users.
+        watchdog('ldap_authorization', '%username : not used because it is set to be applied only to ldap authenticated users.
             %username  is not ldap authenticated.', $watchdog_tokens, WATCHDOG_DEBUG);
       }
-      $authorizations[$consumer_type] = LDAP_AUTHORIZATION_USER_NOT_LDAP_AUTHENTICATED;
+      $notifications[$consumer_type][] = LDAP_AUTHORIZATION_USER_NOT_LDAP_AUTHENTICATED;
       continue;
     }
 
-    if (! ($user_ldap_entry = ldap_servers_get_user_ldap_data($user, $mapping->sid))) {
-      $authorizations[$consumer_type] = LDAP_AUTHORIZATION_USER_LDAP_NOT_FOUND;
+    if (! ($user_ldap_entry = ldap_servers_get_user_ldap_data($user, $consumer->consumerConf->sid))) {
+      $notifications[$consumer_type][] = LDAP_AUTHORIZATION_USER_LDAP_NOT_FOUND;
       if ($detailed_watchdog_log) {
-        watchdog('ldap_authorization', '%username : mapping %mapping_id ldap user not found.', $watchdog_tokens, WATCHDOG_DEBUG);
+        watchdog('ldap_authorization', '%username : %consumer_type ldap user not found.', $watchdog_tokens, WATCHDOG_DEBUG);
       }
       continue;
     }
-    $ldap_server = ldap_servers_get_servers($mapping->sid, 'enabled', TRUE);
+
+    if (! isset($servers[$consumer->consumerConf->sid])) {
+      $notifications[$consumer_type][] = LDAP_AUTHORIZATION_SERVER_CONFIG_NOT_FOUND;
+      if ($detailed_watchdog_log) {
+        watchdog('ldap_authorization', '%username : %consumer_type ldap server %sid not enabled or found.', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
+      continue;
+    }
+
+    $ldap_server = $servers[$consumer->consumerConf->sid];
 
     /**
      * 1. first just need to figure out what authz_ids are generated for this consumer type/mapping configuration
@@ -125,10 +147,10 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
      *   -  drupal user entry, $user
      *   -  a user ldap entry, $user_ldap_entry
      *   -  an ldap server configuration, $ldap_server
-     *   -  a mapping configuration ($ldap_authz_map_config)
+     *   -  a mapping configuration ($consumer_conf)
      */
 
-    ldap_authorization_maps_alter_invoke($user, $user_ldap_entry, $ldap_server, $mapping, $proposed_ldap_authorizations, 'query');
+    ldap_authorization_maps_alter_invoke($user, $user_ldap_entry, $ldap_server, $consumer->consumerConf, $proposed_ldap_authorizations, 'query');
     if ($detailed_watchdog_log) {
       $watchdog_tokens['%proposed_authorizations'] = join(', ', $proposed_ldap_authorizations);
       watchdog('ldap_authorization', '%username : initial proposed authorization for %consumer_type: %proposed_authorizations.',
@@ -142,15 +164,16 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
      */
 
     $filtered_ldap_authorizations = array();
-    if ($mapping->useMappingsAsFilter) {
-      foreach($mapping->mappings as $mapping_filter) {
+    if ($consumer->consumerConf->useMappingsAsFilter) {
+      foreach ($consumer->consumerConf->mappings as $mapping_filter) {
         $map_from = $mapping_filter[0];
         $map_to = $mapping_filter[1];
-        if(isset($proposed_ldap_authorizations[$map_from]) || isset($proposed_ldap_authorizations[strtolower($map_from)])) {
+        if (isset($proposed_ldap_authorizations[$map_from]) || isset($proposed_ldap_authorizations[strtolower($map_from)])) {
           $filtered_ldap_authorizations[] = $map_to;
         }
       }
-    } else {
+    }
+    else {
       $filtered_ldap_authorizations = array_keys($proposed_ldap_authorizations);
     }
     if ($detailed_watchdog_log) {
@@ -163,16 +186,16 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $_mapping_id, $co
      * 3. third, grant any proposed authorizations not already granted
      */
     if ($op == 'set') {
-      _ldap_authorizations_user_authorizations_set($user, $consumer, $mapping, $filtered_ldap_authorizations, $ldap_entry, $watchdog_tokens);
+      _ldap_authorizations_user_authorizations_set($user, $consumer, $filtered_ldap_authorizations, $ldap_entry, $watchdog_tokens);
     }
 
-    $authorizations[$consumer_type] = $filtered_ldap_authorizations[$consumer_type];
-  } //  end foreach $mappings
-  return $authorizations;
+    $authorizations[$consumer_type] = $filtered_ldap_authorizations;
+  } //  end foreach $consumer type
+  return array($authorizations, $notifications);
 
 }
 
-function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $mapping, $filtered_ldap_authorizations, $ldap_entry, $watchdog_tokens) {
+function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filtered_ldap_authorizations, $ldap_entry, $watchdog_tokens) {
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $user_edit = array(); // all user data is stored here until user_save is called.
 
@@ -191,10 +214,11 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $mappin
    * B. if regrantLdapProvisioned is false, $creates array should only be new authorizations
    */
 
-  if (isset($user->data['ldap_authorizations'][$consumer->consumerType]) && $mapping->regrantLdapProvisioned === FALSE) {
+  if (isset($user->data['ldap_authorizations'][$consumer->consumerType]) && $consumer->consumerConf->regrantLdapProvisioned === FALSE) {
     $existing_ldap_authorizations = $initial_existing_ldap_authorizations;
     $creates = array_diff($filtered_ldap_authorizations, $existing_ldap_authorizations);
-  } else {
+  }
+  else {
     $existing_ldap_authorizations = array();
     $creates = $filtered_ldap_authorizations;
   }
@@ -202,21 +226,21 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $mappin
 
 
    /**
-   * C.  query or create existing authorization target ids (drupal roles, og groups etc.)
+   * C.  query or create existing authorization consumer ids (drupal roles, og groups etc.)
    *       doesn't matter if an authorization ids exists if the container constructs don't exist.
    */
-  $consumer_containers_existing = $consumer->getAvailableTargetIDs();
+  $consumer_containers_existing = $consumer->availableConsumerIDs();
   $containers_needed = array_diff($creates, $consumer_containers_existing);
   $watchdog_tokens['%consumer_containers_initial'] = join(', ', $consumer_containers_existing);
-  if ($mapping->createTargets && count($containers_needed) > 0) {
+  if ($consumer->consumerConf->createConsumers && count($containers_needed) > 0) {
     $watchdog_tokens['%consumer_containers_needed'] = join(', ', $containers_needed);
-    $consumer->createTargets($containers_needed);
-    $consumer_containers_existing = $consumer->getAvailableTargetIDs();  // requery in case of failure
+    $consumer->createConsumers($containers_needed);
+    $consumer_containers_existing = $consumer->availableConsumerIDs();  // requery in case of failure
   }
   $watchdog_tokens['%consumer_containers_final'] = join(', ', $consumer_containers_existing);
 
    /**
-   * D.  Only grant authorization target ids that exist
+   * D.  Only grant authorization consumer ids that exist
    */
   $grants = array_intersect($consumer_containers_existing, $creates);
 
@@ -233,7 +257,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $mappin
    *  3.F take away any authorizations not in proposed authorization,
    *      but previously granted by ldap
    */
-  if ($mapping->revokeLdapProvisioned) {
+  if ($consumer->consumerConf->revokeLdapProvisioned) {
     $revokes = array_diff($initial_existing_ldap_authorizations, $filtered_ldap_authorizations);
     if (count($revokes)) {
       $consumer->authorizationRevoke($user, $user_edit, $revokes, $ldap_entry, FALSE);
@@ -260,32 +284,31 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $mappin
   $user = user_save($user, $user_edit);
 }
 
-function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_entry, &$ldap_server, &$mapping, &$authz_ids, $op) {
+function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_entry, &$ldap_server, &$consumer_conf, &$authz_ids, $op) {
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $watchdog_tokens = array();
 
   // Strategy 1: group extracted from user's DN.
   $derive_from_dn_authorizations = array();
-  if ($mapping->deriveFromDn) {
+  if ($consumer_conf->deriveFromDn) {
     $pairs = explode(',', $user_ldap_entry['dn']);
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
-      if (drupal_strtolower(trim($pair[0])) == drupal_strtolower($mapping->deriveFromDnAttr)) {
+      if (drupal_strtolower(trim($pair[0])) == drupal_strtolower($consumer_conf->deriveFromDnAttr)) {
         $id =  trim($pair[1]);
         $derive_from_dn_authorizations[$id] = $id;
       }
     }
-
   }
 
   // Strategy 2: groups in user attributes
   $derive_from_attr_authorizations = array();
-  if ($mapping->deriveFromAttr) {
-    foreach ($mapping->deriveFromAttrAttr as $attribute) {
+  if ($consumer_conf->deriveFromAttr) {
+    foreach ($consumer_conf->deriveFromAttrAttr as $attribute) {
       if (isset($user_ldap_entry['attr'][strtolower($attribute)])) {
         // patch 1050944
-        for($i = 0; $i < $user_ldap_entry['attr'][strtolower($attribute)]['count']; $i++) {
+        for ($i = 0; $i < $user_ldap_entry['attr'][strtolower($attribute)]['count']; $i++) {
           $derive_from_attr_authorizations[$user_ldap_entry['attr'][strtolower($attribute)][$i]] = $user_ldap_entry['attr'][strtolower($attribute)][$i];
         }
       }
@@ -300,11 +323,11 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   // Strategy 3: groups as entries.
   $derive_from_entry_authorizations = array();
  // $ldap_mapping->ldapgroups_entries_attribute
-  if ($mapping->deriveFromEntry) {
-    foreach ($mapping->deriveFromEntryEntries as $branch) {
-      $entries = $ldap_server->search($mapping->deriveFromEntryAttr .'='. $user_ldap_entry['dn'], $branch, array('cn'));
+  if ($consumer_conf->deriveFromEntry) {
+    foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
+      $entries = $ldap_server->search($consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'], $branch, array('cn'));
       if (empty($entries) || $entries['count'] == 0) {
-        $entries = $ldap_server->search($mapping->deriveFromEntryAttr .'='. $user->name, $branch, array('cn'));
+        $entries = $ldap_server->search($consumer_conf->deriveFromEntryAttr . '=' . $user->name, $branch, array('cn'));
         foreach ($entries as $entry) {
           if (isset($entry['cn'])) {
             $derive_from_entry_authorizations[$entry['cn'][0]] = $entry['cn'][0];
@@ -324,13 +347,12 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
     $watchdog_tokens['%username'] = $user->name;
     $watchdog_tokens['%ldap_server'] = $ldap_server->sid;
-    $watchdog_tokens['%mapping_id'] = $mapping->mappingID;
     $watchdog_tokens['%deriveFromDn'] = join(', ', array_keys($derive_from_dn_authorizations));
     $watchdog_tokens['%deriveFromAttr'] = join(', ', array_keys($derive_from_attr_authorizations));
-    $watchdog_tokens['%deriveFromEntry'] = 'authorizations: '. join(', ', array_keys($derive_from_entry_authorizations));
+    $watchdog_tokens['%deriveFromEntry'] = 'authorizations: ' . join(', ', array_keys($derive_from_entry_authorizations));
     $watchdog_tokens['%authz_ids'] =  join(', ', array_keys($authz_ids));
 
-    watchdog('ldap_authorization', '%username :_ldap_authorization_ldap_authorization_maps_alter for mapping_id = %mapping_id:
+    watchdog('ldap_authorization', '%username :_ldap_authorization_ldap_authorization_maps_alter:
       <hr/>deriveFromDn authorization ids: %deriveFromDn
       <hr/>deriveFromAttr authorization ids: %deriveFromAttr
       <hr/>deriveFromEntry authorization ids: %deriveFromEntry

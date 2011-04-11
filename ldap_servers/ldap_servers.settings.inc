@@ -8,26 +8,27 @@
  */
 
 function ldap_servers_settings() {
-  
+
   require_once('ldap_servers.functions.inc');
-  
+
   if (! ldap_servers_ldap_extension_loaded()) {
     drupal_set_message(t('PHP LDAP Extension is not loaded.'), "warning");
-  }$https_approaches = array();
+  }
+
+  $https_approaches = array();
   $https_approaches[] = t('Use secure pages or secure login module to redirect to SSL (https)');
   $https_approaches[] = t('Run entire site with SSL (https)');
   $https_approaches[] = t('Remove logon block and redirect all /user page to https via webserver redirect');
-  
+
   $form['#title'] = "Configure LDAP Preferences";
   $form['ssl'] = array('#type' => 'fieldset', '#title' => t('Require HTTPS on Credential Pages'));
-  $form['ssl']['ldap_servers_require_ssl_for_credentails'] = array( 
-    '#type' => 'checkbox', 
+  $form['ssl']['ldap_servers_require_ssl_for_credentails'] = array(
+    '#type' => 'checkbox',
     '#title' => t('If checked, modules using LDAP will not allow credentials to
-      be entered on or submitted to HTTP pages, only HTTPS. This option should be used with an 
-      approache to get all logon forms to be https, such as:') . 
+      be entered on or submitted to HTTP pages, only HTTPS. This option should be used with an
+      approache to get all logon forms to be https, such as:') .
       theme('item_list', array('items' => $https_approaches)),
-    '#default_value' => variable_get('ldap_api_require_ssl_for_credentails', 1), 
-    '#default_value' => variable_get('ldap_servers_require_ssl_for_credentails', 1), 
+    '#default_value' => variable_get('ldap_servers_require_ssl_for_credentails', 1),
   );
 
   $options = ldap_servers_encrypt_types('encrypt');
@@ -40,13 +41,21 @@ function ldap_servers_settings() {
     '#type' => 'select',
     '#options' => $options,
     '#title' => t('Encrypt Stored LDAP Passwords?'),
-    '#default_value' => variable_get('ldap_servers_encryption', 0), 
-    '#description' => t('With encryption, passwords will be stored in encrypted form.  
+    '#default_value' => variable_get('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT),
+    '#description' => t('With encryption, passwords will be stored in encrypted form.
     This is two way encryption because the actual password needs to used to bind to LDAP.
     So it offers minimal defense if someone gets in the filespace.  It mainly helps avoid the accidental
-    discovery of a clear text password.'),   
+    discovery of a clear text password.'),
     );
-  
+
+    // $options will be empty if server does not support mcrypt.
+  // Disable the form field and explain this to the user.
+  if (empty($options)) {
+    $form['encryption']['ldap_servers_encryption']['#options'] = array(LDAP_SERVERS_ENC_TYPE_CLEARTEXT => t('Not available.'));
+    $form['encryption']['ldap_servers_encryption']['#disabled'] = TRUE;
+    $form['encryption']['ldap_servers_encryption']['#description'] .= ' <strong>' . t('Encryption is not supported on this web server.') . '</strong>';
+  }
+
   $form['#submit'][] = 'ldap_servers_settings_submit';
   return system_settings_form($form);
 }
@@ -56,4 +65,3 @@ function ldap_servers_settings_submit($form, &$form_state) {
     watchdog('ldap', 'LDAP SERVERS settings updated.');
   }
 }
-

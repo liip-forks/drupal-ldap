@@ -6,64 +6,43 @@
  * Install, update and uninstall functions for the LDAP authorization module.
  */
 
-/**
- * Implementation of hook_install().
- */
-function ldap_authorization_install() {
 
-}
-
-/**
- * Implementation of hook_uninstall().
- */
-function ldap_authorization_uninstall() {
-  //db_query("UPDATE {ldapauth} SET ldapdata_bindpw = '' WHERE sid = %d", $values['sid']);
-  //db_query("DELETE FROM {variable} WHERE name like 'ldap_authorization_%'");
-}
-
-/**
- * Implementation of hook_schema().
- */
+  /**
+   * Implements hook_schema().
+   */
 function ldap_authorization_schema() {
-  
+
   $schema['ldap_authorization'] = array(
     'export' => array(
-       'key' => 'mapping_id',
-       'key name' => 'Mapping ID',
-       'identifier' => 'ldap_authorization_conf',
-        'api' => array(
-          'owner' => 'ldap_authorization',
-          'api' => 'ldap_authorization',
-          'minimum_version' => 1,
-          'current_version' => 1,
-         ),
+      'key' => 'consumer_type',
+      'key name' => 'Mapping ID',
+      'identifier' => 'ldap_authorization_conf',
+      'api' => array(
+        'owner' => 'ldap_authorization',
+        'api' => 'ldap_authorization',
+        'minimum_version' => 1,
+        'current_version' => 1,
+      ),
     ),
-      
+
     'description' => "Data used to map users ldap entry to authorization rights.",
-    'primary key' => array('numeric_mapping_id'),
+    'primary key' => array('numeric_consumer_conf_id'),
     'foreign keys' => array(
       'sid' => array(
         'table' => 'ldap_servers',
         'columns' => array('sid' => 'sid'),
       ),
-     ),
-    );
-  
-  require_once('LdapAuthorizationMappingAdmin.class.php');
-    
-  $fields = LdapAuthorizationMappingAdmin::fields();
+    ),
+  );
+
+  require_once('LdapAuthorizationConsumerConfAdmin.class.php');
+
+  $fields = LdapAuthorizationConsumerConfAdmin::fields();
   foreach ($fields as $name => $props) {
     if (isset($props['schema'])) {
-       $schema['ldap_authorization']['fields'][$name] = $props['schema'];
+      $schema['ldap_authorization']['fields'][$name] = $props['schema'];
     }
   }
 
   return $schema;
-
 }
-
-
-
-
-
-

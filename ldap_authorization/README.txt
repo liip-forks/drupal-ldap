@@ -1,59 +1,51 @@
 // $Id: README.txt,v 1.2 2010/12/29 01:37:46 johnbarclay Exp $
-----------------------
-Authorization Consumer
-----------------------
-The "target" or entity that membership or authorization
-is being granted to.  Represented by LdapAuthorizationConsumer<consumer_type>
-class which is provided by consumer modules such as ldap_authorization_drupal_role
 
-e.g. for drupal roles, the authorization consumer would be drupal roles
-e.g. for og, , the authorization consumer would be organic groups
+Vocubulary of LDAP Authorization and its Code
 
 ----------------------
-Consumer Type
+"Consumer"
 ----------------------
-Id of a consumer type.  A module articulates which consumer_types
-it provides in hook_ldap_authorization_consumer and must provide a class
-for each consumer it provides.
-e.g. drupal_role, og_group, etc.
+The "consumer" or entity that authorization is being granted.
+
+Examples:  Drupal role, Organic Group group
 
 ----------------------
-Authorization Consumer Module
+"Consumer Type"
 ----------------------
-A module which provides an authorization consumer.
-The module will provide the LdapAuthorizationConsumer<consumer_type> class and
-implement the hook_ldap_authorization_consumer hook.
+Machine ID of a consumer.  This is used in naming conventionss.
+
+Examples:  drupal_role, og_group
 
 ----------------------
-Authorization Target.
+"Consumer Module"
 ----------------------
-The object representing a single authorization for a given Authorization Consumer.
-e.g. a drupal role, or og group
+The module that bridges ldap_authorization and the consumer.
+It needs to (1) provide a class: LdapAuthorizationConsumer<consumer_type>
+and (2) implement hook_ldap_authorization_consumer.
+
+Examples:  ldap_authorization_drupal_role
+
 
 ----------------------
-Target ID.
+"Authorization ID"
 ----------------------
-The id representing a single authorization for a given Authorization Consumer.
-e.g. for drupal roles, the Target ID would be the drupal role name
-e.g. for og, the Target ID might be the og name.
+The id of an individual authorization such as a drupal role or organic group.
+
+Examples:  "authenticated user", "admin" (for drupal roles)
+Examples:  "knitters on skates", "vacationing programmers" (og group names for organic groups)
+
 
 ----------------------
-Authorization Mapping.
+"Consumer Configuration"
 ----------------------
 Configuration of how a users ldap attributes will
-determine a set of Target ids the user should be granted.
-Represented by LdapAuthorizationMapping and LdapAuthorizationMappingAdmin classes
-and managed at /admin/config/people/ldap/authorization
+determine a set of Consumer ids the user should be granted.
+Represented by LdapAuthorizationConsumerConf and LdapAuthorizationConsumerConfAdmin classes
+and managed at /admin/config/people/ldap/authorization.  Stored in ldap_authorization database table.
 
 ---------------------
-LDAP Server.
+LDAP Server Configuration
 ---------------------
-Each Authorization Mapping will use a single ldap server configuration to bind
+Each Consumer Configuration will use a single ldap server configuration to bind
 and query ldap.  The ldap server configuration is also used to map the drupal
 username to an ldap user entry.
-
-
-
-
-
-

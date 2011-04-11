@@ -1,0 +1,82 @@
+<?php
+// $Id: user.test,v 1.111 2010/12/18 00:56:18 dries Exp $
+
+/**
+ * @file
+ * simpletest for ldap aservers
+ *
+ */
+
+class LdapServersTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'LDAP Servers Tests',
+      'description' => 'Test ldap servers.  Servers module is primarily a storage
+        tool for ldap server configuration, so most of testing is just form and db testing.
+        there are some api like functions that could be tested.',
+      'group' => 'LDAP'
+    );
+  }
+
+  protected $ldap_test_data;
+
+  /**
+   *  create one or more server configurations in such as way
+   *  that this setUp can be a prerequisite for ldap_authentication and ldap_authorization
+   */
+  function setUp() {
+    $this->ldap_user = $this->drupalCreateUser();
+    $this->drupal_user = $this->drupalCreateUser();
+    $this->drupal_admin_user = $this->drupalCreateUser(array('administer site configuration'));
+
+    $parent = dirname(dirname($_SERVER['SCRIPT_FILENAME']));
+    $delimiter = (strpos(@$_SERVER['SERVER_SOFTWARE'], 'Microsoft') === FALSE) ? '/' : '\\';
+    require_once($parent . $delimiter . 'ldap_simpletest.inc');
+    $this->ldap_test_data = ldap_simpletest_conf();
+
+    // create 2 ldap server configurations based on configuration files
+    // set ldap general configuration:  encryption, detailed logging,
+  }
+
+
+  function testEncryption() {
+    // test that pwds in config files are encrypted.
+    // test that switching encryption, decrypes and reincrypts pwd.
+  }
+
+  function testHttps() {
+    // enable https required
+    // get logon form over http and see if disabled
+  }
+
+  function testInstall() {
+    $this->assert('pass', 'pass test');
+    // uninstall ldap_authorization and ldap_authorization_drupal_roles
+    // enable both
+    // assert tables and fields are there (ldap_authorization_schema)
+
+    // uninstall and assert table is removed.
+    }
+
+
+  function testServerCRUD() {
+    // add, edit, and delete a server.
+    // test critical validations
+    // test if server object can be instantiated from server record
+  }
+
+  function testLdap() {
+    // test some basic ldap functions just to see if ldap connection is real.
+
+
+
+  }
+
+  function testAPIFunctions() {
+    // test some functions in the api
+
+
+  }
+
+
+}

@@ -62,7 +62,7 @@ function ldap_create_drupal_account($name, $mail, $dn, $sid, $edit = array()) {
   function ldap_password_modify($userdn, $new_password, $ldap_server) {
 
     $new_password = "\"" . $new_password . "\"";
-    $len = strlen($new_password);
+    $len = drupal_strlen($new_password);
     $new_pass = NULL;
     for ($i = 0; $i < $len; $i++) {
       $new_pass .= "{$new_password{$i}}\000";

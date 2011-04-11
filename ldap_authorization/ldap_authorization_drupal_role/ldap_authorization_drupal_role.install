@@ -6,21 +6,4 @@
  * Install, update and uninstall functions for the LDAP authorization module.
  */
 
-/**
- * Implementation of hook_install().
- */
-function ldap_authorization_drupal_role_install() {
-
-}
-
-/**
- * Implementation of hook_uninstall().
- */
-function ldap_authorization_drupal_role_uninstall() {
-  
-
-}
-
-
-
 

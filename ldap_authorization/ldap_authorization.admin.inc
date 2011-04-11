@@ -3,92 +3,79 @@
 
 /**
  * @file
- * Administrative page callbacks for the ldap_authorization module.
+ * Administrative page callbacks for the ldap_authorization module.  Consumer configuration form and index.
  */
 
 
 /**
- * index of ldap authorization mappings
+ * index of ldap authorization configurations
  *
  * @return string html table
  */
 
 function ldap_authorizations_admin_index() {
-  require_once('LdapAuthorizationMappingAdmin.class.php');
-  $mappings = LdapAuthorizationMappingAdmin::getMappings();
 
-  // check for authorization consumer modules
-  $consumers = ldap_authorization_get_consumers( NULL, TRUE);
+  $consumers = ldap_authorization_get_consumers(NULL, TRUE);
   if (!is_array($consumers) || count($consumers) == 0) {
-    drupal_set_message('No authorization consumer modules are enabled.  Enable
-      LDAP Authorization Drupal Roles, OG LDAP, or another LDAP Authorization consuming module','warning');
+    drupal_set_message(t('No authorization consumer modules are enabled.  Enable
+    LDAP Authorization Drupal Roles, OG LDAP, or another LDAP Authorization consuming module'), 'warning');
   }
 
-   // check for ldap server configurations
   $servers = ldap_servers_get_servers(NULL, 'enabled');
-
   if (count($servers) == 0) {
-      $message =  ldap_servers_no_enabled_servers_msg('ldap authorization can be set up');
-      return $message;
-    } else {
-      return theme('ldap_authorization_admin_index',
-        array('mappings' => $mappings, 'consumers' => $consumers));
-    }
+    $tokens = array('%add_server_link' => l(t('Add LDAP Server'), 'admin/config/people/ldap/servers/add'));
+    return t('ldap authorization can not be set up until ldap servers are configured.  %add_server_link', $tokens);
+  }
+
+  foreach($consumers as $consumer_type => $consumer) {
+    $consumers[$consumer_type] = ldap_authorization_get_consumer_object($consumer_type);
+  }
+  return theme('ldap_authorization_admin_index', array('consumers' => $consumers));
+
 }
 
 
 
 /**
- * form for adding, updating, and deleting a single ldap authorization mapping
+ * form for adding, updating, and deleting a single ldap authorization configuration
  *
- * @param <type> $form
- * @param <type> $form_state
- * @param string $mapping_id unique identifier for authorization mapping
- * @param string $op add, update, delete
- * @param string $consumer_type drupal_roles, og_group, etc.  Only needed for adds
- * @return array drupal form array
+ * @param form array $form
+ * @param form state array $form_state
+ * @param string $op (add, edit, or delete)
+ * @param string $consumer_type e.g. drupal_roles, og_group, etc.  Only needed for adds
+ * @return drupal form array
  */
+
 function ldap_authorization_admin_form($form, &$form_state, $consumer_type, $op = NULL) {
-    require_once('LdapAuthorizationMappingAdmin.class.php');
-  //  $consumer_object = ldap_authorization_get_consumer_object(array('consumer_type' => $consumer_type));
-    $consumer = ldap_authorization_get_consumers($consumer_type, TRUE);
-    // mappings may be null or a mapping object
-    $mapping = LdapAuthorizationMappingAdmin::getMappings(NULL, $consumer_type, TRUE);
+  require_once('LdapAuthorizationConsumerConfAdmin.class.php');
+  $consumer = ldap_authorization_get_consumer_object($consumer_type);
 
-    if ($op == 'add') {
-      if (is_object($mapping) && $mapping->consumerType == $consumer_type) {
-        $tokens = array('%consumer_type' => $consumer_type, '%mapping_id' => $mapping->mappingID);
-        drupal_set_message(t('Only one mapping is allowed per consumer type.
-          %mapping_id already exists for the cosumer type %consumer_type.  Please edit that mapping.', $tokens),'warning');
-        drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/authorization');
-      }
-      else {
-        $mapping = new LdapAuthorizationMappingAdmin(NULL, TRUE, NULL, $consumer_type, $consumer['consumer_module']);
-        print "<pre>"; print_r($mapping); 
-      }
+  if ($op == 'add' && is_object($consumer->consumerConf) && $consumer->consumerConf->inDatabase) {
+    drupal_set_message(t('Only one configuration is allowed per consumer type.
+      Configuration already exists for the cosumer type %consumer_type.  Please edit that configuration.',
+      array('%consumer_type' => $consumer_type)), 'warning');
+    drupal_goto(LDAP_SERVERS_MENU_BASE_PATH . '/authorization');
+  }
 
-    } elseif ($op == 'update' || $op == 'delete') {
-       if ($mapping = new LdapAuthorizationMappingAdmin(check_plain($mapping->mappingID), FALSE)) {
+  if (($op == 'edit' || $op == 'delete') && !is_object($consumer->consumerConf)) {
+    drupal_set_message(t('Bad LDAP Authorization Configuration URL.'), 'error');
+    drupal_goto(LDAP_SERVERS_MENU_BASE_PATH . '/authorization');
+  }
 
-       } else {
-         drupal_set_message(t('Bad LDAP Authorization Mapping URL.  No mapping for mapping id = !id', array('!id' => $mapping_id)), 'error');
-         drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/authorization');
-       }
-    }
-
-    $servers = ldap_servers_get_servers(NULL, 'enabled');
-
-    if (count($servers) == 0) {
-      drupal_goto('admin/config/people/ldap/authorization');
-    } else {
-      foreach ($servers as $sid => $server) {
-        $server_options[$sid] = $server->name;
-      }
-      return  $mapping->drupalForm($server_options, $op);
-    }
+  $servers = ldap_servers_get_servers(NULL, 'enabled');
+  if (count($servers) == 0) {
+    drupal_set_message(t('No ldap servers configured.  Please configure a server before an ldap authorization.'), 'error');
+    drupal_goto('admin/config/people/ldap/authorization');
+  }
 
 
+  $new = ($op == 'add');
+  $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer, $new);
 
+  foreach ($servers as $sid => $server) {
+    $server_options[$sid] = $server->name;
+  }
+  return $consumer_conf_admin->drupalForm($server_options, $op);
 
 }
 
@@ -96,17 +83,17 @@ function ldap_authorization_admin_form($form, &$form_state, $consumer_type, $op 
 /**
  * validate handler for the ldap_authorization_admin_form
  */
+
 function ldap_authorization_admin_form_validate($form, &$form_state) {
- list($consumer, $op, $op_past, $new, $values)  = _ldap_authorization_admin_parse_form($form, $form_state);
 
-  require_once('LdapAuthorizationMappingAdmin.class.php');
-  // create as new simply for validation
-  $mapping = new LdapAuthorizationMappingAdmin($values['mapping_id'], TRUE, $values['sid'], $consumer->consumerType, $consumer->consumerModule);
-  $errors = $mapping->drupalFormValidate($op, $values);
+  list($consumer, $op, $op_past, $new)  = _ldap_authorization_admin_parse_form($form, $form_state);
+  $values = $form_state['values'];
+  require_once('LdapAuthorizationConsumerConfAdmin.class.php');
+  $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer, $new);
+
+  $errors = $consumer_conf_admin->drupalFormValidate($op, $values);
   foreach ($errors as $error_name => $error_text) {
-
     form_set_error($error_name, t($error_text));
-
   }
 
 }
@@ -117,51 +104,55 @@ function ldap_authorization_admin_form_validate($form, &$form_state) {
  */
 
 function ldap_authorization_admin_form_submit($form, &$form_state) {
-  list($consumer, $op, $op_past, $new, $values)  = _ldap_authorization_admin_parse_form($form, $form_state);
+  list($consumer, $op, $op_past_tense, $new)  = _ldap_authorization_admin_parse_form($form, $form_state);
+  $values = $form_state['values'];
+  require_once('LdapAuthorizationConsumerConfAdmin.class.php');
+  $consumer_conf = new LdapAuthorizationConsumerConfAdmin($consumer, $new);
+  $consumer_conf->drupalFormSubmit($op, $values);  // add form data to object and save or create
 
-  require_once('LdapAuthorizationMappingAdmin.class.php');
-  $mapping = new LdapAuthorizationMappingAdmin($values['mapping_id'], $new, $values['sid'], $consumer->consumerType, $consumer->consumerModule);
-  $mapping->drupalFormSubmit($op, $values);  // add form data to object and save or create
-
-  if ($mapping->hasError == FALSE) {
-    drupal_set_message(t('LDAP Authorization %name !verb', array('!verb' => $op_past, '%name' => $values['description'])), 'status');
-    drupal_goto(LDAP_SERVERS_MENU_BASE_PATH .'/authorization');
-  } else {
-    form_set_error($mapping->errorName, $mapping->errorMsg);
-    $mapping->clearError();
+  if ($consumer_conf->hasError == FALSE) {
+    drupal_set_message(t('LDAP Authorization %name !verb', array('!verb' => $op_past_tense, '%name' => $values['description'])), 'status');
+    drupal_goto(LDAP_SERVERS_MENU_BASE_PATH . '/authorization');
   }
+
+  form_set_error($consumer_conf->errorName, $consumer_conf->errorMsg);
+  $consumer_conf->clearError();
 
 }
 
+/**
+ * helper function for parsing ldap authorization config form
+ */
+
 function _ldap_authorization_admin_parse_form($form, &$form_state) {
-  $op = strtolower($form_state['clicked_button']['#value']);
+  $op = drupal_strtolower($form_state['clicked_button']['#value']);
   $values = $form_state['values'];
 
   if ($values['consumer_type']) {
     $consumer_type = $values['consumer_type'];
-    $consumer = ldap_authorization_get_consumer_object(array('consumer_type' =>  $consumer_type));
-  } else {
+    $consumer = ldap_authorization_get_consumer_object($consumer_type);
+  }
+  else {
     return FALSE;
   }
 
-  switch($op) {
-      case 'add':
-      $op_past = 'Added';
+  switch ($op) {
+    case 'add':
+      $op_past_tense = 'Added';
       $new = TRUE;
-      break;
+    break;
 
-      case 'update':
-      $op_past = 'Updated';
+    case 'edit':
+      $op_past_tense = 'Edited';
       $new = FALSE;
+    break;
 
-      break;
-
-      case 'delete':
-      $op_past = 'Deleted';
+    case 'delete':
+      $op_past_tense = 'Deleted';
       $new = FALSE;
-      break;
+    break;
   }
 
-  return array($consumer, $op, $op_past, $new, $form_state['values']);
+  return array($consumer, $op, $op_past_tense, $new);
 
 }

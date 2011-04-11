@@ -54,7 +54,7 @@ function _ldap_servers_encrypt_types($type = 'all') {
     $encrypts = array(
       LDAP_SERVERS_ENC_TYPE_CLEARTEXT => 'No Encyption',
       LDAP_SERVERS_ENC_TYPE_BLOWFISH => 'Blowfish'
-      
+
     );
   }
 
@@ -79,14 +79,13 @@ function _ldap_servers_encrypt_types($type = 'all') {
  * @param string clear_txt
  *   Plaintext password.
  *
- * @return string 
+ * @return string
  *   Encrypted text, formatted for use as an LDAP password.
  *
  */
 
 function _ldap_servers_encrypt($clear_txt, $enc_type = NULL) {
 
- // print "clear_txt = $clear_txt, enc_type = $enc_type";
   if (!$enc_type) {
     $enc_type = variable_get('ldap_servers_encryption' , LDAP_SERVERS_ENC_TYPE_BLOWFISH);
   }
@@ -98,7 +97,6 @@ function _ldap_servers_encrypt($clear_txt, $enc_type = NULL) {
   switch ($enc_type) {
 
     case LDAP_SERVERS_ENC_TYPE_BLOWFISH: // Blowfish
-        print "blowfish";
         $td = mcrypt_module_open('blowfish', '', LDAP_SERVERS_CYPHER_MODE, '');
         $iv = mcrypt_create_iv(mcrypt_enc_get_iv_size($td), MCRYPT_RAND);
         mcrypt_generic_init($td, $key, $iv);

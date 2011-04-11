@@ -23,7 +23,7 @@ function theme_ldap_servers_list($variables) {
   extract($variables);
 
   $table = array(
-    'header' => array("Name", "Type", "Enabled", "Server Address"),
+    'header' => array(t('Name'), t('Type'), t('Enabled'), t('Server Address')),
     'attributes' => array('id' => 'ldap_servers_servers', 'class' => 'data'),
     'colgroups' => array(),
     'sticky' => FALSE,
@@ -32,7 +32,7 @@ function theme_ldap_servers_list($variables) {
   );
 
   if ($actions) {
-    $table['header'][] = "Actions";
+    $table['header'][] = "Operations";
   }
 
   if (count($ldap_servers)) {
@@ -45,7 +45,7 @@ function theme_ldap_servers_list($variables) {
           );
       if ($actions) {
         $switch = ($ldap_server->status ) ? 'disable' : 'enable';
-        $actions =  ' | ' . l(t('update'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $sid) . ' | ' .
+        $actions =  ' | ' . l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $sid) . ' | ' .
             l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $sid) . ' | ' .
             l(t('test'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/test/' . $sid) . ' | ' .
             l($switch, LDAP_SERVERS_MENU_BASE_PATH . '/servers/' . $switch . '/' . $sid) . ' | ';
@@ -56,7 +56,7 @@ function theme_ldap_servers_list($variables) {
 
       $table['rows'][] = $row;
     }
-  } 
+  }
   else {
     $table['rows'] = array();
   }
@@ -88,7 +88,7 @@ function theme_ldap_servers_server($variables) {
 
   if ($actions) {
     $switch = ($ldap_server->status) ? 'disable' : 'enable';
-    $properties[] =  ' | ' . l(t('update'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $sid) . ' | ' .
+    $properties[] =  ' | ' . l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $sid) . ' | ' .
         l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $sid) . ' | ' .
         l(t('test'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/test/' . $sid) . ' | ' .
         l($switch, LDAP_SERVERS_MENU_BASE_PATH . '/servers/' . $switch . '/' . $sid) . ' | ';
@@ -107,14 +107,14 @@ function theme_ldap_servers_server($variables) {
 }
 
 function theme_ldap_servers_https_required($vars) {
-  
+
   if (!isset($vars['site_contact_link']) || empty($vars['site_contact_link'])) {
     $vars['site_contact_link'] = 'site admin';
   }
-  return t("You are accessing site_name using an unencrypted connection. For your security, 
-     site_name only supports account logins using a secure protocol such as HTTPS. You can switch 
-     to HTTPS by trying to view this page again after changing the URL in your browser's 
-     location bar to begin with \"https\" instead of \"http\". Please contact 
+  return t("You are accessing site_name using an unencrypted connection. For your security,
+     site_name only supports account logins using a secure protocol such as HTTPS. You can switch
+     to HTTPS by trying to view this page again after changing the URL in your browser's
+     location bar to begin with \"https\" instead of \"http\". Please contact
       site_contact_link for help if this error continues.", $vars);
 
 }

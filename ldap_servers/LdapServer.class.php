@@ -133,32 +133,18 @@ class LdapServer {
     $this->bind();
   }
 
-  /**
-   * Error Handling Method
-   *
-   * @param int errno
-   *   The level of the error raised.
-   *
-   * @param string errstr
-   *   The error message.
-   *
-   * @param string errfile
-   *   The filename that the error was raised in.
-   *
-   * @param int errline
-   *   The line number the error was raised at.
-   *
-   * @param array errcontext
-   *   An array of every variable that existed in the scope the error was
-   *   triggered in.
-   *
-   * @return bool
-   *   Always return TRUE to avoid PHP's builtin handler.
-   */
-  function error_handler($errno, $errstr, $errfile, $errline, $errcontext) {
-    return TRUE;
-  }
+  public function getErrorMsg($type = NULL) {
+    if ($type == 'ldap' && $this->connection) {
+      return ldap_error($this->connection);
+    }
+    elseif ($type == NULL) {
+      return $this->errorMsg;
+    }
+    else {
+      return NULL;
+    }
 
+  }
 
   /**
    * Connect Method

@@ -1,0 +1,72 @@
+<?php
+// $Id:$
+
+
+/**
+ * @file test stub
+ *
+ */
+
+class LdapAuthorizationTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'LDAP Authorization Tests',
+      'description' => 'Test ldap authorization.  Requires ldap_authorization_drupal_roles
+         since ldap authorization does nothing without a consumer type such as drupal roles.',
+      'group' => 'LDAP'
+    );
+  }
+
+
+  /**
+   * Enable modules and create users with specific permissions.
+   */
+  function setUp() {
+    parent::setUp('ldap_authentication');
+    // Create users.  1 drupal user. 1 ldap user.
+
+  }
+
+/**
+  function testAuthorizationForm() {
+    // test add authorization form validation and actual populated of db with ldap authorization form
+    // test update of that authorization
+    // test delete of that authorization
+    // test permissions on those forms (add, edit, delete) and the index
+  }
+
+  function testIIADeriveFromDN() {
+    // test derive from dn
+  }
+
+
+  function testIIBDeriveFromAttr() {
+
+  }
+
+
+  function testIICDeriveFromEntry() {
+
+  }
+
+
+  function testMappingAndFiltering() {
+
+  }
+
+
+  function testMoreSettings() {
+
+    // toggle for when a user logs on obeyed
+    // revoke
+    // regrant
+    // revoke II
+    // create drupal roles that do not exist.
+    // enable this authorization mapping obeyed
+    // only apply to ldap authenticated users
+
+
+  }
+  **/
+
+}

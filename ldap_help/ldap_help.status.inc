@@ -8,8 +8,8 @@
 
 function ldap_help_status($return = 'html') {
 
-  drupal_add_css(drupal_get_path('module', 'system') .'/system.css', 'module', 'all', FALSE);
-  include_once(drupal_get_path('module', 'system') .'/system.admin.inc');
+  drupal_add_css(drupal_get_path('module', 'system') . '/system.css', 'module', 'all', FALSE);
+  include_once(drupal_get_path('module', 'system') . '/system.admin.inc');
 
   // server and LDAP Module Data
   $heading = "Server and LDAP Module";
@@ -18,19 +18,19 @@ function ldap_help_status($return = 'html') {
   $status['server'] = ldap_help_get_server($phpinfo, $info);
   $reporting_text = _ldap_help_parse_status_to_text($status['server'], $heading);
   $content =  "<h3>$heading</h3>" . theme('status_report', array('requirements' => $status['server'])); //  . ldap_help_phpinfo();
-  
+
   $status['user_settings'] = ldap_help_get_user_settings();
   $content .=  "<h3>User Settings</h3>" . theme('status_report', array('requirements' => $status['user_settings']));
-  
+
   if (module_exists('ldap_servers')) {
     list($status['ldap_servers'], $servers) = ldap_help_get_ldap_servers();
     $content .=  "<h3>General Settings</h3>" . theme('status_report', array('requirements' => $status['ldap_servers']));
 
     foreach ($servers as $sid => $server) {
-      $content .=  "<h3>Server: ". $server[1]['value'] ."</h3>" . theme('status_report', array('requirements' => $server));
+      $content .=  "<h3>Server: " . $server[1]['value'] . "</h3>" . theme('status_report', array('requirements' => $server));
     }
   }
-    
+
   if (module_exists('ldap_authentication')) {
     $status['ldap_authentication'] = ldap_help_get_ldap_authentication();
     $content .=  "<h3>LDAP Authentication Settings</h3>" . theme('status_report', array('requirements' => $status['ldap_authentication']));
@@ -40,39 +40,40 @@ function ldap_help_status($return = 'html') {
     if (count($status['ldap_authorizations'])) {
       foreach ($status['ldap_authorizations'] as $sid => $mapping) {
         $content .=  "<h3>LDAP Authorization Mapping</h3>" . theme('status_report', array('requirements' => $mapping));
-      } 
+      }
     }
   }
-  
+
   if ($return == 'array') {
     return $status;
-  } else {
+  }
+  else {
     return $content;
   }
-  
+
 }
 function ldap_help_get_server($phpinfo, &$info) {
-  
+
   $info['phpversion'] = phpversion();
   $info['ldaploaded'] = extension_loaded('ldap');
-  
+
   $info['ldap'] = $phpinfo['ldap'];
-  
+
   $text = "";
   foreach ($phpinfo['ldap'] as $key => $value) {
-    $text .= "<br/>$key: ". $value;
+    $text .= "<br/>$key: " . $value;
   }
   $info['ldap']['text'] = $text;
-  
+
   $modules = system_rebuild_module_data();
   $ldapmodules = array('ldap_servers', 'ldap_authentication', 'ldap_authorization');
   foreach ( $ldapmodules as $ldapmodule) {
     $data['status'] = $modules[$ldapmodule]->status;
     $data['schema_version'] = $modules[$ldapmodule]->schema_version;
     $data['version'] = $modules[$ldapmodule]->info['version'];
-    $data['text'] = "status: ". $data['status']
-      .", schema_version: " . $data['schema_version']
-      .", v: " . $data['version'];
+    $data['text'] = "status: " . $data['status']
+      . ", schema_version: " . $data['schema_version']
+      . ", v: " . $data['version'];
 
     $info[$ldapmodule] = $data;
   }
@@ -89,21 +90,21 @@ function ldap_help_get_server($phpinfo, &$info) {
       'title' => 'SERVER_SOFTWARE',
       'value' => $_SERVER["SERVER_SOFTWARE"]
     );
-    
+
   }
 
-  
+
   $status[] = array(
     'title' => 'PHP version',
     'value' => phpversion()
   );
-  
-  
 
-    
+
+
+
   if (! $info['ldaploaded']) {
     $status[] = array( 'title' => 'PHP ldap extension not loaded',
-    'value' => l('PHP LDAP extension', 'http://us2.php.net/ldap') .' must be loaded for LDAP Integration to work.
+    'value' => l(t('PHP LDAP extension'), 'http://us2.php.net/ldap') . ' must be loaded for LDAP Integration to work.
     It comes compiled with most versions of PHP.'  ,
     'severity' => REQUIREMENT_ERROR);
   }
@@ -122,7 +123,7 @@ function ldap_help_get_server($phpinfo, &$info) {
     'title' => 'open ssl extension loaded',
     'value' => extension_loaded('openssl') ? "yes" : "no",
   );
-  
+
   $status[] = array('title' => 'Drupal', 'value' => VERSION , 'severity' => "0");
 
   foreach ( $ldapmodules as $ldapmodule) {
@@ -133,9 +134,9 @@ function ldap_help_get_server($phpinfo, &$info) {
 
 function ldap_help_get_ldapauth(&$info) {
   $info['ldapauth']['login_process_text'] = (LDAPAUTH_LOGIN_PROCESS == LDAPAUTH_AUTH_EXCLUSIVED) ? "LDAP directory only" : "Mixed Mode";
-  $info['ldapauth']['login_process_text'] .= " (". LDAPAUTH_LOGIN_PROCESS .')';
+  $info['ldapauth']['login_process_text'] .= " (" . LDAPAUTH_LOGIN_PROCESS . ')';
   $info['ldapauth']['login_conflict_text'] = (LDAPAUTH_LOGIN_CONFLICT == LDAPAUTH_CONFLICT_RESOLVE) ? "Associate local account with the ldap entry" : "Disallow login and log the conflict";
-  $info['ldapauth']['login_conflict_text'] .= "  (". LDAPAUTH_LOGIN_CONFLICT .')';
+  $info['ldapauth']['login_conflict_text'] .= "  (" . LDAPAUTH_LOGIN_CONFLICT . ')';
 
   $status[] =  array(
     'title' => 'Authentication mode',
@@ -154,10 +155,9 @@ function ldap_help_get_ldapauth(&$info) {
 
   $info['ldapauth']['ldapauth_disable_pass_change_text'] = (LDAPAUTH_DISABLE_PASS_CHANGE == TRUE) ? "R" : "Do not R";
   $info['ldapauth']['ldapauth_disable_pass_change_text'] .= 'emove password change fields from user edit form';
+  $info['ldapauth']['ldapauth_alter_email_field_text'] = 'ldapauth_alter_email_field: ' . LDAPAUTH_ALTER_EMAIL_FIELD ;
 
-  $info['ldapauth']['ldapauth_alter_email_field_text'] = 'ldapauth_alter_email_field: '. LDAPAUTH_ALTER_EMAIL_FIELD ;
-
-  $status[] =  array('title' => 'LDAP UI Options', value => $info['ldapauth']['ldapauth_disable_pass_change_text'] ."<br/>". $info['ldapauth']['ldapauth_alter_email_field_text'], 'severity' => "0");
+  $status[] =  array('title' => 'LDAP UI Options', value => $info['ldapauth']['ldapauth_disable_pass_change_text'] . "<br/>" . $info['ldapauth']['ldapauth_alter_email_field_text'], 'severity' => "0");
 
   return $status;
 }
@@ -233,50 +233,50 @@ function ldap_help_parsePHPModules() {
 }
 
 function ldap_help_get_user_settings() {
-  
-   $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
-   $options = array(
-      USER_REGISTER_ADMINISTRATORS_ONLY => t('Administrators only'),
-      USER_REGISTER_VISITORS => t('Visitors'),
-      USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL => t('Visitors, but administrator approval is required'),
-    );
-              
-              
+
+  $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
+  $options = array(
+    USER_REGISTER_ADMINISTRATORS_ONLY => t('Administrators only'),
+    USER_REGISTER_VISITORS => t('Visitors'),
+    USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL => t('Visitors, but administrator approval is required'),
+  );
+
+
     $status[] = array(
       'title' => 'Who can register accounts?',
       'value' => $options[$user_register],
     );
-    
+
     return $status;
-  
+
 }
 
 function ldap_help_get_ldap_servers() {
   if (!module_exists('ldap_servers')) {
     return FALSE;
   }
-  require_once(drupal_get_path('module', 'ldap_servers') .'/ldap_servers.settings.inc');
-  require_once(drupal_get_path('module', 'ldap_servers') .'/ldap_servers.admin.inc');
-  
+  require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.settings.inc');
+  require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.inc');
+
   $conf_form = ldap_servers_settings();
 
   $status[] = array(
       'title' => 'ssl required',
       'value' => $conf_form['ssl']['ldap_servers_require_ssl_for_credentails']['#default_value'],
     );
-  
+
   $selected = @$conf_form['encryption']['ldap_servers_encryption']['#default_value'];
   $status[] = array(
       'title' => 'encryption',
       'value' => @$conf_form['encryption']['ldap_servers_encryption']['#options'][$selected],
     );
-  
 
-      
-  
+
+
+
   $servers_objects = ldap_servers_get_servers(NULL, 'all');
   $servers = array();
-  $props = array('sid','name','status','type','port','tls','user_attr','mail_attr');
+  $props = array('sid', 'name', 'status', 'type', 'port', 'tls', 'user_attr', 'mail_attr');
   foreach ($servers_objects as $sid => $server_object) {
     foreach ($props as $property) {
       $servers[$sid][] = array(
@@ -284,123 +284,121 @@ function ldap_help_get_ldap_servers() {
         'value' => $server_object->{$property},
       );
     }
-   
-   $ldaps = (strpos(strtolower($server_object->address),'ldaps') !== FALSE) ?  'y' : 'n';
-   $servers[$sid][] = array(
-        'title' => 'ldaps in address',
-        'value' => $ldaps,
-      );
-   
-   $binddn = trim($server_object->binddn) ? 'yes' : 'no';
-   $servers[$sid][] = array(
-        'title' => 'binddn present',
-        'value' => $binddn,
-      );
-   
-   $basedn = count($server_object->basedn);
-   $servers[$sid][] = array(
-        'title' => 'basedn count',
-        'value' => $basedn,
-      );  
-        
+
+  $ldaps = (strpos(drupal_strtolower($server_object->address), 'ldaps') !== FALSE) ?  'y' : 'n';
+  $servers[$sid][] = array(
+    'title' => 'ldaps in address',
+    'value' => $ldaps,
+    );
+
+  $binddn = trim($server_object->binddn) ? 'yes' : 'no';
+  $servers[$sid][] = array(
+    'title' => 'binddn present',
+    'value' => $binddn,
+    );
+
+  $basedn = count($server_object->basedn);
+  $servers[$sid][] = array(
+    'title' => 'basedn count',
+    'value' => $basedn,
+    );
+
   }
-  
+
   return array($status, $servers);
 }
 
 function ldap_help_get_ldap_authentication() {
-    require_once(drupal_get_path('module', 'ldap_authentication') .'/LdapAuthenticationConfAdmin.class.php');
+    require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
     $auth_conf = new LdapAuthenticationConfAdmin();
     $conf_form = $auth_conf->drupalForm();
 
   $items['logon']['authenticationMode'] = 'string';
-  $items['restrictions']['allowOnlyIfTextInDn'] = 'empty';    
-  $items['restrictions']['excludeIfTextInDn'] = 'empty';    
-  $items['restrictions']['allowTestPhp'] = 'empty';    
-  $items['drupal_accounts']['loginConflictResolve'] = 'string'; 
-  $items['drupal_accounts']['acctCreation'] = 'string';   
+  $items['restrictions']['allowOnlyIfTextInDn'] = 'empty';
+  $items['restrictions']['excludeIfTextInDn'] = 'empty';
+  $items['restrictions']['allowTestPhp'] = 'empty';
+  $items['drupal_accounts']['loginConflictResolve'] = 'string';
+  $items['drupal_accounts']['acctCreation'] = 'string';
   $items['email ']['emailOption '] = 'string';
-  
- $status = ldap_help_parse_form($conf_form, $items);
 
+  $status = ldap_help_parse_form($conf_form, $items);
 
- 
- return $status;
+  return $status;
 }
 
 function ldap_help_get_ldap_authorization() {
   $status = array();
-  require_once(drupal_get_path('module', 'ldap_authorization') .'/LdapAuthorizationMappingAdmin.class.php');
-  $mappings = LdapAuthorizationMappingAdmin::getMappings();
-  require_once(drupal_get_path('module', 'ldap_servers') .'/ldap_servers.settings.inc');
-  require_once(drupal_get_path('module', 'ldap_servers') .'/ldap_servers.admin.inc');
+  require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizationMappingAdmin.class.php');
+  require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.settings.inc');
+  require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.inc');
   $servers = ldap_servers_get_servers(NULL, 'enabled');
-    
+  $consumers = ldap_authorization_get_consumers();
+
   if (count($servers) == 0) {
     return array();
-  } 
-    
-  foreach ($servers as $sid => $server) {
-     $server_options[$sid] = $server->name;
   }
-  
-  
+
+  foreach ($servers as $sid => $server) {
+    $server_options[$sid] = $server->name;
+  }
+
+
   $items['status']['mapping_id'] = 'string';
-  $items['status']['consumer_type'] = 'string';    
-  $items['status']['status'] = 'string';    
+  $items['status']['consumer_type'] = 'string';
+  $items['status']['status'] = 'string';
 
-  $items['derive_from_dn']['derive_from_dn'] = 'string';    
-  $items['derive_from_dn']['derive_from_dn_attr'] = 'string'; 
+  $items['derive_from_dn']['derive_from_dn'] = 'string';
+  $items['derive_from_dn']['derive_from_dn_attr'] = 'string';
 
-  $items['derive_from_attr']['derive_from_attr'] = 'string';   
+  $items['derive_from_attr']['derive_from_attr'] = 'string';
   $items['derive_from_attr ']['derive_from_attr_attr'] = 'string';
 
 
-  $items['derive_from_entry']['derive_from_entry'] = 'string';   
+  $items['derive_from_entry']['derive_from_entry'] = 'string';
   $items['derive_from_entry ']['derive_from_entry_entries'] = 'string';
-  $items['derive_from_entry']['derive_from_entry_attr'] = 'string';   
+  $items['derive_from_entry']['derive_from_entry_attr'] = 'string';
 
 
   // $items['filter_and_mappings']['mappings'] = 'string';
   $items['use_filter']['mappings'] = 'string';
 
-  $items['misc_settings']['allow_synch_both_directions'] = 'string';   
+  $items['misc_settings']['allow_synch_both_directions'] = 'string';
   $items['misc_settings']['synchronization_modes'] = 'string';
-  $items['misc_settings']['synchronization_actions'] = 'string';   
-    
-  foreach($mappings as $mapping_id => $mapping) {
-    $mapping_admin = new LdapAuthorizationMappingAdmin($mapping_id);
-    $authorization_form = $mapping_admin->drupalForm($server_options, "update");
+  $items['misc_settings']['synchronization_actions'] = 'string';
 
-    $status[$mapping_id] = ldap_help_parse_form($authorization_form, $items);
-    
+  foreach ($consumers as $consumer_type => $consumer) {
+    $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
+    $mapping_admin = new LdapAuthorizationMappingAdmin($consumer_obj->mapping->mappingID, FALSE, NULL, $consumer_type);
+    $authorization_form = $mapping_admin->drupalForm($server_options, 'edit');
+    $status[$consumer_type] = ldap_help_parse_form($authorization_form, $items);
     $maps = $authorization_form['filter_and_mappings']['mappings']['#default_value'];
     $map_content = (trim($maps)) ? "mappings present" : "empty";
     if ($map_content == 'data present') {
-      $map_content .= ($maps == strtolower($maps)) ? ', lower case' : ', mixed case';
+      $map_content .= ($maps == drupal_strtolower($maps)) ? ', lower case' : ', mixed case';
     }
-    $status[$mapping_id][] = array(
+    $status[$consumer_type][] = array(
         'title' => 'mappings',
         'value' => $map_content,
-      ); 
+      );
   }
- return $status;
-    
+  return $status;
+
 }
 
 
 function ldap_help_parse_form($form, $items) {
-  
-  foreach($form as $fieldset_name => $field) {
+
+  foreach ($form as $fieldset_name => $field) {
     foreach ($field as $field_name => $field_data) {
       if (isset($items[$fieldset_name][$field_name])) {
         $value = "";
         if (!@is_array($field_data['#default_value'])) {
           $default_value = @$field_data['#default_value'];
-        } else {
+        }
+        else {
           $default_value = join(', ', array_values($field_data['#default_value']));
         }
-        
+
         switch ($field_data['#type']) {
           case 'radios':
             $value = $field_data['#options'][$default_value];
@@ -411,30 +409,30 @@ function ldap_help_parse_form($form, $items) {
           case 'checkbox':
             $value = (boolean)($field_data['#default_value']) ? 'y' : 'n';
             break;
-          case 'hidden': 
+          case 'hidden':
             $value = $field_data['#value'];
             break;
           case 'textarea':
           case 'textfield':
-          
-             $value = $default_value;
+
+            $value = $default_value;
             break;
         }
         if ($items[$fieldset_name][$field_name] == 'empty') {
-           $value = ((boolean)trim($value)) ?  'populated': 'empty';
+          $value = ((boolean)trim($value)) ?  'populated': 'empty';
         }
         $status[] = array(
           'title' => $field_name,
           'value' => $value,
-        );  
+        );
 
       }
-      
+
     }
-    
+
   }
 
   return $status;
-  
-  
+
+
 }

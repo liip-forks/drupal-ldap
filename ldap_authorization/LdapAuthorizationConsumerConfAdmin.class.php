@@ -1,26 +1,26 @@
 <?php
-// $Id: LdapAuthorizationMappingAdmin.class.php,v 1.6.2.1 2011/02/08 06:01:00 johnbarclay Exp $
+// $Id: LdapAuthorizationConsumerConfAdmin.class.php,v 1.6.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
-/**
- * @file
- * class to encapsulate an ldap authorization ldap entry to authorization ids mapping
- *
- */
- require_once('LdapAuthorizationMapping.class.php');
-/**
- * LDAP Authorization Mapping Admin Class
- */
-class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
+  /**
+   * @file
+   * class to encapsulate an ldap authorization ldap entry to authorization ids mapping
+   *
+   */
+    require_once('LdapAuthorizationConsumerConf.class.php');
+
+  /**
+   * LDAP Authorization Consumer Configration Admin Class
+   */
+class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
 
   public function save() {
 
-    $op = $this->inDatabase ? 'update' : 'insert';
+    $op = $this->inDatabase ? 'edit' : 'insert';
 
-    $values['mapping_id'] =  drupal_strtolower($this->mappingID);
     $values['sid'] = $this->sid;
     $values['consumer_type'] = $this->consumerType;
-    $values['consumer_module'] = $this->consumerModule;
+    $values['consumer_module'] = $this->consumer->consumerModule;
     $values['description'] = $this->description;
     $values['status'] = (int)$this->status;
     $values['only_ldap_authenticated'] = (int)$this->onlyApplyToLdapAuthenticated;
@@ -38,125 +38,69 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     $values['synch_manually'] = (int)$this->synchManually;
     $values['revoke_ldap_provisioned'] = (int)$this->revokeLdapProvisioned;
     $values['revoke_non_ldap_provisioned'] = (int)$this->revokeNonLdapProvisioned;
-    $values['create_targets'] = (int)$this->createTargets;
+    $values['create_consumers'] = (int)$this->createConsumers;
     $values['regrant_ldap_provisioned'] = (int)$this->regrantLdapProvisioned;
 
-     if ($op == 'update') {
-        try {
-            $count = db_update('ldap_authorization')
-             ->fields($values)
-             ->condition('mapping_id', $values['mapping_id'])
-             ->execute();
-        }
-        catch(Exception $e) {
-          drupal_set_message(t('db update failed. Message = %message, query= %query',
-            array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
-        }
+    if ($op == 'edit') {
+      try {
+        $count = db_update('ldap_authorization')
+        ->fields($values)
+        ->condition('consumer_type', $values['consumer_type'])
+        ->execute();
       }
-      else { // insert
+      catch (Exception $e) {
+        drupal_set_message(t('db update failed. Message = %message, query= %query',
+        array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
+      }
+    }
+    else { // insert
 
-        try {
-          $ret = db_insert('ldap_authorization')
-             ->fields($values)
-             ->execute();
+      try {
+        $ret = db_insert('ldap_authorization')
+        ->fields($values)
+        ->execute();
         }
-        catch(Exception $e) {
-          drupal_set_message(t('db insert failed. Message = %message, query= %query',
-            array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
-        }
-
-        $this->inDatabase = TRUE;
+      catch (Exception $e) {
+        drupal_set_message(t('db insert failed. Message = %message, query= %query',
+        array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
       }
 
+      $this->inDatabase = TRUE;
+    }
   }
 
   public $fields;
   public $consumers;
-  public $consumer;  // consumer object
 
- public function delete() {
-    if ($this->mapping_id) {
+  public function delete() {
+    if ($this->consumerType) {
       $this->inDatabase = FALSE;
-       return db_delete('ldap_authorization')->condition('mapping_id', mapping_id)->execute();
-    } else {
-      return FALSE;
-    }
-
- }
- 
-  public function __construct($_mid, $_new = FALSE, $_sid = NULL, $_consumer_type = NULL, $_consumer_module = NULL) {
-    parent::__construct($_mid, $_new, $_sid, $_consumer_type, $_consumer_module);
-
-    $this->fields = $this->fields();
-    $this->consumers = ldap_authorization_get_consumers(NULL, TRUE);
-    if ($_new) {
-      $this->consumer = ldap_authorization_get_consumer_object(array('consumer_type' => $_consumer_type));
-    } else {
-      $this->consumer = ldap_authorization_get_consumer_object(array('mapping_id' => $_mid));
-    }
-    if ($_new) {
-       $this->setConsumerDefaults();
-    }
-  }
-
-  protected function setConsumerDefaults() {
-    foreach ($this->consumer->defaultableMappingProperties as $property) {
-      $default_prop_name = $property . 'Default';
-      $this->$property = $this->consumer->$default_prop_name;
-    }
-
-
-  }
-
-  static function getMappings($mapping_id = NULL, $consumer_type = NULL, $flatten = FALSE, $class = 'LdapAuthorizationMapping') {
-    $mapping_id = drupal_strtolower($mapping_id);
-    $select = db_select('ldap_authorization','ldap_authorization');
-    $select->fields('ldap_authorization');
-    if ($mapping_id) {
-       $select->condition('ldap_authorization.mapping_id', $mapping_id);
-    }
-     if ($consumer_type) {
-       $select->condition('ldap_authorization.consumer_type', $consumer_type);
-    }
-
-    try {
-      $mapping_vars = $select->execute()->fetchAllAssoc('mapping_id',  PDO::FETCH_ASSOC);
-    }
-    catch(Exception $e) {
-      drupal_set_message(t('db index query failed. Message = %message, query= %query',
-        array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
-      return array();
-    }
-
-    $mappings = array();
-    foreach ($mapping_vars as $_mapping_id => $mapping) {
-      $_mapping_id = drupal_strtolower($_mapping_id);
-      if (module_exists($mapping['consumer_module'])) {
-        $mappings[$_mapping_id] = ($class == 'LdapAuthorizationMapping') ? new LdapAuthorizationMapping($_mapping_id) : new LdapAuthorizationMappingAdmin($_mapping_id);
-      }
-    }
-    if ($flatten && count($mappings) != 1) {
-      return FALSE;
-    }
-    elseif ($flatten && $mapping_id) {
-      return $mappings[$mapping_id];
-    }
-    elseif ($flatten && $consumer_type) {
-      $mapping_vals = array_values($mappings);
-      return $mapping_vals[0];
+      return db_delete('ldap_authorization')->condition('consumer_type', $this->consumerType)->execute();
     }
     else {
-      return $mappings;
+      return FALSE;
+    }
+  }
+
+  public function __construct(&$consumer = NULL, $new = FALSE) {
+    parent::__construct($consumer, $new);
+    $this->fields = $this->fields();
+    $this->consumers = ldap_authorization_get_consumers(NULL, TRUE);
+
+    if ($new) {
+      foreach ($this->consumer->defaultableConsumerConfProperties as $property) {
+        $default_prop_name = $property . 'Default';
+        $this->$property = $this->consumer->$default_prop_name;
+      }
     }
   }
 
   public function drupalForm($server_options, $op) {
 
-
-    $consumer_tokens = $this->consumer->tokens();
+    $consumer_tokens = ldap_authorization_tokens($this->consumer);
     $form['intro'] = array(
         '#type' => 'item',
-        '#markup' => t('<h1>LDAP to !consumer_name Mapping Configuration</h1>', $consumer_tokens),
+        '#markup' => t('<h1>LDAP to !consumer_name Configuration</h1>', $consumer_tokens),
     );
 
     $form['status_intro'] = array(
@@ -170,19 +114,10 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
-    $form['status']['mapping_id'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Machine name for this !consumer_shortName mapping configuration.', $consumer_tokens),
-      '#default_value' => $this->mappingID,
-      '#size' => 20,
-      '#maxlength' => 20,
-      '#disabled' => ($op == 'update'),
-      '#description' => t('May only contain alphanumeric characters (a-z, A-Z, 0-9, and _)' ),
-    );
 
     $form['status']['sid'] = array(
       '#type' => 'radios',
-      '#title' => t('LDAP Server used in !consumer_name mapping.', $consumer_tokens),
+      '#title' => t('LDAP Server used in !consumer_name configuration.', $consumer_tokens),
       '#required' => 1,
       '#default_value' => $this->sid,
       '#options' => $server_options,
@@ -196,7 +131,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
 
     $form['status']['description'] = array(
       '#type' => 'textfield',
-      '#title' => t('Short description for this !consumer_shortName mapping configuration.', $consumer_tokens),
+      '#title' => t('Short description for this !consumer_shortName configuration.', $consumer_tokens),
       '#default_value' => $this->description,
       '#size' => 60,
       '#maxlength' => 60,
@@ -204,13 +139,13 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
 
     $form['status']['status'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Enable this authorization mapping', $consumer_tokens),
+      '#title' => t('Enable this configuration', $consumer_tokens),
       '#default_value' =>  $this->status,
     );
 
     $form['status']['only_ldap_authenticated'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Only apply the following LDAP to !consumer_name authorization mapping to users authenticated via LDAP.', $consumer_tokens),
+      '#title' => t('Only apply the following LDAP to !consumer_name configuration to users authenticated via LDAP.', $consumer_tokens),
       '#default_value' =>  $this->onlyApplyToLdapAuthenticated,
     );
 
@@ -322,24 +257,43 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
      *  filter and whitelist
      */
 
-     $form['filter_intro'] = array(
-        '#type' => 'item',
-        '#title' => t('Part III.  Mapping and White List.', $consumer_tokens),
-        '#markup' => t('The rules in Part I. will create a list of !consumer_name !consumer_namePlural.
-          The next field allows you to transform the !consumer_name !consumer_namePlural derived in Part I.
-          By checking the checkbox below it, the same list can be used as a white list to limit which !consumer_name !consumer_namePlural
-          are mapped from LDAP.', $consumer_tokens),
-    );
+    $form['filter_intro'] = array(
+      '#type' => 'item',
+      '#title' => t('Part III.  Mapping and White List.', $consumer_tokens),
+      '#markup' => t('The rules in Part I. will create a list of !consumer_name !consumer_namePlural.
+        The next field allows you to transform the !consumer_name !consumer_namePlural derived in Part I.
+        By checking the checkbox below it, the same list can be used as a white list to limit which !consumer_name !consumer_namePlural
+        are mapped from LDAP.', $consumer_tokens),
+      );
 
     $form['filter_and_mappings'] = array(
       '#type' => 'fieldset',
       '#title' => t('III.A. LDAP to !consumer_name mapping and filtering', $consumer_tokens),
-      '#description' => t('@todo (this needs some rewriting.  Its fuzzy. This module automatically decides the !consumer_namePlural based on LDAP data.
-        For example:<ul>
-        <li>LDAP group: Admins => !consumer_name: Admins <br/>...is written <code>as:Admins|Admins</code>  </li>
-        <li>LDAP group: ou=Underlings,dc=myorg,dc=mytld => !consumer_name: Underlings. <br/>
-        ...is written as:<code>ou=Underlings,dc=myorg,dc=mytld|Underlings</code> </li>
-        </ul>', $consumer_tokens),
+      '#description' => t('
+The settings in part II generate a list of "raw authorization ids" which
+need to be converted to !consumer_namePlural.
+Raw authorization ids might look like the following depending on which of the options in II. are chosen:
+<ul>
+<li>ou=Underlings,dc=myorg,dc=mytld,dc=edu</li>
+<li>ou=IT,dc=myorg,dc=mytld,dc=edu</li>
+<li>Campus Accounts</li>
+</ul>
+
+<p>(II.B and II.C. should generate DNs for raw authorization ids as in the first 2 examples.
+II.A. will generate a simple string such
+as the third example.)</p>
+
+<p><strong>The mapping specified below will convert these raw authorization ids to !consumer_namePlural.</strong></p>
+
+Mappings to deal with the above 3 examples might be:
+<pre>
+ou=Underlings,dc=myorg,dc=mytld|underlings
+ou=IT,dc=myorg,dc=mytld,dc=edu|administrator
+Campus Accounts|authenticated user
+</pre>
+
+Enter one mapping per line with an <code>|</code> separating the raw authorization id and its !consumer_name.
+', $consumer_tokens),
       '#collapsible' => TRUE,
       '#collapsed' => !($this->mappings || $this->useMappingsAsFilter),
     );
@@ -350,17 +304,13 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
       '#default_value' => $this->arrayToPipeList($this->mappings),
       '#cols' => 50,
       '#rows' => 5,
-      '#description' => t('Enter a list of LDAP groups and their !consumer_name mappings, one per line with a | delimiter.
-        Should be in the form [ldap group]|[!consumer_name] such as:
-        <br/>cn=ED IT NAG Staff,DC=ad,DC=uiuc,DC=edu|admin
-        <br/>cn=Ed Webs UIUC Webmasters,DC=ad,DC=uiuc,DC=edu|committee member', $consumer_tokens),
     );
     $form['filter_and_mappings']['use_filter'] = array(
       '#type' => 'checkbox',
       '#title' => t('Use LDAP group to !consumer_namePlural filtering', $consumer_tokens),
       '#default_value' => $this->useMappingsAsFilter,
-      '#description' => t('If enabled, only above mapped LDAP groups will be mapped to !consumer_namePlural.
-        If not enabled, a !consumer_name will be created for every ldap group the user is associated with.')
+      '#description' => t('If enabled, only above mapped !consumer_namePlural will be assigned.
+        <strong>If not checked, many !consumer_namePlural may be created.</strong>', $consumer_tokens)
     );
 
     $form['advanced_intro'] = array(
@@ -370,6 +320,8 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     );
 
 /**
+ *
+ * @todo for 7.x-2.x
   $form['advanced_intro'] = array(
         '#type' => 'item',
         '#title' => t('IV.A. Map in both directions.', $consumer_tokens),
@@ -386,7 +338,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
         needs to writeable, the right side of the mappings list must be unique, and I.B or I.C.
         derivation must be used.', $consumer_tokens),
     );
-**/
+ */
 
     $synchronization_modes = array();
     if ($this->synchOnLogon)  {
@@ -419,8 +371,8 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     if ($this->revokeNonLdapProvisioned)  {
       $synchronization_actions[] = 'revoke_non_ldap_provisioned';
     }
-    if ($this->createTargets)  {
-      $synchronization_actions[] = 'create_targets';
+    if ($this->createConsumers)  {
+      $synchronization_actions[] = 'create_consumers';
     }
     if ($this->regrantLdapProvisioned)  {
       $synchronization_actions[] = 'regrant_ldap_provisioned';
@@ -432,11 +384,11 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           'revoke_ldap_provisioned' => t('Revoke !consumer_namePlural previously granted by LDAP Authorization but no longer valid.', $consumer_tokens),
           'regrant_ldap_provisioned' => t('Re grant !consumer_namePlural previously granted by LDAP Authorization but removed manually.', $consumer_tokens),
           'revoke_non_ldap_provisioned' => t('Revoke !consumer_namePlural not created by LDAP Authorization and not currently valid.', $consumer_tokens),
-          'create_targets' => t('Create !consumer_namePlural if they do not exist.', $consumer_tokens),
+          'create_consumers' => t('Create !consumer_namePlural if they do not exist.', $consumer_tokens),
       ),
       '#default_value' => $synchronization_actions,
     );
-        /**
+    /**
      * @todo  some general options for an individual mapping (perhaps in an advance tab).
      *
      * - on synchronization allow: revoking authorizations made by this module, authorizations made outside of this module
@@ -444,13 +396,13 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
      * - synchronize actual authorizations (not cached) when granting authorizations
      */
 
-    switch($op) {
+    switch ($op) {
       case 'add':
       $action = 'Add';
       break;
 
-      case 'update':
-      $action = 'Update';
+      case 'edit':
+      $action = 'Edit';
       break;
 
       case 'delete':
@@ -464,11 +416,10 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     );
 
   return $form;
-   }
+  }
 
 
   protected function loadFromForm($values, $op) {
-
 
   }
 
@@ -476,17 +427,20 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     $errors = array();
 
     if ($op == 'delete') {
-      if (!$this->mappingID) {
-        $errors['mapping_id_missing'] = 'Mapping id missing from delete form.';
+      if (!$this->consumerType) {
+        $errors['consumer_type_missing'] = 'Consumer type is missing from delete form.';
       }
-    } else {
+    }
+    else {
 
       $this->populateFromDrupalForm($op, $values);
+
 
       $errors = $this->validate();
       if (count($this->mappings) == 0 && trim($values['mappings'])) {
         $errors['mappings'] = t('Bad mapping syntax.  Text entered but not able to convert to array.');
       }
+
     }
     return $errors;
   }
@@ -496,50 +450,47 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
 
     if (!$this->consumerType) {
       $errors['consumer_type'] = t('Consumer type is missing.');
-   }
-
-    if ($this->inDatabase  && (!$this->mappingID)) {  // update or delete but no mappingID set
-        $errors['mapping_id'] = t('Update or delete called without mapping id in form.');
-    } elseif (!$this->inDatabase  && !$this->mappingID) {  // new and no mappingID given
-        $errors['mapping_id'] = t('Mapping ID is required');
-    } elseif (!$this->inDatabase && $this->getMappings($this->mappingID)) {
-        $errors['mapping_id'] = t('Mapping ID %mapping_id is not unique.', array('%mapping_id' => $this->mappingID));
     }
 
-   // are correct values available for selected mapping approach
-   if ($this->deriveFromDn && !trim($this->deriveFromDnAttr)) {
+    if ($this->inDatabase  && (!$this->consumerType)) {
+      $errors['consumer_type'] = t('Edit or delete called without consumer type in form.');
+    }
+
+    // are correct values available for selected mapping approach
+    if ($this->deriveFromDn && !trim($this->deriveFromDnAttr)) {
       $errors['derive_from_dn'] = t('DN attribute is missing.');
-   }
-   if ($this->deriveFromAttr && !count($this->deriveFromAttrAttr)) {
+    }
+    if ($this->deriveFromAttr && !count($this->deriveFromAttrAttr)) {
       $errors['derive_from_attr'] = t('Attribute names are missing.');
     }
-   if ($this->deriveFromEntry && !count($this->deriveFromEntryEntries)) {
+    if ($this->deriveFromEntry && !count($this->deriveFromEntryEntries)) {
       $errors['derive_from_entry'] = t('Nodes are missing.');
-   }
-   if ($this->deriveFromEntry && !trim($this->deriveFromEntryAttr)) {
+    }
+    if ($this->deriveFromEntry && !trim($this->deriveFromEntryAttr)) {
       $errors['derive_from_entry_attribute'] = t('Attribute is missing.');
     }
 
-  if (count($this->mappings) > 0) {
-    foreach ($this->mappings as $mapping_item) {
-     list($map_from, $map_to) = $mapping_item;
-    // validate $mapto is valid mapping target as much as possible.  perhaps alphanum or call hook validate to provider
+    if (count($this->mappings) > 0) {
+      foreach ($this->mappings as $mapping_item) {
+        list($map_from, $map_to) = $mapping_item;
+      // validate $mapto is valid mapping consumer as much as possible.  perhaps alphanum or call hook validate to provider
+      }
     }
+    if ($this->useMappingsAsFilter && !count($this->mappings)) {
+      $errors['mappings'] = t('Mappings are missing.');
+    }
+    return $errors;
   }
-  if ($this->useMappingsAsFilter && !count($this->mappings)) {
-    $errors['mappings'] = t('Mappings are missing.');
-  }
-  return $errors;
-}
 
   protected function populateFromDrupalForm($op, $values) {
 
-    $this->inDatabase = ($op == 'update');
+    $this->inDatabase = (drupal_strtolower($op) == 'edit');
 
     $values['mappings'] = $this->pipeListToArray($values['mappings']);
     $values['derive_from_attr_attr'] = $this->linesToArray($values['derive_from_attr_attr']);
     $values['derive_from_entry_entries'] = $this->linesToArray($values['derive_from_entry_entries']);
 
+    $this->sid = $values['sid'];
     $this->consumerType = $values['consumer_type'];
     $this->description = $values['description'];
     $this->status = (bool)$values['status'];
@@ -564,26 +515,27 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
     $this->regrantLdapProvisioned = (bool)(@$values['synchronization_actions']['regrant_ldap_provisioned']);
     $this->revokeLdapProvisioned = (bool)(@$values['synchronization_actions']['revoke_ldap_provisioned']);
     $this->revokeNonLdapProvisioned = (bool)(@$values['synchronization_actions']['revoke_non_ldap_provisioned']);
-    $this->createTargets = (bool)(@$values['synchronization_actions']['create_targets']);
+    $this->createConsumers = (bool)(@$values['synchronization_actions']['create_consumers']);
 
-}
+  }
 
   public function drupalFormSubmit($op, $values) {
 
-   $this->populateFromDrupalForm($op, $values);
-   if ($op == 'delete') {
-     $this->delete();
-   } else { // add or update
+    $this->populateFromDrupalForm($op, $values);
+    if ($op == 'delete') {
+      $this->delete();
+    }
+    else { // add or edit
 
       try {
-          $save_result = $this->save();
+        $save_result = $this->save();
       }
-      catch(Exception $e) {
+      catch (Exception $e) {
         $this->errorName = 'Save Error';
         $this->errorMsg = t('Failed to save object.  Your form data was not saved.');
         $this->hasError = TRUE;
       }
-   }
+    }
   }
 
 
@@ -594,21 +546,14 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
      *   drupal_roles, og_groups, civicrm_memberships
      */
     $fields = array(
-      'mapping_id' => array(
-          'schema' => array(
-              'type' => 'varchar',
-              'length' => '20',
-              'not null' => TRUE
-          )
-       ),
-      'numeric_mapping_id' => array(
+      'numeric_consumer_conf_id' => array(
           'schema' => array(
             'type' => 'serial',
             'unsigned' => TRUE,
             'not null' => TRUE,
             'description' => 'Primary ID field for the table.  Only used internally.',
             'no export' => TRUE,
-           ),
+          ),
         ),
       'sid' => array(
         'schema' => array(
@@ -616,29 +561,29 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           'length' => 20,
           'not null' => TRUE,
         )
-       ),
+      ),
       'consumer_type' => array(
          'schema' => array(
             'type' => 'varchar',
             'length' => 20,
             'not null' => TRUE,
-         )
-       ),
+        )
+      ),
      'consumer_module' => array(
          'schema' => array(
             'type' => 'varchar',
             'length' => 30,
             'not null' => TRUE,
-         )
-       ),
+        )
+      ),
 
       'description' => array(
         'schema' => array(
           'type' => 'varchar',
           'length' => '60',
           'not null' => FALSE
-          )
-       ),
+        )
+      ),
 
       'status' => array(
           'schema' => array(
@@ -647,15 +592,15 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
             'not null' => TRUE,
             'default' => 0,
           )
-       ),
+      ),
       'only_ldap_authenticated' => array(
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
           'default' => 1,
-         )
-       ),
+        )
+      ),
       'derive_from_dn' => array(
         'schema' => array(
           'type' => 'int',
@@ -665,50 +610,50 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
         )
       ),
       'derive_from_dn_attr' => array(
-         'schema' => array(
-            'type' => 'varchar',
-            'length' => 4,
-            'default' => NULL,
-         )
-       ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'default' => NULL,
+        )
+      ),
       'derive_from_attr' => array(
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
           'default' => 0,
-         )
-       ),
+        )
+      ),
       'derive_from_attr_attr' => array(
         'schema' => array(
           'type' => 'varchar',
           'length' => 255,
           'default' => NULL,
-         )
-       ),
+        )
+      ),
       'derive_from_entry'  => array(
           'schema' => array(
             'type' => 'int',
             'size' => 'tiny',
             'not null' => TRUE,
             'default' => 0,
-         )
-       ),
+        )
+      ),
       'derive_from_entry_entries' => array(
         'form_default' => array(),
         'schema' => array(
           'default' => NULL,
           'type' => 'text',
         )
-       ),
+      ),
 
       'derive_from_entry_attr' => array(
         'schema' => array(
           'type' => 'varchar',
           'length' => 255,
           'default' => NULL,
-         )
-       ),
+        )
+      ),
 
       'mappings'  => array(
         'form_default' => array(),
@@ -716,8 +661,8 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           'type' => 'text',
           'not null' => FALSE,
           'default' => NULL,
-         )
-       ),
+        )
+      ),
 
       'use_filter'   => array(
         'schema' => array(
@@ -726,14 +671,14 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           'not null' => TRUE,
           'default' => 1,
         )
-       ),
+      ),
       'synchronization_modes'  => array(
-          'form_default' =>  array('user_logon'),
-       ),
+        'form_default' =>  array('user_logon'),
+      ),
 
       'synchronization_actions'  => array(
-         'form_default' =>  array('revoke_ldap_provisioned', 'create_targets'),
-       ),
+        'form_default' =>  array('revoke_ldap_provisioned', 'create_consumers'),
+      ),
 
       'synch_to_ldap'  => array(
         'schema' => array(
@@ -741,7 +686,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           'size' => 'tiny',
           'not null' => TRUE,
           'default' => '0',
-         ),
+        ),
       ),
 
       'synch_on_logon'  => array(
@@ -750,7 +695,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           'size' => 'tiny',
           'not null' => TRUE,
           'default' => '0',
-         ),
+        ),
       ),
 
       'synch_manually'  => array(
@@ -759,7 +704,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           'size' => 'tiny',
           'not null' => TRUE,
           'default' => '0',
-         ),
+        ),
       ),
 
       'revoke_ldap_provisioned'  => array(
@@ -768,7 +713,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           'size' => 'tiny',
           'not null' => TRUE,
           'default' => '0',
-         ),
+        ),
       ),
       'revoke_non_ldap_provisioned'  => array(
         'schema' => array(
@@ -776,9 +721,9 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           'size' => 'tiny',
           'not null' => TRUE,
           'default' => '0',
-         ),
+        ),
       ),
-     'create_targets'  => array(
+     'create_consumers'  => array(
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
@@ -792,7 +737,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
           'size' => 'tiny',
           'not null' => TRUE,
           'default' => '0',
-         ),
+        ),
       ),
     );
     return $fields;
@@ -804,7 +749,7 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
   protected function arrayToPipeList($array) {
     $result_text = "";
     foreach ($array as $map_pair) {
-      $result_text .= $map_pair[0] .'|'. $map_pair[1] . "\n";
+      $result_text .= $map_pair[0] . '|' . $map_pair[1] . "\n";
     }
     return $result_text;
   }
@@ -813,7 +758,8 @@ class LdapAuthorizationMappingAdmin extends LdapAuthorizationMapping {
         $lines = "";
         if (is_array($array)) {
           $lines = join("\n", $array);
-        }  elseif (is_array(@unserialize($array))) {
+        }
+        elseif (is_array(@unserialize($array))) {
           $lines = join("\n", unserialize($array));
         }
         return $lines;

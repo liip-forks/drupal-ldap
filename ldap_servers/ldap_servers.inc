@@ -17,7 +17,6 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid) {
       return $ldap_user;
     }
   }
-  
 }
 
 
@@ -47,11 +46,9 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
   }
 
   if (isset($servers[$type])) {
-      
     return $servers[$type];
-  } 
+  }
 }
-
 
 
 function _ldap_servers_fields() {

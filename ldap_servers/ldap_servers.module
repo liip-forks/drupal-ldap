@@ -2,6 +2,7 @@
 // $Id: ldap_servers.module,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 
+
 define('LDAP_SERVERS_PROJECT_TAG', 'ldap');
 define('LDAP_SERVERS_MENU_BASE_PATH', 'admin/config/people/ldap');
 define('LDAP_SERVERS_MENU_BASE_PATH_PARTS', 4); // for argument offsets
@@ -107,7 +108,7 @@ function ldap_servers_menu() {
 
   $items['admin/config/people/ldap'] = array(
     'title' => 'LDAP Configuration',
-    'description' => 'LDAP authentication, authorization, provisioning, ect.',
+    'description' => 'LDAP authentication, authorization, provisioning, etc.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_settings'),
     'access arguments' => array('administer site configuration'),
@@ -119,7 +120,6 @@ function ldap_servers_menu() {
     'weight' => -2,
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-
 
   $items['admin/config/people/ldap/servers'] = array(
     'title' => '2. Servers',
@@ -145,12 +145,10 @@ function ldap_servers_menu() {
     'file' => 'ldap_servers.admin.inc',
   );
 
-
-   $items['admin/config/people/ldap/servers/edit'] = array(
+  $items['admin/config/people/ldap/servers/edit'] = array(
     'title' => 'Edit LDAP Server Configuration',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_form', 'edit', $menu_offset + 2),
-    'type' => MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
@@ -159,18 +157,14 @@ function ldap_servers_menu() {
     'title' => 'Test LDAP Server Configuraion',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_test_form', $menu_offset + 1, $menu_offset + 2),
-    'type' => MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.test_form.inc',
   );
 
-
-
-$items['admin/config/people/ldap/servers/delete'] = array(
+  $items['admin/config/people/ldap/servers/delete'] = array(
     'title' => 'Delete LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_delete', $menu_offset + 2),
-    'type' =>  MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
@@ -179,7 +173,6 @@ $items['admin/config/people/ldap/servers/delete'] = array(
     'title' => 'Enable LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
-    'type' => MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
@@ -188,7 +181,6 @@ $items['admin/config/people/ldap/servers/delete'] = array(
     'title' => 'Enable LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
-    'type' => MENU_CALLBACK,
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
@@ -311,8 +303,8 @@ function ldap_servers_no_enabled_servers_msg($action) {
   $servers = ldap_servers_get_servers(NULL, 'enabled');
   if (count($servers) == 0) {
 
-    $message = 'At least one ldap server must configured and <em>enabled</em> before' .
-      $action . '. Please go to ' . l('admin/config/people/ldap/servers', 'admin/config/people/ldap/servers') . ' to configure an LDAP server';
+    $message = t('At least one ldap server must configured and <em>enabled</em> before') .
+      $action . '. ' . t('Please go to') . ' ' . l('admin/config/people/ldap/servers', 'admin/config/people/ldap/servers') . ' to configure an LDAP server';
 
     drupal_set_message($message, 'warning');
     return $message;

@@ -51,11 +51,10 @@ function ldap_servers_servers_list($sid = NULL, $actions = FALSE) {
  */
 
 function ldap_servers_admin_form($form, &$form_state, $op = NULL, $sid = NULL) {
-    require_once('LdapServerAdmin.class.php');
-    $server = new LdapServerAdmin($sid);
-    $form = $server->drupalForm($op);
-  //  dpm('ldap_servers_admin_form'); dpm($server); dpm($server->drupalForm($op));
-    return $form;
+  require_once('LdapServerAdmin.class.php');
+  $server = new LdapServerAdmin($sid);
+  $form = $server->drupalForm($op);
+  return $form;
 }
 
 /**
@@ -76,16 +75,16 @@ function ldap_servers_admin_form_validate($form, &$form_state) {
   }
 
   $form_state['ldap_warnings'] = (boolean)(count($warnings) > 0);
-  //dpm($form);
+
 }
 
 /**
  * Submit hook for the LDAP server form.
  */
 function ldap_servers_admin_form_submit($form, &$form_state) {
- // dpm('ldap_servers_admin_form_submit');
-  $op = drupal_strtolower($form_state['clicked_button']['#value']);
-  $verb = ($op == 'update') ? 'updated' : $op . 'ed';
+  $button = drupal_strtolower($form_state['clicked_button']['#value']);
+  $op = ($button == 'add') ? 'add' : 'edit';
+  $verb = ($op == 'edit') ? 'edited' : $op . 'ed';
   require_once('LdapServerAdmin.class.php');
   $server = new LdapServerAdmin($form_state['values']['sid']);
   $server->drupalFormSubmit($op, $form_state['values']);  // add form data to object and save or create
@@ -93,15 +92,16 @@ function ldap_servers_admin_form_submit($form, &$form_state) {
   if ($server->hasError == FALSE) {
     drupal_set_message(t('LDAP Server %name !verb.', array('!verb' => $verb, '%name' => $server->name)), 'status');
     ldap_servers_cache_clear();
-    if ($form_state['ldap_warnings']) {
+    if ($form_state['ldap_warnings'] && $op != 'add') {
       // do nothing, but don't redirect away from form.
+      // if there are warnings, want them to see form even if its been saved
     }
     else {
       drupal_goto(LDAP_SERVERS_MENU_BASE_PATH . '/servers');
     }
   }
   else {
-    form_set_error($server->errorName, $server->errorMsg);
+    form_set_error($server->errorName, $server->getErrorMsg());
     $server->clearError();
   }
   ldap_servers_cache_clear();

@@ -30,7 +30,7 @@ function ldap_authentication_admin_form_validate($form, &$form_state) {
   $auth_conf = new LdapAuthenticationConfAdmin();
   $errors = $auth_conf->drupalFormValidate($form_state['values']);
   foreach ($errors as $error_name => $error_text) {
-    form_set_error($error_name, t(c($error_text)));
+    form_set_error($error_name, t($error_text));
   }
 
 }

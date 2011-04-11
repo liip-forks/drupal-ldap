@@ -9,22 +9,22 @@
 
 
 /**
- * Implementation of hook_init().
+ * Implements hook_init().
  */
 function ldap_help_init() {
-  drupal_add_css(drupal_get_path('module', 'ldap_help') .'/ldap_help.css', 'module');
+  drupal_add_css(drupal_get_path('module', 'ldap_help') . '/ldap_help.css', 'module');
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function ldap_help_menu() {
   $items = array();
   $items['admin/config/people/ldap/help'] = array(
-    'title' => t('Help'),
+    'title' => 'Help',
     'type' => MENU_LOCAL_TASK,
     'weight' => 9,
-    'description' => t('Debugging and Configuration Help with LDAP'),
+    'description' => 'Debugging and Configuration Help with LDAP',
     'file' => 'ldap_help.resources.inc',
     'page callback' => 'ldap_help_main',
     'access arguments' => array('administer site configuration'),
@@ -36,8 +36,8 @@ function ldap_help_menu() {
   );
 
   $items['admin/config/people/ldap/help/status'] = array(
-    'title' => t('Status'),
-    'description' => t('LDAP status page'),
+    'title' => 'Status',
+    'description' => 'LDAP status page',
     'page callback' => 'ldap_help_status',
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_help.status.inc',
@@ -46,8 +46,8 @@ function ldap_help_menu() {
   );
 
   $items['admin/config/people/ldap/help/watchdog'] = array(
-    'title' => t('Watchdog'),
-    'description' => t('LDAP watchdog logs'),
+    'title' => 'Watchdog',
+    'description' => 'LDAP watchdog logs',
     'page callback' => 'ldap_help_watchdog',
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_help.watchdog.inc',
@@ -56,8 +56,8 @@ function ldap_help_menu() {
   );
 
     $items['admin/config/people/ldap/help/issues'] = array(
-    'title' => t('Issue Reporting'),
-    'description' => t('Creating LDAP Issue Queue Items'),
+    'title' => 'Issue Reporting',
+    'description' => 'Creating LDAP Issue Queue Items',
     'page callback' => 'ldap_help_issues',
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_help.issues.inc',

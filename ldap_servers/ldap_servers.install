@@ -123,7 +123,7 @@ function ldap_servers_schema() {
       ),
       'binddn' => array(
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 511,
       ),
       'bindpw' => array(
         'type' => 'varchar',

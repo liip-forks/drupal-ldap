@@ -17,13 +17,6 @@ class LdapServerAdmin extends LdapServer {
   public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServer') {
   $select = db_select('ldap_servers', 'ldap_servers');
   $select->fields('ldap_servers');
-  //if ($type != 'all') {
-  //   $select->condition('ldap_servers.status', 1);
- // }
-  //if ($sid) {
-  //   $select->condition('ldap_servers.sid', $sid);
- // }
-
   try {
     $servers = $select->execute()->fetchAllAssoc('sid',  PDO::FETCH_ASSOC);
 
@@ -45,7 +38,7 @@ class LdapServerAdmin extends LdapServer {
   }
 
   protected function populateFromDrupalForm($op, $values) {
-    $this->inDatabase = ($op == 'update');
+    $this->inDatabase = ($op == 'edit');
     $this->sid = trim($values['sid']);
     $this->name = trim($values['name']);
     $this->status = ($values['status']) ? 1 : 0;
@@ -81,8 +74,7 @@ class LdapServerAdmin extends LdapServer {
 
     $entry['basedn'] = serialize($entry['basedn']);
     $entry['tls'] = (int)$entry['tls'];
-   // dpm($op); dpm($entry);
-    if ($op == 'update') {
+    if ($op == 'edit') {
 
       try {
         $count = db_update('ldap_servers')
@@ -247,6 +239,22 @@ $form['#prefix'] = t($form['#prefix']);
     '#maxlength' => 255,
   );
 
+  if ($this->bindpw) {
+    $pwd_directions = t('You currently have a password stored in the database.
+      Leave password field emtpy to leave password unchanged.  Enter a new password
+      to replace the current password.  Check the checkbox below to simply
+      remove it from the database.');
+  }
+  else {
+    $pwd_directions = t('No password is currently stored in the database.
+      If you are using a service account, enter one.');
+  }
+
+  $form['binding_service_acct']['directions'] = array(
+    '#type' => 'item',
+    '#markup' => $pwd_directions,
+  );
+
   $form['binding_service_acct']['bindpw'] = array(
     '#type' => 'password',
     '#title' => t('Password for non-anonymous search'),
@@ -261,9 +269,7 @@ $form['#prefix'] = t($form['#prefix']);
     '#default_value' => 0,
   );
 
-  if ( $form['binding_service_acct']['bindpw']) {
-    $form['binding_service_acct']['bindpw']['#description'] = t('<p>Leave emtpy to leave password unchanged.</p>');
-  }
+
 
   $form['users'] = array(
     '#type' => 'fieldset',
@@ -393,10 +399,14 @@ $form['#prefix'] = t($form['#prefix']);
     if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT && !$this->binddn) {
       $errors['binddn'] =  t('When using "Bind with Service Account", Bind DN is required.');
     }
-
-    if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT && !$this->bindpw) {
-      $errors['bindpw'] =  t('When using "Bind with Service Account", Bind password is required.');
+    if ($op == 'add') {
+      if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT &&
+        (($op == 'add' && !$this->bindpw_new) || ($op != 'add' && !$this->bindpw))
+      ) {
+        $errors['bindpw'] =  t('When using "Bind with Service Account", Bind password is required.');
+      }
     }
+
 
     return $errors;
   }
@@ -406,7 +416,7 @@ public function drupalFormWarnings($op, $values)  {
 
     if ($op == 'delete') {
       if (!$this->sid) {
-        $errors['server_id_missing'] = 'Server id missing from delete form.';
+        $errors['server_id_missing'] = t('Server id missing from delete form.');
       }
     }
     else {
@@ -476,7 +486,7 @@ public function drupalFormSubmit($op, $values) {
   if ($op == 'delete') {
     $this->delete($this);
   }
-  else { // add or update
+  else { // add or edit
     try {
       $save_result = $this->save($op);
     }

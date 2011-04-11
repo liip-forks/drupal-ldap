@@ -11,16 +11,18 @@
  */
 
 /**
- *
- * implements hook_ldap_authorization_consumer
+ * Implements hook_ldap_authorization_consumer().
  */
 function ldap_authorization_drupal_role_ldap_authorization_consumer() {
-
   $types['drupal_role'] =  array(
-      'consumer_name' => 'drupal role',
-      'consumer_class_name' => 'LdapAuthorizationConsumerDrupalRole',
-      'consumer_class_file' => 'LdapAuthorizationConsumerDrupalRole.class.php',
-      'consumer_module' => 'ldap_authorization_drupal_role',
+    'consumer_name' => t('drupal role'),
+    'consumer_name_plural' => t('drupal roles'),
+    'consumer_short_name' => t('role'),
+    'consumer_short_name_plural' => t('roles'),
+    'consumer_description' => t('A Drupal Role.'),
+    'consumer_class_name' => 'LdapAuthorizationConsumerDrupalRole',
+    'consumer_class_file' => 'LdapAuthorizationConsumerDrupalRole.class.php',
+    'consumer_module' => 'ldap_authorization_drupal_role',
   );
 
   return $types;
@@ -29,4 +31,3 @@ function ldap_authorization_drupal_role_ldap_authorization_consumer() {
 function ldap_authorization_drupal_role_init() {
 
 }
-

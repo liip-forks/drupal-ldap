@@ -1,13 +1,17 @@
 <?php
 // $Id: ldap_help.resources.inc,v 1.1 2011/02/07 23:12:23 johnbarclay Exp $
-
+/**
+ * @file
+ * The ldap_help resources are just links.
+ *
+ */
 function ldap_help_main() {
 
-  $text = '<h3>'. t('LDAP Help Module') .'</h3><p>'.
+  $text = '<h3>' . t('LDAP Help Module') . '</h3><p>' .
   t('This module is meant to assist Drupal admins in configuring, debugging, sharing, and submitting
-  support and bug request related to LDAP modules.') .'<strong><em>'.
-  t(' LDAP Help Module should be disabled unless you are debugging or configuring ldap problems.') .'</em></strong>'.
-  t(' It adds no functionality to the LDAP modules.') .'</p>';
+  support and bug request related to LDAP modules.') . '<strong><em>' .
+  t('LDAP Help Module should be disabled unless you are debugging or configuring ldap problems.') . '</em></strong>' .
+  t('It adds no functionality to the LDAP modules.') . '</p>';
 
   $path = drupal_get_path("module", "ldap_servers");
 
