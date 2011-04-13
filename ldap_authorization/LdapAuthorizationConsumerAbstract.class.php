@@ -202,7 +202,7 @@ class LdapAuthorizationConsumerAbstract {
    *
    */
 
-  public function authorizationUserDataSync(&$user, $user_save = TRUE) {
+  public function authorizationUserDataSync(&$user, &$ldap_entry, $user_save = TRUE) {
     // @todo for 7.x-2.x
   }
 
