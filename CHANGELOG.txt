@@ -3,15 +3,31 @@
 ==================
 7.x-1.0-unstable6
 ==================
-- ldap_authentication.  A number of issues ([#1101422], [#1104366], [#1064692], [#1067158]) arise from the anonymous and user binding to ldap
-  part on ldap authentication not being implemented yet. cezaryrk code took care of the binding side and more options were
+
+Ldap Authentication and Ldap Servers are feature complete.  Testing and bug
+fixes are needed to move it toward a relase candidate.  
+
+Ldap Authorization got a good cleanup and restructuring, but
+is wholly untested.  I would not use this version of ldap authorization or expect it to work;
+but I am ready for bug reports and patches as the rewrite is done.
+
+Issue [#1050944] by [dennisz]: allowing for more than one authorization configuration per consumer type (e.g. drupal roles)
+was never implemented. Realized this and changed the architecture so only support 1. This allowed alot of code to be removed
+as well as made the instructions better.
+Issue [#1119774] by [micahw156]: fixed broken password validation on service account
+Issue [#1034712] by [wernercd]: way to short of db field length for some ldap fields.
+Issue [#1034734] by [wernercd]: made changes to encourage filtering and mapping in ldap authorization
+Issue [#1026078] by [wernercd], [micahw156]: menus, tabs, and breadcrumbs are better now.  I think they still could be improved.
+Issue [#989090] by
+Issues ([#1101422], [#1104366], [#1064692], [#1067158]) arise from the anonymous and user binding to ldap
+  part on ldap authentication not being implemented yet. [cezaryrk] code took care of the binding side and more options were
   added to the sever configuration.
-- all: fixed parsing of lines into arrays.  was not accounting for both unix and windows line endings.  this could have created
+Issue [#1110854] by [rbp]: fixed parsing of lines into arrays.  was not accounting for both unix and windows line endings.  this could have created
 any number of issues with configurations that involved text areas with multiple lines such as: [#1110854].   Thanks rbp for pointing
 this out.
-- ldap_servers: added some of ankurs functions for password reset into ldap_servers/ldap_servers.functions.inc.  [#1111000]
-- ldap_authentication:  bug with account creation flag fixed [#1101422]
-- all:  [#1089854] better ldap error messages shown in watchdog for server binding, connection, etc.
+Issue [#1111000] by [ankurs]: added some of ankurs functions for password reset into ldap_servers/ldap_servers.functions.inc.  [#1111000]
+Issue [#1101422]:  bug with account creation flag fixed,
+Issue [#1089854] better ldap error messages shown in watchdog for server binding, connection, etc.
 
 
 ==================

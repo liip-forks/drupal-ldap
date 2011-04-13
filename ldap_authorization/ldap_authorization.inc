@@ -195,7 +195,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
 
 }
 
-function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filtered_ldap_authorizations, $ldap_entry, $watchdog_tokens) {
+function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filtered_ldap_authorizations, &$ldap_entry, $watchdog_tokens) {
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $user_edit = array(); // all user data is stored here until user_save is called.
 
