@@ -432,14 +432,14 @@ protected function warnings($op) {
     $warnings = array();
     if ($this->type) {
       $defaults = ldap_servers_get_ldap_defaults($this->type);
-      if ($defaults['user']['user_attr'] && ($this->user_attr != $defaults['user']['user_attr'])) {
+      if (isset($defaults['user']['user_attr']) && ($this->user_attr != $defaults['user']['user_attr'])) {
         $tokens = array('%name' => $defaults['name'], '%default' => $defaults['user']['user_attr'], '%user_attr' => $this->user_attr);
         $warnings['user_attr'] =  t('The standard UserName attribute in %name is %default.  You have %user_attr. This may be correct
           for your particular LDAP.', $tokens);
       }
 
-      if ($defaults['user']['mail_attr'] && ($this->mail_attr != $defaults['user']['mail_attr'])) {
-        $tokens = array('%name' => $defaults['name'], '%default' => $defaults['user']['user_attr'], '%mail_attr' => $this->mail_attr);
+      if (isset($defaults['user']['mail_attr']) && ($this->mail_attr != $defaults['user']['mail_attr'])) {
+        $tokens = array('%name' => $defaults['name'], '%default' => $defaults['user']['mail_attr'], '%mail_attr' => $this->mail_attr);
         $warnings['mail_attr'] =  t('The standard mail attribute in %name is %default.  You have %mail_attr.  This may be correct
           for your particular LDAP.', $tokens);
       }

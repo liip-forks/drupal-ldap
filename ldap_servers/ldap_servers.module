@@ -245,7 +245,7 @@ function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL) {
 
 function ldap_servers_ldaps_option_array() {
   $options = array();
-  $options['none'] = "-- Select LDAP Type --";
+  $options['default'] = "-- Select LDAP Type --";
   require_once('ldap_servers.functions.inc');
   foreach (ldap_servers_get_ldap_defaults() as $type => $defaults) {
     $options[$type] = $defaults['name'];
