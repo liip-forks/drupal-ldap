@@ -70,6 +70,8 @@ function theme_ldap_authorization_test_results($variables) {
       foreach ($user_results as $consumer_type => $authorizations) {
         if (is_array($authorizations) && count($authorizations) > 0) {
           $authorizations_text =  theme('item_list', array('items' => $authorizations, 'title' => NULL, 'type' => 'ul', 'attributes' => array()));
+        } else {
+          $authorizations_text = "";
         }
         $row = array($username, $consumer->name, $authorizations_text, $consumer_conf_link, $server_link);
         $table['rows'][] = $row;
