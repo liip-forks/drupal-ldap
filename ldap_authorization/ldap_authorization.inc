@@ -186,7 +186,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
      * 3. third, grant any proposed authorizations not already granted
      */
     if ($op == 'set') {
-      _ldap_authorizations_user_authorizations_set($user, $consumer, $filtered_ldap_authorizations, $ldap_entry, $watchdog_tokens);
+      _ldap_authorizations_user_authorizations_set($user, $consumer, $filtered_ldap_authorizations, $user_ldap_entry, $watchdog_tokens);
     }
 
     $authorizations[$consumer_type] = $filtered_ldap_authorizations;
