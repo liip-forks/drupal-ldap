@@ -40,17 +40,9 @@ class LdapServer {
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
 
-  public $errorMsg = NULL;
-  public $hasError = FALSE;
-  public $errorName = NULL;
+
 
   public $inDatabase = FALSE;
-
-  public function clearError() {
-    $this->hasError = FALSE;
-    $this->errorMsg = NULL;
-    $this->errorName = NULL;
-  }
 
   protected $connection;
   // direct mapping of db to object properties
@@ -83,7 +75,7 @@ class LdapServer {
     }
 
     $this->sid = $sid;
-
+    $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
     $select = db_select('ldap_servers', 'ldap_servers');
     $select->fields('ldap_servers');
     $select->condition('ldap_servers.sid',  $this->sid);
@@ -133,18 +125,7 @@ class LdapServer {
     $this->bind();
   }
 
-  public function getErrorMsg($type = NULL) {
-    if ($type == 'ldap' && $this->connection) {
-      return ldap_error($this->connection);
-    }
-    elseif ($type == NULL) {
-      return $this->errorMsg;
-    }
-    else {
-      return NULL;
-    }
 
-  }
 
   /**
    * Connect Method
@@ -208,7 +189,7 @@ class LdapServer {
     }
 
 
-    if (!@ldap_bind($this->connection, $userdn, $pass)) {
+    if (@!ldap_bind($this->connection, $userdn, $pass)) {
       watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", array('%user' => $userdn, '%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
       return ldap_errno($this->connection);
     }
@@ -254,13 +235,20 @@ class LdapServer {
       }
     }
 
-    $result = ldap_search($this->connection, $basedn, $filter, $attributes);
-   // restore_error_handler();
+    $result = @ldap_search($this->connection, $basedn, $filter, $attributes);
+
     if ($result && ldap_count_entries($this->connection, $result)) {
       return ldap_get_entries($this->connection, $result);
+    } elseif ($this->ldapErrorNumber()) {
+      $watchdog_tokens =  array('%basedn' => $basedn, '%filter' => $filter,
+        '%attributes' => print_r($attributes, TRUE), '%errmsg' => $this->errorMsg('ldap'),
+        '%errno' => $this->ldapErrorNumber());
+      watchdog('ldap', "LDAP ldap_search error. basedn: %basedn, filter: %filter, attributes:
+        %attributes, errmsg: %errmsg, ldap err no: %errno,", $watchdog_tokens);
+      return array();
+    } else {
+      return array();
     }
-
-    return $result;
   }
 
 
@@ -283,12 +271,12 @@ class LdapServer {
 
       $result = $this->search($filter, $basedn);
 
-      if (!$result) continue;
+      if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to.
       if ($result['count'] != 1) {
         $count = $result['count'];
-        watchdog('ldap_authentication', "Error:  $count users found with $filter under $basedn.", array(), WATCHDOG_ERROR);
+        watchdog('ldap_authentication', "Error: !count users found with $filter under $basedn.", array('!count' => $count), WATCHDOG_ERROR);
         continue;
       }
       $match = $result[0];
@@ -326,6 +314,66 @@ class LdapServer {
     }
   }
 
+
+
+
+  /**
+   * Error methods and properties.
+   */
+
+  public $detailedWatchdogLog = FALSE;
+  protected $_errorMsg = NULL;
+  protected $_hasError = FALSE;
+  protected $_errorName = NULL;
+
+  public function setError($_errorName, $_errorMsgText = NULL) {
+    $this->_errorMsgText = $_errorMsgText;
+    $this->_errorName = $_errorName;
+    $this->_hasError = TRUE;
+  }
+
+  public function clearError() {
+    $this->_hasError = FALSE;
+    $this->_errorMsg = NULL;
+    $this->_errorName = NULL;
+  }
+
+  public function hasError() {
+    return ($this->_hasError || $this->ldapErrorNumber());
+  }
+
+  public function errorMsg($type = NULL) {
+    if ($type == 'ldap' && $this->connection) {
+      return ldap_err2str(ldap_error($this->connection));
+    }
+    elseif ($type == NULL) {
+      return $this->_errorMsg;
+    }
+    else {
+      return NULL;
+    }
+  }
+
+   public function errorName($type = NULL) {
+    if ($type == 'ldap' && $this->connection) {
+      return "LDAP Error: ". ldap_error($this->connection);
+    }
+    elseif ($type == NULL) {
+      return $this->_errorName;
+    }
+    else {
+      return NULL;
+    }
+  }
+
+  public function ldapErrorNumber() {
+    if ($this->connection && ldap_errno($this->connection)) {
+      return ldap_errno($this->connection);
+    }
+    else {
+      return FALSE;
+    }
+  }
 
 
 

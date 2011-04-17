@@ -89,7 +89,7 @@ function ldap_servers_admin_form_submit($form, &$form_state) {
   $server = new LdapServerAdmin($form_state['values']['sid']);
   $server->drupalFormSubmit($op, $form_state['values']);  // add form data to object and save or create
 
-  if ($server->hasError == FALSE) {
+  if ($server->hasError() == FALSE) {
     drupal_set_message(t('LDAP Server %name !verb.', array('!verb' => $verb, '%name' => $server->name)), 'status');
     ldap_servers_cache_clear();
     if ($form_state['ldap_warnings'] && $op != 'add') {
@@ -101,7 +101,7 @@ function ldap_servers_admin_form_submit($form, &$form_state) {
     }
   }
   else {
-    form_set_error($server->errorName, $server->getErrorMsg());
+    form_set_error($server->errorName(), $server->errorMsg());
     $server->clearError();
   }
   ldap_servers_cache_clear();

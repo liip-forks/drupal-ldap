@@ -150,7 +150,7 @@ function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw) {
 
   $ldap_result = $ldap_server->connect();
   if ($ldap_result != LDAP_SUCCESS) {
-    $results[] = t('Failed to connect to LDAP server.  See watchdog error logs for details.') . $ldap_server->getErrorMsg('ldap');
+    $results[] = t('Failed to connect to LDAP server.  See watchdog error logs for details.') . $ldap_server->errorMsg('ldap');
     $errors = TRUE;
   }
 
@@ -160,7 +160,7 @@ function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw) {
       $results[] =  t('Successfully bound to server');
     }
     else {
-      $results[] = t('Failed to bind to server. ldap error #') . $bind_result . ' ' . $ldap_server->getErrorMsg('ldap') ;
+      $results[] = t('Failed to bind to server. ldap error #') . $bind_result . ' ' . $ldap_server->errorMsg('ldap') ;
       $errors = TRUE;
     }
   }
@@ -173,7 +173,7 @@ function ldap_servers_test_user_mapping($drupal_username, &$ldap_server) {
   $errors = FALSE;
   if (! $ldap_user ) {
     $results[] = t('Failed to find test user %username by searching on  %user_attr = %username.',
-      array('%username' => $drupal_username, '%user_attr' => $ldap_server->user_attr )) . $ldap_server->getErrorMsg('ldap');
+      array('%username' => $drupal_username, '%user_attr' => $ldap_server->user_attr )) . $ldap_server->errorMsg('ldap');
     $errors = TRUE;
   }
   else {

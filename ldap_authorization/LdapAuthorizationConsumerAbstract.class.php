@@ -162,7 +162,7 @@ class LdapAuthorizationConsumerAbstract {
           if ($this->allowConsumerObjectCreation) {
             $this->createConsumers(array($consumer_id));
             if (in_array($consumer_id, $this->availableConsumerIDs(TRUE))) {
-              $this->grantSingleAuthorization($user, $consumer_id);
+              $this->grantSingleAuthorization($user, $consumer_id, $user_edit);
               $user_edit['data']['ldap_authorizations'][$this->consumerType][$consumer_id] = array('date_granted' => time() );
             }
             else {
@@ -172,7 +172,7 @@ class LdapAuthorizationConsumerAbstract {
             // out of luck. can't create new consumer id.
           }
         } else {
-          $this->grantSingleAuthorization($user, $consumer_id);
+          $this->grantSingleAuthorization($user, $consumer_id, $user_edit);
           $user_edit['data']['ldap_authorizations'][$this->consumerType][$consumer_id] = array('date_granted' => time() );
         }
       }

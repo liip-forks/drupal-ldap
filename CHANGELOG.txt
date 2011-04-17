@@ -1,11 +1,20 @@
 // $Id: CHANGELOG.txt,v 1.1.4.3 2011/02/08 20:19:24 johnbarclay Exp $
 
 ==================
+7.x-1.0-unstable7
+==================
+
+Issue #1119774  by micahw156, weboide:  fixed issues with storing and removing service account password
+Issue #1126600  by micahw156: fixed logging errors from "detailed logging" option that caused WSOD fixed.
+Issue #1119330  by alvmarveg: fixed untrapped error when bad basedn is used
+
+
+==================
 7.x-1.0-unstable6
 ==================
 
 Ldap Authentication and Ldap Servers are feature complete.  Testing and bug
-fixes are needed to move it toward a relase candidate.  
+fixes are needed to move it toward a relase candidate.
 
 Ldap Authorization got a good cleanup and restructuring, but
 is wholly untested.  I would not use this version of ldap authorization or expect it to work;

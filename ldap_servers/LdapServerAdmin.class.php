@@ -115,6 +115,8 @@ class LdapServerAdmin extends LdapServer {
   }
   public function drupalForm($op) {
 
+    drupal_add_css(drupal_get_path('module','ldap_servers') . '/ldap_servers.admin.css','module','all');
+
     $form['#prefix'] = <<<EOF
 <p>Setup an LDAP server configuration to be used by other modules such as LDAP Authentication,
 LDAP Authorization, etc.</p>
@@ -244,24 +246,33 @@ $form['#prefix'] = t($form['#prefix']);
       Leave password field emtpy to leave password unchanged.  Enter a new password
       to replace the current password.  Check the checkbox below to simply
       remove it from the database.');
+    $pwd_class = 'ldap-pwd-present';
   }
   else {
     $pwd_directions = t('No password is currently stored in the database.
       If you are using a service account, enter one.');
+    if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
+      $pwd_class = 'ldap-pwd-abscent';
+    } else {
+      $pwd_class = 'ldap-pwd-not-applicable';
+    }
   }
 
-  $form['binding_service_acct']['directions'] = array(
+  $form['binding_service_acct']['service_account_directions'] = array(
     '#type' => 'item',
     '#markup' => $pwd_directions,
+    '#prefix' => '<div class="' . $pwd_class . '">',
+    '#suffice' => '<div class="' . $pwd_class . '">',
   );
 
   $form['binding_service_acct']['bindpw'] = array(
     '#type' => 'password',
     '#title' => t('Password for non-anonymous search'),
     '#size' => 20,
+
     '#maxlength' => 255,
     '#default_value' => "",
-  );
+   );
 
   $form['binding_service_acct']['clear_bindpw'] = array(
     '#type' => 'checkbox',
@@ -480,7 +491,7 @@ public function drupalFormSubmit($op, $values) {
   $this->populateFromDrupalForm($op, $values);
 
   if ($values['clear_bindpw']) {
-    $this->bindpw_clear = NULL;
+    $this->bindpw_clear = TRUE;
   }
 
   if ($op == 'delete') {
@@ -491,9 +502,8 @@ public function drupalFormSubmit($op, $values) {
       $save_result = $this->save($op);
     }
     catch (Exception $e) {
-      $this->errorName = 'Save Error';
-      $this->errorMsg = t('Failed to save object.  Your form data was not saved.');
-      $this->hasError = TRUE;
+      $this->setError('Save Error',
+        t('Failed to save object.  Your form data was not saved.'));
     }
   }
 }

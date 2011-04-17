@@ -183,10 +183,6 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     }
   }
 
-  if ($detailed_watchdog_log) {
-    watchdog('ldap_authentication', '%username : Exisitng Drupal User Account not found.  Continuing on to attempt ldap authentication', $watchdog_tokens, WATCHDOG_DEBUG);
-  }
-
   foreach ($auth_conf->servers as $sid => $ldap_server) {
     $watchdog_tokens['%sid'] = $sid;
     $watchdog_tokens['%bind_method'] = $ldap_server->bind_method;
@@ -197,7 +193,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     $result = $ldap_server->connect();
     if ($result != LDAP_SUCCESS) {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_CONNECT;
-      $watchdog_tokens['%err_msg'] = ldap_err2str($result);
+      $watchdog_tokens['%err_msg'] = $ldap_server->errorMsg('ldap');
       if ($detailed_watchdog_log) {
         watchdog('ldap_authentication',  '%username : Failed connecting to %sid.  Error: %err_msg', $watchdog_tokens, WATCHDOG_DEBUG);
       }
@@ -226,10 +222,9 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     elseif ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON) {
       $result = $ldap_server->bind();
     }
-
     if ($result != LDAP_SUCCESS) {
       if ($detailed_watchdog_log) {
-        $watchdog_tokens['%err_text'] = ldap_err2str($result);
+        $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
         watchdog('ldap_authentication', '%username : Trying server %sid where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
         $watchdog_tokens['%err_text'] = NULL;
       }
@@ -243,14 +238,17 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     $ldap_user = $ldap_server->user_lookup($name);
     if (!$ldap_user) {
       if ($detailed_watchdog_log) {
-        $watchdog_tokens['%err_text'] = @ldap_err2str(@ldap_error($ldap_server->connection));
+        $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
         watchdog('ldap_authentication', '%username : Trying server %sid where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
         $watchdog_tokens['%err_text'] = NULL;
+      }
+      if ($ldap_server->ldapErrorNumber()) {
+        $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_SERVER;
+        break;
       }
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_FIND;
       continue; // next server, please
     }
-
 
     /**
     * check allowed and excluded list and php for allowed users
@@ -260,14 +258,13 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED;
       break;  // regardless of how many servers, disallowed user fails
     }
-
     /**
     * test password
     */
     $result = $ldap_server->bind($ldap_user['dn'], $pass);
     if ($result != LDAP_SUCCESS) {
       if ($detailed_watchdog_log) {
-        $watchdog_tokens['%err_text'] = @ldap_err2str(@ldap_error($ldap_server->connection));
+        $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
         watchdog('ldap_authentication', '%username : Testing user credentials on server %sid where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
         $watchdog_tokens['%err_text'] = NULL;
       }
@@ -426,6 +423,11 @@ function _ldap_authentication_err_text($error) {
     case LDAP_AUTHENTICATION_RESULT_FAIL_GENERIC:
     $msg = t('Sorry, unrecognized username or password.');
     break;
+
+    case LDAP_AUTHENTICATION_RESULT_FAIL_SERVER:
+    $msg = t('Authentication Server or Configuration Error.');
+    break;
+
   }
 
   return $msg;
