@@ -18,6 +18,8 @@ class LdapServersTestCase extends DrupalWebTestCase {
     );
   }
 
+  public $module_name = 'ldap_servers';
+
   protected $ldap_test_data;
 
   /**
@@ -39,6 +41,27 @@ class LdapServersTestCase extends DrupalWebTestCase {
   }
 
 
+  function testInstall() {
+    $group = 'ldap_servers: install and uninstall';
+    // disable, uninstall, and enable/install module
+    $modules = array($this->module_name);
+    module_disable($modules, TRUE); // disable dependent modules
+    drupal_uninstall_modules($modules);
+    module_enable($modules, TRUE);
+    $var_created = $this->assertTrue(db_table_exists($table), 'ldap_servers table creates', $group);
+    $var_created = $this->assertTrue(variable_get('ldap_servers_encryption', FALSE), 'ldap_servers_encryption variable initialized', $group);
+    $var_created = $this->assertTrue(variable_get('ldap_servers_encrypt_key', FALSE), 'ldap_servers_encrypt_key variable initialized', $group);
+
+    module_disable($modules, TRUE); // disable dependent modules
+    drupal_uninstall_modules($modules);
+    $var_created = $this->assertFalse(db_table_exists($table), 'ldap_servers table removed', $group);
+    $var_created = $this->assertFalse(variable_get('ldap_servers_encryption', FALSE), 'ldap_servers_encryption variable removed', $group);
+    $var_created = $this->assertFalse(variable_get('ldap_servers_encrypt_key', FALSE), 'ldap_servers_encrypt_key variable removed', $group);
+
+
+    }
+
+
   function testEncryption() {
     // test that pwds in config files are encrypted.
     // test that switching encryption, decrypes and reincrypts pwd.
@@ -49,14 +72,7 @@ class LdapServersTestCase extends DrupalWebTestCase {
     // get logon form over http and see if disabled
   }
 
-  function testInstall() {
-    $this->assert('pass', 'pass test');
-    // uninstall ldap_authorization and ldap_authorization_drupal_roles
-    // enable both
-    // assert tables and fields are there (ldap_authorization_schema)
 
-    // uninstall and assert table is removed.
-    }
 
 
   function testServerCRUD() {

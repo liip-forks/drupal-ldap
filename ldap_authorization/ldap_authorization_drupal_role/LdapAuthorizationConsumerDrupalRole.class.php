@@ -13,13 +13,8 @@ require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizati
 class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstract {
 
   public $consumerType = 'drupal_role';
-
-
   public $allowSynchBothDirections = FALSE;
   public $allowConsumerObjectCreation = TRUE;
-  protected $_availableConsumerIDs;
-
-  // default values for configurations
   public $onlyApplyToLdapAuthenticatedDefault = TRUE;
   public $useMappingsAsFilterDefault = TRUE;
   public $synchOnLogonDefault = TRUE;
@@ -27,6 +22,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
   public $revokeLdapProvisionedDefault = TRUE;
   public $regrantLdapProvisionedDefault = TRUE;
   public $createContainersDefault = TRUE;
+  public $drupalRolesByName = array();
 
  /**
    * Constructor Method
@@ -34,107 +30,122 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
    */
   function __construct($consumer_type = NULL) {
     $params = ldap_authorization_drupal_role_ldap_authorization_consumer();
+    $this->refreshConsumerIDs();
     parent::__construct('drupal_role', $params['drupal_role']);
   }
 
+  public function refreshConsumerIDs() {
+    $this->drupalRolesByName = array_flip(user_roles());
+    $this->_availableConsumerIDs = array_values(user_roles(TRUE));
+  }
 
   public function availableConsumerIDs($reset = FALSE) {
     if ($reset || ! is_array($this->_availableConsumerIDs)) {
-      $this->_availableConsumerIDs = array_values(user_roles(TRUE));
+      $this->refreshConsumerIDs();
     }
     return $this->_availableConsumerIDs;
   }
 
-  public function createConsumers($creates) {
+  /**
+   * extends createConsumer method of base class
+   *
+   * creates of drupal roles may be mixed case.  drupal doesn't
+   * differentiate, so case is ignored in comparing, but preserved
+   * for the actual created role name saved.
+   *
+   * **/
 
-    //  determine existing drupal roles
-    $existing_roles = $this->availableConsumerIDs();
+  public function createConsumers($creates_mixed_case) {
 
-    //  take diff to find which roles do not already exist. because
-    //  sql field is case insensitive, need to loop through
-    $role_to_create = NULL;
-    $roles_to_create = array();
-    foreach ($creates as $desired_role) {
-      $create = TRUE;
-      foreach ($existing_roles as $existing_role) {
-        if (drupal_strtolower($existing_role) == drupal_strtolower($desired_role)) {
-          $create = FALSE;
-        }
-      }
-      if ($create) {
-        $roles_to_create[] = $desired_role;
-      }
-    }
+    // 1. determins difference between existing drupal roles and ones that are requested to be created
+    $existing_roles_mixed_case = $this->availableConsumerIDs();
+    $creates_lower_case = array_map('drupal_strtolower', $creates_mixed_case);
+    $existing_roles_lower_case = array_map('drupal_strtolower', $existing_roles_mixed_case);
+    $roles_map_lc_to_mixed_case = array_combine($creates_lower_case, $creates_mixed_case);
+    $roles_to_create = array_diff($creates_lower_case, $existing_roles_lower_case);
 
-
-   // $roles_to_create = array_diff($creates, $existing_roles); // ends up attempting to create duplicate entries.
-
-    // create each role that is needed
-    foreach ($roles_to_create as $i => $role_name) {
+    // 2. create each role that is needed
+    foreach ($roles_to_create as $i => $role_name_lowercase) {
       $role = new stdClass();
-      $role->name = $role_name;
+      $role->name = $roles_map_lc_to_mixed_case[$role_name_lowercase];
       if (! ($status = user_role_save($role))) {
         // if role is not created, remove from array to user object doesn't have it stored as granted
-        watchdog('user', 'failed to create drupal role %role in ldap_authorizations module', array('%role' => $role_name));
+        watchdog('user', 'failed to create drupal role %role in ldap_authorizations module', array('%role' => $role->name));
       }
       else {
-        $created[] = $role_name;
-        watchdog('user', 'drupal role %role in ldap_authorizations module', array('%role' => $role_name));
+        $created[] = $role->name;
+        watchdog('user', 'drupal role %role in ldap_authorizations module', array('%role' => $role->name));
       }
     }
-    // return all existing user roles
-    return $this->availableConsumerIDs();  // return actual roles that exist, in case of failure
-
-  }
-  public function revokeSingleAuthorization(&$user, $role_name, &$user_edit, $user_save = TRUE) {
-    $user_edit['roles'] = array_diff($user->roles, array($role_name));
-    if ($user_save) {
-      $user = user_save($user, $user_edit);
+    // 3. return all existing user roles and flush cache of consumer ids.
+    $refreshed_available_consumer_ids = $this->availableConsumerIDs(TRUE);
+    if ($this->detailedWatchdogLog) {
+      $watchdog_tokens = array('%roles_to_create' => join(", ", $roles_to_create));
+      $watchdog_tokens = array('%existing_roles' => join(", ", $existing_roles_mixed_case));
+      $watchdog_tokens = array('%refreshed_available_consumer_ids' => join(", ", $refreshed_available_consumer_ids));
+      watchdog('ldap_authorization',
+        'LdapAuthorizationConsumerDrupalRole.createConsumers()
+        roles to create: %roles_to_create;
+        existing roles: %existing_roles;
+        available roles after createConsumers call: %refreshed_available_consumer_ids;',
+        $watchdog_tokens,
+        WATCHDOG_DEBUG);
     }
+
+
+    return $refreshed_available_consumer_ids;  // return actual roles that exist, in case of failure
+
   }
 
-  public function grantSingleAuthorization(&$user, $role_name, &$user_edit, $user_save = TRUE) {
-    $user_edit['roles'] = $user->roles + array($role_name);
-    if ($user_save) {
-      $user = user_save($user, $user_edit);
+  public function revokeSingleAuthorization(&$user, $role_name, &$user_auth_data) {
+
+    $user_edit = array('roles' => array_diff($user->roles, array($this->drupalRolesByName[$role_name] => $role_name)));
+    $user = user_save($user, $user_edit);
+    $result = ($user && !isset($user->roles[$this->drupalRolesByName[$role_name]]));
+
+    if ($this->detailedWatchdogLog) {
+      watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.revokeSingleAuthorization()
+        revoked:  rid=%rid, role_name=%role_name for username=%username, result=%result',
+        array('%rid' => $this->drupalRolesByName[$role_name], '%role_name' => $role_name, '%username'=> $user->name,
+          '%result' => $result), WATCHDOG_DEBUG);
     }
+
+    return $result;
+
   }
 
+  /**
+   * extends grantSingleAuthorization()
+   */
 
+  public function grantSingleAuthorization(&$user, $role_name, &$user_auth_data) {
+    if (! isset($this->drupalRolesByName[$role_name])) {
+        watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.grantSingleAuthorization()
+        failed to grant %username the role %role_name because role does not exist',
+        array('%role_name' => $role_name, '%username'=> $user->name),
+        WATCHDOG_ERROR);
+        return FALSE;
+    }
+
+    $user_edit = array('roles' => $user->roles + array($this->drupalRolesByName[$role_name] => $role_name));
+    $user = user_save($user, $user_edit);
+    $result = ($user && isset($user->roles[$this->drupalRolesByName[$role_name]]));
+
+
+    if ($this->detailedWatchdogLog) {
+      watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.grantSingleAuthorization()
+        granted: rid=%rid, role_name=%role_name for username=%username, result=%result',
+        array('%rid' => $this->drupalRolesByName[$role_name], '%role_name' => $role_name, '%username'=> $user->name,
+          '%result' => $result), WATCHDOG_DEBUG);
+    }
+
+    return $result;
+
+  }
 
   public function usersAuthorizations(&$user) {
     return array_values($user->roles);
   }
 
-  public function authorizationUserDataSync(&$user, &$ldap_entry, $user_save = TRUE) {
-      $users_authorizations = $this->usersAuthorizations($user);
-      if (isset($user->data['ldap_authorizations'][$this->consumerType])) {
-        $user_data_authorizations = $user->data['ldap_authorizations'][$this->consumerType];
-      }
-      else {
-        $user_data_authorizations = array();
-      }
 
-    /**
-     * @todo for 7.x-2.x not sure what to be doing here.  need to have synchronization configurable such
-     * that a given consumer can implement know synchrozition behaviours such as sych both ways,
-     * sych both ways, revoke module granted only, etc.
-     */
-
-   /**
-    *
-
-    $user_edit['data'] = $user->data;
-     foreach ($user_data_authorizations as $consumer_id => $discard) {
-        if (in_array($consumer_id, $actual_authorizations))
-          $user_edit['data']['ldap_authorizations'][$this->consumerType][$consumer_id] = $user_data_authorizations[$consumer_id];
-        }
-      }
-
-
-      $user = user_save($user, $user_edit);
-    * **/
-
-
-  }
 }

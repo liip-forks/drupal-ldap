@@ -328,7 +328,7 @@ function ldap_help_get_ldap_authentication() {
 
 function ldap_help_get_ldap_authorization() {
   $status = array();
-  require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizationMappingAdmin.class.php');
+  require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizationConsumerConfAdmin.class.php');
   require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.settings.inc');
   require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.inc');
   $servers = ldap_servers_get_servers(NULL, 'enabled');
@@ -368,7 +368,7 @@ function ldap_help_get_ldap_authorization() {
 
   foreach ($consumers as $consumer_type => $consumer) {
     $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
-    $mapping_admin = new LdapAuthorizationMappingAdmin($consumer_obj->mapping->mappingID, FALSE, NULL, $consumer_type);
+    $mapping_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj->mapping->mappingID, FALSE, NULL, $consumer_type);
     $authorization_form = $mapping_admin->drupalForm($server_options, 'edit');
     $status[$consumer_type] = ldap_help_parse_form($authorization_form, $items);
     $maps = $authorization_form['filter_and_mappings']['mappings']['#default_value'];

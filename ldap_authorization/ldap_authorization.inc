@@ -77,9 +77,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     *   - server object ($ldap_server),
     *   - and consumer conf object.
     *
-    *  @todo 7.x-2.x so this insides of this loop probably belong in the consumer mapping abstract class
-    *   as well as the function _ldap_authorizations_user_authorizations_set
-    *
     */
 
     $consumer = ldap_authorization_get_consumer_object($consumer_type);
@@ -103,7 +100,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     if ($context == 'logon' && !$consumer->consumerConf->synchOnLogon) {
       $notifications[$consumer_type][] = LDAP_AUTHORIZATION_MAP_NOT_CONF_FOR_LOGON;
       if ($detailed_watchdog_log) {
-        watchdog('ldap_authorization', '%username : %consumer_type no set to run on user logon.', $watchdog_tokens, WATCHDOG_DEBUG);
+        watchdog('ldap_authorization', '%username : %consumer_type not set to run on user logon.', $watchdog_tokens, WATCHDOG_DEBUG);
       }
       continue;
     }
@@ -194,62 +191,77 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
   return array($authorizations, $notifications);
 
 }
+/**
+ * @param object $user is a drupal user account object, need not be current user
+ * @param object $consumer is instance of an authorization consumer class such as LdapAuthorizationConsumerDrupalRole
+ * @param array $filtered_ldap_authorizations all authorization ids a user is granted via ldap authorization configuration
+ * @param object $ldap_entry is users ldap entry.  mapping of drupal user to ldap entry is stored in ldap_server configuration
+ *
+ * returns nothing
+ */
 
 function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filtered_ldap_authorizations, &$ldap_entry, $watchdog_tokens) {
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
-  $user_edit = array(); // all user data is stored here until user_save is called.
+
 
   /**
    * A.  Determine what authorizations have been granted in the past by ldap authorization
    */
 
   if (isset($user->data['ldap_authorizations'][$consumer->consumerType]) && is_array($user->data['ldap_authorizations'][$consumer->consumerType])) {
-    $initial_existing_ldap_authorizations = array_keys($user->data['ldap_authorizations'][$consumer->consumerType]);
+     $user_auth_data = $user->data['ldap_authorizations'][$consumer->consumerType];
+     $initial_existing_ldap_authorizations = array_keys($user_auth_data);
   }
   else {
-    $initial_existing_ldap_authorizations = array();
+     $user_auth_data = array();
+     $initial_existing_ldap_authorizations = array();
   }
 
-  /**
-   * B. if regrantLdapProvisioned is false, $creates array should only be new authorizations
+
+
+
+  $grants = $filtered_ldap_authorizations;
+   /**
+   * B. if regrantLdapProvisioned is false, $grants array should only be new authorizations
    */
-
-  if (isset($user->data['ldap_authorizations'][$consumer->consumerType]) && $consumer->consumerConf->regrantLdapProvisioned === FALSE) {
-    $existing_ldap_authorizations = $initial_existing_ldap_authorizations;
-    $creates = array_diff($filtered_ldap_authorizations, $existing_ldap_authorizations);
+  // if regranting disabled, filter off previously granted roles
+  if ($consumer->consumerConf->regrantLdapProvisioned === FALSE) {
+    $grants = array_diff($filtered_ldap_authorizations, $initial_existing_ldap_authorizations);
   }
-  else {
-    $existing_ldap_authorizations = array();
-    $creates = $filtered_ldap_authorizations;
-  }
-  $watchdog_tokens['%creates'] = join(', ', $creates);
+  $watchdog_tokens['%grants1'] = join(', ', $grants);
 
 
    /**
    * C.  query or create existing authorization consumer ids (drupal roles, og groups etc.)
-   *       doesn't matter if an authorization ids exists if the container constructs don't exist.
    */
   $consumer_containers_existing = $consumer->availableConsumerIDs();
-  $containers_needed = array_diff($creates, $consumer_containers_existing);
-  $watchdog_tokens['%consumer_containers_initial'] = join(', ', $consumer_containers_existing);
-  if ($consumer->consumerConf->createConsumers && count($containers_needed) > 0) {
-    $watchdog_tokens['%consumer_containers_needed'] = join(', ', $containers_needed);
-    $consumer->createConsumers($containers_needed);
-    $consumer_containers_existing = $consumer->availableConsumerIDs();  // requery in case of failure
+  $containers_needed = array_diff($grants, $consumer_containers_existing);
+  $watchdog_tokens['%consumer_containers_initial'] = (count($consumer_containers_existing)) ? join(', ', $consumer_containers_existing) :  t('none');
+  $watchdog_tokens['%consumer_containers_needed'] =  (count($containers_needed)) ?  join(', ', $containers_needed) :  t('none');
+
+  if (count($containers_needed) > 0) {
+    if ($consumer->consumerConf->createConsumers) {
+      $consumer->createConsumers($containers_needed);
+      $consumer_containers_existing = $consumer->availableConsumerIDs();  // requery in case of failure
+    } else {
+      $grants = array_diff($grants, $containers_needed);  // filter off consumer ids that don't exist and can't be created
+    }
   }
+
+
   $watchdog_tokens['%consumer_containers_final'] = join(', ', $consumer_containers_existing);
 
    /**
    * D.  Only grant authorization consumer ids that exist
    */
-  $grants = array_intersect($consumer_containers_existing, $creates);
+  $grants = array_intersect($consumer_containers_existing, $grants);
 
   /**
    * E. Do grants
    */
 
-  $consumer->authorizationGrant($user, $user_edit, $grants, $ldap_entry, FALSE);
-  $watchdog_tokens['%grants'] = join(', ', $grants);
+  $consumer->authorizationGrant($user, $user_auth_data, $grants, $ldap_entry, FALSE);
+  $watchdog_tokens['%grants'] = (count($grants)) ? join(', ', $grants) :  t('none');
 
 
 
@@ -257,12 +269,13 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
    *  3.F take away any authorizations not in proposed authorization,
    *      but previously granted by ldap
    */
+  $watchdog_tokens['%revokes'] = t('none');
   if ($consumer->consumerConf->revokeLdapProvisioned) {
     $revokes = array_diff($initial_existing_ldap_authorizations, $filtered_ldap_authorizations);
     if (count($revokes)) {
-      $consumer->authorizationRevoke($user, $user_edit, $revokes, $ldap_entry, FALSE);
+      $consumer->authorizationRevoke($user, $user_auth_data, $revokes, $ldap_entry, FALSE);
+      $watchdog_tokens['%revokes'] = join(', ', $revokes);
     }
-    $watchdog_tokens['%revokes'] = join(', ', $revokes);
   }
 
   if ($detailed_watchdog_log) {
@@ -273,14 +286,15 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
       <hr/>consumer containers initially existing: %consumer_containers_initial
       <hr/>consumer containers needed to create: %consumer_containers_needed
       <hr/>consumer containers existing after create call: %consumer_containers_final
-      ',
-      $watchdog_tokens, WATCHDOG_DEBUG);
+      ', $watchdog_tokens, WATCHDOG_DEBUG);
   }
 
   /**
    *  3.G  save user object and user data
    */
 
+  $user_edit = array();
+  $user_edit['data']['ldap_authorizations'][$consumer->consumerType] = $user_auth_data;
   $user = user_save($user, $user_edit);
 }
 

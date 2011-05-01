@@ -1,0 +1,7 @@
+name = LDAP Provisioning
+description = "Implements LDAP Provisioning. Searches servers for users to import into Drupal."
+package = "Lightweight Directory Access Protocol"
+dependencies[] = ldap_profile
+dependencies[] = ldap_servers
+core = 7.x
+configure = admin/config/people/ldap/provisioning

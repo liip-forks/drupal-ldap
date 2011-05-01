@@ -45,7 +45,6 @@ class LdapAuthorizationConsumerConf {
   public $synchManually = TRUE;
 
   public $revokeLdapProvisioned = TRUE;
-  public $revokeNonLdapProvisioned = FALSE;
   public $regrantLdapProvisioned = TRUE;
   public $createConsumers = TRUE;
 
@@ -112,7 +111,6 @@ class LdapAuthorizationConsumerConf {
     $this->synchManually = (bool)(@$consumer_conf->synch_manually);
     $this->regrantLdapProvisioned = (bool)(@$consumer_conf->regrant_ldap_provisioned);
     $this->revokeLdapProvisioned = (bool)(@$consumer_conf->revoke_ldap_provisioned);
-    $this->revokeNonLdapProvisioned = (bool)(@$consumer_conf->revoke_non_ldap_provisioned);
     $this->createConsumers = (bool)(@$consumer_conf->create_consumers);
 
 
@@ -146,7 +144,6 @@ class LdapAuthorizationConsumerConf {
     'synchOnLogon',
     'synchManually',
     'revokeLdapProvisioned',
-    'revokeNonLdapProvisioned',
     'createConsumers',
     'regrantLdapProvisioned',
 

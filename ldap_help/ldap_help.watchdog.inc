@@ -14,7 +14,9 @@ function ldap_help_watchdog() {
     include_once(drupal_get_path('module', 'dblog') . '/dblog.admin.inc');
     $_SESSION['dblog_overview_filter']['type'] = Array('ldap' => 'ldap');
     $_content .= "<h3>" . t('LDAP Watchdog Errors and Notifications') . "</h3>";
-    $_content .= render(dblog_overview());
+    $overview = dblog_overview();
+    $_content .= render($overview);
+
     $_content .= l(t('...more watchdog'), 'admin/reports/dblog');
   }
   else {

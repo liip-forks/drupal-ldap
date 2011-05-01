@@ -21,7 +21,7 @@ define('LDAP_AUTHORIZATION_NO_LDAP_SERVERS', 'ldap_authorization_no_ldap_servers
 function ldap_authorization_menu() {
 
   $items['admin/config/people/ldap/authorization'] = array(
-    'title' => '4. Authorization',
+    'title' => 'Authorization',
     'page callback' => 'ldap_authorizations_admin_index',
     'page arguments' => array(),
     'type' => MENU_LOCAL_TASK,
@@ -143,7 +143,9 @@ function ldap_authorization_get_consumer_object($consumer_type) {
     $path = drupal_get_path('module', $consumer['consumer_module']) . '/' . $consumer['consumer_class_file'];
     require_once(drupal_get_path('module', $consumer['consumer_module']) . '/' . $consumer['consumer_class_file']);
     $class = $consumer['consumer_class_name'];
-    return new $class($consumer_type);
+    $consumer_obj = new $class($consumer_type);
+    $consumer_obj->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
+    return $consumer_obj;
   }
   else {
     return FALSE;

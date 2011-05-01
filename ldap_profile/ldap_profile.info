@@ -1,0 +1,6 @@
+name = LDAP Profile
+description = "Implements LDAP Profile. Allows you to map Drupal profile fields to LDAP profile fields"
+package = "Lightweight Directory Access Protocol"
+dependencies[] = ldap_servers
+core = 7.x
+configure = admin/config/people/ldap/profile

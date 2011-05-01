@@ -5,8 +5,8 @@
 ==================
 
 Issue #1119774  by micahw156, weboide:  fixed issues with storing and removing service account password
-Issue #1126600  by micahw156: fixed logging errors from "detailed logging" option that caused WSOD fixed.
-Issue #1119330  by alvmarveg: fixed untrapped error when bad basedn is used
+Issue #1126600  by micahw156: fixed logging errors from detailed logging option that caused WSOD fixed.
+Issue #1119330  by alvmarveg: fixed untrapped error when bad basedn is used"
 
 
 ==================

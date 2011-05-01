@@ -37,7 +37,6 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values['synch_on_logon'] = (int)$this->synchOnLogon;
     $values['synch_manually'] = (int)$this->synchManually;
     $values['revoke_ldap_provisioned'] = (int)$this->revokeLdapProvisioned;
-    $values['revoke_non_ldap_provisioned'] = (int)$this->revokeNonLdapProvisioned;
     $values['create_consumers'] = (int)$this->createConsumers;
     $values['regrant_ldap_provisioned'] = (int)$this->regrantLdapProvisioned;
 
@@ -368,9 +367,6 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
     if ($this->revokeLdapProvisioned)  {
       $synchronization_actions[] = 'revoke_ldap_provisioned';
     }
-    if ($this->revokeNonLdapProvisioned)  {
-      $synchronization_actions[] = 'revoke_non_ldap_provisioned';
-    }
     if ($this->createConsumers)  {
       $synchronization_actions[] = 'create_consumers';
     }
@@ -383,7 +379,6 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
       '#options' => array(
           'revoke_ldap_provisioned' => t('Revoke !consumer_namePlural previously granted by LDAP Authorization but no longer valid.', $consumer_tokens),
           'regrant_ldap_provisioned' => t('Re grant !consumer_namePlural previously granted by LDAP Authorization but removed manually.', $consumer_tokens),
-          'revoke_non_ldap_provisioned' => t('Revoke !consumer_namePlural not created by LDAP Authorization and not currently valid.', $consumer_tokens),
           'create_consumers' => t('Create !consumer_namePlural if they do not exist.', $consumer_tokens),
       ),
       '#default_value' => $synchronization_actions,
@@ -514,7 +509,6 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
     $this->synchManually = (bool)(@$values['synchronization_modes']['manually']);
     $this->regrantLdapProvisioned = (bool)(@$values['synchronization_actions']['regrant_ldap_provisioned']);
     $this->revokeLdapProvisioned = (bool)(@$values['synchronization_actions']['revoke_ldap_provisioned']);
-    $this->revokeNonLdapProvisioned = (bool)(@$values['synchronization_actions']['revoke_non_ldap_provisioned']);
     $this->createConsumers = (bool)(@$values['synchronization_actions']['create_consumers']);
 
   }
@@ -708,14 +702,6 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
       ),
 
       'revoke_ldap_provisioned'  => array(
-        'schema' => array(
-          'type' => 'int',
-          'size' => 'tiny',
-          'not null' => TRUE,
-          'default' => '0',
-        ),
-      ),
-      'revoke_non_ldap_provisioned'  => array(
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',

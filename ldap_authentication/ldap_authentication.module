@@ -52,7 +52,7 @@ function ldap_authentication_menu() {
   $items = array();
 
   $items['admin/config/people/ldap/authentication'] = array(
-    'title' => '3. Authentication',
+    'title' => 'Authentication',
     'description' => 'Configure LDAP Authentication',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_authentication_admin_form'),
