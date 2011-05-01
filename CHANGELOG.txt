@@ -7,7 +7,14 @@
 Issue #1119774  by micahw156, weboide:  fixed issues with storing and removing service account password
 Issue #1126600  by micahw156: fixed logging errors from detailed logging option that caused WSOD fixed.
 Issue #1119330  by alvmarveg: fixed untrapped error when bad basedn is used"
-
+Ldap Authorization:  fix role saving bug introduced in 7.x-1.0-unstable6
+Ldap Authorization:  fix $user->data['ldap_authorizations'] saving bug introduced in 7.x-1.0-unstable6
+Ldap Authoirzation:  removed option to remove non ldap granted authorizations since it wasn't implemented
+Ldap Authorization and Ldap Authorization Drupal Roles:  made distinct functionality in each as far
+ as storing $user->data['ldap_authorizations'] data.  Only gave drupal role class access to
+ $user->data['ldap_authorizations'][$consumer->consumerType] array; not entire user data array
+ and made saving of $user->data in ldap_authorization.inc
+Ldap Authorization: simplified case sensitivity in drupal role names in  LdapAuthorizationConsumerDrupalRole::createConsumers method
 
 ==================
 7.x-1.0-unstable6
