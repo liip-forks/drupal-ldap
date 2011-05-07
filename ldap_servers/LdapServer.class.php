@@ -289,8 +289,9 @@ class LdapServer {
       $name_attr = $this->user_attr;
       if (!isset($match[$name_attr][0])) {
         $name_attr = drupal_strtolower($name_attr);
-        if (!isset($match[$name_attr][0]))
+        if (!isset($match[$name_attr][0])) {
           continue;
+        }
       }
       // Finally, we must filter out results with spaces added before
       // or after, which are considered OK by LDAP but are no good for us
@@ -344,7 +345,7 @@ class LdapServer {
 
   public function errorMsg($type = NULL) {
     if ($type == 'ldap' && $this->connection) {
-      return ldap_err2str(ldap_error($this->connection));
+      return ldap_err2str(ldap_errno($this->connection));
     }
     elseif ($type == NULL) {
       return $this->_errorMsg;
