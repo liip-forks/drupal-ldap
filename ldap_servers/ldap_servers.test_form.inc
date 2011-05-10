@@ -67,6 +67,16 @@ $form['#prefix'] .= theme('ldap_servers_server', $variables);
   );
 
 
+  if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+    $form['testing_drupal_userpw'] = array(
+      '#type' => 'password',
+      '#title' => t('Testing Drupal User Password'),
+      '#size' => 30,
+      '#maxlength' => 255,
+      '#description' => t('This is optional and used for testing this server\'s configuration against the username above.'),
+    );
+  }
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => 'test',
@@ -112,10 +122,42 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   $results[] = t('Binding with DN for non-anonymous search (%bind_dn).  Using password ',
     array('%bind_dn' =>  $ldap_server->binddn)) . ' ' . $bindpw_type;
 
+ if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
+    $results[] = t('Binding with DN for non-anonymous search (%bind_dn).  Using password ',
+      array('%bind_dn' =>  $ldap_server->binddn)) . ' ' . $bindpw_type;
+  } else {
+	$results[] = t('Binding with null DN for anonymous search.');
+  }
+
+
   // connect to ldap
   // $ldap_server = NULL;
   list($has_errors, $more_results) = ldap_servers_test_binding_credentials($ldap_server, $bindpw);
   $results = array_merge($results, $more_results);
+
+  if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+    list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
+    $results = array_merge($results, $more_results);
+    if (!$has_errors) {
+      $mapping[] = "dn = " . $ldap_user['dn'];
+      foreach ($ldap_user['attr'] as $key => $value) {
+        if (is_array($value)) {
+          $mapping[] = "$key = " . $value[0];
+        }
+      }
+      $results[] =  theme_item_list(array('items' => $mapping, 'title' => t('Attributes available to anonymous search', array('%bind_dn' =>  $ldap_server->binddn)) , 'type' => 'ul', 'attributes' => array()));
+    }
+    $results[] = t('Binding with DN (%bind_dn).  Using supplied password ',
+       array('%bind_dn' =>  $ldap_user['dn']));
+    $result = $ldap_server->bind($ldap_user['dn'], $values['testing_drupal_userpw']);
+    if ($result == LDAP_SUCCESS) {
+	  $results[] =  t('Successfully bound to server');
+    }
+    else {
+      $results[] = t('Failed to bind to server. ldap error #') . $result . ' ' . $ldap_server->errorMsg('ldap') ;
+    }
+  }
+
 
   if (!$has_errors) {
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
@@ -131,7 +173,8 @@ function ldap_servers_test_form_submit($form, &$form_state) {
         }
       }
     // $mapping[] = theme_item_list(array('items' => $list, 'title' => 'Attributes', 'type' => 'ul', 'attributes' => array()));
-    $results[] =  theme_item_list(array('items' => $mapping, 'title' => t('Attributes available to %bind_dn', array('%bind_dn' =>  $ldap_server->binddn)) , 'type' => 'ul', 'attributes' => array()));
+     $results[] =  theme_item_list(array('items' => $mapping, 'title' => t('Attributes available to %bind_dn', array('%bind_dn' => (($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) ? $ldap_user['dn'] : $ldap_server->binddn))) , 'type' => 'ul', 'attributes' => array()));
+
     }
   }
 

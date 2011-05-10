@@ -222,6 +222,20 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     elseif ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON) {
       $result = $ldap_server->bind();
     }
+    elseif ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+	  $result = $ldap_server->bind();
+      if ($result == LDAP_SUCCESS) {
+	  	$result = LDAP_FAIL;
+      	foreach ($ldap_server->basedn as $basedn) {
+          $userdn = $ldap_server->user_lookup($name);
+          $result = $ldap_server->bind($userdn, $pass);
+          if ($result == LDAP_SUCCESS) {
+            break;
+          }
+        }
+      }
+    }
+
     if ($result != LDAP_SUCCESS) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');

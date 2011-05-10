@@ -214,6 +214,12 @@ $form['#prefix'] = t($form['#prefix']);
       to bind to LDAP.  This is only useful for modules that work during user logon such
       as ldap authentication and ldap authorization.  This option is not a best practice in most cases.
       The users dn must be of the form "cn=[username],[base dn]" for this option to work.',
+
+      LDAP_SERVERS_BIND_METHOD_ANON_USER => 'Anonymous Bind for search, then Bind with Users Credentials.
+      Searches for user DN then uses users\' entered credentials to bind to LDAP.  This is only useful for
+      modules that work during user logon such as ldap authentication and ldap authorization.
+      The users dn must be discovered by an anonymous search for this option to work.',
+
       LDAP_SERVERS_BIND_METHOD_ANON => 'Anonymous Bind. Use no credentials to bind to ldap server.
       Will not work on most ldaps.',
     ),

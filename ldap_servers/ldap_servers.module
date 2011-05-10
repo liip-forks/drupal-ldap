@@ -23,6 +23,7 @@ define('LDAP_SERVERS_CYPHER_MODE', 'cfb', 12);
 define('LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT', 1);
 define('LDAP_SERVERS_BIND_METHOD_USER', 2);
 define('LDAP_SERVERS_BIND_METHOD_ANON', 3);
+define('LDAP_SERVERS_BIND_METHOD_ANON_USER', 4);
 define('LDAP_SERVERS_BIND_METHOD_DEFAULT', 1);
 
 define('LDAP_FAIL', -1);
@@ -228,7 +229,12 @@ function ldap_servers_cache_clear() {
  */
 function ldap_servers_get_servers($sid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
   require_once('ldap_servers.inc');
-  return _ldap_servers_get_servers($sid, $type, $flatten, $reset);
+  if (variable_get('ldap_simpletest', FALSE)) {
+    return _ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset);
+  }
+  else {
+    return _ldap_servers_get_servers($sid, $type, $flatten, $reset);
+  }
 }
 
 function ldap_servers_fields() {

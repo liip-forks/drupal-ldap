@@ -6,26 +6,138 @@
  * @file test stub
  *
  */
+require_once(drupal_get_path('module', 'ldap_servers') . '/tests/LdapWebTestCase.class.php');
 
-class LdapAuthorizationTestCase extends DrupalWebTestCase {
+class LdapAuthorizationTestCase extends LdapWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'LDAP Authorization Tests',
       'description' => 'Test ldap authorization.  Requires ldap_authorization_drupal_roles
          since ldap authorization does nothing without a consumer type such as drupal roles.',
-      'group' => 'LDAP'
+      'group' => 'LDAP Authorization'
     );
+  }
+
+  public $module_name = 'ldap_authorization';
+
+  function setUp() {
+    parent::setUp(array('ldap_authorization_drupal_role') );  // don't need any real servers, configured, just ldap_servers code base
+  }
+
+
+  function tearDown(){
+    parent::tearDown();
+
   }
 
 
   /**
-   * Enable modules and create users with specific permissions.
+   * difficult to test install and uninstall since setUp does module enabling and installing.
    */
-  function setUp() {
-    parent::setUp('ldap_authentication');
-    // Create users.  1 drupal user. 1 ldap user.
+  function testInstall() {
+    $group = $this->module_name . ': install and uninstall';
+    $install_tables = array('ldap_authorization');
+    foreach ($install_tables as $table) {
+      $this->assertTrue(db_table_exists($table), $table . ' table creates', $group);
+    }
+
+    // just to give warning if setup doesn't succeed.  may want to take these out at some point.
+    $this->assertTrue(module_exists('ldap_servers'), ' ldap_servers exists', $group);
+    $this->assertTrue(module_exists('ldap_authorization'), ' ldap_authorization exists', $group);
+    $this->assertTrue(module_exists('ldap_authorization_drupal_role'), ' ldap_authorization_drupal_role exists', $group);
 
   }
+
+
+  /**
+   *  most functions in .module are considered api functions, so they
+   *  should continue to exist.  this is simply testing for careless refactoring
+   *
+   */
+  function testAPIs() {
+    $group = $this->module_name . ': test for api functions';
+    $api_functions = array(
+      'ldap_authorization_get_consumer_object',
+      'ldap_authorization_get_consumers',
+      'ldap_authorizations_user_authorizations',
+     );
+
+    foreach ($api_functions as $api_function_name) {
+      $this->assertTrue(function_exists($api_function_name), ' api function '. $api_function_name . ' module enabled', $group);
+    }
+
+  }
+
+  function prepTestData($testid, $group) {
+    include(drupal_get_path('module','ldap_authorization') . '/tests/ldap_authorization_test_data.'. $testid . '.inc');
+    require_once(drupal_get_path('module','ldap_authorization') . '/LdapAuthorizationConsumerConfAdmin.class.php');
+    $consumer_conf = $test_data['ldap_authorization_conf']['consumer_conf'];
+
+    // store server data in variable.  test ldap server will know to look there instead of ldap_server db record.
+    include(drupal_get_path('module','ldap_authorization') . '/tests/LdapServerTestData.' . $consumer_conf['sid']. '.inc');
+
+    parent::prepTestServers( $consumer_conf['sid'],  $test_data['server']);
+
+    // set up consumer authorization configuration.  this need not be faked as with ldap server
+    $consumer_obj = ldap_authorization_get_consumer_object($consumer_conf['consumerType']);
+    $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj, TRUE);
+    foreach ($consumer_conf as $property_name => $property_value) {
+      $consumer_conf_admin->{$property_name} = $property_value;
+    }
+    $consumer_conf_admin->save();
+
+    return  $consumer_conf_admin;
+  }
+
+  function removeTestData($testid, $group) {
+    include(drupal_get_path('module','ldap_authorization') . '/tests/ldap_authorization_test_data.'. $testid . '.inc');
+    require_once(drupal_get_path('module','ldap_authorization') . '/LdapAuthorizationConsumerConfAdmin.class.php');
+    $consumer_conf = $test_data['ldap_authorization_conf']['consumer_conf'];
+    $consumer_obj = ldap_authorization_get_consumer_object($consumer_conf['consumerType']);
+    $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj);
+    return $consumer_conf_admin->delete();  // remove ldap authorization record
+  }
+
+
+
+  function testIIADeriveFromDN() {
+    $group = $this->module_name . ': IIADeriveFromDN tests';
+    $testid = 'DeriveFromDN';
+    $consumer_conf_admin = $this->prepTestData($testid, $group);
+    //$this->assertTrue(is_object($consumer_conf_admin), ' consumer_conf_admin instantiated', $group);
+
+    // ldap_authorization is setup now.  test authorization mappings.  best to test these without user logging in first
+
+
+    $jkool = $this->drupalLdapCreateUser(array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'), TRUE, array());
+   // debug($jkool);
+  //  debug(user_get_authmaps('jkool'));
+    $this->assertTrue(is_object($jkool), ' user account jkool created', $group);
+    $this->assertTrue($this->ldapUserIsAuthmapped('jkool'), ' user account jkool ldap_authentication authmapped', $group);
+
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
+    debug($new_authorizations);
+
+   // list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'set');  // store authorizations and test that they are stored correctly
+   // debug($new_authorizations);
+
+    // now test authorizations with actual user and logon.
+    // user 1: new user not created
+
+
+    // user 2: existing user, previously ldap authorized
+
+
+
+    // user 3: existing user, not previously ldap authentified
+
+
+    $delete_result = $this->removeTestData($testid, $group);
+   // $this->assertTrue($delete_result, ' consumer_conf record deleted ', $group);
+  }
+
+
+
 
 /**
   function testAuthorizationForm() {
@@ -35,9 +147,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
     // test permissions on those forms (add, edit, delete) and the index
   }
 
-  function testIIADeriveFromDN() {
-    // test derive from dn
-  }
+
 
 
   function testIIBDeriveFromAttr() {
@@ -68,5 +178,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
 
   }
   **/
+
+
 
 }

@@ -42,7 +42,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
   $notifications = array();
   $watchdog_tokens = array('%username' => $user->name);
   $consumers = ldap_authorization_get_consumers($consumer_type);
-  $servers = ldap_servers_get_servers( NULL, 'enabled', TRUE);
+  $servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);
 
   /**
    * user 1 not used in ldap authorization.  this is a design decision.
@@ -65,8 +65,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     $ldap_authenticated = (boolean)(module_exists('ldap_authentication') && ldap_authentication_ldap_authenticated($user));
   }
   $watchdog_tokens['%ldap_authenticated'] = ($ldap_authenticated) ? 'yes' : 'no';
-
-
 
   foreach ($consumers as $consumer_type => $consumer) {
 

@@ -289,10 +289,26 @@ class LdapServer {
       $name_attr = $this->user_attr;
       if (!isset($match[$name_attr][0])) {
         $name_attr = drupal_strtolower($name_attr);
-        if (!isset($match[$name_attr][0])) {
+      }
+      elseif (isset($match[drupal_strtolower($name_attr)][0])) {
+        $name_attr = drupal_strtolower($name_attr);
+      }
+      else {
+        if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+          $result = array(
+            'dn' =>  $match['dn'],
+            'mail' => @$match[$this->mail_attr][0],
+            'attr' => $match,
+            );
+          return $result;
+        }
+        else {
           continue;
         }
       }
+
+
+
       // Finally, we must filter out results with spaces added before
       // or after, which are considered OK by LDAP but are no good for us
       // We allow lettercase independence, as requested by Marc Galera

@@ -16,7 +16,7 @@
  * @todo make bindpw protected
  */
 
-require_once('LdapServer.class.php');
+require_once(drupal_get_path('module', 'ldap_servers') . '/LdapServer.class.php');
 
 class LdapServerTest extends LdapServer {
   // LDAP Settings
@@ -34,9 +34,10 @@ class LdapServerTest extends LdapServer {
       $test_data = $sid;
     }
     else {
-      require_once("LdapServerTestData.$sid.inc");
+      $test_data = variable_get('ldap_authorization_test_server__'. $sid, array());
     }
 
+    $this->sid = $sid;
     $this->methodResponses = $test_data['methodResponses'];
     $this->testUsers = $test_data['users'];
 
@@ -57,7 +58,7 @@ class LdapServerTest extends LdapServer {
    * Destructor Method
    */
   function __destruct() {
-
+     // if alterations to server configuration must be maintained throughout simpletest, variable_set('ldap_authorization_test_server__'. $sid, array());
   }
 
   /**
@@ -169,6 +170,19 @@ class LdapServerTest extends LdapServer {
     }
 
     return $results;
+  }
+
+
+  public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServerTest') {
+
+    $servers = variable_get('ldap_test_servers', array());
+
+    foreach ($servers as $sid => $server) {
+      $server_data = variable_get('ldap_test_server__'. $sid, array());
+      $servers[$sid] = new LdapServerTest($server_data);
+    }
+    return $servers;
+
   }
 
 }

@@ -30,12 +30,6 @@ class LdapServersTestCase extends DrupalWebTestCase {
     $this->ldap_user = $this->drupalCreateUser();
     $this->drupal_user = $this->drupalCreateUser();
     $this->drupal_admin_user = $this->drupalCreateUser(array('administer site configuration'));
-
-    $parent = dirname(dirname($_SERVER['SCRIPT_FILENAME']));
-    $delimiter = (strpos(@$_SERVER['SERVER_SOFTWARE'], 'Microsoft') === FALSE) ? '/' : '\\';
-    require_once($parent . $delimiter . 'ldap_simpletest.inc');
-    $this->ldap_test_data = ldap_simpletest_conf();
-
     // create 2 ldap server configurations based on configuration files
     // set ldap general configuration:  encryption, detailed logging,
   }
@@ -43,23 +37,26 @@ class LdapServersTestCase extends DrupalWebTestCase {
 
   function testInstall() {
     $group = 'ldap_servers: install and uninstall';
+    $install_tables = array('ldap_servers');
     // disable, uninstall, and enable/install module
     $modules = array($this->module_name);
     module_disable($modules, TRUE); // disable dependent modules
     drupal_uninstall_modules($modules);
     module_enable($modules, TRUE);
-    $var_created = $this->assertTrue(db_table_exists($table), 'ldap_servers table creates', $group);
+    foreach ($install_tables as $table) {
+      $this->assertTrue(db_table_exists($table), $table . ' table creates', $group);
+    }
     $var_created = $this->assertTrue(variable_get('ldap_servers_encryption', FALSE), 'ldap_servers_encryption variable initialized', $group);
     $var_created = $this->assertTrue(variable_get('ldap_servers_encrypt_key', FALSE), 'ldap_servers_encrypt_key variable initialized', $group);
 
     module_disable($modules, TRUE); // disable dependent modules
     drupal_uninstall_modules($modules);
-    $var_created = $this->assertFalse(db_table_exists($table), 'ldap_servers table removed', $group);
-    $var_created = $this->assertFalse(variable_get('ldap_servers_encryption', FALSE), 'ldap_servers_encryption variable removed', $group);
+    foreach ($install_tables as $table) {
+     $this->assertFalse(db_table_exists($table), $table . ' table removed', $group);
+    }   $var_created = $this->assertFalse(variable_get('ldap_servers_encryption', FALSE), 'ldap_servers_encryption variable removed', $group);
     $var_created = $this->assertFalse(variable_get('ldap_servers_encrypt_key', FALSE), 'ldap_servers_encrypt_key variable removed', $group);
 
-
-    }
+  }
 
 
   function testEncryption() {
