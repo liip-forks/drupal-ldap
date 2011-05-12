@@ -223,9 +223,9 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       $result = $ldap_server->bind();
     }
     elseif ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-	  $result = $ldap_server->bind();
+      $result = $ldap_server->bind();
       if ($result == LDAP_SUCCESS) {
-	  	$result = LDAP_FAIL;
+        $result = LDAP_FAIL;
       	foreach ($ldap_server->basedn as $basedn) {
           $userdn = $ldap_server->user_lookup($name);
           $result = $ldap_server->bind($userdn, $pass);
@@ -334,7 +334,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
        * username does not exist but email does.  Since user_external_login_register does not deal with
        * mail attribute and the email conflict error needs to be caught beforehand, need to throw error here
        */
-      watchdog('ldap_authentication', 'LDAP user with DN %dn has email address (%mail) conflict with a drupal user %name', array('%name' => $account_with_same_email->name, '%mail' => $ldap_user['mail']), array() , WATCHDOG_ERROR);
+      watchdog('ldap_authentication', 'LDAP user with DN %dn has email address (%mail) conflict with a drupal user %name', array('%name' => $account_with_same_email->name, '%mail' => $ldap_user['mail']) , WATCHDOG_ERROR);
       drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
       return FALSE;
 
