@@ -7,14 +7,14 @@ setup: none
 -----------------------
 Tests: see MM and EM tests below
 -----------------------
-ULT.user1.goodpwd  authenticate as user 1
-ULT.user1.badpwd   authenticate as user 1 with wrong password
-ULT.drupal.goodpwd  authenticate as drupal user
-ULT.drupal.badpwd  authenticate as drupal user with wrong password
-ULT.ldap.newaccount.goodpwd  authenticate as ldap user with no existing account
-ULT.ldap.newaccount  authenticate as ldap user with wrong password
-ULT.ldap.existingacct.goodpwd authenticate as ldap user with existing ldap authmapped account
-ULT.ldap.existingacct.badpwd  authenticate as ldap user with existing ldap authmapped account with wrong password
+LDAP_authen.ULT.user1.goodpwd  authenticate as user 1
+LDAP_authen.ULT.user1.badpwd   authenticate as user 1 with wrong password
+LDAP_authen.ULT.drupal.goodpwd  authenticate as drupal user
+LDAP_authen.ULT.drupal.badpwd  authenticate as drupal user with wrong password
+LDAP_authen.ULT.ldap.newaccount.goodpwd  authenticate as ldap user with no existing account
+LDAP_authen.ULT.ldap.newaccount  authenticate as ldap user with wrong password
+LDAP_authen.ULT.ldap.existingacct.goodpwd authenticate as ldap user with existing ldap authmapped account
+LDAP_authen.ULT.ldap.existingacct.badpwd  authenticate as ldap user with existing ldap authmapped account with wrong password
 
 
 ==============================================
@@ -53,14 +53,14 @@ LDAP_authen.MM.ULT.existingacct.badpw -- result:  Drupal logon error message.
 ==============================================
 Whitelist Tests (WL)
 -----------------------
-key: 
+key:
 
 - allow[match], exclude[match] = text match allowed of excluded list
 - allow[miss], exclude[miss]   = no match
 - php[true], php[false] = php evaluates to true or false
 
 -----------------------
-Tests: 
+Tests:
 -----------------------
 single option used in whitelists:
 LDAP_authen.WL.allow[match] -- authenticate success
@@ -80,7 +80,7 @@ LDAP_authen.WL.php[false].* - authenticate fail
 ==============================================
 Account Conflict Tests (AC) from "Existing Drupal User Account Conflict"
 -----------------------
-key: 
+key:
 
 disallow and allow: option selected
 drupal - username exists as non ldap associated drupal account
@@ -89,7 +89,7 @@ noconflict1.  drupal user exists, but is ldap associated (authmapped)
 conflict.  a non ldap drupal account exists and the username if found in ldap
 
 -----------------------
-Tests: 
+Tests:
 -----------------------
 LDAP_authen.AcctConflict.disallow.drupal - no conflict, no action taken
 LDAP_authen.AcctConflict.disallow.ldap - no conflict, no action taken
@@ -106,7 +106,7 @@ Test by logging in with LDAP authenticated user with no existing account.
 
 LDAP_authen.AcctCreate.user_settings.Admin -- desired result:  no account created, user fails to logon
 LDAP_authen.AcctCreate.user_settings.Visitors -- desired result:  acount created and ldap authmapped
-LDAP_authen.AcctCreate.user_settings.AdminWithApproval -- desired result:  no account created, user fails to logon.  Acount should be created via account request form 
+LDAP_authen.AcctCreate.user_settings.AdminWithApproval -- desired result:  no account created, user fails to logon.  Acount should be created via account request form
 LDAP_authen.AcctCreate.ldap -- desired result:  acount created and ldap authmapped
 
 ================================================
@@ -123,7 +123,7 @@ setup:
   REGACCT.visitors
   REGACCT.visitors_w_approv
 
-3. Try with 4 types of users:  
+3. Try with 4 types of users:
   anon = anonymous user
   user1 = authenticated user 1
   drupal = authenticated drupal user
@@ -195,5 +195,3 @@ Assert: configuration is deleted
 
 binding with service account
 binding with user's account
-
-

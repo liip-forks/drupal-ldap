@@ -10,21 +10,9 @@
  *
  */
 
-class LdapWebTestCase extends DrupalWebTestCase {
+class LdapTestFunctions  {
 
-  function setUp() {
-    parent::setUp(array('ldap_servers'));  // don't need any real servers, configured, just ldap_servers code base
-    variable_set('ldap_simpletest', 1);
-  }
-
-
-  function tearDown(){
-    variable_del('ldap_simpletest'); // I believe teardown will remove all vars.  test and remove this.
-    $this->removeTestServers();
-    parent::tearDown();
-
-  }
-
+//   $this->testFunctions->prepTestServers($consumer_conf['sid'],  $test_data['server']);
   function prepTestServers($sid, $data) {
     $current_sids = variable_get('ldap_test_servers', array());
     if (! in_array($sid, $current_sids)) {
@@ -32,13 +20,18 @@ class LdapWebTestCase extends DrupalWebTestCase {
       variable_set('ldap_test_servers', $current_sids);
     }
     variable_set('ldap_test_server__'. $sid, $data);
+  //  debug('prepTestServers, ldap_test_server__'. $sid); debug(variable_get('ldap_test_servers', 'empty')); debug(variable_get('ldap_test_server__'. $sid, 'empty'));
   }
 
   function removeTestServers($sids = NULL) {
 
     $current_sids = variable_get('ldap_test_servers', array());
+
     if (! $sids) {
       $sids = $current_sids;
+    }
+    elseif(is_scalar($sids)) {
+      $sids = array($sids);
     }
     foreach ($sids as $sid) {
       variable_del('ldap_authorization_test_server__'. $sid);  // remove fake server configuation
@@ -54,8 +47,8 @@ class LdapWebTestCase extends DrupalWebTestCase {
     return ($authmaps && in_array('ldap_authentication', array_keys($authmaps)));
   }
 
-  function drupalLdapCreateUser($edit = array(), $ldap_authenticated = FALSE, $permissions = NULL) {
-    $user = $this->drupalCreateUser($permissions);
+  function drupalLdapUpdateUser($edit = array(), $ldap_authenticated = FALSE, $user) {
+
 
     if (count($edit)) {
       $user = user_save($user, $edit);

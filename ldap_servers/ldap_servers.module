@@ -380,3 +380,4 @@ function ldap_servers_get_ldap_defaults($type = NULL) {
 
   return ($type) ? $ldap[$type] : $ldap;
 }
+

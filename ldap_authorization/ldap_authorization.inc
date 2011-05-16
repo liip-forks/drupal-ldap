@@ -6,6 +6,30 @@
  *  bulk of authorization code executed to determine a users authorizations
  */
 
+function ldap_authorization_help_watchdog() {  // remove after testing
+
+  drupal_add_css(drupal_get_path('module', 'ldap_help') . '/ldap_help.css', 'module', 'all', FALSE);
+  $path =  drupal_get_path("module", "ldap_help");
+  $_content = "";
+  if (module_exists('dblog')) {
+    include_once(drupal_get_path('module', 'dblog') . '/dblog.admin.inc');
+    $_SESSION['dblog_overview_filter']['type'] = Array('ldap' => 'ldap');
+    $_content .= "<h3>" . t('LDAP Watchdog Errors and Notifications') . "</h3>";
+    $overview = dblog_overview();
+    $_content .= render($overview);
+
+    $_content .= l(t('...more watchdog'), 'admin/reports/dblog');
+  }
+  else {
+    $_content .= "<h3>" . t('LDAP Help Watchdog Errors and Notifications') . "</h3>";
+    $_content .= 'This feature requires <code>Database logging</code> module to be turned on. ';
+    $_content .= l(t('Module enable page'), 'admin/build/modules');
+  }
+
+
+  return $_content;
+}
+
 
 /**
  * return all desired authorizations for a given user
@@ -186,6 +210,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
 
     $authorizations[$consumer_type] = $filtered_ldap_authorizations;
   } //  end foreach $consumer type
+  //debug(ldap_authorization_help_watchdog());
   return array($authorizations, $notifications);
 
 }
@@ -308,7 +333,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
       if (drupal_strtolower(trim($pair[0])) == drupal_strtolower($consumer_conf->deriveFromDnAttr)) {
-        $id =  trim($pair[1]);
+        $id =  drupal_strtolower(trim($pair[1]));
         $derive_from_dn_authorizations[$id] = $id;
       }
     }
@@ -316,41 +341,59 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
   // Strategy 2: groups in user attributes
   $derive_from_attr_authorizations = array();
+  //debug('consumer_conf->deriveFromAttr=' . (int)$consumer_conf->deriveFromAttr);
   if ($consumer_conf->deriveFromAttr) {
-    foreach ($consumer_conf->deriveFromAttrAttr as $attribute) {
-      if (isset($user_ldap_entry['attr'][strtolower($attribute)])) {
+  //  debug($consumer_conf->deriveFromAttrAttr);
+  //  debug($user_ldap_entry);
+    foreach ($consumer_conf->deriveFromAttrAttr as $derive_from_attribute_name) {
+      foreach ($user_ldap_entry['attr'] as $user_attr_name => $user_attr_values) {
+        if (strcasecmp($derive_from_attribute_name, $user_attr_name) != 0) {
+          continue;
+        }
+       // debug("match  $derive_from_attribute_name, $user_attr_name ");
         // patch 1050944
-        for ($i = 0; $i < $user_ldap_entry['attr'][strtolower($attribute)]['count']; $i++) {
-          $derive_from_attr_authorizations[$user_ldap_entry['attr'][strtolower($attribute)][$i]] = $user_ldap_entry['attr'][strtolower($attribute)][$i];
+        for ($i = 0; $i < $user_attr_values['count']; $i++) {
+          $attr_lcase = strtolower($user_attr_values[$i]);
+          $derive_from_attr_authorizations[$attr_lcase] = $attr_lcase;
         }
       }
-    //  $attributes = ldap_servers_retrieveMultiAttribute($user_ldap_entry['ldap_dn'], $attribute);
-    //  $attrib_authorizations = array_combine($attrib_authorizations, $attrib_authorizations);
-
     }
 
-
+  //  debug($derive_from_attr_authorizations);
   }
 
-  // Strategy 3: groups as entries.
+
+/**
+ *
+ *  Strategy 3: groups as entries.
+ *
+ *  given:
+ *  - user dn = cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu
+ *  - deriveFromEntryEntries = array(ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu)
+ *  - deriveFromEntryAttr = 'member'
+ *
+ * search on member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu within basedn ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu
+ *
+ * returned entries dn or cn should be used to derive authorization mappings
+ *
+ **/
+
   $derive_from_entry_authorizations = array();
- // $ldap_mapping->ldapgroups_entries_attribute
   if ($consumer_conf->deriveFromEntry) {
     foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
       $entries = $ldap_server->search($consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'], $branch, array('cn'));
       if (empty($entries) || $entries['count'] == 0) {
         $entries = $ldap_server->search($consumer_conf->deriveFromEntryAttr . '=' . $user->name, $branch, array('cn'));
-        foreach ($entries as $entry) {
-          if (isset($entry['cn'])) {
-            $derive_from_entry_authorizations[$entry['cn'][0]] = $entry['cn'][0];
-          }
-          elseif (isset($entry['dn'])) {
-            $derive_from_entry_authorizations[$entry['dn']] = $entry['dn'];
-          }
+      }
+      foreach ($entries as $entry) {
+        if (isset($entry['cn'])) {
+          $derive_from_entry_authorizations[$entry['cn'][0]] = $entry['cn'][0];
+        }
+        elseif (isset($entry['dn'])) {
+          $derive_from_entry_authorizations[$entry['dn']] = $entry['dn'];
         }
       }
     }
-
   }
 
   $authz_ids = array_merge($derive_from_dn_authorizations, $derive_from_attr_authorizations, $derive_from_entry_authorizations);

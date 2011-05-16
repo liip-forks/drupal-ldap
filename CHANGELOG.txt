@@ -3,6 +3,7 @@
 ==================
 7.x-1.0-unstable7
 ==================
+Issue #1155196 SQL Syntax error slerby
 Issue #1149942 by jzornig: support LDAP directories which restrict attributes available to anonymous searches
 Issue #1150044  by jdelaune: fixed call to wrong ldap error function
 Issue #1119774  by micahw156, weboide:  fixed issues with storing and removing service account password

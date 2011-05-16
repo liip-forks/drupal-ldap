@@ -54,12 +54,14 @@ function _ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset = TR
   require_once('tests/LdapServerTest.class.php');
 
   $servers['all'] = LdapServerTest::getLdapServerObjects('all');
-
+  //debug('_ldap_servers_get_simpletest_servers'); debug($servers['all']);
   if (!isset($servers['enabled'])) {
     foreach ($servers['all'] as $_sid => $ldap_server) {
       if ($ldap_server->status == 1) {
         $servers['enabled'][$_sid] = $ldap_server;
       }
+
+
     }
   }
 

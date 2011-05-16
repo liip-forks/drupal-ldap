@@ -23,6 +23,7 @@ class LdapServerTest extends LdapServer {
 
   public $testUsers;
   public $methodResponses;
+  public $searchResults;
   /**
    * Constructor Method
    *
@@ -34,12 +35,13 @@ class LdapServerTest extends LdapServer {
       $test_data = $sid;
     }
     else {
-      $test_data = variable_get('ldap_authorization_test_server__'. $sid, array());
+      $test_data = variable_get('ldap_test_server__'. $sid, array());
     }
-
+   // debug('test server data, sid=' . $sid); debug($test_data);
     $this->sid = $sid;
     $this->methodResponses = $test_data['methodResponses'];
     $this->testUsers = $test_data['users'];
+    $this->searchResults = $test_data['search_results'];
 
     $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
 
@@ -135,8 +137,15 @@ class LdapServerTest extends LdapServer {
         return FALSE;
       }
     }
+
+    // return prepolulated search results in test data array if present
+    if (isset($this->searchResults[$filter][$basedn])) {
+      return $this->searchResults[$filter][$basedn];
+    }
+
     $basedn = strtolower($basedn);
-    $filter_parts = explode('=', $filter);
+    list($filter_attribute, $filter_value) = explode('=', $filter);
+
     // need to perform feaux ldap search here with data in
     $results = array();
     foreach ($this->testUsers as $dn => $user_data) {
@@ -148,38 +157,61 @@ class LdapServerTest extends LdapServer {
       // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu
       $pos = strpos($dn, $basedn);
       if ($pos === FALSE || strcasecmp($basedn, substr($dn, 0, $pos + 1)) == FALSE) {
+      //  debug("basedn=$basedn, dn=$dn not in base dn");
         continue; // not in basedn
       }
+      else {
+      //  debug("!! dn=$dn in basedn=$basedn");
+      }
 
-      // if doesn't match filter, continue
-      if ($user_data[$filter_parts[0]] != $filter_parts[1]) {
+      // if doesn't filter attribute has no data, continue
+      if (!isset($user_data['attr'][$filter_attribute])) {
+      //  debug(" filter_attribute $filter_attribute not in array"); debug($user_data);
         continue;
       }
+    //  debug("!$filter_attribute exists");
+      // if doesn't match filter, continue
+      $contained_values = $user_data['attr'][$filter_attribute];
+      unset($contained_values['count']);
+     // debug("contained values"); debug($contained_values); debug($filter_value);
+      if (!in_array($filter_value, array_values($contained_values))) {
+       // debug("filter_attribute=$filter_attribute, filter_value=$filter_value, user_data[filter_attribute]" );
+        continue;
+      }
+
       // loop through all attributes, if any don't match continue
-      $user_data['dn'] = $dn;
+      $user_data['attr']['dn'] = $dn;
       if ($attributes) {
         $selected_user_data = array();
         foreach ($attributes as $key => $value) {
-          $selected_user_data[$key] = (isset($user_data[$key])) ? $user_data[$key] : NULL;
+          $selected_user_data[$key] = (isset($user_data['attr'][$key])) ? $user_data['attr'][$key] : NULL;
         }
         $results[] = $selected_user_data;
       }
       else {
-        $results[] = $user_data;
+        $results[] = $user_data['attr'];
       }
     }
 
+
+  //  debug("search results for basedn=$basedn" );
+  //  debug("filter"); debug($filter);
+  //  debug("attributes"); debug($attributes);
+  //  debug("results"); debug($results);
+    $results['count'] = count($results);
     return $results;
   }
 
 
   public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServerTest') {
 
-    $servers = variable_get('ldap_test_servers', array());
-
-    foreach ($servers as $sid => $server) {
+    $server_ids = variable_get('ldap_test_servers', array());
+    $servers = array();
+//    debug('getLdapServerObjects'); debug($servers);
+    foreach ($server_ids as $i => $sid) {
       $server_data = variable_get('ldap_test_server__'. $sid, array());
       $servers[$sid] = new LdapServerTest($server_data);
+     // debug($sid); debug($server_data);
     }
     return $servers;
 

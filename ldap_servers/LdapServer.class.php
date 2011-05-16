@@ -270,7 +270,6 @@ class LdapServer {
       $filter = $this->user_attr . '=' . $drupal_user_name;
 
       $result = $this->search($filter, $basedn);
-
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to.
@@ -287,8 +286,8 @@ class LdapServer {
       // This was contributed by Dan "Gribnif" Wilga, and described
       // here: http://drupal.org/node/87833
       $name_attr = $this->user_attr;
-      if (!isset($match[$name_attr][0])) {
-        $name_attr = drupal_strtolower($name_attr);
+      if (isset($match[$name_attr][0])) {
+
       }
       elseif (isset($match[drupal_strtolower($name_attr)][0])) {
         $name_attr = drupal_strtolower($name_attr);
@@ -306,8 +305,6 @@ class LdapServer {
           continue;
         }
       }
-
-
 
       // Finally, we must filter out results with spaces added before
       // or after, which are considered OK by LDAP but are no good for us

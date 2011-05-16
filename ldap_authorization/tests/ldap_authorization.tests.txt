@@ -19,38 +19,36 @@ setup: configure a DN based mapping to a consumer type (drupal role).
 Tests and Desired Results
 -----------------------
 
-LDAP_authorz.FromDN.nomatch  -- user authenticates and has no ou match in ldap object
-LDAP_authorz.FromDN.manymatch  -- many matches on dn attribute.  what should happen?  mulitple roles mapped!
-LDAP_authorz.FromDN.onematch  -- single match.  provide match to authorization child module.
+
+==============================================
+Derive drupal authorization mapping from attribute in users DN (II.A. in admin/config/people/ldap/authorization/add/drupal_role)
+
+Simpletest: ldap_authorization/tests/ldap_authorization.test testDeriveFromDN() function
+
+LDAP_authorz.DeriveFromDN.nomatch  -- user authenticates and has no ou match in ldap object
+LDAP_authorz.DeriveFromDN.onematch  -- single match.  provide match to authorization child module.
+LDAP_authorz.DeriveFromDN.manymatch  -- many matches on dn attribute.  mulitple roles mapped.
+LDAP_authorz.DeriveFromDN.caseinsensitive  -- single match. attribute different case
+
 
 ==============================================
 Derive drupal authorization mapping from LDAP attributes  (FromAttr)
------------------------
-setup: configure a ldap attribute such as "memberOf" in text area
------------------------
-Tests and Desired Results
------------------------
 
-LDAP_authorz.1.FromAttr.nomatch  -- nothing should happen
-LDAP_authorz.1.FromAttr.manymatch  -- what should happen?  multiple roles mapped!
-LDAP_authorz.1.FromAttr.onematch  -- single match.  provide match to authorization child module.
+Simpletest: ldap_authorization/tests/ldap_authorization.test  testDeriveFromAttr() function
 
-LDAP_authorz.N.FromAttr.nomatch  -- nothing should happen
-LDAP_authorz.N.FromAttr.manymatch  -- what should happen?  multiple roles mapped!
-LDAP_authorz.N.FromAttr.onematch  -- single match.  provide match to authorization child module.
+LDAP_authorz.DeriveFromAttr.nomatch  -- nothing should happen
+LDAP_authorz.DeriveFromAttr.onematch  -- single match.  provide match to authorization child module.
+LDAP_authorz.DeriveFromAttr.manymatch  -- what should happen?  multiple roles mapped
+LDAP_authorz.DeriveFromAttr.caseinsensitive   -- single match. attribute different case
+
+-- should add tests for multiple attributes.
 
 ==============================================
 Derive roles exist as LDAP entries where a multivalued attribute contains the members' CNs  (FromEntry)
------------------------
-setup:
------------------------
-Tests and Desired Results
------------------------
 
-LDAP_authorz.1.FromEntry.nomatch  -- nothing should happen
-LDAP_authorz.1.FromEntry.manymatch  -- what should happen?  multiple roles mapped!
-LDAP_authorz.1.FromEntry.onematch  -- single match.  provide match to authorization child module.
+Simpletest: ldap_authorization/tests/ldap_authorization.test  testDeriveFromEntry() function
 
-LDAP_authorz.N.FromEntry.nomatch  -- nothing should happen
-LDAP_authorz.N.FromEntry.manymatch  -- what should happen?  multiple roles mapped!
-LDAP_authorz.N.FromEntry.onematch  -- single match.  provide match to authorization child module.
+LDAP_authorz.DeriveFromEntry.nomatch  -- nothing should happen
+LDAP_authorz.DeriveFromEntry.onematch  -- single match.  provide match to authorization child module.
+LDAP_authorz.DeriveFromEntry.manymatch 
+
