@@ -3,6 +3,10 @@
 ==================
 7.x-1.0-unstable7
 ==================
+Issue #1162904 by byrond: fixed broken watchdog message in ldap_authentication.
+Issue #1023366 by johnbarclay: change password encryption when changing encryption types.
+Issue #1062994 simpltest.  Much progress made on this in ldap_authorization.
+Issue #1066608 Ldap authorization: IIC Derive Drupal Roles not implemented.  Implemented correctly now.
 Issue #1155196 SQL Syntax error slerby
 Issue #1149942 by jzornig: support LDAP directories which restrict attributes available to anonymous searches
 Issue #1150044  by jdelaune: fixed call to wrong ldap error function

@@ -291,7 +291,7 @@ function ldap_servers_ldap_extension_loaded() {
 
 function ldap_servers_encrypt($text, $encryption = NULL) {
   require_once('ldap_servers.encryption.inc');
-  return _ldap_servers_encrypt($text);
+  return _ldap_servers_encrypt($text, $encryption);
 }
 
 function ldap_servers_encrypt_types($category = 'all') {

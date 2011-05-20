@@ -108,7 +108,6 @@ class LdapAuthorizationConsumerConf {
 
     $this->synchToLdap = (bool)(@$consumer_conf->synch_to_ldap);
     $this->synchOnLogon = (bool)(@$consumer_conf->synch_on_logon);
-    $this->synchManually = (bool)(@$consumer_conf->synch_manually);
     $this->regrantLdapProvisioned = (bool)(@$consumer_conf->regrant_ldap_provisioned);
     $this->revokeLdapProvisioned = (bool)(@$consumer_conf->revoke_ldap_provisioned);
     $this->createConsumers = (bool)(@$consumer_conf->create_consumers);

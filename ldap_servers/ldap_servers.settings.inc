@@ -36,6 +36,8 @@ function ldap_servers_settings() {
    /**  when this is changed, need to decrypt and possibly encrypt pwd in newly selected format
     *   ... thus default needs to be "No Encryption" to avoid confusion.
     */
+
+  $form['previous_encryption'] = array('#type' => 'hidden',  '#default_value' => variable_get('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT));
   $form['encryption'] = array('#type' => 'fieldset', '#title' => t('Encryption'));
   $form['encryption']['ldap_servers_encryption'] = array(
     '#type' => 'select',
@@ -56,12 +58,24 @@ function ldap_servers_settings() {
     $form['encryption']['ldap_servers_encryption']['#description'] .= ' <strong>' . t('Encryption is not supported on this web server.') . '</strong>';
   }
 
-  $form['#submit'][] = 'ldap_servers_settings_submit';
-  return system_settings_form($form);
+  $form = system_settings_form($form);
+  array_unshift($form['#submit'], 'ldap_servers_settings_submit');  // needs to be first
+  return $form;
 }
 
 function ldap_servers_settings_submit($form, &$form_state) {
   if ($form_state['submitted']) {
-    watchdog('ldap', 'LDAP SERVERS settings updated.');
+    $new_encyption = $form_state['values']['ldap_servers_encryption'];
+    $old_encyption = $form_state['values']['previous_encryption'];
+
+    // use db instead of functions to avoid classes encryption and decryption
+    if ($new_encyption != $old_encyption) {
+      $servers = db_query("SELECT sid, bindpw FROM {ldap_servers} WHERE bindpw is not NULL AND bindpw <> ''")->fetchAllAssoc('sid');
+      foreach ($servers as $sid => $server) {
+        $decrypted_bind_pwd = ldap_servers_decrypt($server->bindpw, $old_encyption);
+        $rencrypted = ldap_servers_encrypt($decrypted_bind_pwd, $new_encyption);
+        db_query("UPDATE {ldap_servers} SET bindpw = :bindpw WHERE sid = :sid", array(':bindpw' => $rencrypted, ':sid' => $sid));
+      }
+    }
   }
 }

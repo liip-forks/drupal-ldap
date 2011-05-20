@@ -42,7 +42,7 @@ function ldap_authorization_help_watchdog() {  // remove after testing
  *   test_query -- don't grant authorization, just query and return authorizations.  assume user is ldap authenticated and exists
  *   query -- don't grant authorization, just query and return authorizations
  *
- *
+ * @param string $consumer_type e.g. drupal_roles
  * @param string $context  'logon'
  *
  * @return
@@ -92,6 +92,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
 
   foreach ($consumers as $consumer_type => $consumer) {
 
+
     /**
     * each consumer type has only one consumer conf and each consumer conf has only one ldap server id (sid)
     * so there is a one-to-one-to-one relationship between:
@@ -102,6 +103,9 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     */
 
     $consumer = ldap_authorization_get_consumer_object($consumer_type);
+    if (!$consumer->consumerConf->status) {
+      continue;
+    }
     $proposed_ldap_authorizations = array();
     $watchdog_tokens['%consumer_type'] = $consumer_type;
     $watchdog_tokens['%sid'] = $consumer->consumerConf->sid;
@@ -201,6 +205,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $watchdog_tokens, WATCHDOG_DEBUG);
     }
 
+   // debug('filtered_ldap_authorizations'); debug($filtered_ldap_authorizations);
     /**
      * 3. third, grant any proposed authorizations not already granted
      */

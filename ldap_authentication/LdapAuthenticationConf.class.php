@@ -79,7 +79,7 @@ class LdapAuthenticationConf {
     }
 
     $this->apiPrefs['requireHttps'] = variable_get('ldap_servers_require_ssl_for_credentails', 1);
-    $this->apiPrefs['encryption'] = variable_get('ldap_servers_encryption', NULL);
+    $this->apiPrefs['encryption'] = variable_get('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT);
 
     // determine account creation configuration
     $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);

@@ -11,7 +11,7 @@
  * Implements hook_install().
  */
 function ldap_servers_install() {
-  variable_set('ldap_servers_encryption', 'none');
+  variable_set('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT);
   variable_set('ldap_servers_require_ssl_for_credentails', 0);
 
   if (! ($key = variable_get('ldap_servers_encrypt_key', NULL))) {

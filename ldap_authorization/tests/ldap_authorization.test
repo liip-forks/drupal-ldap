@@ -280,6 +280,118 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
   }
 
 
+function testFlags() {
+    $test_id = 'Flags';
+    $conf_id = 'Flags';
+    $consumer_conf_admin = $this->prepTestData($conf_id);
+
+    /**
+     * test:  LDAP_authorz.Flags.enable
+     */
+    $user = $this->drupalCreateUser(array());
+    $jkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'), TRUE, $user);
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
+    $roles1 = $new_authorizations['drupal_role'];
+
+    $consumer_conf_admin->status = 0;
+    $consumer_conf_admin->save();
+
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
+    $roles2 = isset($new_authorizations['drupal_role']) ? $new_authorizations['drupal_role'] : array();
+    $this->assertTrue((count($roles1) == 1 && count($roles2) == 0), 'disable consumer configuration disallows authorizations.', $test_id . '.enable');
+
+
+    /**
+     * LDAP_authorz.Flags.onlyLdapAuthenticated (I) - create normal user and apply authorization query
+     */
+    $consumer_conf_admin->onlyApplyToLdapAuthenticated = 1;
+    $consumer_conf_admin->status = 1;
+    $consumer_conf_admin->save();
+
+    // remove authmap for jkool then test
+    $jkool = user_save($user, array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'));
+    user_set_authmaps($jkool, array('authname_ldap_authentication' => NULL));
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
+    $roles = isset($new_authorizations['drupal_role']) ? $new_authorizations['drupal_role'] : array();
+    $this->assertTrue((count($roles) == 0), ' only apply to ldap authenticated grants no roles for non ldap user.', $test_id . '.enable');
+    user_set_authmaps($jkool, array('authname_ldap_authentication' => 1));
+
+    /**
+     * LDAP_authorz.Flags.applyOnLogon  (IV.B) - execute logon and check that roles are applied
+     */
+
+
+
+     /**
+     * LDAP_authorz.Flags.revokeRoles (IV.C) - select this option, grant user role not deserved, and execute manual call
+     */
+
+    // set correct roles
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'set');
+    $consumer_conf_admin->onlyApplyToLdapAuthenticated = 0;
+    $consumer_conf_admin->revokeLdapProvisioned = 1;
+    $consumer_conf_admin->save();
+
+    // add an underserved, ldap granted drupal role
+    $jkool = user_load($jkool->uid);
+    $data = array(
+      'roles' =>  array(3 => 'administrator'),
+      'data' => array('ldap_authorizations' =>
+        array(
+          'drupal_role' =>
+          array(
+            'administrator' =>
+            array('date_granted' => 1304216778),
+          ),
+        ),
+      ),
+    );
+    $jkool = user_save($jkool, $data);
+    $was_set = isset($jkool->roles[3]);
+    // apply correct authorizations.  should remove the administrator role.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'set', 'drupal_role', 'logon');
+    $jkool = user_load($jkool->uid);
+    $this->assertTrue(($was_set && !isset($jkool->roles[3])), ' revoke ldap granted roles when no longer deserved.', $test_id . '.revokeRoles');
+
+
+     /**
+     * LDAP_authorz.Flags.regrantRoles IV.C) - select this option, execute manual call to get deserved roles, remove a role, execute manual call to get deserved roles, make sure role regranted
+     */
+
+
+     /**
+     * LDAP_authorz.Flags.createRoles IV.C) - select this option, delete some roles or make sure they don't exist.  manually execute.  check role created and granted to user
+     */
+
+    // take roles away from user
+    $jkool = user_load($jkool->uid);
+    $data = array(
+      'roles' =>  array(),
+      'data' => array('ldap_authorizations' => array()),
+      );
+    $jkool = user_save($jkool, $data);
+
+    $consumer_conf_admin->createConsumers = 1;
+    $consumer_conf_admin->save();
+
+    // make sure role doesn't exist
+    if (in_array('guests', array_values(user_roles()))) {
+      user_role_delete('guests');
+    }
+    $guest_role_deleted = !in_array('guests', array_values(user_roles()));
+
+    // set authorizations for user.  this should create role
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'set', 'drupal_role', 'logon');
+
+    $jkool = user_load($jkool->uid);
+    $guest_role_recreated = in_array('guests', array_values(user_roles()));
+    $roles_by_name = array_flip(user_roles());
+    $jkool_granted_guest = isset($jkool->roles[$roles_by_name['guests']]);
+    $this->assertTrue(($guest_role_deleted && $guest_role_recreated && $jkool_granted_guest), ' create consumers (e.g. roles)', $test_id . '.createRoles');
+
+
+}
+
 /**
   function testAuthorizationForm() {
     // test add authorization form validation and actual populated of db with ldap authorization form

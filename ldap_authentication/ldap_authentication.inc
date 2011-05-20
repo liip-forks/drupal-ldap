@@ -361,14 +361,16 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   else {  // account already exists
     if ($ldap_authentication_authmap == FALSE) {  // LDAP_authen.AC.disallow.ldap.drupal
       if ($auth_conf->loginConflictResolve == LDAP_AUTHENTICATION_CONFLICT_LOG) {
-        watchdog('ldap_authentication', 'LDAP user with DN %dn has a naming conflict with a local drupal user %name', array('%dn' => $ldap_user['dn'], '%name' => $account->name), array(), WATCHDOG_ERROR);
+        watchdog('ldap_authentication', 'LDAP user with DN %dn has a naming conflict with a local drupal user %name', array('%dn' => $ldap_user['dn'], '%name' => $account->name), WATCHDOG_ERROR);
         drupal_set_message(t('Another user already exists in the system with the same login name. You should contact the system administrator in order to solve this conflict.'), 'error');
         return FALSE;
       }
       else { // LDAP_authen.AC.disallow.ldap.drupal
       // add ldap_authentication authmap to user.  account name is fine here, though cn could be used
         user_set_authmaps($account, array('authname_ldap_authentication' => $name));
-        watchdog('ldap_authentication', $pre . 'set authmap of authname_ldap_authentication', array(), WATCHDOG_DEBUG);
+        if ($detailed_watchdog_log) {
+          watchdog('ldap_authentication', 'set authmap for %username authname_ldap_authentication', $watchdog_tokens, WATCHDOG_DEBUG);
+        }
       }
     }
 
@@ -401,7 +403,6 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
    *
    */
   $fake_form_state['uid'] = $account->uid;
-  // if ($detailed_watchdog_log) {watchdog('fake_form_state uid=', WATCHDOG_DEBUG);}
 
   user_login_submit(array(), $fake_form_state);
   global $user;

@@ -35,7 +35,6 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values['use_filter'] = (int)$this->useMappingsAsFilter;
     $values['synch_to_ldap'] = (int)$this->synchToLdap;
     $values['synch_on_logon'] = (int)$this->synchOnLogon;
-    $values['synch_manually'] = (int)$this->synchManually;
     $values['revoke_ldap_provisioned'] = (int)$this->revokeLdapProvisioned;
     $values['create_consumers'] = (int)$this->createConsumers;
     $values['regrant_ldap_provisioned'] = (int)$this->regrantLdapProvisioned;
@@ -343,9 +342,6 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
     if ($this->synchOnLogon)  {
       $synchronization_modes[] = 'user_logon';
     }
-    if ($this->synchManually)  {
-      $synchronization_modes[] = 'manually';
-    }
     $form['misc_settings']['synchronization_modes'] = array(
       '#type' => 'checkboxes',
       '#title' => t('IV.B. When should !consumer_namePlural be granted/revoked from user?', $consumer_tokens),
@@ -354,13 +350,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'manually' => t('Manually or via another module')
       ),
       '#default_value' => $synchronization_modes,
-      '#description' => t('<p>"When a user logs on" is the common way to do this. Manually may make sense in the following cases:
-        <ul>
-        <li>If you are testing how you mappings would work on a test server and don\'t want to keep logging on.</li>
-        <li>You have another module that is using this module as an API.</li>
-        <li>You are just using LDAP Authorization to get the site going then want to deal with !consumer_name !consumer_namePlural
-        via the drupal interface.</li>
-        </ul></p>', $consumer_tokens),
+      '#description' => t('<p>"When a user logs on" is the common way to do this.</p>', $consumer_tokens),
     );
 
     $synchronization_actions = array();
@@ -506,7 +496,6 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
 
 
     $this->synchOnLogon = (bool)(@$values['synchronization_modes']['user_logon']);
-    $this->synchManually = (bool)(@$values['synchronization_modes']['manually']);
     $this->regrantLdapProvisioned = (bool)(@$values['synchronization_actions']['regrant_ldap_provisioned']);
     $this->revokeLdapProvisioned = (bool)(@$values['synchronization_actions']['revoke_ldap_provisioned']);
     $this->createConsumers = (bool)(@$values['synchronization_actions']['create_consumers']);
@@ -684,15 +673,6 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
       ),
 
       'synch_on_logon'  => array(
-        'schema' => array(
-          'type' => 'int',
-          'size' => 'tiny',
-          'not null' => TRUE,
-          'default' => '0',
-        ),
-      ),
-
-      'synch_manually'  => array(
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
