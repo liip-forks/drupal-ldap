@@ -1,0 +1,7 @@
+name = LDAP Feeds Parser
+description = "Parse an LDAP object for Feeds Module.  Used to automate content creation based on ldap queries"
+package = "Lightweight Directory Access Protocol"
+dependencies[] = feeds
+dependencies[] = ldap_servers
+core = 7.x
+php = 5.2

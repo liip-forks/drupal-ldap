@@ -3,6 +3,8 @@
 ==================
 7.x-1.0-unstable7
 ==================
+Ldap Authorization:  remove "synch manually option".  Not implemented.
+Ldap Authorization:  jbarclay, fixed bug where disabling authorization settings did not disable their use
 Issue #1162904 by byrond: fixed broken watchdog message in ldap_authentication.
 Issue #1023366 by johnbarclay: change password encryption when changing encryption types.
 Issue #1062994 simpltest.  Much progress made on this in ldap_authorization.
