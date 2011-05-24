@@ -15,18 +15,30 @@ class FeedsLdapEntryParser extends FeedsParser {
    * Implements FeedsParser::parse().
    */
   public function parse(FeedsSource $source, FeedsFetcherResult $fetcher_result) {
+
     $this->source_config = $source->getConfigFor($this);
+    if (empty($this->source_config)) {
+      $this->source_config = $this->config;
+    }
 
-    //$mappings = $source->importer->processor->config['mappings'];
-    //$this->mappings = $this->filterMappings($mappings);
-    $fetcher_config = $source->importer->config['fetcher']['config'];
-    $result = new FeedsLdapQueryFetcherResult($fetcher_config); // FeedsParserResult();
-    $entries = $this->parserResult->getRaw();
+    $this->parserResult = new FeedsParserResult();
+    $mappings = $source->importer->processor->config['mappings'];
+    $this->mappings = $this->filterMappings($mappings);
+    $fetcher_config = $source->getConfigFor($source->importer->fetcher);
 
-    $items_num = isset($entries['count']) ? $entries['count'] : 0;
+
+    /**
+     *    $this->parserResult should be in the following form:
+     *
+     *     0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
+     *     1 => array('count' => 1, 'dn' => 'ou=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
+     *     'count' => 2,
+    **/
+
+    $items_num = $this->parserResult['count'];
     for ($i = 0; $i < $items_num; $i++) {
       $item = array();
-      $data = $entries[$i];
+      $data = $this->parserResult[$i];
       $item['guid'] = $data['dn'];
       foreach ($data as $attr_name => $attr_values) {
         if ($attr_name == 'count') {
@@ -45,11 +57,11 @@ class FeedsLdapEntryParser extends FeedsParser {
         }
       }
       $item['raw'] = $data;
-      $result->items[] = $item;
+      $this->parserResult->items[] = $item;
     }
     // Release parser.
     unset($parser);
-    return $result;
+    return $this->parserResult;
 
   }
 
@@ -58,6 +70,7 @@ class FeedsLdapEntryParser extends FeedsParser {
    */
   public function sourceForm($source_config) {
     $form = array();
+    dpm('sourceForm, this:'); dpm($this);
     $mappings_ = feeds_importer($this->id)->processor->config['mappings'];
 
     if (empty($source_config)) {
@@ -104,7 +117,9 @@ class FeedsLdapEntryParser extends FeedsParser {
    * Override parent::sourceFormValidate().
    */
   public function configFormValidate(&$values) {
+    dpm('configFormValidate'); dpm($values);
     $this->setConfig(array('sources' => $values));
+    $this->save();
    }
   /**
   * Override parent::getMappingSources().
@@ -146,6 +161,18 @@ class FeedsLdapEntryParser extends FeedsParser {
   public function configForm(&$form_state) {
     $form = $this->sourceForm($this->config);
     return $form;
+  }
+  public function sourceDefaults() {
+    return array();
+  }
+
+  /**
+   * Define defaults.
+   */
+  public function configDefaults() {
+    return array(
+      'sources' => array(),
+    );
   }
 
 

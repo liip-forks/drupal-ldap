@@ -39,7 +39,7 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
       }
     }
 
-    $this->basedn = (isset($query['base_dn'])) ? $query['base_dn'] : FALSE;
+    $this->basedn = (isset($query['basedn'])) ? $query['basedn'] : FALSE;
     if ($this->basedn) {
       $this->basedn = explode("\n", $this->basedn);
     }
@@ -67,7 +67,7 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
     }
 
     if (!$this->basedn || !is_array($this->basedn) || count($this->basedn) == 0 ) {
-      $this->base_dns = $this->LdapServer->basedn;
+      $this->basedns = $this->LdapServer->basedn;
     }
 
     if (!$this->filter) {
@@ -117,7 +117,7 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
   public function configDefaults() {
     return array(
       'sid' => NULL,
-      'base_dn' => NULL,
+      'basedn' => NULL,
       'filter' => NULL,
       'attributes' => NULL,
       'sizelimit' => $this->sizelimit,
@@ -147,7 +147,7 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
 
     $form['overview'] = array(
       '#markup' => t("This fetcher will perform one search for each base dn entered below.  The
-    base_dn, filter, and attributes below are passed directly into the ldap_search() function
+    basedn, filter, and attributes below are passed directly into the ldap_search() function
     (see http://php.net/ldap_search).  Use its documentation for syntax details."),
       );
 
@@ -177,7 +177,7 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
 
     if ($this->config['sid']) {
       $server_basedn = join('<br/>', $servers[$this->config['sid']]->basedn);
-      $form['base_dn']['#description'] .= '<br/>' . t('Current!sid server base dns are', array('!sid' => $this->config['sid'])) . '<br/><code><pre>' .
+      $form['basedn']['#description'] .= '<br/>' . t('Current!sid server base dns are', array('!sid' => $this->config['sid'])) . '<br/><code><pre>' .
         $server_basedn . '</pre></code>';
     }
 
