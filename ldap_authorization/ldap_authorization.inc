@@ -386,9 +386,9 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   $derive_from_entry_authorizations = array();
   if ($consumer_conf->deriveFromEntry) {
     foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
-      $entries = $ldap_server->search($consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'], $branch, array('cn'));
+      $entries = $ldap_server->search($branch, $consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'],  array('cn'));
       if (empty($entries) || $entries['count'] == 0) {
-        $entries = $ldap_server->search($consumer_conf->deriveFromEntryAttr . '=' . $user->name, $branch, array('cn'));
+        $entries = $ldap_server->search($branch, $consumer_conf->deriveFromEntryAttr . '=' . $user->name,  array('cn'));
       }
       foreach ($entries as $entry) {
         if (isset($entry['cn'])) {

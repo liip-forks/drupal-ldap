@@ -263,7 +263,8 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_FIND;
       continue; // next server, please
     }
-
+    $watchdog_tokens['%dn'] = $ldap_user['dn'];
+    $watchdog_tokens['%mail'] = $ldap_user['mail'];
     /**
     * check allowed and excluded list and php for allowed users
     */
@@ -334,7 +335,9 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
        * username does not exist but email does.  Since user_external_login_register does not deal with
        * mail attribute and the email conflict error needs to be caught beforehand, need to throw error here
        */
-      watchdog('ldap_authentication', 'LDAP user with DN %dn has email address (%mail) conflict with a drupal user %name', array('%name' => $account_with_same_email->name, '%mail' => $ldap_user['mail']) , WATCHDOG_ERROR);
+      $watchdog_tokens['%duplicate_name'] = $account_with_same_email->name;
+      watchdog('ldap_authentication', 'LDAP user with DN %dn has email address
+        (%mail) conflict with a drupal user %duplicate_name', $watchdog_tokens, WATCHDOG_ERROR);
       drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
       return FALSE;
 
@@ -361,7 +364,8 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   else {  // account already exists
     if ($ldap_authentication_authmap == FALSE) {  // LDAP_authen.AC.disallow.ldap.drupal
       if ($auth_conf->loginConflictResolve == LDAP_AUTHENTICATION_CONFLICT_LOG) {
-        watchdog('ldap_authentication', 'LDAP user with DN %dn has a naming conflict with a local drupal user %name', array('%dn' => $ldap_user['dn'], '%name' => $account->name), WATCHDOG_ERROR);
+        $watchdog_tokens['%conflict_name'] = $account_with_same_email->name;
+        watchdog('ldap_authentication', 'LDAP user with DN %dn has a naming conflict with a local drupal user %conflict_name', $watchdog_tokens, WATCHDOG_ERROR);
         drupal_set_message(t('Another user already exists in the system with the same login name. You should contact the system administrator in order to solve this conflict.'), 'error');
         return FALSE;
       }

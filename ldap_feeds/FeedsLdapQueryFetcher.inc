@@ -11,23 +11,24 @@
  * Result of FeedsLdapQueryFetcher::fetch().
  */
 class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
-  protected $basedn = array();  // should default to servers basedn
-  protected $sid;
-  protected $filter;
-  protected $attributes = array();
-  protected $sizelimit = LDAP_FEEDS_FETCHER_SIZELIMIT;
-  protected $LdapServer;
+  public $basedn = array();  // should default to servers basedn
+  public $sid;
+  public $filter;
+  public $attributes = array();
+  public $sizelimit = LDAP_FEEDS_FETCHER_SIZELIMIT;
+  public $LdapServer;
+  public $ldap_result;
+
   /**
    * Constructor.
    */
   public function __construct($source_config) {
-    // @todo, get $query from $source_config
-    dpm('source_config');
-    dpm($source_config);
 
-    $this->sid = isset($query['sid']) ? $query['sid'] : FALSE;
-    $this->filter = isset($query['filter']) ? $query['filter'] : FALSE ;
-    $this->attributes = isset($query['attributes']) ? $query['attributes'] : array();
+    $this->sid = isset($source_config['sid']) ? $source_config['sid'] : FALSE;
+    $this->filter = isset($source_config['filter']) ? $source_config['filter'] : FALSE ;
+    $this->attributes = isset($source_config['attributes']) ? $source_config['attributes'] : array();
+    $this->sizelimit = isset($source_config['sid']) ? $source_config['sizelimit'] : 0;
+
     if ($this->attributes) {
       $temp = $this->attributes;
       $this->attributes = array();
@@ -39,11 +40,10 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
       }
     }
 
-    $this->basedn = (isset($query['basedn'])) ? $query['basedn'] : FALSE;
+    $this->basedn = (isset($source_config['basedn'])) ? $source_config['basedn'] : FALSE;
     if ($this->basedn) {
       $this->basedn = explode("\n", $this->basedn);
     }
-   // dpm($this);
     parent::__construct('');
   }
 
@@ -51,18 +51,14 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
    * Overrides parent::getRaw();
    */
   public function getRaw() {
-   // dpm('getRaw'); dpm((array)$this);
-    $this->LdapServer = ldap_servers_get_servers($this->sid, 'all', TRUE);
+    $this->LdapServer = ldap_servers_get_servers($this->sid, 'enabled', TRUE, TRUE);
+    $tokens = array('!sid' => $this->LdapServer->sid, '!server_admin' => '<a href="' . LDAP_SERVERS_INDEX_BASE_PATH . '">LDAP Servers Admin</a>');
 
-    $tokens = array('!sid' => $this->sid, '!server_admin' => '<a href="{LDAP_SERVERS_INDEX_BASE_PATH}">LDAP Servers Admin</a>');
-
-    //@todo should the validation of constructor parameters be validated here or in constructor.
-    // gives more room to alter/correct object if validated here rather than constructor
-    if (! $this->LdapServer) {
-       throw new Exception(t('LDAP Server !sid not found, please check ldap server admin page: !server_admin', $tokens));
+    if (! $this->LdapServer || !is_object($this->LdapServer) ) {
+      throw new Exception(t('LDAP Server !sid not found, please check ldap server admin page: !server_admin', $tokens));
     }
 
-    if (!$this->LdapServer->status) {
+    if ((bool)$this->LdapServer->status == FALSE) {
        throw new Exception(t('LDAP Server !sid not enabled, please check ldap server admin page: !server_admin', $tokens));
     }
 
@@ -79,14 +75,34 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
       $tokens['errorMsg'] = $this->LdapServer->errorMsg();
       throw new Exception(t('LDAP Server !sid failed to connect, with error message: !errorMsg', $tokens));
     }
+
+    $bind = $this->LdapServer->bind();
+    if ($bind != LDAP_SUCCESS) {
+      $tokens['errorMsg'] = $this->LdapServer->errorMsg();
+      throw new Exception(t('LDAP Server !sid failed to bind, with error message: !errorMsg', $tokens));
+    }
+
     $results = array();
     foreach ($this->basedn as $i => $basedn) {
-      $result = $this->LdapServer->search($this->filter, $basedn, NULL, $this->sizelimit);  // , $this->attributes
+      $result = $this->LdapServer->search($basedn, $this->filter, $this->attributes, 0, $this->sizelimit);  // , $this->attributes
+      $results = array_merge($results, $result);
     }
-    $results['count'] = count($results); // just keep with the ldap search results format, even if redundant
-    return $results; // @todo ? should sanitizeRaw be applied to this array? $this->sanitizeRaw($results);
+
+    return $this->sanitizeRaw($results); // @todo ? should sanitizeRaw be applied to this array? $this->sanitizeRaw($results);
   }
 
+  /**
+   * Override parent::configDefaults().
+   */
+  public function configDefaults() {
+    return array(
+      'sid' => NULL,
+      'basedn' => NULL,
+      'attributes' => '"cn", "dn", "mail"',
+      'filter' => NULL,
+      'sizelimit' => 100,
+      );
+  }
 
 }
 
@@ -99,8 +115,7 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
    * Implements FeedsFetcher::fetch().
    */
   public function fetch(FeedsSource $source) {
-    $source_config = $source->getConfigFor($this);
-    $result = new FeedsLdapQueryFetcherResult($source_config);
+    $result = new FeedsLdapQueryFetcherResult($this->config);
     return $result;
   }
 
@@ -109,19 +124,6 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
    */
   public function clear(FeedsSource $source) {
 
-  }
-
-  /**
-   * Override parent::configDefaults().
-   */
-  public function configDefaults() {
-    return array(
-      'sid' => NULL,
-      'basedn' => NULL,
-      'filter' => NULL,
-      'attributes' => NULL,
-      'sizelimit' => $this->sizelimit,
-    );
   }
 
   /**
@@ -200,13 +202,6 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
     );
     return $form;
   }
-
-
-  /**
-   * @todo, what about sourceForm, sourceFormValidate, sourceSave, sourceDelete?
-   * If all the configuration data for source is in the config form, are these needed.
-   */
-
 
 
 }

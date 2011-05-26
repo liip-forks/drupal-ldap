@@ -6,93 +6,67 @@
  * Provides the Parser for an ldap entry array.
  */
 
-/**
- * Base class for the HTML and XML parsers.
- */
-class FeedsLdapEntryParser extends FeedsParser {
 
-  /**
+class FeedsLdapEntryParser extends FeedsParser {
+  public $ldap_result;
+
+   /**
    * Implements FeedsParser::parse().
    */
   public function parse(FeedsSource $source, FeedsFetcherResult $fetcher_result) {
-
     $this->source_config = $source->getConfigFor($this);
     if (empty($this->source_config)) {
       $this->source_config = $this->config;
     }
-
     $this->parserResult = new FeedsParserResult();
     $mappings = $source->importer->processor->config['mappings'];
-    $this->mappings = $this->filterMappings($mappings);
+    $this->mappings = $mappings;
+
+    // Set link.
     $fetcher_config = $source->getConfigFor($source->importer->fetcher);
+    $this->parserResult->link = $fetcher_config['source'];
+    $this->ldap_result = $fetcher_result->ldap_result;
+    $result = new FeedsParserResult();
 
+    $items_num = count($fetcher_result->ldap_result); // $this->parserResult['count'];
 
-    /**
-     *    $this->parserResult should be in the following form:
-     *
-     *     0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
-     *     1 => array('count' => 1, 'dn' => 'ou=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
-     *     'count' => 2,
-    **/
-
-    $items_num = $this->parserResult['count'];
-    for ($i = 0; $i < $items_num; $i++) {
+    for ($i = 0; $i < $items_num - 1; $i++) {
       $item = array();
-      $data = $this->parserResult[$i];
-      $item['guid'] = $data['dn'];
-      foreach ($data as $attr_name => $attr_values) {
-        if ($attr_name == 'count') {
-          continue;
+      $data = $fetcher_result->ldap_result[$i];
+      $parsedItem = $variables = array();
+      foreach ($this->source_config['sources'] as $source => $query) {
+        if (isset($data[$query])) {
+          if (!is_array($data[$query])) {
+           $variables['$' . $this->mappings[$source]] = $data[$query];
+           }
+           else {
+             $variables['$' . $this->mappings[$source]] = '';
+           }
+           $parsedItem[$source] = $data[$query];
         }
-
-        if (is_scalar($attr_values)) {
-          $item[$attr_name] = $attr_values;
-          $item[$attr_name . '.1'] = $attr_values;
-        }
-        else {
-          $item[$attr_name] = $attr_values[0];
-          for ($j = 0; $j < $data['count']; $j++) {
-            $item[$data[$j] . '.' . $j] = $attr_values[$j];
-          }
-        }
+        $parsedItem['guid'] = $data['dn'];
       }
-      $item['raw'] = $data;
-      $this->parserResult->items[] = $item;
+      $this->parserResult->items[] = $parsedItem;
     }
+
     // Release parser.
     unset($parser);
-    return $this->parserResult;
-
+    return $result;
   }
+
 
   /**
    * Source form.
    */
   public function sourceForm($source_config) {
     $form = array();
-    dpm('sourceForm, this:'); dpm($this);
-    $mappings_ = feeds_importer($this->id)->processor->config['mappings'];
-
+    $mappings = feeds_importer($this->id)->processor->config['mappings'];
     if (empty($source_config)) {
       $source_config = $this->config;
     }
 
     // Add extensions that might get importerd.
     $fetcher = feeds_importer($this->id)->fetcher;
-
-    $uniques = $mappings = array();
-    foreach ($mappings_ as $mapping) {
-      if (strpos($mapping['source'], 'ldapentryparser:') === 0) {
-        $mappings[$mapping['source']] = $mapping['target'];
-        if ($mapping['unique']) {
-          $uniques[] = $mapping['target'];
-        }
-      }
-    }
-    if (empty($mappings)) {
-      $form['error_message']['#markup'] = '<div class="help">' . t('FeedsLdapEntryParser: No mappings are defined.') . '</div><br>';
-      return $form;
-    }
 
     $variables = array();
     foreach ($mappings as $source => $target) {
@@ -117,42 +91,27 @@ class FeedsLdapEntryParser extends FeedsParser {
    * Override parent::sourceFormValidate().
    */
   public function configFormValidate(&$values) {
-    dpm('configFormValidate'); dpm($values);
     $this->setConfig(array('sources' => $values));
     $this->save();
    }
+
+
   /**
   * Override parent::getMappingSources().
   */
   public function getMappingSources() {
-    $mappings = $this->filterMappings(feeds_importer($this->id)->processor->config['mappings']);
-    $next = 0;
-    if (!empty($mappings)) {
-      $mapping_keys = array_keys($mappings);
-      $last_mapping = end($mapping_keys);
-      $next = explode(':', $last_mapping);
-      $next = $next[1] + 1;
+    $attributes = feeds_importer($this->id)->fetcher->config['attributes'];
+    $attributes = explode(',', $attributes);
+    foreach ($attributes as $i => $attribute) {
+      $attribute = trim($attribute);
+      $attribute = trim($attribute, '"');
+      $sources[$attribute] = array(
+        'name' => $attribute . t(' LDAP Attribute'),
+        'description' => t('populate this field with %attr attribute data.', array('%attr' => $attribute)),
+        );
     }
-    return array(
-      'ldapentryparser:' . $next => array(
-        'name' => t('LDAP Entry Attribute'),
-        'description' => t('Allows you to configure an LDAP Entry attribute value that will populate this field.'),
-      ),
-    ) + parent::getMappingSources();
-  }
-
-
-  /**
-   * Filters mappings, returning the ones that belong to us.
-   */
-  protected function filterMappings($mappings) {
-    $our_mappings = array();
-    foreach ($mappings as $mapping) {
-      if (strpos($mapping['source'], 'ldapentryparser:') === 0) {
-        $our_mappings[$mapping['source']] = $mapping['target'];
-      }
-    }
-    return $our_mappings;
+    $sources = $sources + parent::getMappingSources();
+    return $sources;
   }
 
   /**
@@ -166,13 +125,12 @@ class FeedsLdapEntryParser extends FeedsParser {
     return array();
   }
 
+
   /**
    * Define defaults.
    */
   public function configDefaults() {
-    return array(
-      'sources' => array(),
-    );
+    return array();
   }
 
 

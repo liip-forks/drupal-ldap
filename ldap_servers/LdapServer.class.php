@@ -212,35 +212,30 @@ class LdapServer {
   }
 
   /**
-   * Preform an LDAP search.
+   * Perform an LDAP search.  Must be connected and bound first.
    *
-   * @peram string $filter
-   *   The search filter.
-   * @peram strign $basedn
-   *   The search base. If NULL, we use $this->basedn
-   * @peram array $attributes
-   *   List of desired attributes. If omitted, we only return "dn".
+   *  @param params same as ldap_search() params except $link_identifier is omitted.
    *
    * @return
    *   An array of matching entries->attributes, or FALSE if the search is
    *   empty.
    */
-  function search($filter, $basedn = NULL, $attributes = array(), $max = 0) {
-    if ($basedn == NULL) {
+  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
+    if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
-        $basedn = $this->basedn[0];
+        $base_dn = $this->basedn[0];
       }
       else {
         return FALSE;
       }
     }
-
-    $result = @ldap_search($this->connection, $basedn, $filter, $attributes , 0, $max);
+    $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
 
     if ($result && ldap_count_entries($this->connection, $result)) {
-      return ldap_get_entries($this->connection, $result);
+      $entries = ldap_get_entries($this->connection, $result);
+      return $entries;
     } elseif ($this->ldapErrorNumber()) {
-      $watchdog_tokens =  array('%basedn' => $basedn, '%filter' => $filter,
+      $watchdog_tokens =  array('%basedn' => $base_dn, '%filter' => $filter,
         '%attributes' => print_r($attributes, TRUE), '%errmsg' => $this->errorMsg('ldap'),
         '%errno' => $this->ldapErrorNumber());
       watchdog('ldap', "LDAP ldap_search error. basedn: %basedn, filter: %filter, attributes:
@@ -250,7 +245,6 @@ class LdapServer {
       return array();
     }
   }
-
 
 
   /**
@@ -269,7 +263,7 @@ class LdapServer {
 
       $filter = $this->user_attr . '=' . $drupal_user_name;
 
-      $result = $this->search($filter, $basedn);
+      $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to.

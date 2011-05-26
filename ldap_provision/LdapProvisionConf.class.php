@@ -23,13 +23,13 @@ class LdapProvisionConf {
     'provisionCron',
     'provisionCronLast',
   );
-  
+
   function __construct() {
     $this->load();
   }
 
 
-  function load() { 
+  function load() {
     if ($saved = variable_get("ldap_provision_conf", FALSE)) {
       $this->inDatabase = TRUE;
       foreach ($this->saveable as $property) {
@@ -37,7 +37,7 @@ class LdapProvisionConf {
           $this->{$property} = $saved[$property];
         }
       }
-    } 
+    }
     else {
       $this->inDatabase = FALSE;
     }
@@ -51,14 +51,14 @@ class LdapProvisionConf {
 
   /**
    * Provides last time that the provision cron job was executed
-   */ 
+   */
   function get_last_cron() {
     return $this->provisionCronLast;
   }
 
   /**
    * Saves current time as last time provision cron job was executed
-   */ 
+   */
   function update_cron() {
     $this->provisionCronLast = time();
   }
@@ -111,10 +111,10 @@ class LdapProvisionConf {
       $attributes[] = 'dn';
       $filter = $this->get_filter($ldap_server);
       $basedn = ''; // need to modify this to get the base dn from the server
-      
+
       // searches each basedn for this server configuration
       foreach($ldap_server->basedn as $index => $base) {
-        $accounts[$sid][$index] = $ldap_server->search($filter, $base, $attributes);
+        $accounts[$sid][$index] = $ldap_server->search($base, $filter, $attributes);
       }
     }
     return $accounts;
