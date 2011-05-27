@@ -54,9 +54,6 @@ function ldap_feeds_feeds_plugins() {
   );
   **/
 
-//dpm($info);
-
-
 }
 
 /**

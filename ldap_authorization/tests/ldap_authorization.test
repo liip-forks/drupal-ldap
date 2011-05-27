@@ -54,7 +54,11 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
     include(drupal_get_path('module','ldap_authorization') . '/tests/LdapServerTestData.' . $consumer_conf['sid']. '.inc');
     $this->testFunctions->prepTestServers($consumer_conf['sid'],  $test_data['server']);
 
-    //debug($test_data['server']);
+
+    if (isset($test_data['ldap_authentication'])) {
+      $this->testFunctions->configureAuthentication($test_data['ldap_authentication']);
+    }
+
     // create consumer authorization configuration.
     $consumer_obj = ldap_authorization_get_consumer_object($consumer_conf['consumerType']);
     $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj, TRUE);
@@ -122,7 +126,6 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
     $conf_id = 'DeriveFromDN';
     $consumer_conf_admin = $this->prepTestData($conf_id);
 
-
     /**
      * test:  DeriveFromDN.nomatch no matches on dn attribute.
      *
@@ -164,6 +167,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
 
     $user = $this->drupalCreateUser(array());
     $verykool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'verykool', 'mail' =>  'verykool@myuniversity.edu'), TRUE, $user);
+
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query');  // just see if the correct ones are derived.
     $correct_roles = (bool)(isset($new_authorizations['drupal_role']) &&
       in_array('guests', $new_authorizations['drupal_role']) &&
@@ -172,6 +176,25 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
 
     $this->assertTrue($correct_roles, 'user account verykool tested for granting "guests" and "special guests" drupal roles ', $test_id . '.manymatch');
     $this->assertTrue($correct_roles, 'user account verykool tested for case insensitivity ', $test_id . '.caseinsensitive');
+
+
+    /**
+     * test that authorizations are applied when logging (and account created)
+     * that is, don't just call ldap_authorizations_user_authorizations() in query mode as in previous tests
+     */
+
+    $edit = array(
+      'name' => 'newkool',
+      'pass' => 'goodpwd',
+    );
+
+    $this->drupalPost('user', $edit, t('Log in'));
+    $this->assertText(t('Member for'));
+
+    $newkool = user_load_by_name('newkool');
+    $granted_roles = array_values($newkool->roles);
+    $this->assertTrue(in_array('guests', $granted_roles) && in_array('special guests', $granted_roles), 'Proper roles granted to newkool on actual logon');
+    $this->drupalLogout();
 
     $delete_result = $this->removeTestData($conf_id);
 

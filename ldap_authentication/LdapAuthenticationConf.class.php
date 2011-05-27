@@ -38,7 +38,7 @@ class LdapAuthenticationConf {
   public $allowTestPhp = NULL; // code that returns boolean TRUE || FALSE for allowing ldap authentication
 
 
-  protected $saveable = array(
+  public $saveable = array(
     'sids',
     'authenticationMode',
     'loginConflictResolve',

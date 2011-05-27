@@ -17,8 +17,8 @@ $test_data = array();
 
 $test_data['server']['properties']  = array(
 
-    'sid' => 'ldapauthor1',
-    'name'  => 'Test LDAP Server 1 for LDAP Authorization' ,
+    'sid' => 'ldapauthen1',
+    'name'  => 'Test LDAP Server 1 for LDAP Authentication' ,
     'inDatabase' => TRUE,
     'status'  => 1,
     'type'  => 'ad',
@@ -107,14 +107,6 @@ $test_data['server']['users']['cn=verykool,ou=special guests,ou=guest accounts,d
       ),
   );
 
-$test_data['server']['users']['cn=newkool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
-    'dn' => 'cn=newkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
-    'mail' => array( 0 => 'newkool@guests.myuniversity.edu', 'count' => 1),
-    'sAMAccountName' => array( 0 => 'newkool', 'count' => 1),
-    'password' => array( 0 => 'goodpwd', 'count' => 1),
-    'memberOf' => array( 0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
-  );
-
 
 /**
  * test users should include service account if one is being used
@@ -131,9 +123,26 @@ $test_data['server']['users']['cn=service-account,dc=ad,dc=myuniveristy,dc=edu']
   );
 
 
+/** the ldap_authentication data is keyed on the test id such
+ * that the same ldap test data above can be reused for all authentication configurations
+ */
 
-$test_data['ldap_authentication'] = array(
-    'sids' => array('ldapauthor1'),
+$test_data['ldap_authentication']['MixedModeUserLogon'] = array(
+    'sids' => array('ldapauthen1'),
+    'authenticationMode' => LDAP_AUTHENTICATION_MIXED,
+    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
+    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
+    'ldapUserHelpLinkUrl' => '',
+    'ldapUserHelpLinkText' => '',
+    'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
+    'emailUpdate' => LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE,
+    'allowOnlyIfTextInDn' => NULL,
+    'excludeIfTextInDn' => NULL,
+    'allowTestPhp' => NULL,
+  );
+
+$test_data['ldap_authentication']['ExclusiveModeUserLogon'] = array(
+    'sids' => array('ldapauthen1'),
     'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
     'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
     'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,

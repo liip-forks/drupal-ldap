@@ -205,7 +205,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $watchdog_tokens, WATCHDOG_DEBUG);
     }
 
-   // debug('filtered_ldap_authorizations'); debug($filtered_ldap_authorizations);
     /**
      * 3. third, grant any proposed authorizations not already granted
      */
@@ -215,7 +214,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
 
     $authorizations[$consumer_type] = $filtered_ldap_authorizations;
   } //  end foreach $consumer type
-  //debug(ldap_authorization_help_watchdog());
   return array($authorizations, $notifications);
 
 }
@@ -346,16 +344,12 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
   // Strategy 2: groups in user attributes
   $derive_from_attr_authorizations = array();
-  //debug('consumer_conf->deriveFromAttr=' . (int)$consumer_conf->deriveFromAttr);
   if ($consumer_conf->deriveFromAttr) {
-  //  debug($consumer_conf->deriveFromAttrAttr);
-  //  debug($user_ldap_entry);
     foreach ($consumer_conf->deriveFromAttrAttr as $derive_from_attribute_name) {
       foreach ($user_ldap_entry['attr'] as $user_attr_name => $user_attr_values) {
         if (strcasecmp($derive_from_attribute_name, $user_attr_name) != 0) {
           continue;
         }
-       // debug("match  $derive_from_attribute_name, $user_attr_name ");
         // patch 1050944
         for ($i = 0; $i < $user_attr_values['count']; $i++) {
           $attr_lcase = strtolower($user_attr_values[$i]);
@@ -363,8 +357,6 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
         }
       }
     }
-
-  //  debug($derive_from_attr_authorizations);
   }
 
 

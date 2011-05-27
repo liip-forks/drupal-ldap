@@ -12,7 +12,6 @@
 
 class LdapTestFunctions  {
 
-//   $this->testFunctions->prepTestServers($consumer_conf['sid'],  $test_data['server']);
   function prepTestServers($sid, $data) {
     $current_sids = variable_get('ldap_test_servers', array());
     if (! in_array($sid, $current_sids)) {
@@ -20,8 +19,23 @@ class LdapTestFunctions  {
       variable_set('ldap_test_servers', $current_sids);
     }
     variable_set('ldap_test_server__'. $sid, $data);
-  //  debug('prepTestServers, ldap_test_server__'. $sid); debug(variable_get('ldap_test_servers', 'empty')); debug(variable_get('ldap_test_server__'. $sid, 'empty'));
+
   }
+
+
+  function configureAuthentication($options) {
+    require_once(drupal_get_path('module','ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
+
+    $ldapServerAdmin = new LdapAuthenticationConfAdmin();
+
+    foreach($ldapServerAdmin->saveable as $prop_name) {
+      if (isset( $options[$prop_name])) {
+        $ldapServerAdmin->{$prop_name} = $options[$prop_name];
+      }
+    }
+    $ldapServerAdmin->save();
+  }
+
 
   function removeTestServers($sids = NULL) {
 

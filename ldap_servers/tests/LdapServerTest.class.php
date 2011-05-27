@@ -24,6 +24,9 @@ class LdapServerTest extends LdapServer {
   public $testUsers;
   public $methodResponses;
   public $searchResults;
+  public $binddn = FALSE; // Default to an anonymous bind.
+  public $bindpw = FALSE; // Default to an anonymous bind.
+
   /**
    * Constructor Method
    *
@@ -37,7 +40,6 @@ class LdapServerTest extends LdapServer {
     else {
       $test_data = variable_get('ldap_test_server__'. $sid, array());
     }
-   // debug('test server data, sid=' . $sid); debug($test_data);
     $this->sid = $sid;
     $this->methodResponses = $test_data['methodResponses'];
     $this->testUsers = $test_data['users'];
@@ -72,6 +74,8 @@ class LdapServerTest extends LdapServer {
 
 
   function bind($userdn = NULL, $pass = NULL) {
+    $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
+    $pass = ($pass != NULL) ? $pass : $this->bindpw;
 
     if (! isset($this->testUsers[$userdn])) {
       $ldap_errno = LDAP_NO_SUCH_OBJECT;
@@ -82,7 +86,7 @@ class LdapServerTest extends LdapServer {
          $ldap_error = "Failed to find $userdn in LdapServerTest.class.php";
       }
     }
-    elseif ($this->testUsers[$userdn]['password'] != $pass) {
+    elseif (isset($this->testUsers[$userdn]['attr']['password'][0]) && $this->testUsers[$userdn]['attr']['password'][0] != $pass) {
       $ldap_errno = LDAP_INVALID_CREDENTIALS;
       if (function_exists('ldap_err2str')) {
          $ldap_error = ldap_err2str($ldap_errno);
@@ -90,7 +94,6 @@ class LdapServerTest extends LdapServer {
       else {
          $ldap_error = "Credentials for $userdn failed in LdapServerTest.class.php";
       }
-
     }
     else {
       return LDAP_SUCCESS;
@@ -103,7 +106,6 @@ class LdapServerTest extends LdapServer {
        ));
 
     return $ldap_errno;
-
 
   }
 
@@ -128,10 +130,10 @@ class LdapServerTest extends LdapServer {
    *   An array of matching entries->attributes, or FALSE if the search is
    *   empty.
    */
-  function search($filter, $basedn = NULL, $attributes = array()) {
-    if ($basedn == NULL) {
+  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
+    if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
-        $basedn = $this->basedn[0];
+        $base_dn = $this->basedn[0];
       }
       else {
         return FALSE;
@@ -139,11 +141,11 @@ class LdapServerTest extends LdapServer {
     }
 
     // return prepolulated search results in test data array if present
-    if (isset($this->searchResults[$filter][$basedn])) {
-      return $this->searchResults[$filter][$basedn];
+    if (isset($this->searchResults[$filter][$base_dn])) {
+      return $this->searchResults[$filter][$base_dn];
     }
 
-    $basedn = strtolower($basedn);
+    $base_dn = strtolower($base_dn);
     list($filter_attribute, $filter_value) = explode('=', $filter);
 
     // need to perform feaux ldap search here with data in
@@ -155,27 +157,22 @@ class LdapServerTest extends LdapServer {
       // eg. basedn ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu
       // should be leftmost string in:
       // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu
-      $pos = strpos($dn, $basedn);
-      if ($pos === FALSE || strcasecmp($basedn, substr($dn, 0, $pos + 1)) == FALSE) {
-      //  debug("basedn=$basedn, dn=$dn not in base dn");
+      $pos = strpos($dn, $base_dn);
+      if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) == FALSE) {
         continue; // not in basedn
       }
       else {
-      //  debug("!! dn=$dn in basedn=$basedn");
       }
 
       // if doesn't filter attribute has no data, continue
       if (!isset($user_data['attr'][$filter_attribute])) {
-      //  debug(" filter_attribute $filter_attribute not in array"); debug($user_data);
         continue;
       }
-    //  debug("!$filter_attribute exists");
+
       // if doesn't match filter, continue
       $contained_values = $user_data['attr'][$filter_attribute];
       unset($contained_values['count']);
-     // debug("contained values"); debug($contained_values); debug($filter_value);
       if (!in_array($filter_value, array_values($contained_values))) {
-       // debug("filter_attribute=$filter_attribute, filter_value=$filter_value, user_data[filter_attribute]" );
         continue;
       }
 
@@ -193,11 +190,6 @@ class LdapServerTest extends LdapServer {
       }
     }
 
-
-  //  debug("search results for basedn=$basedn" );
-  //  debug("filter"); debug($filter);
-  //  debug("attributes"); debug($attributes);
-  //  debug("results"); debug($results);
     $results['count'] = count($results);
     return $results;
   }
@@ -207,11 +199,9 @@ class LdapServerTest extends LdapServer {
 
     $server_ids = variable_get('ldap_test_servers', array());
     $servers = array();
-//    debug('getLdapServerObjects'); debug($servers);
     foreach ($server_ids as $i => $sid) {
       $server_data = variable_get('ldap_test_server__'. $sid, array());
       $servers[$sid] = new LdapServerTest($server_data);
-     // debug($sid); debug($server_data);
     }
     return $servers;
 
