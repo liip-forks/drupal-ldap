@@ -3,12 +3,18 @@
 
 /**
  * @file
- * Home of the FeedsLdapQueryFetcher and related classes.
+ * FeedsLdapQueryFetcher
  */
+
+define('LDAP_FEEDS_QUERY_FETCHER_MULTI_COMMA', 1);
+define('LDAP_FEEDS_QUERY_FETCHER_MULTI_SHOW_FIRST', 2);
+define('LDAP_FEEDS_QUERY_FETCHER_MULTI_IGNORE', 3);
+define('LDAP_FEEDS_QUERY_FETCHER_MULTI_ARRAY', 4);
+define('LDAP_FEEDS_QUERY_FETCHER_MULTI_DEFAULT', 3);
 
 
 /**
- * Result of FeedsLdapQueryFetcher::fetch().
+ * RFeedsLdapQueryFetcherResult
  */
 class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
   public $basedn = array();  // should default to servers basedn
@@ -16,7 +22,7 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
   public $filter;
   public $attributes = array();
   public $sizelimit = LDAP_FEEDS_FETCHER_SIZELIMIT;
-  public $LdapServer;
+  protected $LdapServer;
   public $ldap_result;
 
   /**
@@ -26,8 +32,8 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
 
     $this->sid = isset($source_config['sid']) ? $source_config['sid'] : FALSE;
     $this->filter = isset($source_config['filter']) ? $source_config['filter'] : FALSE ;
-    $this->attributes = isset($source_config['attributes']) ? $source_config['attributes'] : array();
-    $this->sizelimit = isset($source_config['sid']) ? $source_config['sizelimit'] : 0;
+    $this->attributes = (isset($source_config['attributes']) && $source_config['attributes']) ? $source_config['attributes'] : LDAP_FEEDS_FETCHER_ATTRIBUTES;
+    $this->sizelimit = isset($source_config['sid']) ? $source_config['sizelimit'] : LDAP_FEEDS_FETCHER_SIZELIMIT;
 
     if ($this->attributes) {
       $temp = $this->attributes;
@@ -39,12 +45,16 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
         $this->attributes[] = $element;
       }
     }
-
+    else {
+      $this->attributes = array(); // if LDAP_FEEDS_FETCHER_ATTRIBUTES is empty string
+    }
     $this->basedn = (isset($source_config['basedn'])) ? $source_config['basedn'] : FALSE;
     if ($this->basedn) {
       $this->basedn = explode("\n", $this->basedn);
     }
     parent::__construct('');
+    $this->ldap_result = $this->getRaw();
+    return $this->ldap_result;
   }
 
   /**
@@ -85,24 +95,15 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
     $results = array();
     foreach ($this->basedn as $i => $basedn) {
       $result = $this->LdapServer->search($basedn, $this->filter, $this->attributes, 0, $this->sizelimit);  // , $this->attributes
+    //  dpm("basedn ". $basedn); dpm($this->filter); dpm($this->attributes); dpm($result);
+
       $results = array_merge($results, $result);
     }
 
-    return $this->sanitizeRaw($results); // @todo ? should sanitizeRaw be applied to this array? $this->sanitizeRaw($results);
+    return $results;
   }
 
-  /**
-   * Override parent::configDefaults().
-   */
-  public function configDefaults() {
-    return array(
-      'sid' => NULL,
-      'basedn' => NULL,
-      'attributes' => '"cn", "dn", "mail"',
-      'filter' => NULL,
-      'sizelimit' => 100,
-      );
-  }
+
 
 }
 
@@ -115,26 +116,28 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
    * Implements FeedsFetcher::fetch().
    */
   public function fetch(FeedsSource $source) {
-    $result = new FeedsLdapQueryFetcherResult($this->config);
+    $source_config = $source->getConfigFor($this);
+    $result = new FeedsLdapQueryFetcherResult($source_config);
+   //dpm('FeedsLdapQueryFetcherResult'); dpm($result);
     return $result;
   }
 
-  /**
-   * Clear caches.
-   */
-  public function clear(FeedsSource $source) {
 
-  }
 
   /**
    * Override parent::configForm().
    */
-  public function configForm(&$form_state) {
-
+  public function sourceForm($source_config) {
+   // dpm($source_config);
     $servers = ldap_servers_get_servers(NULL, 'enabled');
     foreach ($servers as $sid => $server) {
       $server_options[$sid] = $server->name;
     }
+    $sid = isset($source_config['sid']) ? $source_config['sid'] : NULL;
+    $basedn = isset($source_config['basedn']) ? $source_config['basedn'] : NULL;
+    $filter = isset($source_config['filter']) ? $source_config['filter'] : NULL;
+    $attributes = isset($source_config['attributes']) ? $source_config['attributes'] : explode(',', LDAP_FEEDS_FETCHER_ATTRIBUTES);
+    $sizelimit = isset($source_config['sizelimit']) ? $source_config['sizelimit'] : LDAP_FEEDS_FETCHER_SIZELIMIT;
 
     $form = array();
 
@@ -142,7 +145,7 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
       '#type' => 'select',
       '#title' => t('LDAP Server'),
       '#required' => TRUE,
-      '#default_value' => $this->config['sid'],
+      '#default_value' =>  $sid,
       '#options' => $server_options,
     );
 
@@ -158,7 +161,7 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
       '#type' => 'textarea',
       '#title' => t('Base DNs'),
       '#description' => t('Base DN for Query.  Leave empty to use base dns associated with server. Separate multiple base dns with a return.'),
-      '#default_value' => $this->config['basedn'],
+      '#default_value' => $basedn,
       '#maxlength' => NULL,
       '#required' => FALSE,
     );
@@ -172,14 +175,16 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
       '#type' => 'textfield',
       '#title' => t('Filter'),
       '#description' => t('Filter for Query.') . $resources,
-      '#default_value' => $this->config['filter'],
+      '#default_value' => $filter,
       '#maxlength' => NULL,
       '#required' => TRUE,
     );
 
-    if ($this->config['sid']) {
-      $server_basedn = join('<br/>', $servers[$this->config['sid']]->basedn);
-      $form['basedn']['#description'] .= '<br/>' . t('Current!sid server base dns are', array('!sid' => $this->config['sid'])) . '<br/><code><pre>' .
+    if ($sid) {
+    //  dpm('server_basedn'); dpm($server_basedn); dpm($basedn);
+      $server_basedn = $basedn;
+
+      $form['basedn']['#description'] .= '<br/>' . t('Current!sid server base dns are', array('!sid' => $sid)) . '<br/><code><pre>' .
         $server_basedn . '</pre></code>';
     }
 
@@ -187,7 +192,7 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
       '#type' => 'textfield',
       '#title' => t('Attributes'),
       '#description' => t('Attributes to return from Query.  Comma separated attribute names such as <code>"mail", "sn", "cn"</code>. Leave empty to return all attributes.'),
-      '#default_value' => $this->config['attributes'],
+      '#default_value' => $attributes,
       '#maxlength' => NULL,
       '#required' => FALSE,
     );
@@ -196,12 +201,23 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
       '#type' => 'textfield',
       '#title' => t('Size Limit'),
       '#description' => t('Max number of entries to return.  Set to 0 for no maximum.'),
-      '#default_value' => $this->config['sizelimit'],
+      '#default_value' => $sizelimit,
       '#maxlength' => NULL,
       '#required' => FALSE,
     );
     return $form;
   }
+
+  /**
+   * Override parent::sourceFormValidate().
+   */
+  public function sourceFormValidate(&$values) {
+     // user form_set_error if anything doesn't validate
+     // could execute query and see if it returns anything for validation
+  }
+
+
+
 
 
 }

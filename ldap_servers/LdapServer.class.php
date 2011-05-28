@@ -220,6 +220,7 @@ class LdapServer {
    *   An array of matching entries->attributes, or FALSE if the search is
    *   empty.
    */
+
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
@@ -230,7 +231,6 @@ class LdapServer {
       }
     }
     $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-
     if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
       return $entries;

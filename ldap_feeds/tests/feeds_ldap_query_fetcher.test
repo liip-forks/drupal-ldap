@@ -57,11 +57,17 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
     $this->testFunctions->removeTestServers('ldapfeeds');
     return $consumer_conf_admin->delete();
   }
+
+
+  // see readme.txt for test steps also.
+
   /**
    * This test should create a complete importer
    */
-  public function testLdapQueryFetcherAndParser() {
+  //public function testLdapQueryFetcherAndParser() {
 
+
+    /** the following code is not finished or tested
     $test_id = 'LdapQueryFetcherAndParser';
     $conf_id = 'LdapQueryFetcherAndParser';
     $consumer_conf_admin = $this->prepTestData($conf_id);
@@ -162,7 +168,7 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
       ),
       **/
 
-    $delete_result = $this->removeTestData($conf_id);
+   // $delete_result = $this->removeTestData($conf_id);
 
-  }
+ // }
 }

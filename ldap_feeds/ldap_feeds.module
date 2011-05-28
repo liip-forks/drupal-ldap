@@ -2,6 +2,8 @@
 
 
 define('LDAP_FEEDS_FETCHER_SIZELIMIT', 50);
+define('LDAP_FEEDS_FETCHER_ATTRIBUTES', '"dn", "cn", "mail"');
+
 /**
  * Implementation of hook_feeds_plugins().
  */
@@ -12,7 +14,7 @@ function ldap_feeds_feeds_plugins() {
 
   $info['FeedsLdapQueryFetcher'] = array(
     'name' => 'LDAP Query Fetcher',
-    'description' => 'DOES NOT WORK.  Included for development purposes only.  Fetch content from ldap query',
+    'description' => 'Fetch content from ldap query',
     'handler' => array(
       'parent' => 'FeedsFetcher', // This is the key name, not the class name.
       'class' => 'FeedsLdapQueryFetcher',
@@ -23,7 +25,7 @@ function ldap_feeds_feeds_plugins() {
 
   $info['FeedsLdapEntryParser'] = array(
     'name'        => t('LDAP Entry Parser for Feeds'),
-    'description' => t('DOES NOT WORK.  Included for development purposes only.  Parse an LDAP Entry Array'),
+    'description' => t('Parse an LDAP Entry Array'),
     'handler'     => array(
       'parent' => 'FeedsParser',
       'class'  => 'FeedsLdapEntryParser',
@@ -63,4 +65,31 @@ function ldap_feeds_feeds_plugins() {
  */
 function ldap_feeds_enable() {
   cache_clear_all('plugins:feeds:plugins', 'cache');
+}
+
+
+/**
+ * show some sample ldap user data to help with mapping interface
+ */
+
+function ldap_feeds_form_feeds_ui_mapping_form_alter(&$form, &$form_state, $form_id) {
+  $sources = array();
+  $servers = ldap_servers_get_servers(NULL, 'enabled');
+  $form['legendset']['#description'] = "";
+  foreach ($servers as $sid => $ldap_server) {
+    $user_ldap_entry = ldap_servers_get_user_ldap_data($ldap_server->testingDrupalUsername, $sid);
+    foreach ($user_ldap_entry['attr'] as $id => $value) {
+      if (!is_numeric($id) && is_scalar($user_ldap_entry['attr'][$id][0]) && $user_ldap_entry['attr'][$id]['count'] == 1) {
+        $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $user_ldap_entry['attr'][$id][0]));
+      }
+      elseif ($user_ldap_entry['attr'][$id]['count'] > 1) {
+        $item = t('MULTIVALUED ATTRIBUTE: ') . join(", \n", $user_ldap_entry['attr'][$id]);
+        $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $item));
+      }
+
+    }
+    $form['legendset']['#description'] .= t('LDAP Attributes in the source "description" column are from testing ldap user (%testing_user) on the server %sid, which is configured in
+      the ldap server form.', array('%sid' => $sid, '%testing_user' => $ldap_server->testingDrupalUsername));
+  }
+  $form['legendset']['legend']['sources'] = $sources;
 }
