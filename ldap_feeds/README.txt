@@ -1,28 +1,38 @@
 
 This is a development version of an feeds fetcher and feeds parser for ldap.
 
-The plan is to have 2 fetchers:
+----------------------------------
+use cases
+----------------------------------
+Move data from an ldap query into nodes, users, or other drupal structures supported by feeds.
+Feeds is a general architecture for moving data where an importer consists of a fetcher, parser, and processor.  Ldap feeds supplies the fetcher and parser such that any processor can be used (node, user, taxonomy term, and any of the processors at: http://drupal.org/node/856644)
+
+
+----------------------------------
+functionality
+----------------------------------
+Includes 2 feeds fetchers:
 - FeedsLdapQueryFetcher for fetching generic ldap queries, configured by admins
-- FeedsLdapDrupalUserFetcher for fetching ldap user entries associated with drupal users.
+- (not implemented yet) FeedsLdapDrupalUserFetcher for fetching ldap entries of drupal users who are ldap authenticated or otherwise ldap associated.
 
-
-And 1 parser:
-
+Includes 1 feeds parser:
 - FeedsLdapEntryParser that converts ldap entries array returned from ldap_search() to standard feed parser result format.
 
-
-Multivalued attributes are not supported, only attributes that have single, scalar values.
-
-Multivalued attributes need some design decisions.
+------------------------------------------------
+TODO:
+------------------------------------------------
+Multivalued attributes are not supported, only attributes that have single, scalar values can be fetched and parsed.
+Multivalued design decisions:
  -- should configuration be per fields or all multivalued fields
  -- can repeating fields be supported via processor
-  and what format should the parser support
+    and what format should the parser support
 
 
-testing steps.  need to convert to simpletest
 
-   *
-   0.  Make sure ldap_feeds, feeds,
+------------------------------------------------
+Testing steps.  need to convert to simpletest
+------------------------------------------------
+   0.  Make sure ldap_servers, ldap_feeds, feeds, and feeds admin ui are enabled and at least on ldap server is configured.
    1.  create content type 'ldap_user'
    2.  add fields 'sn' and 'mail' to content type
    3.  create content type 'ldap_user_feed_node' with "title field label" of "dn"
