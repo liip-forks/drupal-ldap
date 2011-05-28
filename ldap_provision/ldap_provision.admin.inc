@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * @file
@@ -16,9 +17,10 @@
 function ldap_provision_admin_form($form, &$form_state) {
   require_once('LdapProvisionConfAdmin.class.php');
   $auth_conf = new LdapProvisionConfAdmin();
-  if(!empty($form_state['storage']) && !empty($form_state['storage']['values']['accounts'])) {
+  if (!empty($form_state['storage']) && !empty($form_state['storage']['values']['accounts'])) {
     $accounts = $form_state['storage']['values']['accounts'];
-  } else {
+  }
+  else {
     $accounts = array();
   }
   return $auth_conf->drupalForm($accounts);
@@ -73,9 +75,7 @@ function ldap_provision_test_submit($form, &$form_state) {
   $accounts = ldap_provision_test_search($auth_conf, $form_state);
   $form_state['values']['accounts'] = $accounts;
   $form_state['storage']['values'] = $form_state['values'];
-  $form_state['rebuild'] = true;
+  $form_state['rebuild'] = TRUE;
   drupal_set_message(t('LDAP Provisioning Test Run and Configuration Saved'), 'status');
 
 }
-
-

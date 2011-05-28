@@ -1,5 +1,5 @@
 <?php
-
+// $Id$
 /**
  * @file
  * Install, update and uninstall functions for the LDAP provision module.
@@ -18,4 +18,3 @@ function ldap_provision_install() {
 function ldap_provision_uninstall() {
   variable_del('ldap_provision_conf');
 }
-

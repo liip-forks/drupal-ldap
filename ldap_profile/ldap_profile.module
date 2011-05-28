@@ -1,4 +1,5 @@
 <?php
+// $Id:  $
 
 /**
  * @file
@@ -97,11 +98,12 @@ function ldap_profile_get_mapping($profile_field = '') {
   $result = array();
   $mapping = $auth_conf->mapping;
 
-  if($profile_field != '') {
-    if(array_key_exists($profile_field, $mapping)) {
+  if ($profile_field != '') {
+    if (array_key_exists($profile_field, $mapping)) {
       $result = array($mapping[$profile_field]);
     }
-  } else {
+  }
+  else {
     $result = $mapping;
   }
   return $result;

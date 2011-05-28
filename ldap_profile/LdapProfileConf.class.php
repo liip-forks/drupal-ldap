@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * @file
@@ -16,13 +17,13 @@ class LdapProfileConf {
     'ldap_fields',
     'mapping',
   );
-  
+
   function __construct() {
     $this->load();
   }
 
 
-  function load() { 
+  function load() {
     if ($saved = variable_get("ldap_profile_conf", FALSE)) {
       $this->inDatabase = TRUE;
       foreach ($this->saveable as $property) {
@@ -30,7 +31,7 @@ class LdapProfileConf {
           $this->{$property} = $saved[$property];
         }
       }
-    } 
+    }
     else {
       $this->inDatabase = FALSE;
     }

@@ -226,7 +226,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       $result = $ldap_server->bind();
       if ($result == LDAP_SUCCESS) {
         $result = LDAP_FAIL;
-      	foreach ($ldap_server->basedn as $basedn) {
+        foreach ($ldap_server->basedn as $basedn) {
           $userdn = $ldap_server->user_lookup($name);
           $result = $ldap_server->bind($userdn, $pass);
           if ($result == LDAP_SUCCESS) {

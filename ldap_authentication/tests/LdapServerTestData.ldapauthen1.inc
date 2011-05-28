@@ -30,7 +30,7 @@ $test_data['server']['properties']  = array(
        'ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu',
        'ou=education,dc=ad,dc=myuniveristy,dc=edu',
        'ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
-       ),
+      ),
     'binddn'  => 'cn=service-account,dc=ad,dc=myuniveristy,dc=edu',
     'bindpw' => 'goodpwd',
     'user_dn_expression' => 'user_dn_expression',
@@ -114,7 +114,7 @@ $test_data['server']['users']['cn=verykool,ou=special guests,ou=guest accounts,d
 $test_data['server']['users']['cn=service-account,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=service-account,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'service-account@myuniversity.edu', 'count' => 1),
-    'sAMAccountName' => array( 0 =>'service-account', 'count' => 1),
+    'sAMAccountName' => array( 0 => 'service-account', 'count' => 1),
     'memberOf' => array(
       0 => 'CN=service_accounts,OU=ServiceAccountGroups,DC=ad,DC=myuniveristy,DC=edu',
       'count' => 2,

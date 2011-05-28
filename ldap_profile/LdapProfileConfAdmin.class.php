@@ -1,5 +1,5 @@
 <?php
-
+// $Id$
 /**
  * @file
  * This classextends by LdapProfileConf for configuration and other admin functions
@@ -20,7 +20,7 @@ class LdapProfileConfAdmin extends LdapProfileConf {
     $this->errorName = NULL;
   }
 
-  
+
   public function save() {
     foreach ($this->saveable as $property) {
       $save[$property] = $this->{$property};
@@ -52,11 +52,11 @@ class LdapProfileConfAdmin extends LdapProfileConf {
       );
       return $form;
     }
-  
-    // grabs field information for a user account  
-    $fields = field_info_instances('user','user');
+
+    // grabs field information for a user account
+    $fields = field_info_instances('user', 'user');
     $profileFields = array();
-    foreach($fields as $key => $field) {
+    foreach ($fields as $key => $field) {
       $profileFields[$key] = $field['label'];
     }
 
@@ -68,15 +68,15 @@ class LdapProfileConfAdmin extends LdapProfileConf {
     $form['mapping'] = array(
       '#type' => 'fieldset',
       '#title' => 'Profile Fields to Ldap Fields Mapping',
-      '#collapsible' => true,
-      '#collapsed' => false,
-      '#tree' => true,
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+      '#tree' => TRUE,
     );
 
     $user_attr = 'No Value Set';
     $mail_attr = 'No Value Set';
-    $servers = ldap_servers_get_servers('','enabled');
-    foreach($servers as $key => $server) {
+    $servers = ldap_servers_get_servers('', 'enabled');
+    foreach ($servers as $key => $server) {
       $user_attr = $server->user_attr;
       $mail_attr = $server->mail_attr;
     }
@@ -85,19 +85,19 @@ class LdapProfileConfAdmin extends LdapProfileConf {
         '#type' => 'textfield',
         '#title' => 'UserName',
         '#default_value' => $user_attr,
-        '#disabled' => true,
+        '#disabled' => TRUE,
         '#description' => 'This must be altered in the ldap server configuration page',
     );
     $form['mapping']['mail'] = array(
         '#type' => 'textfield',
         '#title' => 'Email',
         '#default_value' => $mail_attr,
-        '#disabled' => true,
+        '#disabled' => TRUE,
         '#description' => 'This must be altered in the ldap server configuration page',
     );
-    foreach($profileFields as $field => $label) {
+    foreach ($profileFields as $field => $label) {
       $mapping = $this->mapping;
-      if(!empty($mapping) && array_key_exists($field,$mapping)) $default = $mapping[$field];
+      if (!empty($mapping) && array_key_exists($field, $mapping)) $default = $mapping[$field];
       else $default = '';
       $form['mapping'][$field] = array(
         '#type' => 'textfield',
@@ -138,13 +138,13 @@ class LdapProfileConfAdmin extends LdapProfileConf {
   protected function populateFromDrupalForm($values) {
     $this->ldap_fields = array();
     $this->mapping = array();
-    foreach($values['mapping'] as $field => $value) {
-      if($value != '') {    
+    foreach ($values['mapping'] as $field => $value) {
+      if ($value != '') {
         //store value in lower case to fix a ldap searching bug
-        $l_value = strtolower($value);
+        $l_value = drupal_strtolower($value);
         $this->mapping[$field] = $l_value;
         // don't add duplicates & ignore case
-        if(!in_array($l_value, array_map('strtolower', $this->ldap_fields))) {
+        if (!in_array($l_value, array_map('strtolower', $this->ldap_fields))) {
           $this->ldap_fields[] = $l_value;
         }
       }

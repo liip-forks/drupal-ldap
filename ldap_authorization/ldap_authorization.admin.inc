@@ -27,7 +27,7 @@ function ldap_authorizations_admin_index() {
     return t('ldap authorization can not be set up until ldap servers are configured.  %add_server_link', $tokens);
   }
 
-  foreach($consumers as $consumer_type => $consumer) {
+  foreach ($consumers as $consumer_type => $consumer) {
     $consumers[$consumer_type] = ldap_authorization_get_consumer_object($consumer_type);
   }
   return theme('ldap_authorization_admin_index', array('consumers' => $consumers));

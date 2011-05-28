@@ -1,5 +1,5 @@
 <?php
-// $Id: LdapAuthorizationConsumerDrupalRole.class.php,v 1.3.2.1 2011/02/08 20:05:42 johnbarclay Exp $
+// $Id:  $
 
 
 
@@ -106,7 +106,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     if ($this->detailedWatchdogLog) {
       watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.revokeSingleAuthorization()
         revoked:  rid=%rid, role_name=%role_name for username=%username, result=%result',
-        array('%rid' => $this->drupalRolesByName[$role_name], '%role_name' => $role_name, '%username'=> $user->name,
+        array('%rid' => $this->drupalRolesByName[$role_name], '%role_name' => $role_name, '%username' => $user->name,
           '%result' => $result), WATCHDOG_DEBUG);
     }
 
@@ -122,7 +122,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     if (! isset($this->drupalRolesByName[$role_name])) {
         watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.grantSingleAuthorization()
         failed to grant %username the role %role_name because role does not exist',
-        array('%role_name' => $role_name, '%username'=> $user->name),
+        array('%role_name' => $role_name, '%username' => $user->name),
         WATCHDOG_ERROR);
         return FALSE;
     }
@@ -135,7 +135,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     if ($this->detailedWatchdogLog) {
       watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.grantSingleAuthorization()
         granted: rid=%rid, role_name=%role_name for username=%username, result=%result',
-        array('%rid' => $this->drupalRolesByName[$role_name], '%role_name' => $role_name, '%username'=> $user->name,
+        array('%rid' => $this->drupalRolesByName[$role_name], '%role_name' => $role_name, '%username' => $user->name,
           '%result' => $result), WATCHDOG_DEBUG);
     }
 

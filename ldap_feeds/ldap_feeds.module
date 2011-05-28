@@ -1,11 +1,11 @@
 <?php
-
+// $Id:  $
 
 define('LDAP_FEEDS_FETCHER_SIZELIMIT', 50);
 define('LDAP_FEEDS_FETCHER_ATTRIBUTES', '"dn", "cn", "mail"');
 
 /**
- * Implementation of hook_feeds_plugins().
+ * Implements hook_feeds_plugins().
  */
 function ldap_feeds_feeds_plugins() {
 
@@ -54,7 +54,8 @@ function ldap_feeds_feeds_plugins() {
       'path' => $path,
     ),
   );
-  **/
+
+  */
 
 }
 
@@ -83,7 +84,7 @@ function ldap_feeds_form_feeds_ui_mapping_form_alter(&$form, &$form_state, $form
         $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $user_ldap_entry['attr'][$id][0]));
       }
       elseif ($user_ldap_entry['attr'][$id]['count'] > 1) {
-        $item = t('MULTIVALUED ATTRIBUTE: ') . join(", \n", $user_ldap_entry['attr'][$id]);
+        $item = t('MULTIVALUED ATTRIBUTE:') . join(" , \n", $user_ldap_entry['attr'][$id]);
         $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $item));
       }
 

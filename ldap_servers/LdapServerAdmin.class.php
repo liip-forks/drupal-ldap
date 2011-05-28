@@ -115,7 +115,7 @@ class LdapServerAdmin extends LdapServer {
   }
   public function drupalForm($op) {
 
-    drupal_add_css(drupal_get_path('module','ldap_servers') . '/ldap_servers.admin.css','module','all');
+    drupal_add_css(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.css', 'module', 'all');
 
     $form['#prefix'] = <<<EOF
 <p>Setup an LDAP server configuration to be used by other modules such as LDAP Authentication,
@@ -259,7 +259,8 @@ $form['#prefix'] = t($form['#prefix']);
       If you are using a service account, enter one.');
     if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
       $pwd_class = 'ldap-pwd-abscent';
-    } else {
+    }
+    else {
       $pwd_class = 'ldap-pwd-not-applicable';
     }
   }
@@ -278,7 +279,7 @@ $form['#prefix'] = t($form['#prefix']);
 
     '#maxlength' => 255,
     '#default_value' => "",
-   );
+  );
 
   $form['binding_service_acct']['clear_bindpw'] = array(
     '#type' => 'checkbox',

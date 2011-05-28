@@ -1,5 +1,5 @@
 <?php
-// $Id: feeds_fetcher_file.test,v 1.1.2.3 2010/10/27 22:33:32 alexb Exp $
+// $Id: $
 
 /**
  * @file
@@ -8,7 +8,7 @@
 
 
 
-require_once(drupal_get_path('module','feeds') . '/tests/feeds.test.inc');
+require_once(drupal_get_path('module', 'feeds') . '/tests/feeds.test.inc');
 
 class LdapFeedsTestCase extends FeedsWebTestCase {
 
@@ -32,7 +32,7 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
   }
 
 
-  function tearDown(){
+  function tearDown() {
     parent::tearDown();
     variable_del('ldap_simpletest');
   }
@@ -47,7 +47,7 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
   function prepTestData($testid) {
     $this->testFunctions = new LdapTestFunctions();
     // create fake ldap server configuration instance
-    include(drupal_get_path('module','ldap_feeds') . '/tests/LdapServerTestData.inc');
+    include(drupal_get_path('module', 'ldap_feeds') . '/tests/LdapServerTestData.inc');
     $this->testFunctions->prepTestServers('ldapfeeds',  $test_data['server']);
 
   }
@@ -166,7 +166,8 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
       'cn' => 'rkool',
       'sn' => 'kool',
       ),
-      **/
+
+ */
 
    // $delete_result = $this->removeTestData($conf_id);
 

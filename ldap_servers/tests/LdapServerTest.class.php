@@ -38,7 +38,7 @@ class LdapServerTest extends LdapServer {
       $test_data = $sid;
     }
     else {
-      $test_data = variable_get('ldap_test_server__'. $sid, array());
+      $test_data = variable_get('ldap_test_server__' . $sid, array());
     }
     $this->sid = $sid;
     $this->methodResponses = $test_data['methodResponses'];
@@ -80,19 +80,19 @@ class LdapServerTest extends LdapServer {
     if (! isset($this->testUsers[$userdn])) {
       $ldap_errno = LDAP_NO_SUCH_OBJECT;
       if (function_exists('ldap_err2str')) {
-         $ldap_error = ldap_err2str($ldap_errno);
+        $ldap_error = ldap_err2str($ldap_errno);
       }
       else {
-         $ldap_error = "Failed to find $userdn in LdapServerTest.class.php";
+        $ldap_error = "Failed to find $userdn in LdapServerTest.class.php";
       }
     }
     elseif (isset($this->testUsers[$userdn]['attr']['password'][0]) && $this->testUsers[$userdn]['attr']['password'][0] != $pass) {
       $ldap_errno = LDAP_INVALID_CREDENTIALS;
       if (function_exists('ldap_err2str')) {
-         $ldap_error = ldap_err2str($ldap_errno);
+        $ldap_error = ldap_err2str($ldap_errno);
       }
       else {
-         $ldap_error = "Credentials for $userdn failed in LdapServerTest.class.php";
+        $ldap_error = "Credentials for $userdn failed in LdapServerTest.class.php";
       }
     }
     else {
@@ -103,7 +103,7 @@ class LdapServerTest extends LdapServer {
       array('%user' => $userdn,
             '%errno' => $ldap_errno,
             '%error' => $ldap_error,
-       ));
+      ));
 
     return $ldap_errno;
 
@@ -145,7 +145,7 @@ class LdapServerTest extends LdapServer {
       return $this->searchResults[$filter][$base_dn];
     }
 
-    $base_dn = strtolower($base_dn);
+    $base_dn = drupal_strtolower($base_dn);
     list($filter_attribute, $filter_value) = explode('=', $filter);
 
     // need to perform feaux ldap search here with data in
@@ -200,7 +200,7 @@ class LdapServerTest extends LdapServer {
     $server_ids = variable_get('ldap_test_servers', array());
     $servers = array();
     foreach ($server_ids as $i => $sid) {
-      $server_data = variable_get('ldap_test_server__'. $sid, array());
+      $server_data = variable_get('ldap_test_server__' . $sid, array());
       $servers[$sid] = new LdapServerTest($server_data);
     }
     return $servers;

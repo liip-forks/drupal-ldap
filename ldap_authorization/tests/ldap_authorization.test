@@ -1,13 +1,13 @@
 <?php
-// $Id:$
-
+// $Id$
 
 /**
- * @file test stub
+ * @file
+ * simpletests for ldap authorization
  *
  */
 require_once(drupal_get_path('module', 'ldap_servers') . '/tests/LdapTestFunctions.class.php');
-require_once(drupal_get_path('module','ldap_authorization') . '/LdapAuthorizationConsumerConfAdmin.class.php');
+require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizationConsumerConfAdmin.class.php');
 
 class LdapAuthorizationTestCase extends DrupalWebTestCase {
   public static function getInfo() {
@@ -29,7 +29,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
   }
 
 
-  function tearDown(){
+  function tearDown() {
     parent::tearDown();
     variable_del('ldap_help_watchdog_detail');
     variable_del('ldap_simpletest');
@@ -47,11 +47,11 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
     $this->testFunctions = new LdapTestFunctions();
 
     // get authorization/consumer configuration data
-    include(drupal_get_path('module','ldap_authorization') . '/tests/ldap_authorization_test_data.'. $testid . '.inc');
+    include(drupal_get_path('module', 'ldap_authorization') . '/tests/ldap_authorization_test_data.' . $testid . '.inc');
     $consumer_conf = $test_data['ldap_authorization_conf']['consumer_conf'];
 
     // create fake ldap server configuration instance
-    include(drupal_get_path('module','ldap_authorization') . '/tests/LdapServerTestData.' . $consumer_conf['sid']. '.inc');
+    include(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapServerTestData.' . $consumer_conf['sid'] . '.inc');
     $this->testFunctions->prepTestServers($consumer_conf['sid'],  $test_data['server']);
 
 
@@ -71,7 +71,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
 
 
   function removeTestData($testid) {
-    include(drupal_get_path('module','ldap_authorization') . '/tests/ldap_authorization_test_data.'. $testid . '.inc');
+    include(drupal_get_path('module', 'ldap_authorization') . '/tests/ldap_authorization_test_data.' . $testid . '.inc');
     $consumer_conf = $test_data['ldap_authorization_conf']['consumer_conf'];
     $consumer_obj = ldap_authorization_get_consumer_object($consumer_conf['consumerType']);
     $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj);
@@ -108,8 +108,8 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
     $api_functions = array(
       'ldap_authorization_get_consumer_object' => array(1, 1),
       'ldap_authorization_get_consumers'  => array(3, 0),
-      'ldap_authorizations_user_authorizations'  => array(4,1),
-     );
+      'ldap_authorizations_user_authorizations'  => array(4, 1),
+    );
 
     foreach ($api_functions as $api_function_name => $param_count) {
       $reflector = new ReflectionFunction($api_function_name);
@@ -117,7 +117,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
           function_exists($api_function_name) &&
           $param_count[1] == $reflector->getNumberOfRequiredParameters() &&
           $param_count[0] == $reflector->getNumberOfParameters()
-          , ' api function '. $api_function_name . ' parameters and required parameters count unchanged', $testid);
+          , ' api function ' . $api_function_name . ' parameters and required parameters count unchanged', $testid);
     }
   }
 
@@ -441,7 +441,7 @@ function testFlags() {
 
 
   }
-  **/
+ */
 
 
 

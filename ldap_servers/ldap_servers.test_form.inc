@@ -122,11 +122,12 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   $results[] = t('Binding with DN for non-anonymous search (%bind_dn).  Using password ',
     array('%bind_dn' =>  $ldap_server->binddn)) . ' ' . $bindpw_type;
 
- if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
+  if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
     $results[] = t('Binding with DN for non-anonymous search (%bind_dn).  Using password ',
       array('%bind_dn' =>  $ldap_server->binddn)) . ' ' . $bindpw_type;
-  } else {
-	$results[] = t('Binding with null DN for anonymous search.');
+  }
+  else {
+    $results[] = t('Binding with null DN for anonymous search.');
   }
 
 
@@ -148,10 +149,10 @@ function ldap_servers_test_form_submit($form, &$form_state) {
       $results[] =  theme_item_list(array('items' => $mapping, 'title' => t('Attributes available to anonymous search', array('%bind_dn' =>  $ldap_server->binddn)) , 'type' => 'ul', 'attributes' => array()));
     }
     $results[] = t('Binding with DN (%bind_dn).  Using supplied password ',
-       array('%bind_dn' =>  $ldap_user['dn']));
+      array('%bind_dn' =>  $ldap_user['dn']));
     $result = $ldap_server->bind($ldap_user['dn'], $values['testing_drupal_userpw']);
     if ($result == LDAP_SUCCESS) {
-	  $results[] =  t('Successfully bound to server');
+      $results[] = t('Successfully bound to server');
     }
     else {
       $results[] = t('Failed to bind to server. ldap error #') . $result . ' ' . $ldap_server->errorMsg('ldap') ;
@@ -173,7 +174,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
         }
       }
     // $mapping[] = theme_item_list(array('items' => $list, 'title' => 'Attributes', 'type' => 'ul', 'attributes' => array()));
-     $results[] =  theme_item_list(array('items' => $mapping, 'title' => t('Attributes available to %bind_dn', array('%bind_dn' => (($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) ? $ldap_user['dn'] : $ldap_server->binddn))) , 'type' => 'ul', 'attributes' => array()));
+    $results[] = theme_item_list(array('items' => $mapping, 'title' => t('Attributes available to %bind_dn', array('%bind_dn' => (($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) ? $ldap_user['dn'] : $ldap_server->binddn))) , 'type' => 'ul', 'attributes' => array()));
 
     }
   }

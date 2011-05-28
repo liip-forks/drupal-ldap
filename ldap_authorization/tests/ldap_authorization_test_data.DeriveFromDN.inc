@@ -1,5 +1,10 @@
 <?php
+// $Id$
 
+/**
+ * @file
+ * ldap consumer configuration for simpletests
+ */
 
 
   $test_data['ldap_authorization_conf']['consumer_conf']['sid'] = 'ldapauthor1';

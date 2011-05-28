@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * @file
@@ -18,4 +19,3 @@ function ldap_profile_install() {
 function ldap_profile_uninstall() {
   variable_del('ldap_profile_conf');
 }
-

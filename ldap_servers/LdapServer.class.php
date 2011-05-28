@@ -234,14 +234,16 @@ class LdapServer {
     if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
       return $entries;
-    } elseif ($this->ldapErrorNumber()) {
+    }
+    elseif ($this->ldapErrorNumber()) {
       $watchdog_tokens =  array('%basedn' => $base_dn, '%filter' => $filter,
         '%attributes' => print_r($attributes, TRUE), '%errmsg' => $this->errorMsg('ldap'),
         '%errno' => $this->ldapErrorNumber());
       watchdog('ldap', "LDAP ldap_search error. basedn: %basedn, filter: %filter, attributes:
         %attributes, errmsg: %errmsg, ldap err no: %errno,", $watchdog_tokens);
       return array();
-    } else {
+    }
+    else {
       return array();
     }
   }
@@ -362,9 +364,9 @@ class LdapServer {
     }
   }
 
-   public function errorName($type = NULL) {
+  public function errorName($type = NULL) {
     if ($type == 'ldap' && $this->connection) {
-      return "LDAP Error: ". ldap_error($this->connection);
+      return "LDAP Error: " . ldap_error($this->connection);
     }
     elseif ($type == NULL) {
       return $this->_errorName;

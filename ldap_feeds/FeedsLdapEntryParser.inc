@@ -1,4 +1,5 @@
 <?php
+// $Id: $
 
 /**
  * @file
@@ -48,7 +49,7 @@ class FeedsLdapEntryParser extends FeedsParser {
                 }
             }
           }
-*/
+ */
         }
 
       }
@@ -81,10 +82,9 @@ class FeedsLdapEntryParser extends FeedsParser {
    * Override parent::sourceFormValidate().
    */
   public function configFormValidate(&$values) {
-
     $this->setConfig(array('sources' => $values));
     $this->save();
-   }
+  }
 
 
   /**
@@ -103,7 +103,7 @@ class FeedsLdapEntryParser extends FeedsParser {
       'multivalued' => LDAP_FEEDS_QUERY_FETCHER_MULTI_DEFAULT,
     );
 
-    **/
+  */
     return array();
   }
 
@@ -129,7 +129,7 @@ class FeedsLdapEntryParser extends FeedsParser {
       '#default_value' => LDAP_FEEDS_QUERY_FETCHER_DEFAULT,
     );
 
-    **/
+  */
 
     return $form;
   }

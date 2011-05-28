@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * @file
@@ -20,7 +21,7 @@ class LdapProvisionConfAdmin extends LdapProvisionConf {
     $this->errorName = NULL;
   }
 
-  
+
   public function save() {
     foreach ($this->saveable as $property) {
       $save[$property] = $this->{$property};
@@ -52,16 +53,18 @@ class LdapProvisionConfAdmin extends LdapProvisionConf {
       );
       return $form;
     }
-    // grabs field information for a user account  
-    $profile_fields = field_info_instances('user','user');
+    // grabs field information for a user account
+    $profile_fields = field_info_instances('user', 'user');
     $mapped_fields = ldap_profile_get_mapping();
     $field_options = array();
-    foreach($mapped_fields as $key => $field) {
-      if($key == 'username') {
+    foreach ($mapped_fields as $key => $field) {
+      if ($key == 'username') {
         $field_options[$key] = 'User Name';
-      } elseif($key == 'mail') {
+      }
+      elseif ($key == 'mail') {
         $field_options[$key] = 'Email';
-      } else {
+      }
+      else {
         $field_options[$key] = $profile_fields[$key]['label'];
       }
     }
@@ -121,8 +124,8 @@ class LdapProvisionConfAdmin extends LdapProvisionConf {
     $form['provisionCron'] = array(
       '#type' => 'radios',
       '#title' => 'Cron Setting',
-      '#collapsible' => true,
-      '#collapsed' => true,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
       '#options' => array(
         'Once A Day (run at 3:00 am)',
         'Every 12 Hours',
@@ -147,7 +150,7 @@ class LdapProvisionConfAdmin extends LdapProvisionConf {
       '#submit' => array('ldap_provision_test_submit'),
     );
 
-    if(!empty($accounts)) {
+    if (!empty($accounts)) {
       $form['test_table'] = array(
         '#type' => 'item',
         '#markup' => theme('ldap_provision_admin_test_table', array('auth_conf' => $this, 'accounts' => $accounts)),

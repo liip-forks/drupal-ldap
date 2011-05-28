@@ -178,12 +178,12 @@ class LdapAuthorizationConsumerAbstract {
     if (!is_array($consumer_ids)) {
       $consumer_ids = array($consumer_ids);
     }
-   $watchdog_tokens['%username'] = $user->name;
-   $watchdog_tokens['%action'] = $op;
-   $consumer_ids_log = array();
-   $users_authorization_ids = $this->usersAuthorizations($user);
+    $watchdog_tokens['%username'] = $user->name;
+    $watchdog_tokens['%action'] = $op;
+    $consumer_ids_log = array();
+    $users_authorization_ids = $this->usersAuthorizations($user);
 
-   $watchdog_tokens['%users_authorization_ids'] = join(', ', $users_authorization_ids);
+    $watchdog_tokens['%users_authorization_ids'] = join(', ', $users_authorization_ids);
     foreach ($consumer_ids as $consumer_id) {
       $log = "consumer_id=$consumer_id, op=$op,";
       $results[$consumer_id] = TRUE;
@@ -204,7 +204,8 @@ class LdapAuthorizationConsumerAbstract {
               $results[$consumer_id] = FALSE;
                // out of luck, failed to create consumer id
             }
-          } else {
+          }
+          else {
             $log .= "consumer does not support creating consumer object, ";
             // out of luck. can't create new consumer id.
             $results[$consumer_id] = FALSE;
@@ -229,7 +230,8 @@ class LdapAuthorizationConsumerAbstract {
               unset($user_auth_data[$consumer_id]);
             }
             $log .= t(',result=') . (boolean)($results[$consumer_id]);
-          } else {
+          }
+          else {
             unset($user_auth_data[$consumer_id]);
           }
         }

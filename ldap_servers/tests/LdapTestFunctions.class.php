@@ -1,9 +1,10 @@
 <?php
-// $Id:$
+// $Id$
 
 
 /**
- * @file LdapTestCase.class.php
+ * @file
+ *  LdapTestCase.class.php
  *
  * stub for test class for any ldap module.  has functionality of fake ldap server
  * with user configurations.  Intended to help unifying test environment
@@ -18,17 +19,17 @@ class LdapTestFunctions  {
       $current_sids[] = $sid;
       variable_set('ldap_test_servers', $current_sids);
     }
-    variable_set('ldap_test_server__'. $sid, $data);
+    variable_set('ldap_test_server__' . $sid, $data);
 
   }
 
 
   function configureAuthentication($options) {
-    require_once(drupal_get_path('module','ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
+    require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
 
     $ldapServerAdmin = new LdapAuthenticationConfAdmin();
 
-    foreach($ldapServerAdmin->saveable as $prop_name) {
+    foreach ($ldapServerAdmin->saveable as $prop_name) {
       if (isset( $options[$prop_name])) {
         $ldapServerAdmin->{$prop_name} = $options[$prop_name];
       }
@@ -44,11 +45,11 @@ class LdapTestFunctions  {
     if (! $sids) {
       $sids = $current_sids;
     }
-    elseif(is_scalar($sids)) {
+    elseif (is_scalar($sids)) {
       $sids = array($sids);
     }
     foreach ($sids as $sid) {
-      variable_del('ldap_authorization_test_server__'. $sid);  // remove fake server configuation
+      variable_del('ldap_authorization_test_server__' . $sid);  // remove fake server configuation
     }
     $remaining_sids = array_diff($current_sids, $sids);
     variable_set('ldap_test_servers', $remaining_sids);

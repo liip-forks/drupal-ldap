@@ -7,9 +7,9 @@
  */
 
 
-  /**
-   * Implements hook_schema().
-   */
+/**
+ * Implements hook_schema().
+ */
 function ldap_authorization_schema() {
 
   $schema['ldap_authorization'] = array(

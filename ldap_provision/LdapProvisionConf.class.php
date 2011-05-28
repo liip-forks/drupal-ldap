@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * @file
@@ -70,21 +71,23 @@ class LdapProvisionConf {
     $filter = '';
     (!empty($ldap_server)) ? $user_attr = $ldap_server->user_attr : $user_attr = 'uid';
     // filter depends on the current rule
-    switch($this->provisionRule){
+    switch ($this->provisionRule) {
        // case 0 - all people
-       case 0: $filter = $user_attr ."=*";
-               break;
-       case 1: $field = ldap_profile_get_mapping($this->provisionRuleAttrSelect);
-               $field = $field[0];
-               if($field == "") $error = "No Ldap Mapping for Selected Field.";
-               else {
-                 $filter = $field ."=". $this->provisionRuleAttrText;
-               }
-               break;
-       case 2: $filter = $this->provisionRuleCustText;
-               break;
-       default:  $filter = $user_attr ."=*";
-    }
+      case 0: $filter = $user_attr . "=*";
+        break;
+      case 1: $field = ldap_profile_get_mapping($this->provisionRuleAttrSelect);
+        $field = $field[0];
+        if ($field == "") {
+          $error = "No Ldap Mapping for Selected Field.";
+        }
+        else {
+        $filter = $field . "=" . $this->provisionRuleAttrText;
+        }
+      break;
+      case 2: $filter = $this->provisionRuleCustText;
+        break;
+      default:  $filter = $user_attr . "=*";
+      }
     return $filter;
   }
 
@@ -93,7 +96,7 @@ class LdapProvisionConf {
    */
   function search() {
     $accounts = array();
-    $servers = ldap_servers_get_servers('','enabled');
+    $servers = ldap_servers_get_servers('', 'enabled');
     foreach ($servers as $sid => $ldap_server) {
       $result = $ldap_server->connect();
       if ($result != LDAP_SUCCESS) {
@@ -113,7 +116,7 @@ class LdapProvisionConf {
       $basedn = ''; // need to modify this to get the base dn from the server
 
       // searches each basedn for this server configuration
-      foreach($ldap_server->basedn as $index => $base) {
+      foreach ($ldap_server->basedn as $index => $base) {
         $accounts[$sid][$index] = $ldap_server->search($base, $filter, $attributes);
       }
     }
@@ -133,7 +136,7 @@ class LdapProvisionConf {
 
     $name = $account[$username][0];
     // account must have an email associated with it.
-    if(!empty($account[$mail])) {
+    if (!empty($account[$mail])) {
       $dn = $account['dn'];
       $edit = array(
         'name' => $name,
@@ -141,8 +144,8 @@ class LdapProvisionConf {
         'init' => $account[$mail][0],
         'status' => 1,
       );
-      foreach($attributes as $drupal => $ldap) {
-        if(!empty($account[$ldap])) {
+      foreach ($attributes as $drupal => $ldap) {
+        if (!empty($account[$ldap])) {
           // translates the ldap value into a value that drupal reconizes.
           $value = ldap_profile_translate($ldap, $account[$ldap][0]);
           $edit[$drupal] = array('und' => array(array('value' => $value)));
@@ -166,7 +169,8 @@ class LdapProvisionConf {
         user_set_authmaps($account, array('authname_ldap_authentication' => $name));
         return TRUE;
       }
-    } else {
+    }
+    else {
       // $account had no email so return false for not creating account.
       return FALSE;
     }
@@ -177,13 +181,13 @@ class LdapProvisionConf {
    * @params - $account - This is a ldap account returned based off of a ldap search.
    * @params - $user - This is this drupal account of the same user
    */
-  function update_drupal_account($account,$user) {
+  function update_drupal_account($account, $user) {
     $attributes = ldap_profile_get_mapping();
     $mail = $user->mail;
     $name = $user->name;
     $edit = array();
-    foreach($attributes as $drupal => $ldap) {
-      if(!empty($account[$ldap])) {
+    foreach ($attributes as $drupal => $ldap) {
+      if (!empty($account[$ldap])) {
         $value = ldap_profile_translate($ldap, $account[$ldap][0]);
         $edit[$drupal] = array('und' => array(array('value' => $value)));
       }

@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * @file
@@ -59,7 +60,7 @@ function ldap_provision_info($field = 0) {
 }
 
 /**
- * Implements hook_cron
+ * Implements hook_cron().
  */
 function ldap_provision_cron() {
   require_once('LdapProvisionConfAdmin.class.php');
@@ -74,9 +75,9 @@ function ldap_provision_cron() {
   $result = array();
   $hour = 0;
 
-  switch($auth_conf->provisionCron) {
+  switch ($auth_conf->provisionCron) {
     case 0: // ran nightly - at 0300
-            if($cur_day > $last_cron_day && $cur_hour > 3) {
+            if ($cur_day > $last_cron_day && $cur_hour > 3) {
               $result[] = $auth_conf;
             };
             break;
@@ -92,9 +93,9 @@ function ldap_provision_cron() {
     default: $result[] = $auth_conf;
   }
 
-  if($hour != 0) {
+  if ($hour != 0) {
     $cur_hour = $cur_hour + (24 * ($cur_day - $last_cron_day));
-    if($cur_hour >= $last_cron_hour + $hour) {
+    if ($cur_hour >= $last_cron_hour + $hour) {
       $result[] = $auth_conf;
     };
   }
@@ -106,7 +107,7 @@ function ldap_provision_cron() {
 }
 
 /**
- * Implements hook_cron_queue_info
+ * Implements hook_cron_queue_info().
  */
 function ldap_provision_cron_queue_info() {
   // $length is amount time (sec) to allow the cron to execute.
@@ -125,11 +126,11 @@ function ldap_provision_cron_queue_info() {
  */
 function ldap_provision_cron_job($auth_conf) {
   $accounts = $auth_conf->search();
-  $servers = ldap_servers_get_servers('','enabled');
+  $servers = ldap_servers_get_servers('', 'enabled');
 
-  foreach($accounts as $sid => $dn) {
-    foreach($dn as $base_dn => $base_dn_accounts) {
-      watchdog('ldap', 'LDAP processing '. $servers[$sid]->name .' with base dn of '. $servers[$sid][$base_dn]);
+  foreach ($accounts as $sid => $dn) {
+    foreach ($dn as $base_dn => $base_dn_accounts) {
+      watchdog('ldap', 'LDAP processing ' . $servers[$sid]->name . ' with base dn of ' . $servers[$sid][$base_dn]);
       $mapping = ldap_profile_get_mapping();
       $username = $mapping['username'];
       $mail = $mapping['mail'];
@@ -138,34 +139,37 @@ function ldap_provision_cron_job($auth_conf) {
       $create_success = array();
       $update_success = array();
 
-      if(!empty($accounts)) {
+      if (!empty($accounts)) {
         $sid = $accounts['sid'];
-        foreach($accounts as $key => $account) {
-          if($key !== 'sid' && $key !== 'count') {
+        foreach ($accounts as $key => $account) {
+          if ($key !== 'sid' && $key !== 'count') {
             // if name doesn't exist, not a valid account and should be skipped
-            if(!empty($account[$username])) {
+            if (!empty($account[$username])) {
               $name = $account[$username][0];
               // user exist in drupal already, need to update drupal account with any new ldap information
-              if($user = user_load_by_name($name)) {
-                $updated = $auth_conf->update_drupal_account($account,$user);
-                if(!$updated) {
+              if ($user = user_load_by_name($name)) {
+                $updated = $auth_conf->update_drupal_account($account, $user);
+                if (!$updated) {
                   $broken_accounts[] = $name;
-                } else {
-                 $update_success[] = $name;
                 }
-              } else {
+                else {
+                  $update_success[] = $name;
+                }
+              }
+              else {
                 // user is new, need to create the drupal account with the ldap account information
                 $created = $auth_conf->create_drupal_account($account, $sid);
-                if(!$created) {
+                if (!$created) {
                   $broken_accounts[] = $name;
-                } else {
+                }
+                else {
                   $create_success[] = $name;
                 }
               }
             }
           }
         }
-        watchdog('ldap', 'Create = '. count($create_success) .' - Update = '. count($update_success) .' - Failures = '. count($broken_accounts));
+        watchdog('ldap', 'Create = ' . count($create_success) . ' - Update = ' . count($update_success) . ' - Failures = ' . count($broken_accounts));
       }
     }
   }

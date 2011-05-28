@@ -1,5 +1,5 @@
 <?php
-// $Id: FeedsLdapQueryFetcher.inc,v 1.29.2.2 2010/10/26 19:03:14 yhahn Exp $
+// $Id:  $
 
 /**
  * @file
@@ -38,10 +38,10 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
     if ($this->attributes) {
       $temp = $this->attributes;
       $this->attributes = array();
-      foreach(explode(",", $temp) as $i => $element) {
-        $element = trim($element,'"');
+      foreach (explode(",", $temp) as $i => $element) {
+        $element = trim($element, '"');
         $element = trim($element);
-        $element = trim($element,'"');
+        $element = trim($element, '"');
         $this->attributes[] = $element;
       }
     }
@@ -69,7 +69,7 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
     }
 
     if ((bool)$this->LdapServer->status == FALSE) {
-       throw new Exception(t('LDAP Server !sid not enabled, please check ldap server admin page: !server_admin', $tokens));
+      throw new Exception(t('LDAP Server !sid not enabled, please check ldap server admin page: !server_admin', $tokens));
     }
 
     if (!$this->basedn || !is_array($this->basedn) || count($this->basedn) == 0 ) {
@@ -167,8 +167,8 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
     );
 
 
-    $resources[] = l('centos.org ldap', 'http://www.centos.org/docs/5/html/CDS/ag/8.0/Finding_Directory_Entries-LDAP_Search_Filters.html');
-    $resources[] = l('postini.com', 'http://www.postini.com/webdocs/gads/admin/prep_ldap.html');
+    $resources[] = l(t('centos.org ldap'), 'http://www.centos.org/docs/5/html/CDS/ag/8.0/Finding_Directory_Entries-LDAP_Search_Filters.html');
+    $resources[] = l(t('postini.com'), 'http://www.postini.com/webdocs/gads/admin/prep_ldap.html');
     $resources = theme_item_list(array('items' => $resources, 'title' => 'Filter Syntax Resources', 'type' => 'ul', 'attributes' => array()));
 
     $form['filter'] = array(

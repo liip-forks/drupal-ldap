@@ -235,12 +235,12 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
    */
 
   if (isset($user->data['ldap_authorizations'][$consumer->consumerType]) && is_array($user->data['ldap_authorizations'][$consumer->consumerType])) {
-     $user_auth_data = $user->data['ldap_authorizations'][$consumer->consumerType];
-     $initial_existing_ldap_authorizations = array_keys($user_auth_data);
+    $user_auth_data = $user->data['ldap_authorizations'][$consumer->consumerType];
+    $initial_existing_ldap_authorizations = array_keys($user_auth_data);
   }
   else {
-     $user_auth_data = array();
-     $initial_existing_ldap_authorizations = array();
+    $user_auth_data = array();
+    $initial_existing_ldap_authorizations = array();
   }
 
 
@@ -269,7 +269,8 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
     if ($consumer->consumerConf->createConsumers) {
       $consumer->createConsumers($containers_needed);
       $consumer_containers_existing = $consumer->availableConsumerIDs();  // requery in case of failure
-    } else {
+    }
+    else {
       $grants = array_diff($grants, $containers_needed);  // filter off consumer ids that don't exist and can't be created
     }
   }
@@ -352,7 +353,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
         }
         // patch 1050944
         for ($i = 0; $i < $user_attr_values['count']; $i++) {
-          $attr_lcase = strtolower($user_attr_values[$i]);
+          $attr_lcase = drupal_strtolower($user_attr_values[$i]);
           $derive_from_attr_authorizations[$attr_lcase] = $attr_lcase;
         }
       }
@@ -373,7 +374,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
  *
  * returned entries dn or cn should be used to derive authorization mappings
  *
- **/
+ */
 
   $derive_from_entry_authorizations = array();
   if ($consumer_conf->deriveFromEntry) {
