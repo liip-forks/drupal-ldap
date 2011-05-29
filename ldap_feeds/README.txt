@@ -5,7 +5,17 @@ This is a development version of an feeds fetcher and feeds parser for ldap.
 use cases
 ----------------------------------
 Move data from an ldap query into nodes, users, or other drupal structures supported by feeds.
-Feeds is a general architecture for moving data where an importer consists of a fetcher, parser, and processor.  Ldap feeds supplies the fetcher and parser such that any processor can be used (node, user, taxonomy term, and any of the processors at: http://drupal.org/node/856644)
+Feeds is a general architecture for moving data where an importer consists of a fetcher, parser, and processor.  Ldap Feeds supplies the fetcher and parser such that any processor can be used (node, user, taxonomy term, and any of the processors at: http://drupal.org/node/856644)
+
+Examples:
+-- Move course or faculty staff info into drupal nodes for directories.
+---- FeedsLdapQueryFetcher for ldap query, FeedsLdapEntryParser for parsing it into feeds format, Node Processor for creating/synching nodes.
+
+-- Synch ldap attributes with user profile data
+---- FeedsDrupalUserLdapEntryFetcher for gettling ldap data, FeedsLdapEntryParser for parsing it into feeds format, User Processor for creating/synching with drupal users.
+
+-- Provision Drupal Users with ldap query.
+---- FeedsLdapQueryFetcher for ldap query, FeedsLdapEntryParser for parsing it into feeds format, User Processor for creating/synching users.
 
 
 ----------------------------------
@@ -13,7 +23,7 @@ functionality
 ----------------------------------
 Includes 2 feeds fetchers:
 - FeedsLdapQueryFetcher for fetching generic ldap queries, configured by admins
-- (not implemented yet) FeedsLdapDrupalUserFetcher for fetching ldap entries of drupal users who are ldap authenticated or otherwise ldap associated.
+- FeedsDrupalUserLdapEntryFetcher for fetching ldap entries of drupal users who are ldap authenticated or otherwise ldap associated.
 
 Includes 1 feeds parser:
 - FeedsLdapEntryParser that converts ldap entries array returned from ldap_search() to standard feed parser result format.
