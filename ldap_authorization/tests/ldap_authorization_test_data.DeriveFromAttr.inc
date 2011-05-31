@@ -28,6 +28,7 @@
 
   $test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('cn=SYSadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'sysadmins');
   $test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('cn=netadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins');
+  $test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('cn=phone operators,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins');
 
 
   $test_data['ldap_authorization_conf']['consumer_conf']['useMappingsAsFilter'] = 1;

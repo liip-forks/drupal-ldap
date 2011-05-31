@@ -302,6 +302,36 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
 
   }
 
+/**
+previous functions just test mapping, these actually log a user on which tests other issues
+
+ */
+
+function testLogons() {
+
+
+    $conf_id = 'DeriveFromEntry';
+    $consumer_conf_admin = $this->prepTestData($conf_id);
+
+
+    // test for same role mapped multiple times:  issue #1174332
+    $test_id = 'ActualLogonDuplicateMap';
+    $edit = array(
+      'name' => 'verykool',
+      'pass' => 'goodpwd',
+    );
+    $this->drupalPost('user', $edit, t('Log in'));
+    $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', $test_id);
+    $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('verykool'), 'Ldap user properly authmapped.', $test_id);
+
+    $verykool = user_load_by_name('verykool');
+    $correct_roles = in_array('content editors', array_values($verykool->roles)) && in_array('content approvers', array_values($verykool->roles));
+    $this->assertTrue($correct_roles, 'verykool granted 2 roles on actual logon "content editors" and "content approvers" drupal roles ', $test_id . '.duplicate_entry');
+
+
+    $this->drupalGet('user/logout');
+
+}
 
 function testFlags() {
     $test_id = 'Flags';

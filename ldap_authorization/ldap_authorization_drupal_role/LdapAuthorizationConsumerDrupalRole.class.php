@@ -62,7 +62,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     $creates_lower_case = array_map('drupal_strtolower', $creates_mixed_case);
     $existing_roles_lower_case = array_map('drupal_strtolower', $existing_roles_mixed_case);
     $roles_map_lc_to_mixed_case = array_combine($creates_lower_case, $creates_mixed_case);
-    $roles_to_create = array_diff($creates_lower_case, $existing_roles_lower_case);
+    $roles_to_create =  array_unique(array_diff($creates_lower_case, $existing_roles_lower_case));
 
     // 2. create each role that is needed
     foreach ($roles_to_create as $i => $role_name_lowercase) {
