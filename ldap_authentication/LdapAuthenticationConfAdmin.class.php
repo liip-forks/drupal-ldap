@@ -47,6 +47,12 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
         for allowing ldap authentication.  Available variables are:
         $drupal_mapped_username and $user_ldap_entry  See readme.txt for more info.');
 
+    $values['excludeIfNoAuthorizationsDescription'] = t('If the user is not granted any drupal roles,
+      organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be
+      enabled for this to work.');
+
+
+
     /**
     * 3. Drupal Account Provisioning and Syncing
     */
@@ -99,6 +105,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   protected $authenticationServersOptions = array();
   protected $ldapUserHelpLinkUrlDescription;
   protected $ldapUserHelpLinkTextDescription;
+
 
   /**
    * 2.  LDAP User Restrictions
@@ -260,6 +267,16 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#description' => t($this->allowTestPhpDescription, $tokens),
     );
 
+
+    $form['restrictions']['excludeIfNoAuthorizations'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Deny access to users without authorization mappings such as Drupal roles.'),
+      '#default_value' =>  $this->excludeIfNoAuthorizations,
+      '#description' => t($this->excludeIfNoAuthorizationsDescription, $tokens),
+      '#disabled' => (boolean)(!module_exists('ldap_authorization')),
+    );
+
+
     $form['drupal_accounts'] = array(
       '#type' => 'fieldset',
       '#title' => t('Drupal User Account Creation'),
@@ -348,6 +365,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;
     $this->ldapUserHelpLinkUrl = ($values['ldapUserHelpLinkUrl']) ? (string)$values['ldapUserHelpLinkUrl'] : NULL;
     $this->ldapUserHelpLinkText = ($values['ldapUserHelpLinkText']) ? (string)$values['ldapUserHelpLinkText'] : NULL;
+    $this->excludeIfNoAuthorizations = ($values['excludeIfNoAuthorizations']) ? (int)$values['excludeIfNoAuthorizations'] : NULL;
     $this->emailOption  = ($values['emailOption']) ? (int)$values['emailOption'] : NULL;
     $this->emailUpdate  = ($values['emailUpdate']) ? (int)$values['emailUpdate'] : NULL;
 

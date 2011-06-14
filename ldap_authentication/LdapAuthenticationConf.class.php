@@ -24,6 +24,7 @@ class LdapAuthenticationConf {
   public $apiPrefs = array();
   public $createLDAPAccounts; // should an drupal account be created when an ldap user authenticates
   public $createLDAPAccountsAdminApproval; // create them, but as blocked accounts
+  public $excludeIfNoAuthorizations = LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT;
 
   /**
    * Advanced options.   whitelist / blacklist options
@@ -50,6 +51,7 @@ class LdapAuthenticationConf {
     'allowOnlyIfTextInDn',
     'excludeIfTextInDn',
     'allowTestPhp',
+    'excludeIfNoAuthorizations',
   );
 
   /** are any ldap servers that are enabled associated with ldap authentication **/
@@ -139,13 +141,30 @@ class LdapAuthenticationConf {
      * do one of the allow attribute pairs match
      */
     if (count($this->allowOnlyIfTextInDn)) {
+      $fail = TRUE;
       foreach ($this->allowOnlyIfTextInDn as $test) {
         if (strpos(drupal_strtolower($ldap_user['dn']), drupal_strtolower($test)) !== FALSE) {
-          return TRUE;
+          $fail = FALSE;
         }
       }
-      return FALSE;
+      if ($fail) {
+        return FALSE;
+      }
+
     }
+    /**
+     * is excludeIfNoAuthorizations option enabled and user not granted any groups
+     */
+
+    if ($this->excludeIfNoAuthorizations) {
+      //@todo:  does the following query account for "only apply to ldap authenticated users?"
+      // if not, there is a stalemate here
+    //  list($authorizations, $notifications) = ldap_authorizations_user_authorizations($name, 'query');
+     // if (count(array_filter(array_values($authorizations))) == 0) {
+    //    return FALSE;
+    //  }
+    }
+
 
     /**
      * default to allowed

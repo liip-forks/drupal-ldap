@@ -179,7 +179,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       return FALSE; // don't bother authenticating if account doesn't exists and account creation not allowed
     }
     if ($detailed_watchdog_log) {
-      watchdog('ldap_authentication', '%username : Exisitng Drupal User Account not found.  Continuing on to attempt ldap authentication', $watchdog_tokens, WATCHDOG_DEBUG);
+      watchdog('ldap_authentication', '%username : Existing Drupal User Account not found.  Continuing on to attempt ldap authentication', $watchdog_tokens, WATCHDOG_DEBUG);
     }
   }
   foreach ($auth_conf->servers as $sid => $ldap_server) {
@@ -242,7 +242,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
         watchdog('ldap_authentication', '%username : Trying server %sid where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
         $watchdog_tokens['%err_text'] = NULL;
       }
-      $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_BIND;
+      $authentication_result = ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_USER) ? LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS : LDAP_AUTHENTICATION_RESULT_FAIL_BIND;
       continue; // next server, please
     }
 
