@@ -19,7 +19,9 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid) {
   }
 }
 
-
+/**
+ * param @type = all, enabled
+ */
 function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
   require_once('LdapServerAdmin.class.php');
   static $servers;
@@ -31,6 +33,7 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
     $servers['all'] = LdapServerAdmin::getLdapServerObjects('all');
   }
   if (!isset($servers['enabled'])) {
+    $servers['enabled'] = array();
     foreach ($servers['all'] as $_sid => $ldap_server) {
       if ($ldap_server->status == 1) {
         $servers['enabled'][$_sid] = $ldap_server;
