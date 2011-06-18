@@ -72,8 +72,10 @@ class LdapAuthenticationConf {
           $this->{$property} = $saved[$property];
         }
       }
-      foreach ($this->sids as $sid) {
-        $this->servers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
+      foreach ($this->sids as $sid => $is_enabled) {
+        if ($is_enabled) {
+          $this->servers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
+        }
       }
     }
     else {
