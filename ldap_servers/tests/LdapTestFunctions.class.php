@@ -13,14 +13,13 @@
 
 class LdapTestFunctions  {
 
-  function prepTestServers($sid, $data) {
-    $current_sids = variable_get('ldap_test_servers', array());
-    if (! in_array($sid, $current_sids)) {
-      $current_sids[] = $sid;
-      variable_set('ldap_test_servers', $current_sids);
+  function prepTestServers($servers) {
+    $current_sids = array();
+    foreach ($servers as $sid => $server_data) {
+      $current_sids[$sid] = $sid;
+      variable_set('ldap_test_server__' . $sid, $server_data);
     }
-    variable_set('ldap_test_server__' . $sid, $data);
-
+    variable_set('ldap_test_servers', $current_sids);
   }
 
 
@@ -41,17 +40,17 @@ class LdapTestFunctions  {
   function removeTestServers($sids = NULL) {
 
     $current_sids = variable_get('ldap_test_servers', array());
-
+    $remaining_sids = $current_sids;
     if (! $sids) {
       $sids = $current_sids;
     }
     elseif (is_scalar($sids)) {
       $sids = array($sids);
     }
-    foreach ($sids as $sid) {
+    foreach ($sids as $sid => $discard) {
       variable_del('ldap_authorization_test_server__' . $sid);  // remove fake server configuation
+      unset($remaining_sids[$sid]);
     }
-    $remaining_sids = array_diff($current_sids, $sids);
     variable_set('ldap_test_servers', $remaining_sids);
   }
 

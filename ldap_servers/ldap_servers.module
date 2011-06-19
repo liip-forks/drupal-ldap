@@ -226,7 +226,8 @@ function ldap_servers_cache_clear() {
  * @param enum $type 'all', 'enabled',
  * @param boolean $flatten signifies if array or single object returned.  Only works if sid is specified
  * @param boolean $reset do not use cached or static result
- * @return array of server conf object keyed on sid or single server conf object (if flatten == TRUE)
+ * @return - array of server conf object keyed on sid
+ *         - single server conf object (if flatten == TRUE)
  */
 function ldap_servers_get_servers($sid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
   require_once('ldap_servers.inc');

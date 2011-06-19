@@ -52,7 +52,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
 
     // create fake ldap server configuration instance
     include(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapServerTestData.' . $consumer_conf['sid'] . '.inc');
-    $this->testFunctions->prepTestServers($consumer_conf['sid'],  $test_data['server']);
+    $this->testFunctions->prepTestServers($test_data['servers']);
 
 
     if (isset($test_data['ldap_authentication'])) {

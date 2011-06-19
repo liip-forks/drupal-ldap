@@ -108,7 +108,6 @@ class FeedsDrupalUserLdapEntryFetcher extends FeedsFetcher {
   public function fetch(FeedsSource $source) {
     $source_config = $source->getConfigFor($this);
     $result = new FeedsDrupalUserLdapEntryFetcherResult($source_config);
-   //dpm('FeedsLdapQueryFetcherResult'); dpm($result);
     return $result;
   }
 
@@ -118,7 +117,6 @@ class FeedsDrupalUserLdapEntryFetcher extends FeedsFetcher {
    * Override parent::configForm().
    */
   public function sourceForm($source_config) {
-    //dpm($source_config);
     $available_user_attributes = explode(',',LDAP_FEEDS_DRUPAL_USER_FETCHER_USER_ATTR);
     $filterRoles = isset($source_config['filters']['filterRoles']) ? $source_config['filters']['filterRoles'] : array();
     $filterLdapAuthenticated = isset($source_config['filters']['filterLdapAuthenticated']) ? $source_config['filters']['filterLdapAuthenticated'] : LDAP_FEEDS_DRUPAL_USER_FETCHER_FILTER_AUTHENTICATED;

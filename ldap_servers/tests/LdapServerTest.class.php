@@ -199,12 +199,15 @@ class LdapServerTest extends LdapServer {
 
     $server_ids = variable_get('ldap_test_servers', array());
     $servers = array();
-    foreach ($server_ids as $i => $sid) {
+    foreach ($server_ids as $sid => $_sid) {
       $server_data = variable_get('ldap_test_server__' . $sid, array());
       $servers[$sid] = new LdapServerTest($server_data);
     }
+
     return $servers;
 
   }
+
+
 
 }

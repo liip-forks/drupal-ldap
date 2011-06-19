@@ -20,7 +20,7 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid) {
 }
 
 /**
- * param @type = all, enabled
+ * see ldap_servers_get_servers()
  */
 function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
   require_once('LdapServerAdmin.class.php');
@@ -53,19 +53,20 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
   }
 }
 
+/**
+ * see ldap_servers_get_servers()
+ */
 function _ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset = TRUE) {
   require_once('tests/LdapServerTest.class.php');
 
   $servers['all'] = LdapServerTest::getLdapServerObjects('all');
-  if (!isset($servers['enabled'])) {
-    foreach ($servers['all'] as $_sid => $ldap_server) {
-      if ($ldap_server->status == 1) {
-        $servers['enabled'][$_sid] = $ldap_server;
-      }
 
-
+  foreach ($servers['all'] as $_sid => $ldap_server) {
+    if ($ldap_server->status == 1) {
+      $servers['enabled'][$_sid] = $ldap_server;
     }
   }
+
 
   if ($sid) {
     if (!isset($servers[$type][$sid])) {

@@ -14,25 +14,29 @@ class LdapServerAdmin extends LdapServer {
 
   public $bindpw_new = FALSE;
   public $bindpw_clear = FALSE;
+
+  /**
+   * @param $type = 'all', 'enabled'
+   */
   public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServer') {
-  $select = db_select('ldap_servers', 'ldap_servers');
-  $select->fields('ldap_servers');
-  try {
-    $servers = $select->execute()->fetchAllAssoc('sid',  PDO::FETCH_ASSOC);
+    $select = db_select('ldap_servers', 'ldap_servers');
+    $select->fields('ldap_servers');
+    try {
+      $servers = $select->execute()->fetchAllAssoc('sid',  PDO::FETCH_ASSOC);
+    }
+    catch (Exception $e) {
+      drupal_set_message(t('server index query failed. Message = %message, query= %query',
+        array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
+      return array();
+    }
+    foreach ($servers as $sid => $server) {
+      $servers[$sid] = ($class == 'LdapServer') ? new LdapServer($sid) : new LdapServerAdmin($sid);
+    }
+
+    return $servers;
 
   }
-  catch (Exception $e) {
-    drupal_set_message(t('server index query failed. Message = %message, query= %query',
-      array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
-    return array();
-  }
-  foreach ($servers as $sid => $server) {
-    $servers[$sid] = ($class == 'LdapServer') ? new LdapServer($sid) : new LdapServerAdmin($sid);
-  }
 
-  return $servers;
-
-}
   function __construct($sid) {
     parent::__construct($sid);
   }

@@ -94,9 +94,7 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
 
     $results = array();
     foreach ($this->basedn as $i => $basedn) {
-      $result = $this->LdapServer->search($basedn, $this->filter, $this->attributes, 0, $this->sizelimit);  // , $this->attributes
-    //  dpm("basedn ". $basedn); dpm($this->filter); dpm($this->attributes); dpm($result);
-
+      $result = $this->LdapServer->search($basedn, $this->filter, $this->attributes, 0, $this->sizelimit);
       $results = array_merge($results, $result);
     }
 
@@ -118,7 +116,6 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
   public function fetch(FeedsSource $source) {
     $source_config = $source->getConfigFor($this);
     $result = new FeedsLdapQueryFetcherResult($source_config);
-   //dpm('FeedsLdapQueryFetcherResult'); dpm($result);
     return $result;
   }
 
@@ -128,7 +125,6 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
    * Override parent::configForm().
    */
   public function sourceForm($source_config) {
-   // dpm($source_config);
     $servers = ldap_servers_get_servers(NULL, 'enabled');
     foreach ($servers as $sid => $server) {
       $server_options[$sid] = $server->name;
@@ -181,9 +177,7 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
     );
 
     if ($sid) {
-    //  dpm('server_basedn'); dpm($server_basedn); dpm($basedn);
       $server_basedn = $basedn;
-
       $form['basedn']['#description'] .= '<br/>' . t('Current!sid server base dns are', array('!sid' => $sid)) . '<br/><code><pre>' .
         $server_basedn . '</pre></code>';
     }

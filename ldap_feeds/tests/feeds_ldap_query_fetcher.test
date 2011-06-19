@@ -48,7 +48,7 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
     $this->testFunctions = new LdapTestFunctions();
     // create fake ldap server configuration instance
     include(drupal_get_path('module', 'ldap_feeds') . '/tests/LdapServerTestData.inc');
-    $this->testFunctions->prepTestServers('ldapfeeds',  $test_data['server']);
+    $this->testFunctions->prepTestServers($test_data['servers']);
 
   }
 

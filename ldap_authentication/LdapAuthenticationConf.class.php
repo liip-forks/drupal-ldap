@@ -77,6 +77,7 @@ class LdapAuthenticationConf {
           $this->servers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
         }
       }
+
     }
     else {
       $this->inDatabase = FALSE;

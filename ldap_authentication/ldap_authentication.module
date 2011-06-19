@@ -181,6 +181,7 @@ function ldap_authentication_ldap_authenticated($user) {
  */
 
 function ldap_authentication_get_valid_conf() {
+
   static $auth_conf;
   if (is_object($auth_conf)) {
     return $auth_conf;

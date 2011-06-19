@@ -15,7 +15,7 @@ $test_data = array();
  * $test_data['properties'] are all the initial properties of the instantiated LdapServerTest object
  */
 
-$test_data['server']['properties']  = array(
+$test_data['servers']['ldapauthen1']['properties']  = array(
 
     'sid' => 'ldapauthen1',
     'name'  => 'Test LDAP Server 1 for LDAP Authentication' ,
@@ -55,15 +55,15 @@ $test_data['server']['properties']  = array(
  * is expected to return
  */
 
-$test_data['server']['methodResponses']['connect'] = LDAP_SUCCESS;
+$test_data['servers']['ldapauthen1']['methodResponses']['connect'] = LDAP_SUCCESS;
 
-$test_data['server']['search_results']['member=cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
+$test_data['servers']['ldapauthen1']['search_results']['member=cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
     0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     1 => array('count' => 1, 'dn' => 'ou=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     'count' => 2,
   );
 
-$test_data['server']['search_results']['member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
+$test_data['servers']['ldapauthen1']['search_results']['member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
     0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     'count' => 1,
   );
@@ -71,7 +71,7 @@ $test_data['server']['search_results']['member=cn=jkool,ou=guest accounts,dc=ad,
 /**
  * fake user data array below 'attr' should mimick ldap user result data
  */
-$test_data['server']['users']['cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+$test_data['servers']['ldapauthen1']['users']['cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jdoe', 'count' => 1),
@@ -79,7 +79,7 @@ $test_data['server']['users']['cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,
   );
 
 
-$test_data['server']['users']['cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+$test_data['servers']['ldapauthen1']['users']['cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'jkool@guests.myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jkool', 'count' => 1),
@@ -87,7 +87,7 @@ $test_data['server']['users']['cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,
     'memberOf' => array( 0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
   );
 
-$test_data['server']['users']['cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+$test_data['servers']['ldapauthen1']['users']['cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'unkool@nowhere.myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jkool', 'count' => 1),
@@ -95,7 +95,7 @@ $test_data['server']['users']['cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu'][
     'memberOf' => array( 0 => 'cn=unknown_people,ou=nowhere,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
   );
 
-$test_data['server']['users']['cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+$test_data['servers']['ldapauthen1']['users']['cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'verykool@myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'verykool', 'count' => 1),
@@ -111,7 +111,7 @@ $test_data['server']['users']['cn=verykool,ou=special guests,ou=guest accounts,d
 /**
  * test users should include service account if one is being used
  */
-$test_data['server']['users']['cn=service-account,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+$test_data['servers']['ldapauthen1']['users']['cn=service-account,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=service-account,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'service-account@myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'service-account', 'count' => 1),
@@ -128,7 +128,7 @@ $test_data['server']['users']['cn=service-account,dc=ad,dc=myuniveristy,dc=edu']
  */
 
 $test_data['ldap_authentication']['MixedModeUserLogon'] = array(
-    'sids' => array('ldapauthen1'),
+    'sids' => array('ldapauthen1' => 'ldapauthen1'),
     'authenticationMode' => LDAP_AUTHENTICATION_MIXED,
     'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
     'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
@@ -142,7 +142,7 @@ $test_data['ldap_authentication']['MixedModeUserLogon'] = array(
   );
 
 $test_data['ldap_authentication']['ExclusiveModeUserLogon'] = array(
-    'sids' => array('ldapauthen1'),
+    'sids' => array('ldapauthen1' => 'ldapauthen1'),
     'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
     'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
     'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
