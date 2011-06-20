@@ -46,6 +46,8 @@ define('LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR',          4);
 
 define('LDAP_AUTHENTICATION_HELP_LINK_TEXT_DEFAULT', 'Logon Help');
 
+define('LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG' , 'The site logon is currently not working due to a configuration error.  Please see logs for additional details.');
+
 /**
  * Implements hook_menu().
  */

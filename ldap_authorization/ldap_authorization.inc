@@ -38,12 +38,12 @@ function ldap_authorization_help_watchdog() {  // remove after testing
  * @param object $user
  *
  * @param string $op =
- *   set -- grant authorizations and return authorizations
+ *   set -- grant authorizations (store in db) and return authorizations
  *   test_query -- don't grant authorization, just query and return authorizations.  assume user is ldap authenticated and exists
  *   query -- don't grant authorization, just query and return authorizations
  *
  * @param string $consumer_type e.g. drupal_roles
- * @param string $context  'logon'
+ * @param string $context  'logon', 'test_if_authorizations_granted'
  *
  * @return
  *
@@ -82,7 +82,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
   /**
    * determine if user is ldap authenticated
    */
-  if ($op == 'test_query' && @$user->ldap_test == TRUE) {
+  if ($context == 'test_if_authorizations_granted' || ($op == 'test_query' && @$user->ldap_test == TRUE)) {
     $ldap_authenticated = $user->ldap_authenticated;  // property 'ldap_authenticated' only exists for fake user objects
   }
   else {

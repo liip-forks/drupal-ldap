@@ -142,8 +142,8 @@ function _ldap_authorization_admin_parse_form($form, &$form_state) {
       $new = TRUE;
     break;
 
-    case 'edit':
-      $op_past_tense = 'Edited';
+    case 'update':
+      $op_past_tense = 'Updated';
       $new = FALSE;
     break;
 

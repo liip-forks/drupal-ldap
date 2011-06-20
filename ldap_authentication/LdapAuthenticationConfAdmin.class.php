@@ -36,16 +36,16 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
      */
 
     $values['allowOnlyIfTextInDnDescription'] = t('A list of text such as ou=education
-      or cn=barclay that at least one of be found in users cn string.  Enter one per line
+      or cn=barclay that at least one of be found in user\'s dn string.  Enter one per line
       such as <pre>ou=education') . "\n" . t('ou=engineering</pre>   This test will be case insensitive.');
 
     $values['excludeIfTextInDnDescription'] = t('A list of text such as ou=evil
-      or cn=bad that if found in a users cn, exclude them from ldap authentication.
+      or cn=bad that if found in a user\'s dn, exclude them from ldap authentication.
       Enter one per line such as <pre>ou=evil') . "\n" . t('cn=bad</pre> This test will be case insensitive.');
 
-    $values['allowTestPhpDescription'] = t('PHP code which should return boolean
-        for allowing ldap authentication.  Available variables are:
-        $drupal_mapped_username and $user_ldap_entry  See readme.txt for more info.');
+    $values['allowTestPhpDescription'] = t('PHP code which should print 1
+        for allowing ldap authentication or 0 for not allowed.  Available variables are:
+        $name and $ldap_user_entry  See readme.txt for more info.');
 
     $values['excludeIfNoAuthorizationsDescription'] = t('If the user is not granted any drupal roles,
       organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be
@@ -265,12 +265,16 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#cols' => 50,
       '#rows' => 3,
       '#description' => t($this->allowTestPhpDescription, $tokens),
+      '#disabled' => (boolean)(!module_exists('php')),
     );
+    if (!module_exists('php')) {
+      $form['restrictions']['allowTestPhp']['#title'] .= ' <em>'. t('php module currently disabled') .'</em>';
+    }
 
 
     $form['restrictions']['excludeIfNoAuthorizations'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Deny access to users without authorization mappings such as Drupal roles.'),
+      '#title' => t('New and lightly tested feature. Use with caution!  Requires LDAP Authorization to be enabled and configured.  Deny access to users without Ldap Authorization Module authorization mappings such as Drupal roles.'),
       '#default_value' =>  $this->excludeIfNoAuthorizations,
       '#description' => t($this->excludeIfNoAuthorizationsDescription, $tokens),
       '#disabled' => (boolean)(!module_exists('ldap_authorization')),

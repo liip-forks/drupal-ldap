@@ -139,19 +139,28 @@ function ldap_authorization_theme() {
  * @return consumer object
  */
 function ldap_authorization_get_consumer_object($consumer_type) {
-  if ($consumer = @ldap_authorization_get_consumers($consumer_type, FALSE, TRUE)) {
-    $path = drupal_get_path('module', $consumer['consumer_module']) . '/' . $consumer['consumer_class_file'];
-    require_once(drupal_get_path('module', $consumer['consumer_module']) . '/' . $consumer['consumer_class_file']);
-    $class = $consumer['consumer_class_name'];
-    $consumer_obj = new $class($consumer_type);
-    $consumer_obj->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
-    return $consumer_obj;
-  }
+    $consumer = @ldap_authorization_get_consumers($consumer_type, TRUE, TRUE);
+    if (is_array($consumer)) {
+      $path = drupal_get_path('module', $consumer['consumer_module']) . '/' . $consumer['consumer_class_file'];
+      require_once(drupal_get_path('module', $consumer['consumer_module']) . '/' . $consumer['consumer_class_file']);
+      $class = $consumer['consumer_class_name'];
+      $consumer_obj = new $class($consumer_type);
+      $consumer_obj->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
+      return $consumer_obj;
+    }
   else {
     return FALSE;
   }
 }
 
+/**
+ * @param string $consumer_type is machine name of consumer type such as "drupal_role"
+ * @param boolean $reset signifies clear static variable
+ * @param boolean $flatten signies return individual consumer not keyed on consumer type
+ *
+ * @return array (1) if $faltten is true, consumer configuration array
+ *   otherwise (2) associative array of consumer configurations keyed on consumer type such as "drupal_role"
+ */
 function ldap_authorization_get_consumers($consumer_type = NULL, $reset = FALSE, $flatten = FALSE) {
   static $consumers;
   if ($reset || !is_array($consumers)) {
@@ -161,6 +170,7 @@ function ldap_authorization_get_consumers($consumer_type = NULL, $reset = FALSE,
     return $consumers[$consumer_type];
   }
   else {
+
     return $consumers;
   }
 }

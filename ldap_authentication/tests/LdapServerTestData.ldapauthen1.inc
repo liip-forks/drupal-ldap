@@ -139,6 +139,7 @@ $test_data['ldap_authentication']['MixedModeUserLogon'] = array(
     'allowOnlyIfTextInDn' => NULL,
     'excludeIfTextInDn' => NULL,
     'allowTestPhp' => NULL,
+    'excludeIfNoAuthorizations' => LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT,
   );
 
 $test_data['ldap_authentication']['ExclusiveModeUserLogon'] = array(
@@ -153,4 +154,53 @@ $test_data['ldap_authentication']['ExclusiveModeUserLogon'] = array(
     'allowOnlyIfTextInDn' => NULL,
     'excludeIfTextInDn' => NULL,
     'allowTestPhp' => NULL,
+    'excludeIfNoAuthorizations' => LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT,
   );
+
+$test_data['ldap_authentication']['WL1'] = array(
+    'sids' => array('ldapauthen1' => 'ldapauthen1'),
+    'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
+    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
+    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
+    'ldapUserHelpLinkUrl' => '',
+    'ldapUserHelpLinkText' => '',
+    'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
+    'emailUpdate' => LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE,
+    'allowOnlyIfTextInDn' => NULL,
+    'excludeIfTextInDn' => NULL,
+    'allowTestPhp' => NULL,
+    'excludeIfNoAuthorizations' => 0,
+  );
+
+$test_data['ldap_authorization_conf']['consumer_conf']['sid'] = 'ldapauthen1';
+
+$test_data['ldap_authorization_conf']['consumer_conf']['consumerType'] = 'drupal_role';  // change as desired
+$test_data['ldap_authorization_conf']['consumer_conf']['consumerModule'] = 'ldap_authorization_drupal_role';
+
+$test_data['ldap_authorization_conf']['consumer_conf']['description'] = 'UIUC AD';
+$test_data['ldap_authorization_conf']['consumer_conf']['status'] = 1;
+$test_data['ldap_authorization_conf']['consumer_conf']['onlyApplyToLdapAuthenticated'] = 1;
+
+$test_data['ldap_authorization_conf']['consumer_conf']['deriveFromDn'] = 1;
+$test_data['ldap_authorization_conf']['consumer_conf']['deriveFromDnAttr'] = 'ou';
+
+$test_data['ldap_authorization_conf']['consumer_conf']['deriveFromAttr'] = 0;
+$test_data['ldap_authorization_conf']['consumer_conf']['deriveFromAttrAttr'] = array();
+
+$test_data['ldap_authorization_conf']['consumer_conf']['deriveFromEntry'] = 0;
+$test_data['ldap_authorization_conf']['consumer_conf']['deriveFromEntryEntries'] = NULL;
+$test_data['ldap_authorization_conf']['consumer_conf']['deriveFromEntryAttr'] = NULL;
+
+$test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('Campus Accounts', 'campus accounts');
+$test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('guest accounts', 'guests');
+$test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('special guests', 'special guests');
+$test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'sysadmins');
+
+$test_data['ldap_authorization_conf']['consumer_conf']['useMappingsAsFilter'] = 1;
+
+$test_data['ldap_authorization_conf']['consumer_conf']['synchOnLogon'] = 1;
+$test_data['ldap_authorization_conf']['consumer_conf']['synchManually'] = 1;
+
+$test_data['ldap_authorization_conf']['consumer_conf']['revokeLdapProvisioned'] = 1;
+$test_data['ldap_authorization_conf']['consumer_conf']['createConsumers'] = 1;
+$test_data['ldap_authorization_conf']['consumer_conf']['regrantLdapProvisioned'] = 1;
