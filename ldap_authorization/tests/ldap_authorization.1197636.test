@@ -1,0 +1,112 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * simpletests for ldap authorization
+ *
+ */
+require_once(drupal_get_path('module', 'ldap_servers') . '/tests/LdapTestFunctions.class.php');
+require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizationConsumerConfAdmin.class.php');
+
+class LdapAuthorizationTestCase1197636 extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'LDAP Authorization Tests: Issue #1197636',
+      'description' => 'ldap authorization. Issue #1197636.  User cannot logon with ldap authorization enabled.',
+      'group' => 'LDAP Authorization'
+    );
+  }
+
+  public $module_name = 'ldap_authorization';
+  public $testFunctions;
+
+  function setUp() {
+    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role')); // don't need any real servers, configured, just ldap_servers code base
+    variable_set('ldap_simpletest', 1);
+    variable_set('ldap_help_watchdog_detail', 0);
+  }
+
+
+  function tearDown() {
+    parent::tearDown();
+    variable_del('ldap_help_watchdog_detail');
+    variable_del('ldap_simpletest');
+  }
+
+
+  /**
+   * prepTestData create an ldap_authorization configuration and stores fake ldap server configuration.
+   *
+   * @param string $testid the name of the test.  used to determine which configuration file to include
+   * @return object consumer configuration object (class = LdapAuthorizationConsumerConfAdmin)
+   *
+   */
+  function prepTestData($testid) {
+    $this->testFunctions = new LdapTestFunctions();
+    include(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapServerTestData.' . $testid . '.inc');
+    $consumer_conf = $test_data['ldap_authorization_conf']['consumer_conf'];
+
+    // create fake ldap server configuration instance
+    $this->testFunctions->prepTestServers($test_data['servers']);
+
+
+    if (isset($test_data['ldap_authentication'])) {
+      $this->testFunctions->configureAuthentication($test_data['ldap_authentication']);
+    }
+
+    // create consumer authorization configuration.
+    $consumer_obj = ldap_authorization_get_consumer_object($consumer_conf['consumerType']);
+    $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj, TRUE);
+    foreach ($consumer_conf as $property_name => $property_value) {
+      $consumer_conf_admin->{$property_name} = $property_value;
+    }
+    $consumer_conf_admin->save();
+    return $consumer_conf_admin;
+  }
+
+
+  function removeTestData($testid) {
+    include(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapServerTestData.' . $testid . '.inc');
+    $consumer_conf = $test_data['ldap_authorization_conf']['consumer_conf'];
+    $consumer_obj = ldap_authorization_get_consumer_object($consumer_conf['consumerType']);
+    $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj);
+    $this->testFunctions->removeTestServers($consumer_conf['sid']);
+    return $consumer_conf_admin->delete();
+  }
+
+
+
+/**
+ * authorizations are tested in ldap_authorization.Derivations.test
+ *
+ * this is geared toward testing logon functionality
+ */
+
+  function testLogons() {
+
+    $test_id = '1197636';
+    $discard = $this->prepTestData($test_id);
+
+    $edit = array(
+      'name' => 'verykool',
+      'pass' => 'goodpwd',
+    );
+    $this->drupalPost('user', $edit, t('Log in'));
+    $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', $test_id);
+    $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('verykool'), 'Ldap user properly authmapped.', $test_id);
+
+    $verykool = user_load_by_name('verykool');
+    $this->assertTrue((is_object($verykool) && @(int)$verykool->uid > 1), 'Ldap user exists with uid > 1.', $test_id);
+
+
+    $correct_roles = in_array('netadmins', array_values($verykool->roles));
+    $this->assertTrue($correct_roles, 'verykool granted  roles on actual logon "netadmins" drupal roles ', $test_id);
+
+
+    $this->drupalGet('user/logout');
+
+  }
+
+
+}

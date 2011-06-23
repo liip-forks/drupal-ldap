@@ -45,7 +45,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
     $values['allowTestPhpDescription'] = t('PHP code which should print 1
         for allowing ldap authentication or 0 for not allowed.  Available variables are:
-        $name and $ldap_user_entry  See readme.txt for more info.');
+        $_name and $_ldap_user_entry  See readme.txt for more info.');
 
     $values['excludeIfNoAuthorizationsDescription'] = t('If the user is not granted any drupal roles,
       organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be

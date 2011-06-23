@@ -6,6 +6,16 @@
  * simpletest for ldap aservers
  *
  */
+
+
+/** could replace mock server class with overriding ldap_* functions
+ *
+ *  the following functions would be candidates for overriding:
+ *  ldap_bind,  ldap_connect, ldap_search,
+ *  ldap_errno, ldap_err2str
+ *
+ */
+
 require_once('LdapTestFunctions.class.php');
 class LdapServersTestCase extends DrupalWebTestCase {
   public static function getInfo() {
