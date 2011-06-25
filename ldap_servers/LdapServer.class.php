@@ -44,7 +44,7 @@ class LdapServer {
 
   public $inDatabase = FALSE;
 
-  protected $connection;
+  public $connection;
   // direct mapping of db to object properties
   public static function field_to_properties_map() {
     return array( 'sid' => 'sid',
