@@ -50,21 +50,22 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
     $variables = array();
     $authentication = array();
     $authorization = array();
-
+    $this->testFunctions = new LdapTestFunctions();
     if ($this->useFeatureData) {
-    //   require_once($this->featuresPath . '/' . $this->featureName . '.ldap_authorization.inc')
-      if (
-           (module_enable('ctools') || module_enable('ctools'))
-          && (module_exists('strongarm') || module_enable('strongarm'))
-          && (module_enable('features') || module_enable('features'))
-         ) {
-
-        module_enable($this->featureName);
+       module_enable(array('ctools'), TRUE);
+       module_enable(array('strongarm'), TRUE);
+       module_enable(array('features'), TRUE);
+       module_enable(array($this->featureName), TRUE);
         // will need to set non exportables such as bind password also
-      }
-      else {
+        // also need to create fake ldap server data.  use
+      debug("features:" . module_exists('features') ."-". $this->featureName . ": ". module_exists($this->featureName));
+      if (! (module_exists('ctools') && module_exists('strongarm') && module_exists('features') && module_exists('$this->featureName')) ) {
         drupal_set_message(t('Features and Strongarm modules must be available to use Features as configuratio of simpletests'), 'warning');
       }
+      include(drupal_get_path('module', 'ldap_authorization') . '/tests/' . $this->serversData);
+      $this->testData['servers'] = $servers;
+      // make included fake sid match feature sid
+      $this->testFunctions->prepTestConfiguration($this->testData);
     }
     else {
       include(drupal_get_path('module', 'ldap_authorization') . '/tests/' . $this->authorizationData);
@@ -89,11 +90,11 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
         $this->testData['authentication']['sids'] = array($this->sid => $this->sid);
         $this->testData['servers'][$this->sid]['sid'] = $this->sid;
       }
-
-      $this->testFunctions = new LdapTestFunctions();
       $this->testFunctions->prepTestConfiguration($this->testData);
-
     }
+
+
+
   }
 
 }

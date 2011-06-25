@@ -519,6 +519,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
     $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu');
     $this->assertText(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG, t('Authentication prohibited when excludeIfNoAuthorizations = true and LDAP Authorization disabled. LDAP_authen.WL1.excludeIfNoAuthorizations.failsafe'), $testid);
 
+    module_enable(array('ldap_authorization_drupal_role'), TRUE);
     $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu');
     $this->assertText(t('Member for'), 'User able to authenticate because of excludeIfNoAuthorizations setting.', $testid);
 

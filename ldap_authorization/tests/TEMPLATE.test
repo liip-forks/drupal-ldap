@@ -11,17 +11,18 @@ class LdapAuthorizationTestCaseTEMPLATE extends LdapAuthorizationTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'LDAP Authorization Tests: Issue #1197636',
-      'description' => 'ldap authorization. Issue #1197636.  User cannot logon with ldap authorization enabled.',
+      'name' => 'LDAP Authorization Tests: Issue #NNNNN',
+      'description' => 'Test case for using features to store configuration data for simpletests.',
       'group' => 'LDAP Authorization'
     );
   }
 
   function testLogon() {
-    $this->ldapTestId = 'Issue #1197636';
+    $this->ldapTestId = 'TEMPLATE test case';
     $this->useFeatureData = TRUE;
     $this->featurePath = drupal_get_path('module', 'ldap_authorization') . '/tests/ldap_authorization_simpletest';
-    $this->featureName = 'ldap_authorization_simpletest';
+    $this->featureName = 'ldap_authorization_simplettest';
+    $this->serversData = 'ldapauthor1.ldap_server.test_data.inc';
 
     $this->prepTestData();
 

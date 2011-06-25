@@ -24,8 +24,10 @@ class LdapTestFunctions  {
       $this->prepConsumerConf($test_data['authorization']);
     }
 
-    foreach ($test_data['variables'] as $name => $value) {
-      variable_set($name, $value);
+    if (isset($test_data['variables'])) {
+      foreach ($test_data['variables'] as $name => $value) {
+        variable_set($name, $value);
+      }
     }
   }
 
