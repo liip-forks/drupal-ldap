@@ -187,7 +187,7 @@ class LdapAuthenticationConf {
       foreach ($consumers as $consumer_type => $consumer_config) {
 
         $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
-        if ($consumer_obj->status) {
+        if ($consumer_obj->consumerConf->status) {
           $has_enabled_consumers = TRUE;
           list($authorizations, $notifications) = ldap_authorizations_user_authorizations($user, 'query', $consumer_type, 'test_if_authorizations_granted');
           if (count(array_filter(array_values($authorizations))) > 0) {
