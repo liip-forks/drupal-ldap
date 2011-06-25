@@ -13,6 +13,22 @@
 
 class LdapTestFunctions  {
 
+  function prepTestConfiguration($test_data) {
+    $this->prepTestServers($test_data['servers']);
+
+    if (isset($test_data['authentication'])) {
+      $this->configureAuthentication($test_data['authentication']);
+    }
+
+    if (isset($test_data['authorization'])) {
+      $this->prepConsumerConf($test_data['authorization']);
+    }
+
+    foreach ($test_data['variables'] as $name => $value) {
+      variable_set($name, $value);
+    }
+  }
+
   function prepTestServers($servers) {
     $current_sids = array();
     foreach ($servers as $sid => $server_data) {
@@ -37,21 +53,16 @@ class LdapTestFunctions  {
   }
 
 
-  function removeTestServers($sids = NULL) {
-
-    $current_sids = variable_get('ldap_test_servers', array());
-    $remaining_sids = $current_sids;
-    if (! $sids) {
-      $sids = $current_sids;
+  function prepConsumerConf($consumer_confs) {
+    // create consumer authorization configuration.
+    foreach ($consumer_confs as $consumer_type => $consumer_conf) {
+      $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
+      $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj, TRUE);
+      foreach ($consumer_conf as $property_name => $property_value) {
+        $consumer_conf_admin->{$property_name} = $property_value;
+      }
+      $consumer_conf_admin->save();
     }
-    elseif (is_scalar($sids)) {
-      $sids = array($sids);
-    }
-    foreach ($sids as $sid => $discard) {
-      variable_del('ldap_authorization_test_server__' . $sid);  // remove fake server configuation
-      unset($remaining_sids[$sid]);
-    }
-    variable_set('ldap_test_servers', $remaining_sids);
   }
 
 

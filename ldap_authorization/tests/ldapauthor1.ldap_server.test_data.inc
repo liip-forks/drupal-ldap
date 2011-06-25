@@ -1,23 +1,6 @@
 <?php
-// $Id: LdapServerTest.class.inc,v 1.4.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
-/**
- * @file
- * test configurations for LdapServerTest.class.php
- * file name should be of form LdapServerTestData.<sid>.inc
- * where sid is the server id data is used for.
- *
- */
-
-$test_data = array();
-
-/**
- * $test_data['properties'] are all the initial properties of the instantiated LdapServerTest object
- */
-
-$test_data['servers']['ldapauthor1']['properties']  = array(
-
-    'sid' => 'ldapauthor1',
+$servers['ldapauthor1']['properties']  = array(
     'name'  => 'Test LDAP Server 1 for LDAP Authorization' ,
     'inDatabase' => TRUE,
     'status'  => 1,
@@ -38,32 +21,19 @@ $test_data['servers']['ldapauthor1']['properties']  = array(
     'mail_attr'  => 'mail',
     'ldapToDrupalUserPhp'  => NULL,
     'testingDrupalUsername'  => 'jdoe'
-
   );
 
-/**
- *
- * method responses are stored in array $test_data['methodResponses']
- * where keys are:
- * <method_name>
- * parameter1,
- * parameter2,
- * ...
- *
- * and value is the response test ldap server is expected to return. values
- * can be scalar, array, object, etc, depending on what the method being mimicked
- * is expected to return
- */
 
-$test_data['servers']['ldapauthor1']['methodResponses']['connect'] = LDAP_SUCCESS;
 
-$test_data['servers']['ldapauthor1']['search_results']['member=cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
+$servers['ldapauthor1']['methodResponses']['connect'] = LDAP_SUCCESS;
+
+$servers['ldapauthor1']['search_results']['member=cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
     0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     1 => array('count' => 1, 'dn' => 'ou=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     'count' => 2,
   );
 
-$test_data['servers']['ldapauthor1']['search_results']['member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
+$servers['ldapauthor1']['search_results']['member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
     0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     'count' => 1,
   );
@@ -71,7 +41,7 @@ $test_data['servers']['ldapauthor1']['search_results']['member=cn=jkool,ou=guest
 /**
  * fake user data array below 'attr' should mimick ldap user result data
  */
-$test_data['servers']['ldapauthor1']['users']['cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+$servers['ldapauthor1']['users']['cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jdoe', 'count' => 1),
@@ -79,7 +49,7 @@ $test_data['servers']['ldapauthor1']['users']['cn=jdoe,ou=campus accounts,dc=ad,
   );
 
 
-$test_data['servers']['ldapauthor1']['users']['cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+$servers['ldapauthor1']['users']['cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'jkool@guests.myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jkool', 'count' => 1),
@@ -87,7 +57,7 @@ $test_data['servers']['ldapauthor1']['users']['cn=jkool,ou=guest accounts,dc=ad,
     'memberOf' => array( 0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
   );
 
-$test_data['servers']['ldapauthor1']['users']['cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+$servers['ldapauthor1']['users']['cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'unkool@nowhere.myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jkool', 'count' => 1),
@@ -95,7 +65,7 @@ $test_data['servers']['ldapauthor1']['users']['cn=unkool,ou=lost,dc=ad,dc=myuniv
     'memberOf' => array( 0 => 'cn=unknown_people,ou=nowhere,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
   );
 
-$test_data['servers']['ldapauthor1']['users']['cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+$servers['ldapauthor1']['users']['cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'verykool@myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'verykool', 'count' => 1),
@@ -108,7 +78,7 @@ $test_data['servers']['ldapauthor1']['users']['cn=verykool,ou=special guests,ou=
       ),
   );
 
-$test_data['servers']['ldapauthor1']['users']['cn=newkool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+$servers['ldapauthor1']['users']['cn=newkool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=newkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'newkool@guests.myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'newkool', 'count' => 1),
@@ -120,7 +90,7 @@ $test_data['servers']['ldapauthor1']['users']['cn=newkool,ou=special guests,ou=g
 /**
  * test users should include service account if one is being used
  */
-$test_data['servers']['ldapauthor1']['users']['cn=service-account,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+$servers['ldapauthor1']['users']['cn=service-account,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=service-account,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'service-account@myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'service-account', 'count' => 1),
@@ -129,20 +99,4 @@ $test_data['servers']['ldapauthor1']['users']['cn=service-account,dc=ad,dc=myuni
       'count' => 2,
       ),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
-  );
-
-
-
-$test_data['ldap_authentication'] = array(
-    'sids' => array('ldapauthor1' => 'ldapauthor1'),
-    'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
-    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
-    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
-    'ldapUserHelpLinkUrl' => '',
-    'ldapUserHelpLinkText' => '',
-    'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
-    'emailUpdate' => LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE,
-    'allowOnlyIfTextInDn' => NULL,
-    'excludeIfTextInDn' => NULL,
-    'allowTestPhp' => NULL,
   );

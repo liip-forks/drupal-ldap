@@ -1,90 +1,30 @@
 <?php
-// $Id$
 
 /**
  * @file
- * simpletests for ldap authorization
- *
+ * see getInfo() for test summary
  */
-require_once(drupal_get_path('module', 'ldap_servers') . '/tests/LdapTestFunctions.class.php');
-require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizationConsumerConfAdmin.class.php');
 
-class LdapAuthorizationTestCaseDerivations extends DrupalWebTestCase {
+require_once(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapAuthorizationTestCase.class.php');
+
+class LdapAuthorizationDerivationsTests  extends LdapAuthorizationTestCase {
+
   public static function getInfo() {
     return array(
       'name' => 'LDAP Authorization Tests: Derivations',
-      'description' => 'Test ldap authorization.  Requires ldap_authorization_drupal_roles
-         since ldap authorization does nothing without a consumer type such as drupal roles.',
+      'description' => 'Test ldap authorization logic for derivation of roles.  Tests are in absence of logons to isolate mapping logic.',
       'group' => 'LDAP Authorization'
     );
   }
 
-  public $module_name = 'ldap_authorization';
-  public $testFunctions;
-
-  function setUp() {
-    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role')); // don't need any real servers, configured, just ldap_servers code base
-    variable_set('ldap_simpletest', 1);
-    variable_set('ldap_help_watchdog_detail', 0);
-  }
-
-
-  function tearDown() {
-    parent::tearDown();
-    variable_del('ldap_help_watchdog_detail');
-    variable_del('ldap_simpletest');
-  }
-
-
-  /**
-   * prepTestData create an ldap_authorization configuration and stores fake ldap server configuration.
-   *
-   * @param string $testid the name of the test.  used to determine which configuration file to include
-   * @return object consumer configuration object (class = LdapAuthorizationConsumerConfAdmin)
-   *
-   */
-  function prepTestData($testid) {
-    $this->testFunctions = new LdapTestFunctions();
-
-    // get authorization/consumer configuration data
-    include(drupal_get_path('module', 'ldap_authorization') . '/tests/ldap_authorization_test_data.' . $testid . '.inc');
-    $consumer_conf = $test_data['ldap_authorization_conf']['consumer_conf'];
-
-    // create fake ldap server configuration instance
-    include(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapServerTestData.' . $consumer_conf['sid'] . '.inc');
-    $this->testFunctions->prepTestServers($test_data['servers']);
-
-
-    if (isset($test_data['ldap_authentication'])) {
-      $this->testFunctions->configureAuthentication($test_data['ldap_authentication']);
-    }
-
-    // create consumer authorization configuration.
-    $consumer_obj = ldap_authorization_get_consumer_object($consumer_conf['consumerType']);
-    $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj, TRUE);
-    foreach ($consumer_conf as $property_name => $property_value) {
-      $consumer_conf_admin->{$property_name} = $property_value;
-    }
-    $consumer_conf_admin->save();
-    return $consumer_conf_admin;
-  }
-
-
-  function removeTestData($testid) {
-    include(drupal_get_path('module', 'ldap_authorization') . '/tests/ldap_authorization_test_data.' . $testid . '.inc');
-    $consumer_conf = $test_data['ldap_authorization_conf']['consumer_conf'];
-    $consumer_obj = ldap_authorization_get_consumer_object($consumer_conf['consumerType']);
-    $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj);
-    $this->testFunctions->removeTestServers($consumer_conf['sid']);
-    return $consumer_conf_admin->delete();
-  }
-
-
-
   function testDeriveFromDN() {
-    $test_id = 'DeriveFromDN';
-    $conf_id = 'DeriveFromDN';
-    $consumer_conf_admin = $this->prepTestData($conf_id);
+
+    $this->ldapTestId = 'DeriveFromDN';
+    $this->serversData = 'ldapauthor1.ldap_server.test_data.inc';
+    $this->authorizationData = 'Derivations.ldap_authorization.DeriveFromDN.inc';
+    $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
+    $this->consumerType = 'drupal_role';
+    $this->prepTestData();
 
     /**
      * test:  DeriveFromDN.nomatch no matches on dn attribute.
@@ -97,7 +37,7 @@ class LdapAuthorizationTestCaseDerivations extends DrupalWebTestCase {
     $user = $this->drupalCreateUser(array());
     $unkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'unkool', 'mail' =>  'unkool@nowhere.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($unkool, 'query');  // just see if the correct ones are derived.
-    $this->assertTrue(count($new_authorizations) == 0, 'user account unkool tested for granting no drupal roles ', $test_id . '.nomatch');
+    $this->assertTrue(count($new_authorizations) == 0, 'user account unkool tested for granting no drupal roles ', $this->ldapTestId . '.nomatch');
 
 
 
@@ -113,7 +53,7 @@ class LdapAuthorizationTestCaseDerivations extends DrupalWebTestCase {
     $jkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
     $correct_roles = (bool)(isset($new_authorizations['drupal_role']) && in_array('guests', $new_authorizations['drupal_role']));
-    $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "guests"', $test_id . '.onematch');
+    $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "guests"', $this->ldapTestId . '.onematch');
 
 
     /**
@@ -130,12 +70,12 @@ class LdapAuthorizationTestCaseDerivations extends DrupalWebTestCase {
 
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query');  // just see if the correct ones are derived.
     $correct_roles = (bool)(isset($new_authorizations['drupal_role']) &&
-      in_array('guests', $new_authorizations['drupal_role']) &&
-      in_array('special guests', $new_authorizations['drupal_role'])
+      in_array('guests', $new_authorizations[$this->consumerType]) &&
+      in_array('special guests', $new_authorizations[$this->consumerType])
       );
 
-    $this->assertTrue($correct_roles, 'user account verykool tested for granting "guests" and "special guests" drupal roles ', $test_id . '.manymatch');
-    $this->assertTrue($correct_roles, 'user account verykool tested for case insensitivity ', $test_id . '.caseinsensitive');
+    $this->assertTrue($correct_roles, 'user account verykool tested for granting "guests" and "special guests" drupal roles ', $this->ldapTestId . '.manymatch');
+    $this->assertTrue($correct_roles, 'user account verykool tested for case insensitivity ', $this->ldapTestId . '.caseinsensitive');
 
 
     /**
@@ -156,14 +96,15 @@ class LdapAuthorizationTestCaseDerivations extends DrupalWebTestCase {
     $this->assertTrue(in_array('guests', $granted_roles) && in_array('special guests', $granted_roles), 'Proper roles granted to newkool on actual logon');
     $this->drupalLogout();
 
-    $delete_result = $this->removeTestData($conf_id);
-
   }
 
   function testDeriveFromAttr() {
-    $test_id = 'DeriveFromAttr';
-    $conf_id = 'DeriveFromAttr';
-    $consumer_conf_admin = $this->prepTestData($conf_id);
+    $this->ldapTestId =  'DeriveFromAttr';
+    $this->serversData = 'ldapauthor1.ldap_server.test_data.inc';
+    $this->authorizationData = 'Derivations.ldap_authorization.DeriveFromAttr.inc';
+    $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
+    $this->consumerType = 'drupal_role';
+    $this->prepTestData();
 
     /**
      * test:  DeriveFromAttr.nomatch no matches on dn attribute.
@@ -174,7 +115,7 @@ class LdapAuthorizationTestCaseDerivations extends DrupalWebTestCase {
     $user = $this->drupalCreateUser(array());
     $unkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'unkool', 'mail' =>  'unkool@nowhere.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($unkool, 'query');  // just see if the correct ones are derived.
-    $this->assertTrue(count($new_authorizations) == 0, 'user account unkool tested for granting no drupal roles ', $test_id . '.nomatch');
+    $this->assertTrue(count($new_authorizations) == 0, 'user account unkool tested for granting no drupal roles ', $this->ldapTestId  . '.nomatch');
 
 
     /**
@@ -186,8 +127,8 @@ class LdapAuthorizationTestCaseDerivations extends DrupalWebTestCase {
     $user = $this->drupalCreateUser(array());
     $jkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
-    $correct_roles = (bool)(isset($new_authorizations['drupal_role']) && in_array('sysadmins', $new_authorizations['drupal_role']));
-    $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "sysadmins"', $test_id . '.onematch');
+    $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('sysadmins', $new_authorizations['drupal_role']));
+    $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "sysadmins"', $this->ldapTestId  . '.onematch');
 
 
     /**
@@ -203,22 +144,25 @@ class LdapAuthorizationTestCaseDerivations extends DrupalWebTestCase {
     $user = $this->drupalCreateUser(array());
     $verykool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'verykool', 'mail' =>  'verykool@myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query');  // just see if the correct ones are derived.
-    $correct_roles = (bool)(isset($new_authorizations['drupal_role']) &&
-      in_array('netadmins', $new_authorizations['drupal_role']) &&
-      in_array('sysadmins', $new_authorizations['drupal_role'])
+    $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) &&
+      in_array('netadmins', $new_authorizations[$this->consumerType]) &&
+      in_array('sysadmins', $new_authorizations[$this->consumerType])
       );
-    $this->assertTrue($correct_roles, 'user account verykool tested for granting "netadmins" and "sysadmins" drupal roles ', $test_id . '.manymatch');
-    $this->assertTrue($correct_roles, 'user account verykool tested for case insensitivity ', $test_id . '.caseinsensitive');
+    $this->assertTrue($correct_roles, 'user account verykool tested for granting "netadmins" and "sysadmins" drupal roles ', $this->ldapTestId  . '.manymatch');
+    $this->assertTrue($correct_roles, 'user account verykool tested for case insensitivity ', $this->ldapTestId  . '.caseinsensitive');
 
-    $delete_result = $this->removeTestData($conf_id);
 
   }
 
 
   function testDeriveFromEntry() {
-    $test_id = 'DeriveFromEntry';
-    $conf_id = 'DeriveFromEntry';
-    $consumer_conf_admin = $this->prepTestData($conf_id);
+
+    $this->ldapTestId = 'DeriveFromEntry';
+    $this->serversData = 'ldapauthor1.ldap_server.test_data.inc';
+    $this->authorizationData = 'Derivations.ldap_authorization.DeriveFromEntry.inc';
+    $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
+    $this->consumerType = 'drupal_role';
+    $this->prepTestData();
 
     /**
      * test:  DeriveFromEntry.nomatch no matches on dn attribute.
@@ -229,7 +173,7 @@ class LdapAuthorizationTestCaseDerivations extends DrupalWebTestCase {
     $user = $this->drupalCreateUser(array());
     $unkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'unkool', 'mail' =>  'unkool@nowhere.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($unkool, 'query');  // just see if the correct ones are derived.
-    $this->assertTrue(count($new_authorizations) == 0, 'user account unkool tested for granting no drupal roles ', $test_id . '.nomatch');
+    $this->assertTrue(count($new_authorizations) == 0, 'user account unkool tested for granting no drupal roles ', $this->ldapTestId . '.nomatch');
 
 
     /**
@@ -240,8 +184,8 @@ class LdapAuthorizationTestCaseDerivations extends DrupalWebTestCase {
     $user = $this->drupalCreateUser(array());
     $jkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
-    $correct_roles = (bool)(isset($new_authorizations['drupal_role']) && in_array('content editors', $new_authorizations['drupal_role']));
-    $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "content editors"', $test_id . '.onematch');
+    $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('content editors', $new_authorizations[$this->consumerType]));
+    $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "content editors"', $this->ldapTestId . '.onematch');
 
 
     /**
@@ -251,16 +195,12 @@ class LdapAuthorizationTestCaseDerivations extends DrupalWebTestCase {
     $user = $this->drupalCreateUser(array());
     $verykool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'verykool', 'mail' =>  'verykool@myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query');  // just see if the correct ones are derived.
-    $correct_roles = (bool)(isset($new_authorizations['drupal_role']) &&
-      in_array('content editors', $new_authorizations['drupal_role']) &&
-      in_array('content approvers', $new_authorizations['drupal_role'])
+    $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) &&
+      in_array('content editors', $new_authorizations[$this->consumerType]) &&
+      in_array('content approvers', $new_authorizations[$this->consumerType])
       );
-    $this->assertTrue($correct_roles, 'user account verykool tested for granting "content editors" and "content approvers" drupal roles ', $test_id . '.manymatch');
-
-    $delete_result = $this->removeTestData($conf_id);
+    $this->assertTrue($correct_roles, 'user account verykool tested for granting "content editors" and "content approvers" drupal roles ', $this->ldapTestId . '.manymatch');
 
   }
-
-
 
 }

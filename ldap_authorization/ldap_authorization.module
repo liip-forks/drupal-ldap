@@ -225,3 +225,11 @@ function ldap_authorization_tokens($consumer) {
   }
   return $tokens;
 }
+
+
+function ldap_authorization_get_consumer_admin_object($consumer_type) {
+  require_once('LdapAuthorizationConsumerConfAdmin.class.php');
+  $consumer_object = ldap_authorization_get_consumer_object($consumer_type);
+  $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_object);
+  return $consumer_conf_admin;
+}

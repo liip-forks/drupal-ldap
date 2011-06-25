@@ -53,12 +53,6 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
   }
 
 
-  function removeTestData($testid) {
-    $this->testFunctions->removeTestServers('ldapfeeds');
-    return $consumer_conf_admin->delete();
-  }
-
-
   // see readme.txt for test steps also.
 
   /**
@@ -168,8 +162,6 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
       ),
 
  */
-
-   // $delete_result = $this->removeTestData($conf_id);
 
  // }
 }
