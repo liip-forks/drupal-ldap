@@ -43,6 +43,7 @@ function ldap_authorization_schema() {
         'minimum_version' => 1,
         'current_version' => 1,
       ),
+      'export type string' => 'ctools_storage_type',
     ),
 
     'description' => "Data used to map users ldap entry to authorization rights.",
