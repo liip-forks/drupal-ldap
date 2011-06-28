@@ -92,7 +92,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
 
   foreach ($consumers as $consumer_type => $consumer) {
 
-
     /**
     * each consumer type has only one consumer conf and each consumer conf has only one ldap server id (sid)
     * so there is a one-to-one-to-one relationship between:

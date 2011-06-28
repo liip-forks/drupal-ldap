@@ -7,7 +7,7 @@
 /**
  * Implementation of hook_strongarm().
  */
-function ldap_authorization_simplettest_strongarm() {
+function ldap_authorization_simpletest1_strongarm() {
   $export = array();
 
   $strongarm = new stdClass;
@@ -16,20 +16,21 @@ function ldap_authorization_simplettest_strongarm() {
   $strongarm->name = 'ldap_authentication_conf';
   $strongarm->value = array(
     'sids' => array(
-      'uiuc_ad' => 'uiuc_ad',
+      'ldapauthor1' => 'ldapauthor1',
     ),
-    'authenticationMode' => 2,
-    'loginConflictResolve' => 1,
-    'acctCreation' => 4,
+    'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
+    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
+    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
     'ldapUserHelpLinkUrl' => 'https://passwords.cites.uiuc.edu/',
     'ldapUserHelpLinkText' => 'Illinois Passwords',
-    'emailOption' => 3,
-    'emailUpdate' => 1,
-    'allowOnlyIfTextInDn' => array(),
-    'excludeIfTextInDn' => array(),
-    'allowTestPhp' => '',
+    'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
+    'emailUpdate' => LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE,
+    'allowOnlyIfTextInDn' => NULL,
+    'excludeIfTextInDn' => NULL,
+    'allowTestPhp' => NULL,
     'excludeIfNoAuthorizations' => NULL,
   );
+
   $export['ldap_authentication_conf'] = $strongarm;
 
   $strongarm = new stdClass;
@@ -64,7 +65,7 @@ function ldap_authorization_simplettest_strongarm() {
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
   $strongarm->name = 'user_register';
-  $strongarm->value = '0';
+  $strongarm->value = USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL;
   $export['user_register'] = $strongarm;
 
   return $export;

@@ -58,14 +58,26 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
        module_enable(array($this->featureName), TRUE);
         // will need to set non exportables such as bind password also
         // also need to create fake ldap server data.  use
-      debug("features:" . module_exists('features') ."-". $this->featureName . ": ". module_exists($this->featureName));
+
       if (! (module_exists('ctools') && module_exists('strongarm') && module_exists('features') && module_exists('$this->featureName')) ) {
         drupal_set_message(t('Features and Strongarm modules must be available to use Features as configuratio of simpletests'), 'warning');
       }
-      include(drupal_get_path('module', 'ldap_authorization') . '/tests/' . $this->serversData);
-      $this->testData['servers'] = $servers;
+
+
+   // with test data stored in features, need to get server properties from ldap_server properties
+      require_once(drupal_get_path('module', $this->featureName) . '/' . $this->featureName . '.ldap_servers.inc');
+      require_once(drupal_get_path('module', $this->featureName) . '/fake_ldap_server_data.inc');
+      $function_name =  $this->featureName . '_default_ldap_servers';
+      $servers = call_user_func($function_name);
+      foreach ($servers as $sid => $server) {
+        $this->testData['servers'][$sid]['properties'] = (array)$server; // convert to array
+        $this->testData['servers'][$sid]['properties']['inDatabase'] = TRUE;
+        $this->testData['servers'][$sid]['properties']['bindpw'] = 'goodpwd';
+        $this->testData['servers'][$sid] = array_merge($this->testData['servers'][$sid], $fake_ldap_server_data[$sid]);
+      }
+
       // make included fake sid match feature sid
-      $this->testFunctions->prepTestConfiguration($this->testData);
+      $this->testFunctions->prepTestConfiguration($this->testData, TRUE);
     }
     else {
       include(drupal_get_path('module', 'ldap_authorization') . '/tests/' . $this->authorizationData);
@@ -90,7 +102,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
         $this->testData['authentication']['sids'] = array($this->sid => $this->sid);
         $this->testData['servers'][$this->sid]['sid'] = $this->sid;
       }
-      $this->testFunctions->prepTestConfiguration($this->testData);
+      $this->testFunctions->prepTestConfiguration($this->testData, FALSE);
     }
 
 

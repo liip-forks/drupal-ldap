@@ -1,13 +1,13 @@
 <?php
 /**
  * @file
- * ldap_authorization_simplettest.features.inc
+ * ldap_authorization_simpletest1.features.inc
  */
 
 /**
  * Implementation of hook_ctools_plugin_api().
  */
-function ldap_authorization_simplettest_ctools_plugin_api() {
+function ldap_authorization_simpletest1_ctools_plugin_api() {
   list($module, $api) = func_get_args();
   if ($module == "ldap_authorization" && $api == "ldap_authorization") {
     return array("version" => 1);

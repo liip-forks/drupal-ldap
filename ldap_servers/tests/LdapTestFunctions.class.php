@@ -13,25 +13,30 @@
 
 class LdapTestFunctions  {
 
-  function prepTestConfiguration($test_data) {
-    $this->prepTestServers($test_data['servers']);
+  function prepTestConfiguration($test_data, $features = FALSE) {
+    $this->prepTestServers($test_data['servers'], $features);
 
-    if (isset($test_data['authentication'])) {
+    if (!$features && isset($test_data['authentication'])) {
       $this->configureAuthentication($test_data['authentication']);
     }
 
-    if (isset($test_data['authorization'])) {
+    if (!$features && isset($test_data['authorization'])) {
       $this->prepConsumerConf($test_data['authorization']);
     }
 
-    if (isset($test_data['variables'])) {
+    if (!$features && isset($test_data['variables'])) {
       foreach ($test_data['variables'] as $name => $value) {
         variable_set($name, $value);
       }
     }
+
+  $consumer_conf_admin = ldap_authorization_get_consumer_admin_object('drupal_role');
+  $consumer_conf_admin->status = 1;
+  $consumer_conf_admin->save();
+
   }
 
-  function prepTestServers($servers) {
+  function prepTestServers($servers, $features = FALSE, $feature_name = NULL) {
     $current_sids = array();
     foreach ($servers as $sid => $server_data) {
       $current_sids[$sid] = $sid;
@@ -75,7 +80,6 @@ class LdapTestFunctions  {
   }
 
   function drupalLdapUpdateUser($edit = array(), $ldap_authenticated = FALSE, $user) {
-
 
     if (count($edit)) {
       $user = user_save($user, $edit);
