@@ -4,6 +4,8 @@
 ==================
 7.x-1.0-beta2
 ==================
+Added warnings when drupal 6 ldapauth table is found warning of manual upgrade process.
+Issue #1201414 by justintime: to improve exportables, renamed ldap_servers.type to ldap_server.ldap_type for older versions of ctools.  Also added export type string.
 Issue #1174332 by endiku: error thrown when trying to add the same drupal role twice.  Added simpletest and applied array_unique().
 Issue #1192356 by bfroehle: ldap_servers_get_servers returning null instead of empty array. 1192356-Fix-warnings-when-iterating-through-en.patch
 Issue #1030404 by ankur:  Fixed issue with ldap authentication with multiple servers.  1030404 comment #6

@@ -276,7 +276,7 @@ function ldap_help_get_ldap_servers() {
 
   $servers_objects = ldap_servers_get_servers(NULL, 'all');
   $servers = array();
-  $props = array('sid', 'name', 'status', 'type', 'port', 'tls', 'user_attr', 'mail_attr');
+  $props = array('sid', 'name', 'status', 'ldap_type', 'port', 'tls', 'user_attr', 'mail_attr');
   foreach ($servers_objects as $sid => $server_object) {
     foreach ($props as $property) {
       $servers[$sid][] = array(

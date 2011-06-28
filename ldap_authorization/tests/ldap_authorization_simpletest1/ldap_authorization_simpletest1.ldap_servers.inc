@@ -16,7 +16,7 @@ function ldap_authorization_simpletest1_default_ldap_servers() {
   $ldap_servers_conf->sid = 'ldapauthor1';
   $ldap_servers_conf->name = 'Test LDAP Server 1 for LDAP Authorization';
   $ldap_servers_conf->status = 1;
-  $ldap_servers_conf->type = 'ad';
+  $ldap_servers_conf->ldap_type = 'ad';
   $ldap_servers_conf->address = 'ad.myuniveristy.edu';
   $ldap_servers_conf->port = 389;
   $ldap_servers_conf->tls = FALSE;

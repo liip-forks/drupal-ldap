@@ -341,7 +341,7 @@ function ldap_servers_help($path, $arg) {
   }
 }
 
-function ldap_servers_get_ldap_defaults($type = NULL) {
+function ldap_servers_get_ldap_defaults($ldap_type = NULL) {
 
   $ldap['default']['name'] = t('Default LDAP');
   $ldap['default']['description'] = "";
@@ -380,5 +380,5 @@ function ldap_servers_get_ldap_defaults($type = NULL) {
   $ldap["openldap"]['user']['mail_attr'] = 'mail';
   $ldap['openldap']['person_object_class'] = 'person';
 
-  return ($type) ? $ldap[$type] : $ldap;
+  return ($ldap_type) ? $ldap[$ldap_type] : $ldap;
 }

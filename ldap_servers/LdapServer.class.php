@@ -26,7 +26,7 @@ class LdapServer {
   public $sid;
   public $name;
   public $status;
-  public $type;
+  public $ldap_type;
   public $address;
   public $port = 389;
   public $tls = FALSE;
@@ -50,7 +50,7 @@ class LdapServer {
     return array( 'sid' => 'sid',
     'name'  => 'name' ,
     'status'  => 'status',
-    'type'  => 'type',
+    'ldap_type'  => 'ldap_type',
     'address'  => 'address',
     'port'  => 'port',
     'tls'  => 'tls',

@@ -13,18 +13,18 @@
 
 class LdapTestFunctions  {
 
-  function prepTestConfiguration($test_data, $features = FALSE) {
-    $this->prepTestServers($test_data['servers'], $features);
+  function prepTestConfiguration($test_data, $feetures = FALSE) {
+    $this->prepTestServers($test_data['servers'], $feetures);
 
-    if (!$features && isset($test_data['authentication'])) {
+    if (!$feetures && isset($test_data['authentication'])) {
       $this->configureAuthentication($test_data['authentication']);
     }
 
-    if (!$features && isset($test_data['authorization'])) {
+    if (!$feetures && isset($test_data['authorization'])) {
       $this->prepConsumerConf($test_data['authorization']);
     }
 
-    if (!$features && isset($test_data['variables'])) {
+    if (!$feetures && isset($test_data['variables'])) {
       foreach ($test_data['variables'] as $name => $value) {
         variable_set($name, $value);
       }
@@ -36,7 +36,7 @@ class LdapTestFunctions  {
 
   }
 
-  function prepTestServers($servers, $features = FALSE, $feature_name = NULL) {
+  function prepTestServers($servers, $feetures = FALSE, $feature_name = NULL) {
     $current_sids = array();
     foreach ($servers as $sid => $server_data) {
       $current_sids[$sid] = $sid;

@@ -47,6 +47,14 @@ function ldap_servers_requirements($phase) {
     $requirements['ldap_extension_loaded']['description'] = t('No LDAP Extension is loaded for PHP, so LDAP will not work properly.');
   }
 
+  if (db_table_exists('ldapauth')) {
+    $requirements['ldap_servers_ldap_integration']['title'] = t('LDAP Integration LDAP Auth to LDAP Servers Upgrade Concern');
+    $requirements['ldap_servers_ldap_integration']['severity'] = REQUIREMENT_WARNING;
+    $requirements['ldap_servers_ldap_integration']['value'] = NULL;
+    $requirements['ldap_servers_ldap_integration']['description'] = t('Upgrade from Drupal 6 LDAP Auth to Drupal 7
+      LDAP Servers is not automatic.  LDAP Servers will need to be configured by hand.
+      See http://drupal.org/node/1023016. This message will go away when the ldapauth database table is removed.');
+  }
   // check that ldapauth not installed.
   return $requirements;
 }
@@ -66,6 +74,7 @@ function ldap_servers_schema() {
         'minimum_version' => 1,
         'current_version' => 1,
         ),
+      'export type string' => 'ctools_storage_type',
       ),
     'fields' => array(
       'sid' => array(
@@ -91,7 +100,7 @@ function ldap_servers_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'type' =>  array(
+      'ldap_type' =>  array(
         'type' => 'varchar',
         'length' => 20,
         'not null' => FALSE,
@@ -171,3 +180,17 @@ function ldap_servers_schema() {
   return $schema;
 
 }
+
+function ldap_servers_update_7100() {
+
+  db_change_field('ldap_servers', 'type', 'ldap_type', array(
+    'type' => 'varchar',
+    'length' => 20,
+    'not null' => FALSE
+  ));
+
+  return t('ldap_servers table field "type" renamed to "ldap_type"');
+  
+}
+
+

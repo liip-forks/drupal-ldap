@@ -46,7 +46,7 @@ class LdapServerAdmin extends LdapServer {
     $this->sid = trim($values['sid']);
     $this->name = trim($values['name']);
     $this->status = ($values['status']) ? 1 : 0;
-    $this->type = trim($values['type']);
+    $this->ldap_type = trim($values['ldap_type']);
     $this->address = trim($values['address']);
     $this->port = trim($values['port']);
     $this->tls = trim($values['tls']);
@@ -166,11 +166,11 @@ $form['#prefix'] = t($form['#prefix']);
     '#description' => t('Disable in order to keep configuration without having it active.'),
   );
 
-  $form['server']['type'] = array(
+  $form['server']['ldap_type'] = array(
     '#type' => 'select',
     '#options' =>  ldap_servers_ldaps_option_array(),
     '#title' => t('LDAP Server Type'),
-    '#default_value' => $this->type,
+    '#default_value' => $this->ldap_type,
     '#description' => t('This field is informative.  It\'s purpose is to assist with default values and give validation warnings.'),
     '#required' => FALSE,
   );
