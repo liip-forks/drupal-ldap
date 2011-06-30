@@ -74,13 +74,33 @@ class LdapAuthorizationConsumerConf {
   }
 
   protected function loadFromDb() {
-    $select = db_select('ldap_authorization', 'ldap_authorization');
-    $select->fields('ldap_authorization');
-    if ($this->consumerType) {
-      $select->condition('ldap_authorization.consumer_type',  $this->consumerType);
+    if (module_exists('ctools')) {
+      ctools_include('export');
+	    if ($this->consumerType) {
+		    $result = ctools_export_load_object('ldap_authorization', 'names', array($this->consumerType));
+	    }
+	    else {
+		    $result = ctools_export_load_object('ldap_authorization', 'all');
+	    }
+	    // @todo, this is technically wrong, but I don't quite grok what we're doing in the non-ctools case - justintime
+	    $consumer_conf = array_pop($result);
+	    // There's no ctools api call to get the reserved properties, so instead of hardcoding a list of them
+	    // here, we just grab everything.  Basically, we sacrifice a few bytes of RAM for forward-compatibility.
+	    if ($consumer_conf) {
+		    foreach ($consumer_conf as $property => $value) {
+		      $this->$property = $value;
+		    }
+	    }
     }
+    else {
+	    $select = db_select('ldap_authorization', 'ldap_authorization');
+	    $select->fields('ldap_authorization');
+	    if ($this->consumerType) {
+	      $select->condition('ldap_authorization.consumer_type',  $this->consumerType);
+	    }
 
-    $consumer_conf = $select->execute()->fetchObject();
+	    $consumer_conf = $select->execute()->fetchObject();
+    }
 
     if (!$consumer_conf) {
       $this->inDatabase = FALSE;

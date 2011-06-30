@@ -22,10 +22,9 @@ function theme_ldap_authorization_admin_index(&$variables) {
   foreach ($consumers as $consumer_type => $consumer) {
 
     if ($consumer->consumerConf->inDatabase) {
-      $actions =  ' | ' . l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/edit/' . $consumer->consumerType) . ' | ' .
-        l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/delete/' . $consumer->consumerType) . ' | ' .
-        l(t('test'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/test/' . $consumer->consumerType) . ' | ';
-        }
+      $admin = new LdapAuthorizationConsumerConfAdmin($consumer);
+      $actions =  join(' | ', $admin->getLdapAuthorizationConsumerActions());
+    }
     else {
       $actions =  l(t('add'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/add/' . $consumer->consumerType);
     }

@@ -34,26 +34,18 @@ function theme_ldap_servers_list($variables) {
   if ($actions) {
     $table['header'][] = "Operations";
   }
-
   if (count($ldap_servers)) {
     foreach ($ldap_servers as $sid => $ldap_server ) {
       $row =  array(
         $ldap_server->name,
-        $ldap_server->type,
+        $ldap_server->ldap_type,
         ($ldap_server->status == 1) ? "Yes" : "No",
         $ldap_server->address
           );
       if ($actions) {
-        $switch = ($ldap_server->status ) ? 'disable' : 'enable';
-        $actions =  ' | ' . l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $sid) . ' | ' .
-            l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $sid) . ' | ' .
-            l(t('test'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/test/' . $sid) . ' | ' .
-            l($switch, LDAP_SERVERS_MENU_BASE_PATH . '/servers/' . $switch . '/' . $sid) . ' | ';
-
-
-        $row[] = $actions;
+        $admin = new LdapServerAdmin($ldap_server->sid);
+        $row[] = join(' | ', $admin->getLdapServerActions());
       }
-
       $table['rows'][] = $row;
     }
   }
@@ -87,11 +79,8 @@ function theme_ldap_servers_server($variables) {
   }
 
   if ($actions) {
-    $switch = ($ldap_server->status) ? 'disable' : 'enable';
-    $properties[] =  ' | ' . l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $sid) . ' | ' .
-        l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $sid) . ' | ' .
-        l(t('test'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/test/' . $sid) . ' | ' .
-        l($switch, LDAP_SERVERS_MENU_BASE_PATH . '/servers/' . $switch . '/' . $sid) . ' | ';
+    $admin = new LdapServerAdmin($ldap_server->sid);
+    $properties = join(' | ', $admin->getLdapServerActions());
   }
 
   $output = theme_item_list(

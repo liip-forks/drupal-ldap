@@ -36,14 +36,14 @@ function ldap_authorization_schema() {
     'export' => array(
       'key' => 'consumer_type',
       'key name' => 'Mapping ID',
-      'identifier' => 'ldap_authorization_conf',
+      'identifier' => 'consumer_type',
+      'primary key' => 'numeric_consumer_conf_id',
       'api' => array(
         'owner' => 'ldap_authorization',
         'api' => 'ldap_authorization',
         'minimum_version' => 1,
         'current_version' => 1,
       ),
-      'export type string' => 'ctools_storage_type',
     ),
 
     'description' => "Data used to map users ldap entry to authorization rights.",

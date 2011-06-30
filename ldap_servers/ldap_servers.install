@@ -67,6 +67,7 @@ function ldap_servers_schema() {
     'export' => array(
       'key' => 'sid',
       'key name' => 'Server ID',
+      'primary key' => 'numeric_sid',
       'identifier' => 'ldap_servers_conf',
       'api' => array(
         'owner' => 'ldap_servers',
@@ -74,7 +75,6 @@ function ldap_servers_schema() {
         'minimum_version' => 1,
         'current_version' => 1,
         ),
-      'export type string' => 'ctools_storage_type',
       ),
     'fields' => array(
       'sid' => array(
@@ -129,6 +129,7 @@ function ldap_servers_schema() {
       ),
       'basedn' => array(
         'type' => 'text',
+        'serialize' => TRUE,
       ),
       'binddn' => array(
         'type' => 'varchar',

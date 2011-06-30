@@ -65,7 +65,7 @@ class LdapServer {
     );
 
   }
-
+  
   /**
    * Constructor Method
    */
@@ -74,14 +74,26 @@ class LdapServer {
       return;
     }
 
-    $this->sid = $sid;
-    $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
-    $select = db_select('ldap_servers', 'ldap_servers');
-    $select->fields('ldap_servers');
-    $select->condition('ldap_servers.sid',  $this->sid);
-
-
-    $server_record = $select->execute()->fetchAllAssoc('sid',  PDO::FETCH_ASSOC);
+    $server_record = array();
+    if (module_exists('ctools')) {
+      ctools_include('export');
+	    $result = ctools_export_load_object('ldap_servers', 'names', array($sid));
+		  if (isset($result[$sid])) {
+		    $server_record[$sid] = $result[$sid];
+		    foreach ($server_record[$sid] as $property => $value) {
+		      $this->{$property} = $value;
+		    }
+		  }
+    }
+    else {
+	    $select = db_select('ldap_servers')
+		    ->fields('ldap_servers')
+		    ->condition('ldap_servers.sid',  $sid)
+		    ->execute();
+		  foreach ($select as $record) {
+		    $server_record[$record->sid] = $record;
+		  }
+    }
     if (!isset($server_record[$sid])) {
       $this->inDatabase = FALSE;
       return;
@@ -90,20 +102,23 @@ class LdapServer {
 
     if ($server_record) {
       $this->inDatabase = TRUE;
+	    $this->sid = $sid;
+	    $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
     }
     else {
       // @todo throw error
     }
+    
     foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
-      if (isset($server_record[$db_field_name])) {
-        $this->{$property_name} = $server_record[$db_field_name];
+      if (isset($server_record->$db_field_name)) {
+        $this->{$property_name} = $server_record->$db_field_name;
       }
     }
     if (is_scalar($this->basedn)) {
       $this->basedn = unserialize($this->basedn);
     }
-    if (isset($server_record['bindpw']) && $server_record['bindpw'] != '') {
-      $this->bindpw = $server_record['bindpw'];
+    if (isset($server_record->bindpw) && $server_record->bindpw != '') {
+      $this->bindpw = $server_record->bindpw;
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
   }

@@ -230,22 +230,10 @@ function ldap_servers_admin_enable_disable_submit($form, &$form_state) {
   if ($values['confirm'] && $sid) {
 
     $form_state['redirect'] = LDAP_SERVERS_MENU_BASE_PATH . '/servers';
+    $ldap_server = new LdapServerAdmin($sid);
 
-    $entry = array(
-        'sid' => $sid,
-        'status' => $status,
-    );
-    try {
-      $count = db_update('ldap_servers')
-      ->fields($entry)
-      ->condition('sid', $sid)
-      ->execute();
-    }
-    catch (Exception $e) {
-      drupal_set_message(t('db update failed. Message = %message, query= %query',
-        array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
-    }
-
+    $ldap_server->status = $status;
+    $ldap_server->save('edit');
     $tokens = array('%name' => $values['name'], '!sid' => $sid, '!action' => t($values['action']) . 'd');
     drupal_set_message(t('LDAP Server Configuration %name (server id = !sid) has been !action.', $tokens));
     $message = t('LDAP Server !action: %name (sid = !sid) ', $tokens);
