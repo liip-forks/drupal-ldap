@@ -1,5 +1,9 @@
 <?php
-
+// $Id$
+/**
+ * @file
+ * simpltest authentication config
+ */
 
 $authentication = array(
     'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,

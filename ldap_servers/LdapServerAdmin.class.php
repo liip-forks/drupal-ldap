@@ -14,7 +14,7 @@ class LdapServerAdmin extends LdapServer {
 
   public $bindpw_new = FALSE;
   public $bindpw_clear = FALSE;
-  
+
   /**
    * @param $type = 'all', 'enabled'
    */
@@ -22,19 +22,19 @@ class LdapServerAdmin extends LdapServer {
     $servers = array();
     if (module_exists('ctools')) {
       ctools_include('export');
-	    $select = ctools_export_load_object('ldap_servers', 'all');
+      $select = ctools_export_load_object('ldap_servers', 'all');
     }
     else {
-	    try {
-		    $select = db_select('ldap_servers', 'ldap_servers')
-			    ->fields('ldap_servers')
-			    ->execute();
-	    }
-	    catch (Exception $e) {
-	      drupal_set_message(t('server index query failed. Message = %message, query= %query',
-	        array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
-	      return array();
-	    }
+      try {
+        $select = db_select('ldap_servers', 'ldap_servers')
+          ->fields('ldap_servers')
+          ->execute();
+      }
+      catch (Exception $e) {
+        drupal_set_message(t('server index query failed. Message = %message, query= %query',
+          array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
+        return array();
+      }
     }
     foreach ($select as $result) {
       $servers[$result->sid] = ($class == 'LdapServer') ? new LdapServer($result->sid) : new LdapServerAdmin($result->sid);
@@ -77,7 +77,7 @@ class LdapServerAdmin extends LdapServer {
       $entry->{$field_name} = $this->{$property_name};
     }
     if (isset($this->bindpw) && $this->bindpw) {
-	    $entry->bindpw = ldap_servers_encrypt($this->bindpw);
+      $entry->bindpw = ldap_servers_encrypt($this->bindpw);
     }
     if ($this->bindpw_new) {
       $entry->bindpw =  ldap_servers_encrypt($this->bindpw_new);
@@ -89,35 +89,35 @@ class LdapServerAdmin extends LdapServer {
 
     $result = FALSE;
     if ($op == 'edit') {
-	    if (module_exists('ctools')) {
-	      ctools_include('export');
-		    $result = ctools_export_crud_save('ldap_servers', $entry);
-	    }
-	    else {
-	      $result = drupal_write_record('ldap_servers', $entry, 'sid');
-	    }
+      if (module_exists('ctools')) {
+        ctools_include('export');
+        $result = ctools_export_crud_save('ldap_servers', $entry);
+      }
+      else {
+        $result = drupal_write_record('ldap_servers', $entry, 'sid');
+      }
     }
     else {
-	    if (module_exists('ctools')) {
-	      ctools_include('export');
-	      // Populate our object with ctool's properties
-	      $object = ctools_export_crud_new('ldap_servers');
-	      foreach ($object as $property => $value) {
-	        if (!isset($entry->$property)) {
-		        $entry->$property = $value;
-	        }
-	      }
-		    $result = ctools_export_crud_save('ldap_servers', $entry);
-	    }
-	    else {
-	      $result = drupal_write_record('ldap_servers', $entry);
-	    }
+      if (module_exists('ctools')) {
+        ctools_include('export');
+        // Populate our object with ctool's properties
+        $object = ctools_export_crud_new('ldap_servers');
+        foreach ($object as $property => $value) {
+          if (!isset($entry->$property)) {
+            $entry->$property = $value;
+          }
+        }
+        $result = ctools_export_crud_save('ldap_servers', $entry);
+      }
+      else {
+        $result = drupal_write_record('ldap_servers', $entry);
+      }
     }
     if ($result) {
-	    $this->inDatabase = TRUE;
+      $this->inDatabase = TRUE;
     }
     else {
-      drupal_set_message('Failed to write LDAP Server to the database.');
+      drupal_set_message(t('Failed to write LDAP Server to the database.'));
     }
   }
 
@@ -136,10 +136,10 @@ class LdapServerAdmin extends LdapServer {
     $actions[] =  l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $this->sid);
     if (property_exists($this, 'type')) {
       if ($this->type == 'Overridden') {
-	        $actions[] = l(t('revert'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
+          $actions[] = l(t('revert'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
       }
       if ($this->type == 'Normal') {
-	        $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
+          $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
       }
     }
     else {

@@ -1,11 +1,12 @@
 <?php
+// $Id$
 /**
  * @file
  * ldap_authorization_simpletest.ldap_authorization.inc
  */
 
 /**
- * Implementation of hook_default_ldap_authorization().
+ * Implements hook_default_ldap_authorization().
  */
 function ldap_authorization_simpletest1_default_ldap_authorization() {
   $export = array();

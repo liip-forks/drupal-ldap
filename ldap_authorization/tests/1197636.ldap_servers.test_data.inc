@@ -1,4 +1,9 @@
 <?php
+// $Id$
+/**
+ * @file
+ * simpletest fake data
+ */
 
 $servers['fake_server1']['properties']  = array(
   'name'  => 'Test LDAP Server 1 for LDAP Authorization' ,

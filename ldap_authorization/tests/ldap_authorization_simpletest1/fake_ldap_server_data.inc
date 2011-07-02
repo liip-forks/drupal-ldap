@@ -1,5 +1,10 @@
 <?php
+// $Id$
 
+/**
+ * @file
+ * simpletest ldap server fake data
+ */
 
 $fake_ldap_server_data['ldapauthor1']['methodResponses']['connect'] = LDAP_SUCCESS;
 

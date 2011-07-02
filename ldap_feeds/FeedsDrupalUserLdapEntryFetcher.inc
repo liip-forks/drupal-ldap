@@ -24,7 +24,7 @@ class FeedsDrupalUserLdapEntryFetcherResult extends FeedsFetcherResult {
    * Constructor.
    */
   public function __construct($source_config) {
-    $this->available_user_attributes = explode(',',LDAP_FEEDS_DRUPAL_USER_FETCHER_USER_ATTR);
+    $this->available_user_attributes = explode(',', LDAP_FEEDS_DRUPAL_USER_FETCHER_USER_ATTR);
     $this->addDrupalUserAttributes = isset($source_config['addDrupalUserAttributes']) ? $source_config['addDrupalUserAttributes'] : LDAP_FEEDS_DRUPAL_USER_FETCHER_ADD_USER_ATTR;
     $this->filterLdapAuthenticated = isset($source_config['filters']['filterLdapAuthenticated']) ? $source_config['filters']['filterLdapAuthenticated'] : LDAP_FEEDS_DRUPAL_USER_FETCHER_FILTER_AUTHENTICATED;
     $this->attributes = (isset($source_config['attributes']) && $source_config['attributes']) ? $source_config['attributes'] : LDAP_FEEDS_DRUPAL_USER_FETCHER_FILTER_ATTR;
@@ -117,7 +117,7 @@ class FeedsDrupalUserLdapEntryFetcher extends FeedsFetcher {
    * Override parent::configForm().
    */
   public function sourceForm($source_config) {
-    $available_user_attributes = explode(',',LDAP_FEEDS_DRUPAL_USER_FETCHER_USER_ATTR);
+    $available_user_attributes = explode(',', LDAP_FEEDS_DRUPAL_USER_FETCHER_USER_ATTR);
     $filterRoles = isset($source_config['filters']['filterRoles']) ? $source_config['filters']['filterRoles'] : array();
     $filterLdapAuthenticated = isset($source_config['filters']['filterLdapAuthenticated']) ? $source_config['filters']['filterLdapAuthenticated'] : LDAP_FEEDS_DRUPAL_USER_FETCHER_FILTER_AUTHENTICATED;
     $attributes = isset($source_config['attributes']) ? $source_config['attributes'] : LDAP_FEEDS_DRUPAL_USER_FETCHER_FILTER_ATTR;

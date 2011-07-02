@@ -23,7 +23,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
   public $sid;
 
   function setUp() {
-    parent::setUp(array('ldap_authentication','ldap_authorization', 'ldap_authorization_drupal_role')); // don't need any real servers, configured, just ldap_servers code base
+    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role')); // don't need any real servers, configured, just ldap_servers code base
     variable_set('ldap_simpletest', 1);
     variable_set('ldap_help_watchdog_detail', 0);
   }
@@ -70,13 +70,13 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
     $this->drupalLogout();
     $user = $this->testData['servers'][$this->sid]['users'][$dn]['attr'];
-    $parts = explode(',',$dn);
+    $parts = explode(',', $dn);
     $cn_parts = explode('=', $parts[0]);
     $edit = array(
       'name' => $cn_parts[1],
       'pass' => $user['password'][0],
     );
-   $user = user_load_by_name($edit['name']);
+    $user = user_load_by_name($edit['name']);
     if ($user) {
       user_delete($user->uid);
     }
@@ -325,7 +325,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
 
 
- function testAuthenticationWhitelistTests() {
+  function testAuthenticationWhitelistTests() {
     require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
 
     $sid = 'ldapauthen1';

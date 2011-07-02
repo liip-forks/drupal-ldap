@@ -1,8 +1,14 @@
 <?php
+// $Id$
+
+/**
+ * @file
+ * simpletest authorization configuration
+ */
 
 $authorization['drupal_role'] =  array(
   'consumerModule' =>  'ldap_authorization_drupal_role',
-  
+
   'description' =>  'UIUC AD',
   'status' =>  1,
   'onlyApplyToLdapAuthenticated' =>  1,
@@ -22,7 +28,7 @@ $authorization['drupal_role'] =  array(
     1 =>  array('guest accounts', 'guests'),
     2 =>  array('special guests', 'special guests'),
     3 =>  array('cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'sysadmins'),
-   ),
+  ),
 
   'useMappingsAsFilter' =>  1,
 

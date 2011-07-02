@@ -268,7 +268,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#disabled' => (boolean)(!module_exists('php')),
     );
     if (!module_exists('php')) {
-      $form['restrictions']['allowTestPhp']['#title'] .= ' <em>'. t('php module currently disabled') .'</em>';
+      $form['restrictions']['allowTestPhp']['#title'] .= ' <em>' . t('php module currently disabled') . '</em>';
     }
 
 

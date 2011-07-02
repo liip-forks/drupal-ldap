@@ -137,7 +137,7 @@ class LdapAuthenticationConf {
         global $_name, $_ldap_user_entry;
         $_name = $name;
         $_ldap_user_entry = $ldap_user_entry;
-        $code = '<?php ' .  "global \$_name; \n  global \$_ldap_user_entry; \n" . $this->allowTestPhp . ' ?>';
+        $code = '<?php ' . "global \$_name; \n  global \$_ldap_user_entry; \n" . $this->allowTestPhp . ' ?>';
         $code_result = php_eval($code);
         $_name = NULL;
         $_ldap_user_entry = NULL;
@@ -147,7 +147,7 @@ class LdapAuthenticationConf {
       }
       else {
         drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
-         $tokens = array('!ldap_authentication_config' => l(t('LDAP Authentication Configuration'), 'admin/config/people/ldap/authentication'));
+        $tokens = array('!ldap_authentication_config' => l(t('LDAP Authentication Configuration'), 'admin/config/people/ldap/authentication'));
         watchdog('warning', 'LDAP Authentication is configured to deny users based on php execution with php_eval function, but php module is not enabled. Please enable php module or remove php code at !ldap_authentication_config .', $tokens);
         return FALSE;
       }
@@ -174,7 +174,7 @@ class LdapAuthenticationConf {
 
     if ($this->excludeIfNoAuthorizations) {
       if (!module_exists('ldap_authorization')) {
-        drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG),'warning');
+        drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
         $tokens = array('!ldap_authentication_config' => l(t('LDAP Authentication Configuration'), 'admin/config/people/ldap/authentication'));
         watchdog('warning', 'LDAP Authentication is configured to deny users without LDAP Authorization mappings, but LDAP Authorization module is not enabled.  Please enable and configure LDAP Authorization or disable this option at !ldap_authentication_config .', $tokens);
         return FALSE;
@@ -197,7 +197,7 @@ class LdapAuthenticationConf {
       }
 
       if (!$has_enabled_consumers) {
-        drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG),'warning');
+        drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
         $tokens = array('!ldap_consumer_config' => l(t('LDAP Authorization Configuration'), 'admin/config/people/ldap/authorization'));
         watchdog('warning', 'LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured:  !ldap_consumer_config .', $tokens);
         return FALSE;

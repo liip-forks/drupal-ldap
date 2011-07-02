@@ -1,5 +1,9 @@
 <?php
-
+// $Id$
+/**
+ * @file
+ * ldap_authentication test data
+ */
 
 $variables['user_register'] = USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL;
 $variables['user_email_verification'] = 1;

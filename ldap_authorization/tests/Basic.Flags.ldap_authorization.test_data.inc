@@ -1,5 +1,10 @@
 <?php
+// $Id$
 
+/**
+ * @file
+ * ldap_authorization test data
+ */
 
 $authorization['drupal_role'] = array(
 
@@ -25,7 +30,7 @@ $authorization['drupal_role'] = array(
     array('special guests', 'special guests'),
     array('cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'sysadmins'),
   ),
-  
+
   'useMappingsAsFilter' => 1,
 
   'synchOnLogon' => 1,

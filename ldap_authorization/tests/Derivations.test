@@ -1,5 +1,5 @@
 <?php
-
+// $Id$
 /**
  * @file
  * see getInfo() for test summary
@@ -115,7 +115,7 @@ class LdapAuthorizationDerivationsTests  extends LdapAuthorizationTestCase {
     $user = $this->drupalCreateUser(array());
     $unkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'unkool', 'mail' =>  'unkool@nowhere.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($unkool, 'query');  // just see if the correct ones are derived.
-    $this->assertTrue(count($new_authorizations) == 0, 'user account unkool tested for granting no drupal roles ', $this->ldapTestId  . '.nomatch');
+    $this->assertTrue(count($new_authorizations) == 0, 'user account unkool tested for granting no drupal roles ', $this->ldapTestId . '.nomatch');
 
 
     /**
@@ -128,7 +128,7 @@ class LdapAuthorizationDerivationsTests  extends LdapAuthorizationTestCase {
     $jkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('sysadmins', $new_authorizations['drupal_role']));
-    $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "sysadmins"', $this->ldapTestId  . '.onematch');
+    $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "sysadmins"', $this->ldapTestId . '.onematch');
 
 
     /**
@@ -148,8 +148,8 @@ class LdapAuthorizationDerivationsTests  extends LdapAuthorizationTestCase {
       in_array('netadmins', $new_authorizations[$this->consumerType]) &&
       in_array('sysadmins', $new_authorizations[$this->consumerType])
       );
-    $this->assertTrue($correct_roles, 'user account verykool tested for granting "netadmins" and "sysadmins" drupal roles ', $this->ldapTestId  . '.manymatch');
-    $this->assertTrue($correct_roles, 'user account verykool tested for case insensitivity ', $this->ldapTestId  . '.caseinsensitive');
+    $this->assertTrue($correct_roles, 'user account verykool tested for granting "netadmins" and "sysadmins" drupal roles ', $this->ldapTestId . '.manymatch');
+    $this->assertTrue($correct_roles, 'user account verykool tested for case insensitivity ', $this->ldapTestId . '.caseinsensitive');
 
 
   }

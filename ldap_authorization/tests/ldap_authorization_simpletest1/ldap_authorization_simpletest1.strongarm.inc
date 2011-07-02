@@ -1,11 +1,12 @@
 <?php
+// $Id$
 /**
  * @file
  * ldap_authorization_simplettest.strongarm.inc
  */
 
 /**
- * Implementation of hook_strongarm().
+ * Implements hook_strongarm().
  */
 function ldap_authorization_simpletest1_strongarm() {
   $export = array();

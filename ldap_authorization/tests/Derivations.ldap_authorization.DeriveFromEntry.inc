@@ -1,4 +1,10 @@
 <?php
+// $Id$
+
+/**
+ * @file
+ * simpletest authorization configuration
+ */
 
 $authorization['drupal_role'] = array(
   'consumerModule' => 'ldap_authorization_drupal_role',

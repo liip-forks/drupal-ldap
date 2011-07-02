@@ -1,11 +1,12 @@
 <?php
+// $Id$
 /**
  * @file
  * ldap_authorization_simpletest.ldap_servers.inc
  */
 
 /**
- * Implementation of hook_default_ldap_servers().
+ * Implements hook_default_ldap_servers().
  */
 function ldap_authorization_simpletest1_default_ldap_servers() {
   $export = array();

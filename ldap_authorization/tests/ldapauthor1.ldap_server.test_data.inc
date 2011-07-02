@@ -1,4 +1,10 @@
 <?php
+// $Id$
+
+/**
+ * @file
+ * simpltest authorization config
+ */
 
 $servers['ldapauthor1']['properties']  = array(
     'name'  => 'Test LDAP Server 1 for LDAP Authorization' ,

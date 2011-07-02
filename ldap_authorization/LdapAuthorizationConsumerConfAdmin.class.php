@@ -41,14 +41,14 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
     if (module_exists('ctools')) {
       ctools_include('export');
-	    // Populate our object with ctool's properties
+      // Populate our object with ctool's properties
       $object = ctools_export_crud_new('ldap_authorization');
       foreach ($object as $property => $value) {
         if (!isset($values->$property)) {
-	        $values->$property = $value;
+          $values->$property = $value;
         }
       }
-	    $result = ctools_export_crud_save('ldap_authorization', $values);
+      $result = ctools_export_crud_save('ldap_authorization', $values);
     }
     elseif ($op == 'edit') {
       $result = drupal_write_record('ldap_authorization', $values, 'consumer_type');
@@ -57,15 +57,22 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       $result = drupal_write_record('ldap_authorization', $values);
     }
 
-	  if ($result) {
-	    $this->inDatabase = TRUE;
+    if ($result) {
+      $this->inDatabase = TRUE;
     }
     else {
-      drupal_set_message('Failed to write LDAP Authorization to the database.');
+      drupal_set_message(t('Failed to write LDAP Authorization to the database.'));
     }
 
+    // rever mappings to array and remove temporary properties from ctools export
     $this->mappings = $this->pipeListToArray($values->mappings);
-
+    foreach (array('consumer_type', 'consumer_module', 'only_ldap_authenticated',
+      'derive_from_dn', 'derive_from_dn_attr', 'derive_from_attr', 'derive_from_attr_attr',
+      'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'use_filter',
+      'synch_to_ldap', 'synch_on_logon', 'revoke_ldap_provisioned', 'create_consumers',
+      'regrant_ldap_provisioned') as $prop_name) {
+      unset($this->{$prop_name});
+    }
   }
 
   public $fields;
@@ -414,10 +421,10 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
     $actions[] =  l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/edit/' . $this->consumerType);
     if (property_exists($this, 'type')) {
       if ($this->type == 'Overridden') {
-	        $actions[] = l(t('revert'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/delete/' . $this->consumerType);
+          $actions[] = l(t('revert'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/delete/' . $this->consumerType);
       }
       if ($this->type == 'Normal') {
-	        $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/delete/' . $this->consumerType);
+          $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/delete/' . $this->consumerType);
       }
     }
     else {

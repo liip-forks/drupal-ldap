@@ -52,12 +52,12 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
     $authorization = array();
     $this->testFunctions = new LdapTestFunctions();
     if ($this->useFeatureData) {
-       module_enable(array('ctools'), TRUE);
-       module_enable(array('strongarm'), TRUE);
-       module_enable(array('features'), TRUE);
-       module_enable(array($this->featureName), TRUE);
-        // will need to set non exportables such as bind password also
-        // also need to create fake ldap server data.  use
+      module_enable(array('ctools'), TRUE);
+      module_enable(array('strongarm'), TRUE);
+      module_enable(array('features'), TRUE);
+      module_enable(array($this->featureName), TRUE);
+       // will need to set non exportables such as bind password also
+       // also need to create fake ldap server data.  use
 
       if (! (module_exists('ctools') && module_exists('strongarm') && module_exists('features') && module_exists('$this->featureName')) ) {
         drupal_set_message(t('Features and Strongarm modules must be available to use Features as configuratio of simpletests'), 'warning');

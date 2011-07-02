@@ -40,8 +40,6 @@ class LdapServer {
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
 
-
-
   public $inDatabase = FALSE;
 
   public $connection;
@@ -65,7 +63,7 @@ class LdapServer {
     );
 
   }
-  
+
   /**
    * Constructor Method
    */
@@ -77,22 +75,22 @@ class LdapServer {
     $server_record = array();
     if (module_exists('ctools')) {
       ctools_include('export');
-	    $result = ctools_export_load_object('ldap_servers', 'names', array($sid));
-		  if (isset($result[$sid])) {
-		    $server_record[$sid] = $result[$sid];
-		    foreach ($server_record[$sid] as $property => $value) {
-		      $this->{$property} = $value;
-		    }
-		  }
+      $result = ctools_export_load_object('ldap_servers', 'names', array($sid));
+      if (isset($result[$sid])) {
+        $server_record[$sid] = $result[$sid];
+        foreach ($server_record[$sid] as $property => $value) {
+          $this->{$property} = $value;
+        }
+      }
     }
     else {
-	    $select = db_select('ldap_servers')
-		    ->fields('ldap_servers')
-		    ->condition('ldap_servers.sid',  $sid)
-		    ->execute();
-		  foreach ($select as $record) {
-		    $server_record[$record->sid] = $record;
-		  }
+      $select = db_select('ldap_servers')
+        ->fields('ldap_servers')
+        ->condition('ldap_servers.sid',  $sid)
+        ->execute();
+      foreach ($select as $record) {
+        $server_record[$record->sid] = $record;
+      }
     }
     if (!isset($server_record[$sid])) {
       $this->inDatabase = FALSE;
@@ -102,13 +100,13 @@ class LdapServer {
 
     if ($server_record) {
       $this->inDatabase = TRUE;
-	    $this->sid = $sid;
-	    $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
+      $this->sid = $sid;
+      $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
     }
     else {
       // @todo throw error
     }
-    
+
     foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
       if (isset($server_record->$db_field_name)) {
         $this->{$property_name} = $server_record->$db_field_name;

@@ -1,4 +1,9 @@
 <?php
+// $Id$
+/**
+ * @file
+ * ldap_authorization test data
+ */
 
 $authorization['drupal_role'] = array(
 
@@ -18,8 +23,8 @@ $authorization['drupal_role'] = array(
   'deriveFromEntryAttr' =>  NULL,
 
   'mappings' => array(
-     0 => array('cn=netadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins'),
-    ),
+    0 => array('cn=netadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins'),
+  ),
 
   'useMappingsAsFilter'  =>  1,
 

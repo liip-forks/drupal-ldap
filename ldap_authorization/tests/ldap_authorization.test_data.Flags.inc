@@ -1,4 +1,11 @@
 <?php
+// $Id$
+
+/**
+ * @file
+ * simpletest authorization config
+ *
+ */
 
   $authorization['consumer_conf']['drupal_role'] = array(
 
