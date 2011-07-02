@@ -4,6 +4,7 @@
 ==================
 7.x-1.0-beta2
 ==================
+Issue #1206500 by justintime: applied patch to allow exporting bind password if encryption enabled
 Issue #1201414 by justintime: applied very big exportables patch http://drupal.org/node/1201414#comment-4672616 successfully
 Added warnings when drupal 6 ldapauth table is found warning of manual upgrade process.
 Issue #1201414 by justintime: to improve exportables, renamed ldap_servers.type to ldap_server.ldap_type for older versions of ctools.  Also added export type string.
@@ -14,6 +15,7 @@ Simpletests by johnbarclay: fixed fake ldap server arrays for simpletests to wor
 Issue #1170034 by pumpkinkid:  Added functionality for limiting who can authenticate based on whether ldap authorizations exist.  U.I. was already in, just not functionality.
 Fixed whitelist php eval code by johnbarclay.  Did not check for php.module enabled, documentation showed wrong variables and return values.
 Additonal Ldap Authentication whitelist section simpletests added by johnbarclay: LDAP_authen.WL.php.php disabled, LDAP_authen.WL.php.true, LDAP_authen.WL.php.false, LDAP_authen.WL.exclude.miss, LDAP_authen.WL.exclude.match, LDAP_authen.WL.allow.miss, LDAP_authen.WL.allow.match
+
 ==================
 7.x-1.0-beta1
 ==================
