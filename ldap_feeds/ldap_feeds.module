@@ -1,0 +1,107 @@
+<?php
+// $Id:  $
+
+define('LDAP_FEEDS_FETCHER_SIZELIMIT', 50);
+define('LDAP_FEEDS_FETCHER_ATTRIBUTES', '"dn", "cn", "mail"');
+
+/**
+ * Implements hook_feeds_plugins().
+ */
+function ldap_feeds_feeds_plugins() {
+
+  $path = drupal_get_path('module', 'ldap_feeds');
+  $info = array();
+
+  $info['FeedsLdapQueryFetcher'] = array(
+    'name' => 'LDAP Query Fetcher',
+    'description' => 'Fetch content from ldap query',
+    'handler' => array(
+      'parent' => 'FeedsFetcher', // This is the key name, not the class name.
+      'class' => 'FeedsLdapQueryFetcher',
+      'file' => 'FeedsLdapQueryFetcher.inc',
+      'path' => $path,
+    ),
+  );
+
+  $info['FeedsDrupalUserLdapEntryFetcher'] = array(
+    'name' => 'Drupal User LDAP Entry Fetcher',
+    'description' => 'Fetches LDAP Entries associated with users.',
+    'handler' => array(
+      'parent' => 'FeedsFetcher', // This is the key name, not the class name.
+      'class' => 'FeedsDrupalUserLdapEntryFetcher',
+      'file' => 'FeedsDrupalUserLdapEntryFetcher.inc',
+      'path' => $path,
+    ),
+  );
+
+  $info['FeedsLdapEntryParser'] = array(
+    'name'        => t('LDAP Entry Parser for Feeds'),
+    'description' => t('Parse an LDAP Entry Array'),
+    'handler'     => array(
+      'parent' => 'FeedsParser',
+      'class'  => 'FeedsLdapEntryParser',
+      'file'   => 'FeedsLdapEntryParser.inc',
+      'path'   => $path,
+    ),
+  );
+
+
+  return $info;
+
+  /**
+   * this feed would be specific to drupal ldap authenticated or otherwise ldap identified users
+   * with the main use case being user profile or other user data synching from ldap to drupal
+   * it would use the FeedsLdapEntryParse.
+   */
+
+  /**
+  $info['FeedsLdapDrupalUserFetcher'] = array(
+    'name' => 'LDAP Drupal User Fetcher',
+    'description' => 'Fetch LDAP data associated with LDAP Authenticated users',
+    'handler' => array(
+      'parent' => 'FeedsFetcher', // This is the key name, not the class name.
+      'class' => 'FeedsDrupalUserFetcher',
+      'file' => 'FeedsLdapDrupalUserFetcher.inc',
+      'path' => $path,
+    ),
+  );
+
+  */
+
+}
+
+/**
+ * Implements hook_enable().
+ *
+ * Clear Feed's plugin cache so that this plugin shows up.
+ */
+function ldap_feeds_enable() {
+  cache_clear_all('plugins:feeds:plugins', 'cache');
+}
+
+
+/**
+ * show some sample ldap user data to help with mapping interface
+ */
+
+function ldap_feeds_form_feeds_ui_mapping_form_alter(&$form, &$form_state, $form_id) {
+  $sources = array();
+  $servers = ldap_servers_get_servers(NULL, 'enabled');
+  $form['legendset']['#description'] = "";
+  foreach ($servers as $sid => $ldap_server) {
+    $user_ldap_entry = ldap_servers_get_user_ldap_data($ldap_server->testingDrupalUsername, $sid);
+    foreach ($user_ldap_entry['attr'] as $id => $value) {
+      if (!is_numeric($id) && is_scalar($user_ldap_entry['attr'][$id][0]) && $user_ldap_entry['attr'][$id]['count'] == 1) {
+        $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $user_ldap_entry['attr'][$id][0]));
+      }
+      elseif ($user_ldap_entry['attr'][$id]['count'] > 1) {
+        $item = t('MULTIVALUED ATTRIBUTE:') . join(" , \n", $user_ldap_entry['attr'][$id]);
+        $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $item));
+      }
+
+    }
+    $form['legendset']['#description'] .= t('LDAP Attributes in the source "description" column are from testing ldap user (%testing_user) on the server %sid, which is configured in
+      the ldap server form.', array('%sid' => $sid, '%testing_user' => $ldap_server->testingDrupalUsername));
+  }
+  $form['legendset']['legend']['sources'] = $sources;
+}
