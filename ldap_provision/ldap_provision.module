@@ -129,7 +129,8 @@ function ldap_provision_cron_job($auth_conf) {
 
   foreach($accounts as $sid => $dn) {
     foreach($dn as $base_dn => $base_dn_accounts) {
-      watchdog('ldap', 'LDAP processing '. $servers[$sid]->name .' with base dn of '. $servers[$sid][$base_dn]);
+      watchdog('ldap', 'LDAP processing '. $servers[$sid]->name .' with base dn of '. $servers[$sid]->basedn[0]);
+
       $mapping = ldap_profile_get_mapping();
       $username = $mapping['username'];
       $mail = $mapping['mail'];
@@ -140,7 +141,7 @@ function ldap_provision_cron_job($auth_conf) {
 
       if(!empty($accounts)) {
         $sid = $accounts['sid'];
-        foreach($accounts as $key => $account) {
+        foreach($base_dn_accounts as $key => $account) {
           if($key !== 'sid' && $key !== 'count') {
             // if name doesn't exist, not a valid account and should be skipped
             if(!empty($account[$username])) {
