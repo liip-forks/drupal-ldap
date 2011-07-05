@@ -175,9 +175,9 @@ class LdapServer {
       }
     }
 
-  // Store the resulting resource
-  $this->connection = $con;
-  return LDAP_SUCCESS;
+    // Store the resulting resource
+    $this->connection = $con;
+    return LDAP_SUCCESS;
   }
 
 
@@ -235,6 +235,10 @@ class LdapServer {
    */
 
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
+    if (!$this->connection) {
+      $this->connect();
+    }
+
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
         $base_dn = $this->basedn[0];
@@ -246,6 +250,7 @@ class LdapServer {
     $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
     if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
+      dpm('entries'); dpm($entries);
       return $entries;
     }
     elseif ($this->ldapErrorNumber()) {

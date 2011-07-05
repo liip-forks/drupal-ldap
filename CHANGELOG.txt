@@ -5,6 +5,7 @@
 ==================
 Added ldap profile and provision back in
 Issue #1199094 by avinoam, applied patch in comment #4 to fix logging errors
+Issue #1209800 by johnbarclay, ldap query module start
 
 ==================
 7.x-1.0-beta2
