@@ -353,6 +353,12 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
         // patch 1050944
         for ($i = 0; $i < $user_attr_values['count']; $i++) {
           $attr_lcase = drupal_strtolower($user_attr_values[$i]);
+
+          if ($consumer_conf->deriveFromAttrUseFirstAttr) {
+            $attr_parts = explode(',', $attr_lcase);
+            $first_part = explode('=', $attr_parts[0]);
+            $attr_lcase = trim($first_part[1]);
+          }
           $derive_from_attr_authorizations[$attr_lcase] = $attr_lcase;
         }
       }

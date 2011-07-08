@@ -276,7 +276,7 @@ function ldap_help_get_ldap_servers() {
 
   $servers_objects = ldap_servers_get_servers(NULL, 'all');
   $servers = array();
-  $props = array('sid', 'name', 'status', 'ldap_type', 'port', 'tls', 'user_attr', 'mail_attr');
+  $props = array('sid', 'name', 'status', 'ldap_type', 'port', 'tls', 'user_attr', 'mail_attr', 'user_dn_expression', 'ldap_to_drupal_user');
   foreach ($servers_objects as $sid => $server_object) {
     foreach ($props as $property) {
       $servers[$sid][] = array(
@@ -346,6 +346,8 @@ function ldap_help_get_ldap_authorization() {
   $items['status']['mapping_id'] = 'string';
   $items['status']['consumer_type'] = 'string';
   $items['status']['status'] = 'string';
+  $items['status']['only_ldap_authenticated'] = 'string';
+
 
   $items['derive_from_dn']['derive_from_dn'] = 'string';
   $items['derive_from_dn']['derive_from_dn_attr'] = 'string';

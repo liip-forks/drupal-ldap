@@ -40,6 +40,7 @@ class LdapServer {
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
 
+
   public $inDatabase = FALSE;
 
   public $connection;
@@ -272,11 +273,33 @@ class LdapServer {
    *   An array with users LDAP data or NULL if not found.
    */
   function user_lookup($drupal_user_name) {
+    $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
 
+    if ($this->ldapToDrupalUserPhp && module_exists('php')) {
+      global $name;
+      $name = $drupal_user_name;
+      $code = "<?php global \$name; \n". $this->ldapToDrupalUserPhp . "; \n ?>";
+      $watchdog_tokens['%code'] = $this->ldapToDrupalUserPhp;
+      $code_result = php_eval($code);
+      $watchdog_tokens['%code_result'] = $code_result;
+      $ldap_username = $code_result;
+      $watchdog_tokens['%ldap_username'] = $ldap_username;
+      $name = NULL;
+      if ($this->detailedWatchdogLog) {
+        watchdog('ldap_server', '%drupal_user_name tansformed to %ldap_username by applying code <code>%code</code>', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
+    }
+    else {
+      $ldap_username = $drupal_user_name;
+    }
+    if (!$ldap_username) {
+      return FALSE;
+    }
+   // print "$ldap_username from $drupal_user_name"; die;
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
 
-      $filter = $this->user_attr . '=' . $drupal_user_name;
+      $filter = $this->user_attr . '=' . $ldap_username;
 
       $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
@@ -288,7 +311,6 @@ class LdapServer {
         continue;
       }
       $match = $result[0];
-
       // These lines serve to fix the attribute name in case a
       // naughty server (i.e.: MS Active Directory) is messing the
       // characters' case.
@@ -324,7 +346,7 @@ class LdapServer {
       // Clarence "sparr" Risher on http://drupal.org/node/102008, so we
       // loop through all possible options.
       foreach ($match[$name_attr] as $value) {
-        if (drupal_strtolower(trim($value)) == drupal_strtolower($drupal_user_name)) {
+        if (drupal_strtolower(trim($value)) == drupal_strtolower($ldap_username)) {
           $result = array(
             'dn' =>  $match['dn'],
             'mail' => @$match[$this->mail_attr][0],

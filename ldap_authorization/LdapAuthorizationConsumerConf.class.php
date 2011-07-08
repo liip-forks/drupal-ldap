@@ -31,6 +31,7 @@ class LdapAuthorizationConsumerConf {
 
   public $deriveFromAttr = FALSE;
   public $deriveFromAttrAttr = NULL;
+  public $deriveFromAttrUseFirstAttr = FALSE;
 
   public $deriveFromEntry = FALSE;
   public $deriveFromEntryEntries = NULL;
@@ -118,6 +119,7 @@ class LdapAuthorizationConsumerConf {
 
     $this->deriveFromAttr  = (bool)($consumer_conf->derive_from_attr);
     $this->deriveFromAttrAttr =  $this->linesToArray($consumer_conf->derive_from_attr_attr);
+    $this->deriveFromAttrUseFirstAttr  = (bool)($consumer_conf->derive_from_attr_use_first_attr);
 
     $this->deriveFromEntry  = (bool)(@$consumer_conf->derive_from_entry);
     $this->deriveFromEntryEntries = $this->linesToArray($consumer_conf->derive_from_entry_entries);
@@ -154,6 +156,7 @@ class LdapAuthorizationConsumerConf {
     'deriveFromDnAttr',
     'deriveFromAttr',
     'deriveFromAttrAttr',
+    'deriveFromAttrUseFirstAttr',
     'deriveFromEntry',
     'deriveFromEntryEntries',
     'deriveFromEntryAttr',

@@ -376,11 +376,18 @@ $form['#prefix'] = t($form['#prefix']);
   );
   $form['users']['ldap_to_drupal_user'] = array(
     '#type' => 'textarea',
-    '#title' => t('PHP to transform login name from Drupal to LDAP'),
+    '#title' => t('PHP to transform Drupal login username to LDAP UserName attribute.'),
     '#default_value' => $this->ldapToDrupalUserPhp,
     '#cols' => 25,
     '#rows' => 5,
-    '#description' => t('Enter PHP to transform Drupal username to the value of the UserName attribute.  Careful, bad PHP code here will break your site. If left empty, no name transformation will be done. Change following example code to enable transformation:<br /><code>return $name;</code>'),
+    '#disabled' => (!module_exists('php')),
+    '#description' => t('Enter PHP to transform Drupal username to the value of the UserName attribute.
+        The code should print the UserName attribute.
+        PHP filter module must be enabled for this to work.
+        The variable $name is available and is the user\'s login username.
+        Careful, bad PHP code here will break your site. If left empty, no name transformation will be done.
+        <br/>Example:<br/>Given the user will logon with jdoe@xyz.com and you want the ldap UserName attribute to be
+        jdoe.<br/><code>$parts = explode(\'@\', $name); if (count($parts) == 2) {print $parts[0]};</code>'),
   );
 
   $form['users']['testing_drupal_username'] = array(

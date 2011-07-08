@@ -85,3 +85,22 @@ function ldap_authorization_update_7100() {
   }
 
 }
+
+function ldap_authorization_update_7101() {
+
+  // make sure 'create_consumers' field is there for old 7.x-1.x-dev versions
+  if (!db_field_exists('ldap_authorization', 'derive_from_attr_use_first_attr')) {
+    db_add_field('ldap_authorization', 'derive_from_attr_use_first_attr', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+    return t('"derive_from_attr_use_first_attr" field added to ldap_authorization table');
+  }
+  else {
+    return t('No database changes made.');
+  }
+
+}
+

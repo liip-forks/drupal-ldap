@@ -1,6 +1,8 @@
 // $Id: CHANGELOG.txt,v 1.1.4.3 2011/02/08 20:19:24 johnbarclay Exp $
 
 
+Issue #1206146 danharper (and likely several other issues): allow mapping of cn or other first attribute instead of dn in ldap authorization and check for long drupal role names.
+Issue #1213228 johnbarclay: drupal user name to ldap php never implemented in ldap authorization. php format has changed.
 ==================
 7.x-1.0-beta2
 ==================

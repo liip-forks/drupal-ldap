@@ -28,6 +28,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values->derive_from_dn_attr = $this->deriveFromDnAttr;
     $values->derive_from_attr = (int)$this->deriveFromAttr;
     $values->derive_from_attr_attr = $this->arrayToLines($this->deriveFromAttrAttr);
+    $values->derive_from_attr_use_first_attr = (int)$this->deriveFromAttrUseFirstAttr;
     $values->derive_from_entry = (int)$this->deriveFromEntry;
     $values->derive_from_entry_entries = $this->arrayToLines($this->deriveFromEntryEntries);
     $values->derive_from_entry_attr = $this->deriveFromEntryAttr;
@@ -67,7 +68,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     // rever mappings to array and remove temporary properties from ctools export
     $this->mappings = $this->pipeListToArray($values->mappings);
     foreach (array('consumer_type', 'consumer_module', 'only_ldap_authenticated',
-      'derive_from_dn', 'derive_from_dn_attr', 'derive_from_attr', 'derive_from_attr_attr',
+      'derive_from_dn', 'derive_from_dn_attr', 'derive_from_attr', 'derive_from_attr_attr', 'derive_from_attr_use_first_attr',
       'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'use_filter',
       'synch_to_ldap', 'synch_on_logon', 'revoke_ldap_provisioned', 'create_consumers',
       'regrant_ldap_provisioned') as $prop_name) {
@@ -214,6 +215,12 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#cols' => 50,
       '#rows' => 6,
       '#description' => t('If the !consumer_shortNamePlural are stored in the user entries, along with the rest of their data, then enter here a list of attributes which may contain them.', $consumer_tokens),
+    );
+
+    $form['derive_from_attr']['derive_from_attr_use_first_attr'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Convert full dn to value of first attribute.  e.g.  <code>cn=admin group,ou=it,dc=ad,dc=nebraska,dc=edu</code> would be converted to <code>admin group</code>', $consumer_tokens),
+      '#default_value' => $this->deriveFromAttrUseFirstAttr,
     );
 
 
@@ -496,7 +503,6 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
   protected function populateFromDrupalForm($op, $values) {
 
     $this->inDatabase = (drupal_strtolower($op) == 'edit');
-
     $values['mappings'] = $this->pipeListToArray($values['mappings']);
     $values['derive_from_attr_attr'] = $this->linesToArray($values['derive_from_attr_attr']);
     $values['derive_from_entry_entries'] = $this->linesToArray($values['derive_from_entry_entries']);
@@ -512,6 +518,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
 
     $this->deriveFromAttr  = (bool)($values['derive_from_attr']);
     $this->deriveFromAttrAttr = $values['derive_from_attr_attr'];
+    $this->deriveFromAttrUseFirstAttr  = (bool)($values['derive_from_attr_use_first_attr']);
 
     $this->deriveFromEntry  = (bool)(@$values['derive_from_entry']);
     $this->deriveFromEntryEntries = $values['derive_from_entry_entries'];
@@ -638,6 +645,14 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'type' => 'varchar',
           'length' => 255,
           'default' => NULL,
+        )
+      ),
+      'derive_from_attr_use_first_attr' => array(
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
         )
       ),
       'derive_from_entry'  => array(
