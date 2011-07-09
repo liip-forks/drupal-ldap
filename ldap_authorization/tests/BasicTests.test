@@ -200,37 +200,7 @@ function testFlags() {
   $jkool_granted_guest = isset($jkool->roles[$roles_by_name['guests']]);
   $this->assertTrue(($guest_role_deleted && $guest_role_recreated && $jkool_granted_guest), ' create consumers (e.g. roles)', $this->ldapTestId . '.createRoles');
 
-
 }
-
-/**
-  function testAuthorizationForm() {
-    // test add authorization form validation and actual populated of db with ldap authorization form
-    // test update of that authorization
-    // test delete of that authorization
-    // test permissions on those forms (add, edit, delete) and the index
-  }
-
-
-  function testMappingAndFiltering() {
-
-  }
-
-
-  function testMoreSettings() {
-
-    // toggle for when a user logs on obeyed
-    // revoke
-    // regrant
-    // revoke II
-    // create drupal roles that do not exist.
-    // enable this authorization mapping obeyed
-    // only apply to ldap authenticated users
-
-
-  }
- */
-
 
 
 }

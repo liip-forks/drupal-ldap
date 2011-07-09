@@ -185,6 +185,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
      * an array of filtered and mapped authorization ids
      */
 
+
     $filtered_ldap_authorizations = array();
     if ($consumer->consumerConf->useMappingsAsFilter) {
       foreach ($consumer->consumerConf->mappings as $mapping_filter) {
@@ -198,6 +199,8 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     else {
       $filtered_ldap_authorizations = array_keys($proposed_ldap_authorizations);
     }
+    $filtered_ldap_authorizations = array_unique($filtered_ldap_authorizations);
+
     if ($detailed_watchdog_log) {
       $watchdog_tokens['%filtered_ldap_authorizations'] = join(', ', $filtered_ldap_authorizations);
       watchdog('ldap_authorization', '%username : filtered authorization for %consumer_type: %filtered_ldap_authorizations.',

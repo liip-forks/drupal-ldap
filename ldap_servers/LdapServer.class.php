@@ -274,7 +274,6 @@ class LdapServer {
    */
   function user_lookup($drupal_user_name) {
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
-
     if ($this->ldapToDrupalUserPhp && module_exists('php')) {
       global $name;
       $name = $drupal_user_name;

@@ -44,6 +44,10 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
     variable_del('ldap_simpletest');
   }
 
+
+
+
+
   function prepTestData() {
 
     $servers = array();

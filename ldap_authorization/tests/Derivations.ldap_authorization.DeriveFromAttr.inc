@@ -20,6 +20,7 @@ $authorization['drupal_role'] = array(
 
   'deriveFromAttr' => 1,
   'deriveFromAttrAttr' => array('memberOf'),
+  'deriveFromAttrUseFirstAttr' => 0,
 
   'deriveFromEntry' => 0,
   'deriveFromEntryEntries' => NULL,
@@ -29,6 +30,7 @@ $authorization['drupal_role'] = array(
     array('cn=SYSadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'sysadmins'),
     array('cn=netadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins'),
     array('cn=phone operators,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins'),
+    array('netadmins', 'netadmins2'),
   ),
 
   'useMappingsAsFilter' => 1,

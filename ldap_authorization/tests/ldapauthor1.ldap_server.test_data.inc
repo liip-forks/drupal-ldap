@@ -80,7 +80,7 @@ $servers['ldapauthor1']['users']['cn=verykool,ou=special guests,ou=guest account
       0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
       1 => 'CN=NETadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
       2 => 'cn=phone operators,ou=it,dc=ad,dc=myuniveristy,dc=edu',
-      'count' => 2,
+      'count' => 3,
       ),
   );
 
