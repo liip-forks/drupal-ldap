@@ -63,6 +63,7 @@ function ldap_servers_requirements($phase) {
  * Implements hook_schema().
  */
 function ldap_servers_schema() {
+  require_once('ldap_servers.module');  // to get the LDAP_SERVERS_ENC_TYPE_CLEARTEXT constants issue#1209576
   $schema['ldap_servers'] = array(
     'export' => array(
       'key' => 'sid',
