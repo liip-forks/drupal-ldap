@@ -139,7 +139,6 @@ function ldap_servers_schema() {
       'bindpw' => array(
         'type' => 'varchar',
         'length' => 255,
-        'no export' => variable_get('ldap_servers_encryption' , LDAP_SERVERS_ENC_TYPE_CLEARTEXT) == LDAP_SERVERS_ENC_TYPE_CLEARTEXT ? TRUE : FALSE,
       ),
       'user_dn_expression' => array(
         'type' => 'varchar',
