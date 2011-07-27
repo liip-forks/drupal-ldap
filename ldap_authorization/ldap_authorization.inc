@@ -335,7 +335,8 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   // Strategy 1: group extracted from user's DN.
   $derive_from_dn_authorizations = array();
   if ($consumer_conf->deriveFromDn) {
-    $pairs = explode(',', $user_ldap_entry['dn']);
+    $pairs = ldap_explode_dn($user_ldap_entry['dn'], 0);
+    $count = array_shift($pairs);
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
       if (drupal_strtolower(trim($pair[0])) == drupal_strtolower($consumer_conf->deriveFromDnAttr)) {
