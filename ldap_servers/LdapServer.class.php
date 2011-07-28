@@ -39,6 +39,7 @@ class LdapServer {
   public $mail_attr;
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
+  public $detailed_watchdog_log;
 
 
   public $inDatabase = FALSE;
@@ -72,7 +73,7 @@ class LdapServer {
     if (!is_scalar($sid)) {
       return;
     }
-
+    $this->detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
     $server_record = array();
     if (module_exists('ctools')) {
       ctools_include('export');
@@ -244,6 +245,20 @@ class LdapServer {
         return FALSE;
       }
     }
+    if ($this->detailed_watchdog_log) {
+      $query = 'ldap_search() call: '. join("<hr/>", array(
+        'base_dn: ' . $base_dn,
+        'filter = ' . $filter,
+        'attributes: ' .  join(',', $attributes),
+        'attrsonly = ' .  $attrsonly,
+        'sizelimit = ' .  $sizelimit,
+        'timelimit = ' .  $timelimit,
+        'deref = ' .  $deref,
+        )
+      );
+      watchdog('ldap_server', $query, array());
+    }
+
     $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
     if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
@@ -419,7 +434,5 @@ class LdapServer {
       return FALSE;
     }
   }
-
-
 
 }

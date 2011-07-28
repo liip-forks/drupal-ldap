@@ -200,7 +200,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       $filtered_ldap_authorizations = array_keys($proposed_ldap_authorizations);
     }
     $filtered_ldap_authorizations = array_unique($filtered_ldap_authorizations);
-    debug('filtered_ldap_authorizations'); debug($filtered_ldap_authorizations);
     if ($detailed_watchdog_log) {
       $watchdog_tokens['%filtered_ldap_authorizations'] = join(', ', $filtered_ldap_authorizations);
       watchdog('ldap_authorization', '%username : filtered authorization for %consumer_type: %filtered_ldap_authorizations.',
@@ -388,9 +387,10 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   $derive_from_entry_authorizations = array();
   if ($consumer_conf->deriveFromEntry) {
     foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
-      $entries = $ldap_server->search($branch, $consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'],  array('cn'));
+      $filter = '(' . $consumer_conf->deriveFromEntryAttr . '="' . $user_ldap_entry['dn'] . '")';
+      $entries = $ldap_server->search($branch, $filter, array('cn'));
       if (empty($entries) || $entries['count'] == 0) {
-        $entries = $ldap_server->search($branch, $consumer_conf->deriveFromEntryAttr . '=' . $user->name,  array('cn'));
+        $entries = $ldap_server->search($branch, $consumer_conf->deriveFromEntryAttr . '="' . $user->name . '"',  array('cn'));
       }
       foreach ($entries as $entry) {
         if (isset($entry['cn'])) {
