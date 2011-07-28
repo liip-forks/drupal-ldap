@@ -63,6 +63,33 @@ $servers['ldapauthor1']['users']['cn=jkool,ou=guest accounts,dc=ad,dc=myuniveris
     'memberOf' => array( 0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
   );
 
+// duplicate of previous with escaped commas in cn.
+$servers['ldapauthor1']['users']['cn=Flintstone\, Wilma,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+    'dn' => 'cn=Flintstone\, Wilma,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
+    'mail' => array( 0 => 'wilmaf@guests.myuniversity.edu', 'count' => 1),
+    'sAMAccountName' => array( 0 => 'wilmaf', 'count' => 1),
+    'password' => array( 0 => 'goodpwd', 'count' => 1),
+    'memberOf' => array(
+       0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+       1 => 'cn=punctuated\,comma\,freaks,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+      'count' => 2
+      ),
+  );
+
+// duplicate of previous with quoted cn.
+$servers['ldapauthor1']['users']['cn=Rubble\, Barney,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+    'dn' => 'cn=Rubble\, Barney,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
+    'mail' => array( 0 => 'barneyr@guests.myuniversity.edu', 'count' => 1),
+    'sAMAccountName' => array( 0 => 'barneyr', 'count' => 1),
+    'password' => array( 0 => 'goodpwd', 'count' => 1),
+    'memberOf' => array(
+       0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+       1 => 'cn="punctuated,comma,freaks",ou=it,dc=ad,dc=myuniveristy,dc=edu',
+      'count' => 2
+      ),
+  );
+
+
 $servers['ldapauthor1']['users']['cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'unkool@nowhere.myuniversity.edu', 'count' => 1),
@@ -83,6 +110,8 @@ $servers['ldapauthor1']['users']['cn=verykool,ou=special guests,ou=guest account
       'count' => 3,
       ),
   );
+
+
 
 $servers['ldapauthor1']['users']['cn=newkool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=newkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',

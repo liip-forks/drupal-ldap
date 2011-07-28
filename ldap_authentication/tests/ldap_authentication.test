@@ -70,7 +70,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
     $this->drupalLogout();
     $user = $this->testData['servers'][$this->sid]['users'][$dn]['attr'];
-    $parts = explode(',', $dn);
+    $parts = ldap_explode_dn($dn, 0);
     $cn_parts = explode('=', $parts[0]);
     $edit = array(
       'name' => $cn_parts[1],

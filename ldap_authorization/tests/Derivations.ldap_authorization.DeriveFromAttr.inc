@@ -31,6 +31,7 @@ $authorization['drupal_role'] = array(
     array('cn=netadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins'),
     array('cn=phone operators,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins'),
     array('netadmins', 'netadmins2'),
+    array('punctuated,comma,freaks', 'comma freaks'),
   ),
 
   'useMappingsAsFilter' => 1,
