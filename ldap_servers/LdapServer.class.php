@@ -268,8 +268,8 @@ class LdapServer {
       $watchdog_tokens =  array('%basedn' => $base_dn, '%filter' => $filter,
         '%attributes' => print_r($attributes, TRUE), '%errmsg' => $this->errorMsg('ldap'),
         '%errno' => $this->ldapErrorNumber());
-      watchdog('ldap', "LDAP ldap_search error. basedn: %basedn, filter: %filter, attributes:
-        %attributes, errmsg: %errmsg, ldap err no: %errno,", $watchdog_tokens);
+      watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
+        %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
       return array();
     }
     else {
@@ -314,7 +314,7 @@ class LdapServer {
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
 
-      $filter = $this->user_attr . '=' . $ldap_username;
+      $filter = '('. $this->user_attr . '="' . $ldap_username . '")';
 
       $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
