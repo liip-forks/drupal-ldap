@@ -178,6 +178,7 @@ $form['#prefix'] = t($form['#prefix']);
       '#default_value' => $this->sid,
       '#size' => 20,
       '#maxlength' => 20,
+      '#required' => TRUE,
       '#disabled' => ($op == 'edit'),
       '#description' => t('May only contain alphanumeric characters (a-z, A-Z, 0-9, and _)' ),
     );
