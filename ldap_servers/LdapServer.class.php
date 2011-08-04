@@ -314,7 +314,7 @@ class LdapServer {
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
 
-      $filter = '('. $this->user_attr . '="' . $ldap_username . '")';
+      $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
 
       $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;

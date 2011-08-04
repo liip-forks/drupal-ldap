@@ -1,5 +1,5 @@
 // $Id: CHANGELOG.txt,v 1.1.4.3 2011/02/08 20:19:24 johnbarclay Exp $
-
+Backed out of quoting filter values.  Though valid syntax, doesn't seem to work.
 Issue #1232332 by zeezhao:  cut length of file so .tar packaging would work
 Issue #1224808 by cpierce:  A number of escaping and quoting issues were resolved via quoting filters on ldap queries and using ldap_explode_dn() function instead of splitting on ",".  Also added a detialed logging entry for the ldap server class search() method to aid in future debugging
 Issue #1206500 by justintime: Added Make bind passwords exportable
