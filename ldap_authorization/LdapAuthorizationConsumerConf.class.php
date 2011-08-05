@@ -64,9 +64,9 @@ class LdapAuthorizationConsumerConf {
    */
   function __construct(&$consumer, $_new = FALSE, $_sid = NULL) {
     $this->consumer = $consumer;
+    $this->consumerType = $consumer->consumerType;
     if ($_new) {
       $this->inDatabase = FALSE;
-      $this->consumerType = $consumer->consumerType; //FALSE;
     }
     else {
       $this->inDatabase = TRUE;

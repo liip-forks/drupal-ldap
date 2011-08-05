@@ -1,5 +1,6 @@
 // $Id: CHANGELOG.txt,v 1.1.4.3 2011/02/08 20:19:24 johnbarclay Exp $
 
+Issue #1240966 by sunil.  Fix multiple consumer loads.
 Issue #1235430 by kbnielsen.  Improve message of disabled password reset form.
 Issue #1238818 by showmanlkz.  Made sid required on server form.
 Backed out of quoting filter values.  Though valid syntax, doesn't seem to work.
