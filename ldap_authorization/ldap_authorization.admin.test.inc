@@ -121,6 +121,8 @@ function ldap_authorization_test_form_submit($form, &$form_state) {
         $user->ldap_authenticated = TRUE;
       }
       list($results[$username], $notifications[$username]) = ldap_authorizations_user_authorizations($user, 'test_query', $consumer_type, 'logon');
+      // remove authorizations from other consumer types
+      $results[$username] = array($consumer_type => $results[$username][$consumer_type]);
       $i++;
       if ($i == 10) {
         break;
