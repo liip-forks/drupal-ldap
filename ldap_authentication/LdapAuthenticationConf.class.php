@@ -21,6 +21,11 @@ class LdapAuthenticationConf {
   public $acctCreation = LDAP_AUTHENTICATION_ACCT_CREATION_DEFAULT;
   public $emailOption = LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT;
   public $emailUpdate = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DEFAULT;
+  public $ssoEnabled = FALSE;
+  public $seamlessLogin = FALSE;
+  public $ldapImplementation = FALSE;
+  public $cookieExpire = LDAP_AUTHENTICATION_COOKIE_EXPIRE;
+
   public $apiPrefs = array();
   public $createLDAPAccounts; // should an drupal account be created when an ldap user authenticates
   public $createLDAPAccountsAdminApproval; // create them, but as blocked accounts
@@ -51,6 +56,10 @@ class LdapAuthenticationConf {
     'excludeIfTextInDn',
     'allowTestPhp',
     'excludeIfNoAuthorizations',
+    'ssoEnabled',
+    'seamlessLogin',
+    'ldapImplementation',
+    'cookieExpire',
   );
 
   /** are any ldap servers that are enabled associated with ldap authentication **/

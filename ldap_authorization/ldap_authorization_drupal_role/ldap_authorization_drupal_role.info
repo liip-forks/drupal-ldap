@@ -6,6 +6,6 @@ package = "Lightweight Directory Access Protocol"
 dependencies[] = ldap_authorization
 core = 7.x
 configure = admin/config/people/ldap/authorization
-files[] = LdapAuthorizationConssumerRole.class.php
+files[] = LdapAuthorizationConsumerRole.class.php
 files[] = ldap_authorization_drupal_role.module
 files[] = ldap_authorization_drupal_role.inc

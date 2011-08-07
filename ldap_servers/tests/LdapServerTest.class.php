@@ -130,6 +130,7 @@ class LdapServerTest extends LdapServer {
    *   empty.
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
+
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
         $base_dn = $this->basedn[0];
@@ -145,8 +146,9 @@ class LdapServerTest extends LdapServer {
     }
 
     $base_dn = drupal_strtolower($base_dn);
-    list($filter_attribute, $filter_value) = explode('=', $filter);
+    $filter = trim($filter,"()");
 
+    list($filter_attribute, $filter_value) = explode('=', $filter);
     // need to perform feaux ldap search here with data in
     $results = array();
     foreach ($this->testUsers as $dn => $user_data) {

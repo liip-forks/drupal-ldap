@@ -18,7 +18,6 @@ function theme_ldap_authorization_admin_index(&$variables) {
     'caption' => t('LDAP Authorization Configurations'),
   );
 
-
   foreach ($consumers as $consumer_type => $consumer) {
 
     if ($consumer->consumerConf->inDatabase) {

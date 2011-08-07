@@ -86,3 +86,47 @@ function theme_ldap_authentication_user_pass_validate_ldap_authenticated($variab
   }
   return $msg;
 }
+
+
+/**
+ * The following three functions are theme callbacks for various messages
+ * from NTLM/seamless login integration.
+ *
+ * Provides a theme callback for successful login messages. The reason for
+ * using theme callbacks instead of a simple t() function is to provide the
+ * ability to have more complex message handling performed; an example would
+ * be to use the Real Name module to say "Welcome, User Name" upon successful
+ * login.
+ * @param $message
+ *   A text string containing a translatable success message
+ *
+ * @ingroup themeable
+ */
+function theme_ldap_authentication_login_message($variables){
+  extract($variables);
+  return $message;
+}
+
+/**
+ * Provides a theme callback for user not found messages.
+ * @param $message
+ *   A text string containing a translatable "user not found" message
+ *
+ * @ingroup themeable
+ */
+function theme_ldap_authentication_message_not_found($variables){
+  extract($variables);
+  return $message;
+}
+
+/**
+ * Provides a theme callback for authentication failure messages.
+ * @param $message
+ *   A text string containing a translatable "authentication failure" message
+ *
+ * @ingroup themeable
+ */
+function theme_ldap_authentication_message_not_authenticated($variables){
+  extract($variables);
+  return $message;
+}

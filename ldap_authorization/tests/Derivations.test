@@ -105,7 +105,7 @@ class LdapAuthorizationDerivationsTests  extends LdapAuthorizationTestCase {
     $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
     $this->consumerType = 'drupal_role';
     $this->prepTestData();
-    debug($this->serversData);
+
     /**
      * test:  DeriveFromAttr.nomatch no matches on dn attribute.
      *
