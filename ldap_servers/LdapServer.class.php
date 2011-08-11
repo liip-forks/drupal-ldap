@@ -37,6 +37,9 @@ class LdapServer {
   public $user_dn_expression;
   public $user_attr;
   public $mail_attr;
+  public $mail_template;
+  public $unique_persistent_attr;
+  public $allow_conflicting_drupal_accts = FALSE;
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
   public $detailed_watchdog_log;
@@ -60,6 +63,9 @@ class LdapServer {
     'user_dn_expression' => 'user_dn_expression',
     'user_attr'  => 'user_attr',
     'mail_attr'  => 'mail_attr',
+    'mail_template'  => 'mail_template',
+    'unique_persistent_attr' => 'unique_persistent_attr',
+    'allow_conflicting_drupal_accts' => 'allow_conflicting_drupal_accts',
     'ldap_to_drupal_user'  => 'ldapToDrupalUserPhp',
     'testing_drupal_username'  => 'testingDrupalUsername'
     );
@@ -319,7 +325,7 @@ class LdapServer {
       $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
-      // Must find exactly one user for authentication to.
+      // Must find exactly one user for authentication to work.
       if ($result['count'] != 1) {
         $count = $result['count'];
         watchdog('ldap_authentication', "Error: !count users found with $filter under $basedn.", array('!count' => $count), WATCHDOG_ERROR);
@@ -342,7 +348,7 @@ class LdapServer {
         if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
           $result = array(
             'dn' =>  $match['dn'],
-            'mail' => @$match[$this->mail_attr][0],
+            'mail' => $this->deriveEmailFromEntry($match),
             'attr' => $match,
             );
           return $result;
@@ -364,7 +370,7 @@ class LdapServer {
         if (drupal_strtolower(trim($value)) == drupal_strtolower($ldap_username)) {
           $result = array(
             'dn' =>  $match['dn'],
-            'mail' => @$match[$this->mail_attr][0],
+            'mail' => $this->deriveEmailFromEntry($match),
             'attr' => $match,
           );
 
@@ -374,7 +380,18 @@ class LdapServer {
     }
   }
 
-
+  public function deriveEmailFromEntry($ldap_entry) {
+    if ($this->mail_attr) { // not using template
+      return @$ldap_entry[$this->mail_attr][0];
+    }
+    elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
+      require_once('ldap_servers.functions.inc');
+      return ldap_server_token_replace($ldap_entry, $this->mail_template);
+    }
+    else {
+      return FALSE;
+    }
+  }
 
 
   /**

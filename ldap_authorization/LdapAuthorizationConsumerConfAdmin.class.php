@@ -688,7 +688,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
         )
       ),
 
-      'use_filter'   => array(
+      'use_filter' => array(
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
@@ -696,11 +696,12 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'default' => 1,
         )
       ),
-      'synchronization_modes'  => array(
+
+      'synchronization_modes' => array(
         'form_default' =>  array('user_logon'),
       ),
 
-      'synchronization_actions'  => array(
+      'synchronization_actions' => array(
         'form_default' =>  array('revoke_ldap_provisioned', 'create_consumers'),
       ),
 
@@ -730,6 +731,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'default' => '0',
         ),
       ),
+
      'create_consumers'  => array(
         'schema' => array(
           'type' => 'int',
@@ -738,6 +740,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'default' => '0',
         ),
       ),
+
      'regrant_ldap_provisioned'  => array(
         'schema' => array(
           'type' => 'int',

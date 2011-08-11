@@ -271,12 +271,10 @@ function ldap_help_get_ldap_servers() {
       'value' => @$conf_form['encryption']['ldap_servers_encryption']['#options'][$selected],
     );
 
-
-
-
   $servers_objects = ldap_servers_get_servers(NULL, 'all');
   $servers = array();
-  $props = array('sid', 'name', 'status', 'ldap_type', 'port', 'tls', 'user_attr', 'mail_attr', 'user_dn_expression', 'ldap_to_drupal_user');
+  $field_to_properties = LdapServer::field_to_properties_map();
+  $props = array_values($field_to_properties); // array('sid', 'name', 'status', 'ldap_type', 'port', 'tls', 'user_attr', 'mail_attr', 'user_dn_expression', 'ldap_to_drupal_user');
   foreach ($servers_objects as $sid => $server_object) {
     foreach ($props as $property) {
       $servers[$sid][] = array(
@@ -370,7 +368,7 @@ function ldap_help_get_ldap_authorization() {
 
   foreach ($consumers as $consumer_type => $consumer) {
     $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
-    $mapping_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj->mapping->mappingID, FALSE, NULL, $consumer_type);
+    $mapping_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj, FALSE);
     $authorization_form = $mapping_admin->drupalForm($server_options, 'edit');
     $status[$consumer_type] = ldap_help_parse_form($authorization_form, $items);
     $maps = $authorization_form['filter_and_mappings']['mappings']['#default_value'];
@@ -379,9 +377,10 @@ function ldap_help_get_ldap_authorization() {
       $map_content .= ($maps == drupal_strtolower($maps)) ? ', lower case' : ', mixed case';
     }
     $status[$consumer_type][] = array(
-        'title' => 'mappings',
-        'value' => $map_content,
-      );
+      'title' => 'mappings',
+      'value' => $map_content,
+    );
+
   }
   return $status;
 

@@ -107,3 +107,53 @@ function theme_ldap_servers_https_required($vars) {
       site_contact_link for help if this error continues.", $vars);
 
 }
+
+function theme_ldap_server_token_table($variables) {
+  $header = array(
+    array('data' => 'Token', 'sort' => 'asc'),
+    array('data' => 'Value'),
+  );
+  foreach ($variables['tokens'] as $token => $value) {
+    $rows[] = array('data' => array($token, $value));
+  }
+  $token_table = '<div class="content"><h2>' . t('Available Tokens') . '</h2>' . theme_table(array('colgroups' => NULL,'caption' => 'tokens', 'header' => $header, 'rows' => $rows, 'sticky' => TRUE, 'attributes' => array(), 'empty' => 'No data')). '</div>';
+
+  return $token_table;
+}
+
+ function theme_ldap_server_ldap_entry_table($variables) {
+
+      $header = array('Attribute Name', 'Instance', 'Value', 'token');
+      $rows = array();
+      foreach ($variables['entry'] as $key => $value) {
+        if (is_numeric($key) || $key == 'count') {
+        }
+        elseif (count($value) > 1) {
+          $count = (int)$value['count'];
+          foreach ($value as $i => $value2) {
+
+            if ((string)$i == 'count') {
+              continue;
+            }
+            elseif ($i == 0 && $count == 1) {
+              $token = LDAP_SERVERS_TOKEN_PRE . $key . LDAP_SERVERS_TOKEN_POST;
+            }
+            elseif ($i == 0 && $count > 1) {
+              $token = LDAP_SERVERS_TOKEN_PRE . $key . LDAP_SERVERS_TOKEN_DEL . '0' . LDAP_SERVERS_TOKEN_POST;
+            }
+            elseif (($i == $count - 1) && $count > 1) {
+              $token = LDAP_SERVERS_TOKEN_PRE . $key . LDAP_SERVERS_TOKEN_DEL . 'last' . LDAP_SERVERS_TOKEN_POST;
+            }
+            elseif ($count > 1) {
+              $token = LDAP_SERVERS_TOKEN_PRE . $key . LDAP_SERVERS_TOKEN_DEL . $i . LDAP_SERVERS_TOKEN_POST;
+            }
+            else {
+              $token = "";
+            }
+            $rows[] = array('data' => array($key, $i, $value2, $token));
+          }
+        }
+      }
+      $entry_table = '<div class="content"><h2>' . t('LDAP Entry for %username', array('%username' => $variables['username'])) . '</h2>' . theme('table', array('colgroups' => NULL, 'caption' => 'ldap entry array', 'header' => $header, 'rows' => $rows, 'sticky' => TRUE, 'attributes' => array(), 'empty' => 'No data')) . '</div>';
+      return $entry_table;
+    }

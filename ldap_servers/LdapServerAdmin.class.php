@@ -65,6 +65,9 @@ class LdapServerAdmin extends LdapServer {
     $this->basedn = $this->linesToArray(trim($values['basedn']));
     $this->user_attr = trim($values['user_attr']);
     $this->mail_attr = trim($values['mail_attr']);
+    $this->mail_template = trim($values['mail_template']);
+    $this->unique_persistent_attr = trim($values['unique_persistent_attr']);
+    $this->allow_conflicting_drupal_accts = trim($values['allow_conflicting_drupal_accts']);
     $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
     $this->testingDrupalUsername = trim($values['testing_drupal_username']);
 
@@ -163,7 +166,7 @@ base dns for authentication and authorization and (2) non anonymous bind users w
 for different purposes.</p>
 EOF;
 
-$form['#prefix'] = t($form['#prefix']);
+  $form['#prefix'] = t($form['#prefix']);
 
   $form['server'] = array(
     '#type' => 'fieldset',
@@ -172,96 +175,11 @@ $form['#prefix'] = t($form['#prefix']);
     '#collapsed' => FALSE,
   );
 
-  $form['server']['sid'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Machine name for this server configuration.'),
-      '#default_value' => $this->sid,
-      '#size' => 20,
-      '#maxlength' => 20,
-      '#required' => TRUE,
-      '#disabled' => ($op == 'edit'),
-      '#description' => t('May only contain alphanumeric characters (a-z, A-Z, 0-9, and _)' ),
-    );
-
-  $form['server']['name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Name'),
-    '#default_value' => $this->name,
-    '#description' => t('Choose a <em><strong>unique</strong></em> name for this server configuration.'),
-    '#size' => 50,
-    '#maxlength' => 255,
-    '#required' => TRUE,
-  );
-
-  $form['server']['status'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enabled'),
-    '#default_value' => $this->status,
-    '#description' => t('Disable in order to keep configuration without having it active.'),
-  );
-
-  $form['server']['ldap_type'] = array(
-    '#type' => 'select',
-    '#options' =>  ldap_servers_ldaps_option_array(),
-    '#title' => t('LDAP Server Type'),
-    '#default_value' => $this->ldap_type,
-    '#description' => t('This field is informative.  It\'s purpose is to assist with default values and give validation warnings.'),
-    '#required' => FALSE,
-  );
-  $form['server']['address'] = array(
-    '#type' => 'textfield',
-    '#title' => t('LDAP server'),
-    '#default_value' => $this->address,
-    '#size' => 50,
-    '#maxlength' => 255,
-    '#description' => t('The domain name or IP address of your LDAP Server such as "ad.unm.edu". For SSL
-        use the form ldaps://DOMAIN such as "ldaps://ad.unm.edu"'),
-    '#required' => TRUE,
-  );
-  $form['server']['port'] = array(
-    '#type' => 'textfield',
-    '#title' => t('LDAP port'),
-    '#default_value' => $this->port,
-    '#size' => 5,
-    '#maxlength' => 5,
-    '#description' => t('The TCP/IP port on the above server which accepts LDAP connections. Must be an integer.'),
-  );
-  $form['server']['tls'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Use Start-TLS'),
-    '#default_value' => $this->tls,
-    '#description' => t('Secure the connection between the Drupal and the LDAP servers using TLS.<br /><em>Note: To use START-TLS, you must set the LDAP Port to 389.</em>'),
-  );
-
   $form['bind_method'] = array(
     '#type' => 'fieldset',
     '#title' => t('Binding Method.'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
-  );
-
-  $form['bind_method']['bind_method'] = array(
-    '#type' => 'radios',
-    '#title' => t('Binding Method for Searches (such as finding user object or their group memberships)'),
-    '#default_value' => ($this->bind_method) ? $this->bind_method : LDAP_SERVERS_BIND_METHOD_DEFAULT,
-    '#options' => array(
-      LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT => 'Service Account Bind.  Use credentials in following section to
-      bind to ldap.  This option is usually a best practice. Service account is entered in next section.',
-
-      LDAP_SERVERS_BIND_METHOD_USER => 'Bind with Users Credentials.  Use users\' entered credentials
-      to bind to LDAP.  This is only useful for modules that work during user logon such
-      as ldap authentication and ldap authorization.  This option is not a best practice in most cases.
-      The users dn must be of the form "cn=[username],[base dn]" for this option to work.',
-
-      LDAP_SERVERS_BIND_METHOD_ANON_USER => 'Anonymous Bind for search, then Bind with Users Credentials.
-      Searches for user DN then uses users\' entered credentials to bind to LDAP.  This is only useful for
-      modules that work during user logon such as ldap authentication and ldap authorization.
-      The users dn must be discovered by an anonymous search for this option to work.',
-
-      LDAP_SERVERS_BIND_METHOD_ANON => 'Anonymous Bind. Use no credentials to bind to ldap server.
-      Will not work on most ldaps.',
-    ),
-    '#required' => TRUE,
   );
 
   $form['binding_service_acct'] = array(
@@ -277,13 +195,43 @@ $form['#prefix'] = t($form['#prefix']);
     '#collapsed' => FALSE,
   );
 
-  $form['binding_service_acct']['binddn'] =  array(
-    '#type' => 'textfield',
-    '#title' => t('DN for non-anonymous search'),
-    '#default_value' => $this->binddn,
-    '#size' => 80,
-    '#maxlength' => 255,
+  $form['users'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('LDAP User to Drupal User Relationship'),
+    '#description' => t('How are LDAP user entries found based on Drupal username or email?  And vice-versa?
+       Needed for LDAP Authentication and Authorization functionality.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
   );
+
+  $field_to_prop_maps = $this->field_to_properties_map();
+  foreach ($this->fields() as $field_id => $field) {
+    if (isset($field['form'])) {
+
+      if (!isset($field['form']['required']) && isset($field['schema']['not null'])) {
+        $field['form']['#required'] = (boolean)$field['schema']['not null'];
+      }
+      if (isset($field['schema']['length']) && !isset($field['form']['#maxlength'])) {
+        $field['form']['#maxlength'] = $field['schema']['length'];
+      }
+      if (isset($field_to_prop_maps[$field_id])) {
+        $field['form']['#default_value'] = $this->{$field_to_prop_maps[$field_id]};
+      }
+      $fieldset = @$field['form']['fieldset'];
+      if ($fieldset) {
+        unset($field['form']['fieldset']);
+        $form[$fieldset][$field_id] = $field['form'];
+      }
+      else {
+        $form[$field_id] = $field['form'];
+      }
+    }
+  }
+
+  $form['server']['sid']['#disabled'] = ($op == 'edit');
+  $form['server']['tls']['#required'] = FALSE;
+  $form['bind_method']['bind_method']['#default_value'] = ($this->bind_method) ? $this->bind_method : LDAP_SERVERS_BIND_METHOD_DEFAULT;
+  $form['users']['basedn']['#default_value'] = $this->arrayToLines($this->basedn);
 
   if ($this->bindpw) {
     $pwd_directions = t('You currently have a password stored in the database.
@@ -302,103 +250,6 @@ $form['#prefix'] = t($form['#prefix']);
       $pwd_class = 'ldap-pwd-not-applicable';
     }
   }
-
-  $form['binding_service_acct']['service_account_directions'] = array(
-    '#type' => 'item',
-    '#markup' => $pwd_directions,
-    '#prefix' => '<div class="' . $pwd_class . '">',
-    '#suffice' => '<div class="' . $pwd_class . '">',
-  );
-
-  $form['binding_service_acct']['bindpw'] = array(
-    '#type' => 'password',
-    '#title' => t('Password for non-anonymous search'),
-    '#size' => 20,
-
-    '#maxlength' => 255,
-    '#default_value' => "",
-  );
-
-  $form['binding_service_acct']['clear_bindpw'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Clear existing password from database.  Check this when switching away from service account binding.'),
-    '#default_value' => 0,
-  );
-
-
-
-  $form['users'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('LDAP User to Drupal User Relationship'),
-    '#description' => t('How are LDAP user entries found based on Drupal username or email?  And vice-versa?
-       Needed for LDAP Authentication and Authorization functionality.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-  );
-
-  $form['users']['basedn'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Base DNs for LDAP user entries'),
-    '#default_value' => $this->arrayToLines($this->basedn),
-    '#cols' => 50,
-    '#rows' => 6,
-    '#description' => t('What DNs have user accounts relavant to this configuration?') . " e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>  " . t('Enter one per line in case if you need more than one.'),
-  );
-
-  $form['users']['user_attr'] = array(
-    '#type' => 'textfield',
-    '#title' => t('UserName attribute'),
-    '#default_value' => $this->user_attr,
-    '#size' => 30,
-    '#maxlength' => 255,
-    '#description' => t('The attribute that holds the users\' login name. (eg. <code>cn</code> for eDir or <code>sAMAccountName</code> for Active Directory).'),
-  );
-
-  $form['users']['user_dn_expression'] =  array(
-    '#type' => 'textfield',
-    '#title' => t('Expression for user DN. Required when "Bind with Users Credentials" method selected.'),
-    '#default_value' => $this->user_dn_expression,
-    '#size' => 80,
-    '#maxlength' => 255,
-    '#description' => t('%username and %basedn are valid tokens in the expression.
-      Typically it will be:<br/> <code>cn=%username,%basedn</code>
-       which might evaluate to <code>cn=jdoe,ou=campus accounts,dc=ad,dc=mycampus,dc=edu</code>
-       Base DNs are entered above.'),
-  );
-
-
-  $form['users']['mail_attr'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Email attribute'),
-    '#default_value' => $this->mail_attr,
-    '#size' => 30,
-    '#maxlength' => 255,
-    '#description' => t('The attribute that holds the users\' email address. (eg. <code>mail</code>).'),
-  );
-  $form['users']['ldap_to_drupal_user'] = array(
-    '#type' => 'textarea',
-    '#title' => t('PHP to transform Drupal login username to LDAP UserName attribute.'),
-    '#default_value' => $this->ldapToDrupalUserPhp,
-    '#cols' => 25,
-    '#rows' => 5,
-    '#disabled' => (!module_exists('php')),
-    '#description' => t('Enter PHP to transform Drupal username to the value of the UserName attribute.
-        The code should print the UserName attribute.
-        PHP filter module must be enabled for this to work.
-        The variable $name is available and is the user\'s login username.
-        Careful, bad PHP code here will break your site. If left empty, no name transformation will be done.
-        <br/>Example:<br/>Given the user will logon with jdoe@xyz.com and you want the ldap UserName attribute to be
-        jdoe.<br/><code>$parts = explode(\'@\', $name); if (count($parts) == 2) {print $parts[0]};</code>'),
-  );
-
-  $form['users']['testing_drupal_username'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Testing Drupal Username'),
-    '#default_value' => $this->testingDrupalUsername,
-    '#size' => 30,
-    '#maxlength' => 255,
-    '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
-  );
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -450,13 +301,16 @@ $form['#prefix'] = t($form['#prefix']);
 
     }
 
-
     if (!is_numeric($this->port)) {
       $errors['port'] =  t('The TCP/IP port must be an integer.');
     }
 
     if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_USER && !$this->user_dn_expression) {
       $errors['user_dn_expression'] =  t('When using "Bind with Users Credentials", Expression for user DN is required');
+    }
+
+    if ($this->mail_attr && $this->mail_template) {
+      $errors['mail_attr'] =  t('Mail attribute or Mail Template may be used.  Not both.');
     }
 
     if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT && !$this->binddn) {
@@ -469,7 +323,6 @@ $form['#prefix'] = t($form['#prefix']);
         $errors['bindpw'] =  t('When using "Bind with Service Account", Bind password is required.');
       }
     }
-
 
     return $errors;
   }
@@ -501,7 +354,7 @@ protected function warnings($op) {
           for your particular LDAP.', $tokens);
       }
 
-      if (isset($defaults['user']['mail_attr']) && ($this->mail_attr != $defaults['user']['mail_attr'])) {
+      if (isset($defaults['user']['mail_attr']) && $this->mail_attr && ($this->mail_attr != $defaults['user']['mail_attr'])) {
         $tokens = array('%name' => $defaults['name'], '%default' => $defaults['user']['mail_attr'], '%mail_attr' => $this->mail_attr);
         $warnings['mail_attr'] =  t('The standard mail attribute in %name is %default.  You have %mail_attr.  This may be correct
           for your particular LDAP.', $tokens);
@@ -509,6 +362,10 @@ protected function warnings($op) {
     }
     if (!$this->status) {
       $warnings['status'] =  t('This server configuration is currently disabled.');
+    }
+
+    if (!$this->mail_attr && !$this->mail_template) {
+      $warnings['mail_attr'] =  t('Mail attribute or Mail Template should be used for most user account functionality.');
     }
 
     if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) { // Only for service account
@@ -530,9 +387,16 @@ protected function warnings($op) {
       $warnings['user_attr'] =  $result['text'];
     }
 
-    $result = ldap_badattr($this->mail_attr, t('Mail attribute'));
+    if ($this->mail_attr) {
+      $result = ldap_badattr($this->mail_attr, t('Mail attribute'));
+      if ($result['boolean'] == FALSE) {
+        $warnings['mail_attr'] =  $result['text'];
+      }
+    }
+
+    $result = ldap_badattr($this->unique_persistent_attr, t('Unique Persistent Attribute'));
     if ($result['boolean'] == FALSE) {
-      $warnings['mail_attr'] =  $result['text'];
+      $warnings['unique_persistent_attr'] =  $result['text'];
     }
 
     return $warnings;
@@ -588,4 +452,367 @@ public function drupalFormSubmit($op, $values) {
     return $array;
   }
 
+
+   public static function fields() {
+
+     /**
+     * consumer_type is tag (unique alphanumeric id) of consuming authorization such as
+     *   drupal_roles, og_groups, civicrm_memberships
+     */
+    $fields = array(
+
+      'sid' => array(
+        'form' => array(
+          'fieldset' => 'server',
+          '#type' => 'textfield',
+          '#size' => 20,
+          '#title' => t('Machine name for this server configuration.'),
+          '#description' => t('May only contain alphanumeric characters (a-z, A-Z, 0-9, and _)'),
+          '#required' => TRUE,
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 20,
+          'not null' => TRUE,
+        )
+      ),
+
+     'numeric_sid' => array(
+        'schema' => array(
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'description' => 'Primary ID field for the table.  Only used internally.',
+          'no export' => TRUE,
+        ),
+      ),
+
+      'name' => array(
+        'form' => array(
+          'fieldset' => 'server',
+          '#type' => 'textfield',
+          '#size' => 50,
+          '#title' => 'Name',
+          '#description' => t('Choose a <em><strong>unique</strong></em> name for this server configuration.'),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+        ),
+      ),
+
+      'status' => array(
+        'form' => array(
+          'fieldset' => 'server',
+          '#type' => 'checkbox',
+          '#title' => t('Enabled'),
+          '#description' => t('Disable in order to keep configuration without having it active.'),
+          '#required' => FALSE,
+        ),
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+
+      'ldap_type' =>  array(
+        'form' => array(
+          'fieldset' => 'server',
+          '#type' => 'select',
+          '#options' =>  ldap_servers_ldaps_option_array(),
+          '#title' => t('LDAP Server Type'),
+          '#description' => t('This field is informative.  It\'s purpose is to assist with default values and give validation warnings.'),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 20,
+          'not null' => FALSE,
+        ),
+      ),
+
+      'address' => array(
+        'form' => array(
+          'fieldset' => 'server',
+          '#type' => 'textfield',
+          '#title' => t('LDAP server'),
+          '#description' => t('The domain name or IP address of your LDAP Server such as "ad.unm.edu". For SSL
+        use the form ldaps://DOMAIN such as "ldaps://ad.unm.edu"'),
+          '#size' => 50,
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+        ),
+      ),
+
+      'port' => array(
+        'form' => array(
+          'fieldset' => 'server',
+          '#type' => 'textfield',
+          '#title' => t('LDAP port'),
+          '#size' => 5,
+          '#description' => t('The TCP/IP port on the above server which accepts LDAP connections. Must be an integer.'),
+        ),
+        'schema' => array(
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 389,
+        ),
+      ),
+
+      'tls' => array(
+        'form' => array(
+          'fieldset' => 'server',
+          '#type' => 'checkbox',
+          '#title' => t('Use Start-TLS'),
+          '#description' => t('Secure the connection between the Drupal and the LDAP servers using TLS.<br /><em>Note: To use START-TLS, you must set the LDAP Port to 389.</em>'),
+        ),
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+
+      'bind_method' => array(
+        'form' => array(
+          'fieldset' => 'bind_method',
+          '#type' => 'radios',
+          '#title' => t('Binding Method for Searches (such as finding user object or their group memberships)'),
+          '#options' => array(
+            LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT => t('Service Account Bind.  Use credentials in following section to
+            bind to ldap.  This option is usually a best practice. Service account is entered in next section.'),
+
+            LDAP_SERVERS_BIND_METHOD_USER => t('Bind with Users Credentials.  Use users\' entered credentials
+            to bind to LDAP.  This is only useful for modules that work during user logon such
+            as ldap authentication and ldap authorization.  This option is not a best practice in most cases.
+            The users dn must be of the form "cn=[username],[base dn]" for this option to work.'),
+
+            LDAP_SERVERS_BIND_METHOD_ANON_USER => t('Anonymous Bind for search, then Bind with Users Credentials.
+            Searches for user DN then uses users\' entered credentials to bind to LDAP.  This is only useful for
+            modules that work during user logon such as ldap authentication and ldap authorization.
+            The users dn must be discovered by an anonymous search for this option to work.'),
+
+            LDAP_SERVERS_BIND_METHOD_ANON => t('Anonymous Bind. Use no credentials to bind to ldap server.
+            Will not work on most ldaps.'),
+          ),
+        ),
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+
+      'binddn' => array(
+        'form' => array(
+          'fieldset' => 'binding_service_acct',
+          '#type' => 'textfield',
+          '#title' => t('DN for non-anonymous search'),
+          '#size' => 80,
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 511,
+        ),
+      ),
+
+      'bindpw' => array(
+        'form' => array(
+          'fieldset' => 'binding_service_acct',
+          '#type' => 'password',
+          '#title' => t('Password for non-anonymous search'),
+          '#size' => 20,
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+        ),
+      ),
+
+      'clear_bindpw' => array(
+        'form' => array(
+          'fieldset' => 'binding_service_acct',
+          '#type' => 'checkbox',
+          '#title' => t('Clear existing password from database.  Check this when switching away from service account binding.'),
+          '#default_value' => 0,
+        ),
+      ),
+
+      'basedn' => array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'textarea',
+          '#cols' => 50,
+          '#rows' => 6,
+          '#title' => t('Base DNs for LDAP user entries'),
+          '#description' => t('What DNs have user accounts relavant to this configuration? e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>Enter one per line in case if you need more than one.'),
+        ),
+        'schema' => array(
+          'type' => 'text',
+          'serialize' => TRUE,
+        ),
+      ),
+
+      'user_attr' => array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('UserName attribute'),
+          '#description' => t('The attribute that holds the users\' login name. (eg. <code>cn</code> for eDir or <code>sAMAccountName</code> for Active Directory).'),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+        ),
+      ),
+
+      'mail_attr' => array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('Email attribute'),
+          '#description' => t('The attribute that holds the users\' email address. (eg. <code>mail</code>). Leave empty if no such attribute exists'),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+      ),
+
+      'mail_template' => array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('Email template'),
+          '#description' => t('If no attribute contains the user\'s email address, but it can be derived from other attributes,
+            enter an email "template" here.
+            Templates should have the user\'s attribute name in form such as [cn], [uin], etc.
+            such as <code>[cn]@mycompany.com</code>.
+            See http://drupal.org/node/997082 for additional documentation on ldap tokens.
+            '),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+      ),
+
+      'allow_conflicting_drupal_accts' => array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'checkbox',
+          '#title' => t('Allow account conflicts'),
+          '#description' => t('[Not implemented yet.  This is in the user interface, but not the code]. If selected, a user or admin created account could pick the same username as an entry in your LDAP,
+            creating future conflicts. This option will affect any ldap modules that create accounts such as ldap authentication
+            or ldap provision.'),
+        ),
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => FALSE,
+          'default' => 0,
+        ),
+      ),
+
+      'unique_persistent_attr' => array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('Persistent and Unique User Attribute'),
+          '#description' => t('[Not implemented yet.  This is in the user interface, but not the code]. In some LDAPs, a user\'s DN, CN, or mail value may change when a user\'s name changes or for other reasons.
+            In order to avoid creation of multiple accounts for that user or other ambiguities,
+            enter a unique and persistent ldap attribute for users.
+            If no such attribute exists, leave this blank.'
+            ),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 64,
+          'not null' => FALSE,
+        ),
+      ),
+
+      'user_dn_expression' => array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'textfield',
+          '#size' => 80,
+          '#title' => t('Expression for user DN. Required when "Bind with Users Credentials" method selected.'),
+          '#description' => t('%username and %basedn are valid tokens in the expression.
+            Typically it will be:<br/> <code>cn=%username,%basedn</code>
+             which might evaluate to <code>cn=jdoe,ou=campus accounts,dc=ad,dc=mycampus,dc=edu</code>
+             Base DNs are entered above.'),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+      ),
+
+      'ldap_to_drupal_user' =>  array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#disabled' => (!module_exists('php')),
+          '#type' => 'textarea',
+          '#cols' => 25,
+          '#rows' => 5,
+          '#title' => t('PHP to transform Drupal login username to LDAP UserName attribute.'),
+          '#description' => t('Enter PHP to transform Drupal username to the value of the UserName attribute.
+            The code should print the UserName attribute.
+            PHP filter module must be enabled for this to work.
+            The variable $name is available and is the user\'s login username.
+            Careful, bad PHP code here will break your site. If left empty, no name transformation will be done.
+            <br/>Example:<br/>Given the user will logon with jdoe@xyz.com and you want the ldap UserName attribute to be
+            jdoe.<br/><code>$parts = explode(\'@\', $name); if (count($parts) == 2) {print $parts[0]};</code>'),
+          ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 1024,
+          'not null' => FALSE,
+        ),
+      ),
+
+     'testing_drupal_username' =>  array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('Testing Drupal Username'),
+          '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+      ),
+
+      'weight' =>  array(
+        'schema' => array(
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+
+    );
+
+  return $fields;
+
+  }
 }
