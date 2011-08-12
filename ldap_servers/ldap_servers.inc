@@ -44,7 +44,7 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
     if (!isset($servers[$type][$sid])) {
       return FALSE;
     }
-    return ($flatten) ? $servers[$type][$sid] : $servers[$type];
+    return ($flatten) ? $servers[$type][$sid] : array($sid => $servers[$type][$sid]);
   }
 
   if (isset($servers[$type])) {
