@@ -37,8 +37,13 @@ class LdapServer {
   public $user_dn_expression;
   public $user_attr;
   public $mail_attr;
+  public $mail_template;
+  public $unique_persistent_attr;
+  public $allow_conflicting_drupal_accts = FALSE;
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
+  public $detailed_watchdog_log;
+
 
   public $inDatabase = FALSE;
 
@@ -58,6 +63,9 @@ class LdapServer {
     'user_dn_expression' => 'user_dn_expression',
     'user_attr'  => 'user_attr',
     'mail_attr'  => 'mail_attr',
+    'mail_template'  => 'mail_template',
+    'unique_persistent_attr' => 'unique_persistent_attr',
+    'allow_conflicting_drupal_accts' => 'allow_conflicting_drupal_accts',
     'ldap_to_drupal_user'  => 'ldapToDrupalUserPhp',
     'testing_drupal_username'  => 'testingDrupalUsername'
     );
@@ -71,7 +79,7 @@ class LdapServer {
     if (!is_scalar($sid)) {
       return;
     }
-
+    $this->detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
     $server_record = array();
     if (module_exists('ctools')) {
       ctools_include('export');
@@ -175,9 +183,9 @@ class LdapServer {
       }
     }
 
-    // Store the resulting resource
-    $this->connection = $con;
-    return LDAP_SUCCESS;
+  // Store the resulting resource
+  $this->connection = $con;
+  return LDAP_SUCCESS;
   }
 
 
@@ -235,10 +243,6 @@ class LdapServer {
    */
 
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
-    if (!$this->connection) {
-      $this->connect();
-    }
-
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
         $base_dn = $this->basedn[0];
@@ -247,18 +251,31 @@ class LdapServer {
         return FALSE;
       }
     }
+    if ($this->detailed_watchdog_log) {
+      $query = 'ldap_search() call: '. join("<hr/>", array(
+        'base_dn: ' . $base_dn,
+        'filter = ' . $filter,
+        'attributes: ' .  join(',', $attributes),
+        'attrsonly = ' .  $attrsonly,
+        'sizelimit = ' .  $sizelimit,
+        'timelimit = ' .  $timelimit,
+        'deref = ' .  $deref,
+        )
+      );
+      watchdog('ldap_server', $query, array());
+    }
+
     $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
     if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
-      dpm('entries'); dpm($entries);
       return $entries;
     }
     elseif ($this->ldapErrorNumber()) {
       $watchdog_tokens =  array('%basedn' => $base_dn, '%filter' => $filter,
         '%attributes' => print_r($attributes, TRUE), '%errmsg' => $this->errorMsg('ldap'),
         '%errno' => $this->ldapErrorNumber());
-      watchdog('ldap', "LDAP ldap_search error. basedn: %basedn, filter: %filter, attributes:
-        %attributes, errmsg: %errmsg, ldap err no: %errno,", $watchdog_tokens);
+      watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
+        %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
       return array();
     }
     else {
@@ -277,23 +294,44 @@ class LdapServer {
    *   An array with users LDAP data or NULL if not found.
    */
   function user_lookup($drupal_user_name) {
-
+    $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
+    if ($this->ldapToDrupalUserPhp && module_exists('php')) {
+      global $name;
+      $old_name_value = $name;
+      $name = $drupal_user_name;
+      $code = "<?php global \$name; \n". $this->ldapToDrupalUserPhp . "; \n ?>";
+      $watchdog_tokens['%code'] = $this->ldapToDrupalUserPhp;
+      $code_result = php_eval($code);
+      $watchdog_tokens['%code_result'] = $code_result;
+      $ldap_username = $code_result;
+      $watchdog_tokens['%ldap_username'] = $ldap_username;
+      $name = $old_name_value;
+      if ($this->detailedWatchdogLog) {
+        watchdog('ldap_server', '%drupal_user_name tansformed to %ldap_username by applying code <code>%code</code>', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
+    }
+    else {
+      $ldap_username = $drupal_user_name;
+    }
+    if (!$ldap_username) {
+      return FALSE;
+    }
+   // print "$ldap_username from $drupal_user_name"; die;
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
 
-      $filter = $this->user_attr . '=' . $drupal_user_name;
+      $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
 
       $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
-      // Must find exactly one user for authentication to.
+      // Must find exactly one user for authentication to work.
       if ($result['count'] != 1) {
         $count = $result['count'];
         watchdog('ldap_authentication', "Error: !count users found with $filter under $basedn.", array('!count' => $count), WATCHDOG_ERROR);
         continue;
       }
       $match = $result[0];
-
       // These lines serve to fix the attribute name in case a
       // naughty server (i.e.: MS Active Directory) is messing the
       // characters' case.
@@ -310,7 +348,7 @@ class LdapServer {
         if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
           $result = array(
             'dn' =>  $match['dn'],
-            'mail' => @$match[$this->mail_attr][0],
+            'mail' => $this->deriveEmailFromEntry($match),
             'attr' => $match,
             );
           return $result;
@@ -329,10 +367,10 @@ class LdapServer {
       // Clarence "sparr" Risher on http://drupal.org/node/102008, so we
       // loop through all possible options.
       foreach ($match[$name_attr] as $value) {
-        if (drupal_strtolower(trim($value)) == drupal_strtolower($drupal_user_name)) {
+        if (drupal_strtolower(trim($value)) == drupal_strtolower($ldap_username)) {
           $result = array(
             'dn' =>  $match['dn'],
-            'mail' => @$match[$this->mail_attr][0],
+            'mail' => $this->deriveEmailFromEntry($match),
             'attr' => $match,
           );
 
@@ -342,7 +380,18 @@ class LdapServer {
     }
   }
 
-
+  public function deriveEmailFromEntry($ldap_entry) {
+    if ($this->mail_attr) { // not using template
+      return @$ldap_entry[$this->mail_attr][0];
+    }
+    elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
+      require_once('ldap_servers.functions.inc');
+      return ldap_server_token_replace($ldap_entry, $this->mail_template);
+    }
+    else {
+      return FALSE;
+    }
+  }
 
 
   /**
@@ -402,7 +451,5 @@ class LdapServer {
       return FALSE;
     }
   }
-
-
 
 }

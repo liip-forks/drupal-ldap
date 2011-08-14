@@ -16,4 +16,5 @@ files[] = ldap_authorization.theme.inc
 files[] = tests/BasicTests.test
 files[] = tests/Derivations.test
 files[] = tests/1197636.test
+files[] = tests/OtherAuthenticationIntegrationTests.test
 configure = admin/config/people/ldap/authorization

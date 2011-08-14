@@ -100,6 +100,12 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
 
     if (!ldap_authentication_show_reset_pwd($form['#user'])) {
       $form['account']['current_pass']['#disabled'] = TRUE;
+      if ($auth_conf->ldapUserHelpLinkUrl) {
+        $form['account']['current_pass']['#description'] = l(t($auth_conf->ldapUserHelpLinkText), $auth_conf->ldapUserHelpLinkUrl);
+      }
+      else {
+        $form['account']['current_pass']['#description'] = t('The password cannot be changed using this website');
+      }
       $form['account']['pass']['#disabled'] = TRUE;
     }
   }
@@ -117,7 +123,20 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $name = $form_state['values']['name'];
   $pass = $form_state['values']['pass'];
+
+  /*
+   * If a fake form state was passed into this function from
+   * _ldap_authentication_user_login_sso(), there will be a value outside of the
+   * form_state[values] array to let us know that we are not authenticating with
+   * a password, but instead just looking up a username/dn in LDAP since the web
+   * server already authenticated the user.
+   */
+  $sso_login = (isset($form_state['sso_login']) && $form_state['sso_login']) ? TRUE : FALSE;
+
   $watchdog_tokens = array('%username' => $name);
+  if ($detailed_watchdog_log) {
+    watchdog('ldap_authentication', '%username : Beginning authentification....', $watchdog_tokens, WATCHDOG_DEBUG);
+  }
 
   if (!$auth_conf = ldap_authentication_get_valid_conf()) {
     watchdog('ldap_authentication', 'Failed to get valid ldap authentication configuration.', array(), WATCHDOG_ERROR);
@@ -189,6 +208,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       watchdog('ldap_authentication', '%username : Trying server %sid where bind_method = %bind_method', $watchdog_tokens, WATCHDOG_DEBUG);
     }
 
+    // #1 CONNECT TO SERVER
     $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_GENERIC;
     $result = $ldap_server->connect();
     if ($result != LDAP_SUCCESS) {
@@ -204,52 +224,60 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       watchdog('ldap_authentication',  '%username : Success at connecting to %sid', $watchdog_tokens, WATCHDOG_DEBUG);
     }
 
-    if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
-      $result = $ldap_server->bind();
+    // #2 BIND TO SERVER
+    $bind_success = FALSE;
+    if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
+        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON ||
+        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
+        ) {
+      $bind_success = ($ldap_server->bind() == LDAP_SUCCESS);
     }
-    elseif ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_USER) {
-      $result = LDAP_FAIL;
+    elseif ($sso_login) {
+      watchdog('ldap_authentication', 'Trying to use SSO with LDAP_SERVERS_BIND_METHOD_USER bind method.', $watchdog_tokens, WATCHDOG_ERROR);
+    }
+    elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_USER && $sso_login == FALSE) {
+      // with sso enabled this method of binding isn't valid
       foreach ($ldap_server->basedn as $basedn) {
         $search = array('%basedn', '%username');
         $replace = array($basedn, $name);
         $userdn = str_replace($search, $replace, $ldap_server->user_dn_expression);
-        $result = $ldap_server->bind($userdn, $pass);
-        if ($result == LDAP_SUCCESS) {
+        $bind_success = ($ldap_server->bind($userdn, $pass) == LDAP_SUCCESS);
+        if ($bind_success) {
           break;
         }
       }
     }
-    elseif ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON) {
-      $result = $ldap_server->bind();
-    }
-    elseif ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-      $result = $ldap_server->bind();
-      if ($result == LDAP_SUCCESS) {
-        $result = LDAP_FAIL;
-        foreach ($ldap_server->basedn as $basedn) {
-          $userdn = $ldap_server->user_lookup($name);
-          $result = $ldap_server->bind($userdn, $pass);
-          if ($result == LDAP_SUCCESS) {
-            break;
-          }
-        }
-      }
+    else {
+      watchdog('ldap_authentication', 'No bind method set in ldap_server->bind_method in _ldap_authentication_user_login_authenticate_validate.', $watchdog_tokens, WATCHDOG_ERROR);
     }
 
-    if ($result != LDAP_SUCCESS) {
+    if (!$bind_success) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
         watchdog('ldap_authentication', '%username : Trying server %sid where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
         $watchdog_tokens['%err_text'] = NULL;
       }
       $authentication_result = ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_USER) ? LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS : LDAP_AUTHENTICATION_RESULT_FAIL_BIND;
-      continue; // next server, please
+      continue; // if bind fails, onto next server
     }
 
-    /**
-    * does user exist in ldap?
-    */
-    $ldap_user = $ldap_server->user_lookup($name);
+    // #3 DOES USER EXIST IN SERVER'S LDAP
+    if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+      $ldap_user = $ldap_server->user_lookup($name);
+    }
+    elseif ($sso_login) {
+      $ldap_user = $ldap_server->user_lookup($name);
+      if ($detailed_watchdog_log) {
+        $watchdog_tokens['%result'] = var_export($result, true);
+        watchdog('ldap_authentication', '%username : attempting single sign-on
+          login in bind_method of LDAP_SERVERS_BIND_METHOD_USER. Result of
+          user_lookup: <pre>%result</pre>', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
+    }
+    else {
+      $ldap_user = $ldap_server->user_lookup($name);
+    }
+
     if (!$ldap_user) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
@@ -261,23 +289,42 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
         break;
       }
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_FIND;
-      continue; // next server, please
+       continue; // next server, please
     }
+
     $watchdog_tokens['%dn'] = $ldap_user['dn'];
     $watchdog_tokens['%mail'] = $ldap_user['mail'];
+
     /**
-    * check allowed and excluded list and php for allowed users
+    * #4 CHECK ALLOWED AND EXCLUDED LIST AND PHP FOR ALLOWED USERS
     */
     $allow = $auth_conf->allowUser($name, $ldap_user);
     if (!$allow) {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED;
       break;  // regardless of how many servers, disallowed user fails
     }
+
     /**
-    * test password
+    * #5 TEST PASSWORD
     */
-    $result = $ldap_server->bind($ldap_user['dn'], $pass);
-    if ($result != LDAP_SUCCESS) {
+    $credentials_pass = FALSE;
+    if ($sso_login) {
+      /** If we have $sso_login passed in as true from the fake form state in
+        * passed from _ldap_authentication_user_login_sso(), we will be relying
+        * on the webserver for actually authenticating the user, either by NTLM
+        * or user/password if configured as a fallback. Since the webserver has
+        * already authenticated the user, and the web server only contains the
+        * user's LDAP user name, instead of binding on the username/pass, we
+        * simply look up the user's account in LDAP, and make sure it matches
+        * what is contained in the global $_SERVER array populated by the web
+        * server authentication.
+        */
+      $credentials_pass = (boolean)($ldap_user);
+    }
+    else {
+      $credentials_pass = ($ldap_server->bind($ldap_user['dn'], $pass) == LDAP_SUCCESS);
+    }
+    if (!$credentials_pass) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
         watchdog('ldap_authentication', '%username : Testing user credentials on server %sid where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
@@ -291,6 +338,9 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       break; //success
     }
   }  // end loop through servers
+
+
+
   $watchdog_tokens['%result'] = $result;
   $watchdog_tokens['%auth_result'] = $authentication_result;
   $watchdog_tokens['%err_text'] =  _ldap_authentication_err_text($authentication_result) ;
@@ -411,9 +461,94 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   user_login_submit(array(), $fake_form_state);
   global $user;
   $form_state['uid'] = $user->uid;
-  return;
+  return $user;
 
 }
+
+/**
+ * A proxy function for the actual authentication routine. This is in place
+ * so various implementations of grabbing NTLM credentials can be used and
+ * selected from an administration page. This is the real gatekeeper since
+ * this assumes that any NTLM authentication from the underlying web server
+ * is good enough, and only checks that there are values in place for the
+ * user name, and anything else that is set for a particular implementation. In
+ * the case that there is no credentials set by the underlying web server, the
+ * user is redirected to the normal user login form.
+ *
+ * @return false
+ */
+function _ldap_authentication_user_login_sso() {
+  $auth_conf = ldap_authentication_get_valid_conf();
+  $implementation = $auth_conf->ldapImplementation;
+  $enabled = $auth_conf->ssoEnabled;
+  if($enabled == true){
+    switch($implementation) {
+      case 'mod_auth_sspi' :
+        if(isset($_SERVER['REMOTE_USER']))
+          $remote_user = $_SERVER['REMOTE_USER'];
+        elseif(isset($_SERVER['REDIRECT_REMOTE_USER']))
+          $remote_user = $_SERVER['REDIRECT_REMOTE_USER'];
+        else
+          $remote_user = false;
+        break;
+    }
+
+    if ($remote_user){
+      watchdog('ldap_authentication', '%username : $_SERVER[\'REMOTE_USER\'] found',
+              array('%username' => $remote_user), WATCHDOG_DEBUG);
+      $fake_form_state = array(
+        'values' => array(
+          'name' => check_plain($remote_user),
+         'pass' => user_password(20),
+        ),
+        'sso_login' => true,
+      );
+      $user = _ldap_authentication_user_login_authenticate_validate($fake_form_state);
+      if ($user && $user->uid > 0){
+        if ($auth_conf->seamlessLogin == 1){
+          setcookie("seamless_login", 'auto login', time() + $auth_conf->cookieExpire, base_path(), "");
+          $_SESSION['seamless_login'] = 'auto login';
+          setcookie("seamless_login_attempted", '');
+          unset($_SESSION['seamless_login_attempted']);
+
+      }
+        drupal_set_message(theme('ldap_authentication_login_message',
+                                  array('message' => t('You have been successfully authenticated'))));
+        drupal_goto('<front>');
+      }
+      else {
+        if ($auth_conf->seamlessLogin == 1){
+          setcookie("seamless_login", 'do not auto login', time() + $auth_conf->cookieExpire, base_path(), "");
+          $_SESSION['seamless_login'] = 'do not auto login';
+      }
+        drupal_set_message(theme('ldap_authentication_message_not_found',
+                                   array('message' => t('Sorry, your LDAP credentials were not found, '.
+                                   'or the LDAP server is not available. You may log in '.
+                                    'with other credentials on the !user_login_form.',
+                                     array('!user_login_form' => l(t('user login form'), 'user/login'))))
+                                ), 'error');
+        drupal_goto('user/login');
+      }
+    }
+    else {
+      watchdog('ldap_authentication', '$_SERVER[\'REMOTE_USER\'] not found', array(), WATCHDOG_DEBUG);
+      if ($auth_conf->seamlessLogin == 1){
+        setcookie("seamless_login", 'do not auto login', time() + $auth_conf->cookieExpire, base_path(), "");
+        $_SESSION['seamless_login'] = 'do not auto login';
+      }
+      drupal_set_message(theme('ldap_authentication_message_not_authenticated',
+                                 array('message' =>
+                                     t('You were not authenticated by the server.
+                                       You may log in with your credentials below.')
+                                   )
+                                ), 'error');
+      drupal_goto('user/login');
+    }
+  }
+  else
+    drupal_goto('user/login');
+}
+
 
 function _ldap_authentication_err_text($error) {
 

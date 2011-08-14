@@ -45,6 +45,12 @@ class LdapTestFunctions  {
     variable_set('ldap_test_servers', $current_sids);
   }
 
+  function setFakeServerProperty($sid, $prop, $value) {
+    $test_data = variable_get('ldap_test_server__' . $sid, array());
+    $test_data['properties'][$prop] = $value;
+    variable_set('ldap_test_server__' . $sid, $test_data);
+  }
+
 
   function configureAuthentication($options) {
     require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');

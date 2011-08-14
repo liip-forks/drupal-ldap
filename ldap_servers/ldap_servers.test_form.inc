@@ -4,8 +4,6 @@
 
 /**
  * @file
- * unfinished and depracated.  needs a look
- *
  */
 
 /**
@@ -24,27 +22,24 @@
 
 function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
 
-$ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
+  $ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
 
-$form['#prefix'] = t('<h1>Test %name LDAP Server Configuration</h1>', array('%name' => $ldap_server->name));
+  $form['#prefix'] = t('<h1>Test %name LDAP Server Configuration</h1>', array('%name' => $ldap_server->name));
 
-$form['#prefix'] .= t('This form simply tests an LDAP configuration to see if
-  it can bind and if the sample username is mapped correctly.  It does not
-  alter the settings.');
+  $form['#prefix'] .= t('This form simply tests an LDAP configuration to see if
+    it can bind and if the sample username is mapped correctly.  It does not
+    alter the settings.');
 
-$variables = array(
-      'ldap_server' => $ldap_server, 'actions' => FALSE, 'type' => 'detail'
-    );
+  $variables = array(
+    'ldap_server' => $ldap_server, 'actions' => FALSE, 'type' => 'detail'
+  );
 
-$form['#prefix'] .= theme('ldap_servers_server', $variables);
-
-
+  $form['#prefix'] .= theme('ldap_servers_server', $variables);
 
   $form['sid'] = array(
       '#type' => 'hidden',
       '#default_value' => $sid,
     );
-
 
   $form['binding']['bindpw'] = array(
     '#type' => 'password',
@@ -66,7 +61,6 @@ $form['#prefix'] .= theme('ldap_servers_server', $variables);
     '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
   );
 
-
   if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
     $form['testing_drupal_userpw'] = array(
       '#type' => 'password',
@@ -83,6 +77,14 @@ $form['#prefix'] .= theme('ldap_servers_server', $variables);
     '#weight' => 100,
   );
 
+  if (isset($_SESSION['ldap_server_test_data']) && count($_SESSION['ldap_server_test_data']) > 0) {
+    $form['#suffix'] = theme('ldap_server_ldap_entry_table',
+      array(
+        'entry' => $_SESSION['ldap_server_test_data']['LDAP Entry'],
+        'username' => $_SESSION['ldap_server_test_data']['username'],
+      ));
+    unset($_SESSION['ldap_server_test_data']);
+  }
   return $form;
 }
 
@@ -130,7 +132,6 @@ function ldap_servers_test_form_submit($form, &$form_state) {
     $results[] = t('Binding with null DN for anonymous search.');
   }
 
-
   // connect to ldap
   // $ldap_server = NULL;
   list($has_errors, $more_results) = ldap_servers_test_binding_credentials($ldap_server, $bindpw);
@@ -159,29 +160,16 @@ function ldap_servers_test_form_submit($form, &$form_state) {
     }
   }
 
-
-  if (!$has_errors) {
+  if (!$has_errors && @$values['testing_drupal_username']) {
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
-    $results = array_merge($results, $more_results);
-
-    if (!$has_errors) {
-      $mapping[] = "dn = " . $ldap_user['dn'];
-      $mapping[] = "email = " . $ldap_user['mail'];
-
-      foreach ($ldap_user['attr'] as $key => $value) {
-        if (is_array($value)) {
-          $mapping[] = "$key = " . $value[0];
-        }
-      }
-    // $mapping[] = theme_item_list(array('items' => $list, 'title' => 'Attributes', 'type' => 'ul', 'attributes' => array()));
-    $results[] = theme_item_list(array('items' => $mapping, 'title' => t('Attributes available to %bind_dn', array('%bind_dn' => (($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) ? $ldap_user['dn'] : $ldap_server->binddn))) , 'type' => 'ul', 'attributes' => array()));
-
-    }
+    $_SESSION['ldap_server_test_data'] = array(
+      'username' => $values['testing_drupal_username'],
+      'Tokens Available' => ldap_server_tokenize_entry($ldap_user['attr'], 'all'),
+      'LDAP Entry' => $ldap_user['attr'],
+    );
   }
-
-  $title =  t('Test %name LDAP Server Configuration', array('%name' => $ldap_server->name));
-  $message =  theme_item_list(   array('items' => $results, 'title' => $title, 'type' => 'ul', 'attributes' => array()));
-  drupal_set_message(t("<form>" . $message . "</form>"), ($has_errors) ? 'error' : 'status');
+  $message =  theme_item_list(array('items' => $results, 'title' => t('Connection Info'), 'type' => 'ul', 'attributes' => array()));
+  drupal_set_message(t($message), ($has_errors) ? 'error' : 'status');
   $form_state['redirect'] = LDAP_SERVERS_MENU_BASE_PATH . "/servers/test/$sid";
 
 }

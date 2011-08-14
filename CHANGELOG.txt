@@ -1,11 +1,38 @@
 // $Id: CHANGELOG.txt,v 1.1.4.3 2011/02/08 20:19:24 johnbarclay Exp $
 
-==================
-7.x-2.x-dev
-==================
-Added ldap profile and provision back in
+=================
+Merged head and 7.x-2.x branches
+From 7.x-2x in branch merge 7.x-1.x-dev to 7.x-2.x merge
+=================
 Issue #1199094 by avinoam, applied patch in comment #4 to fix logging errors
-Issue #1209800 by johnbarclay, ldap query module start
+Issue #1199094 by kbnielsen. Patch to ldap profile to deal with custom fields (comme...
+==================
+7.x-1.0-beta4
+==================
+Issue #1240782 by justintime, fixes flatten returned array in ldap servers
+Issue #1240782 by justintime, fixes _ldap_servers_get_user_ldap_data when sid is passed in.
+Issue #1236532, #986806 by johnbarclay, begin to deal with a number of username, email, and unique id issues.
+Issue #1224808#21 by mfulz, need to remove quotes from filter.
+==================
+7.x-1.0-beta4
+==================
+Issue #1227088 by hotspoons. Allow SSO for authentication http://drupal.org/project/ldap_sso
+Issue #1240966 by sunil.  Fix multiple consumer loads adn display on authorizations test page.
+Issue #1235430 by kbnielsen.  Improve message of disabled password reset form.
+Issue #1238818 by showmanlkz.  Made sid required on server form.
+Backed out of quoting filter values.  Though valid syntax, doesn't seem to work.
+Issue #1232332 by zeezhao:  cut length of file so .tar packaging would work
+Issue #1224808 by cpierce:  A number of escaping and quoting issues were resolved via quoting filters on ldap queries and using ldap_explode_dn() function instead of splitting on ",".  Also added a detialed logging entry for the ldap server class search() method to aid in future debugging
+Issue #1206500 by justintime: Added Make bind passwords exportable
+
+==================
+7.x-1.0-beta3
+==================
+Issue #1209576 thekevinday: install shows error of undefined constant fixed
+Added simpletests for drupal authentication and ldap authorization, and the following 2 issues (#1206146, #1213228)
+filtered on array_unique for drupal role mapping to avoid redundant role names
+Issue #1206146 danharper (and likely several other issues): allow mapping of cn or other first attribute instead of dn in ldap authorization and check for long drupal role names.
+Issue #1213228 johnbarclay: drupal user name to ldap php never implemented in ldap authorization. php format has changed.
 
 ==================
 7.x-1.0-beta2

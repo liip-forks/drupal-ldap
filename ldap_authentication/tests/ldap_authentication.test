@@ -70,7 +70,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
     $this->drupalLogout();
     $user = $this->testData['servers'][$this->sid]['users'][$dn]['attr'];
-    $parts = explode(',', $dn);
+    $parts = ldap_explode_dn($dn, 0);
     $cn_parts = explode('=', $parts[0]);
     $edit = array(
       'name' => $cn_parts[1],
@@ -540,96 +540,4 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 }
 
 
-/**
-==============================================
-Account Conflict Tests (AC) from "Existing Drupal User Account Conflict"
------------------------
-key:
-
-disallow and allow: option selected
-drupal - username exists as non ldap associated drupal account
-ldap - username exists in ldap
-noconflict1.  drupal user exists, but is ldap associated (authmapped)
-conflict.  a non ldap drupal account exists and the username if found in ldap
-
------------------------
-Tests:
------------------------
-LDAP_authen.AcctConflict.disallow.drupal - no conflict, no action taken
-LDAP_authen.AcctConflict.disallow.ldap - no conflict, no action taken
-LDAP_authen.AcctConflict.disallow.ldap.drupal - conflict logged and user authentication fails
-LDAP_authen.AcctConflict.allow.drupal - no conflict, no action taken
-LDAP_authen.AcctConflict.allow.ldap - no conflict, no action taken
-LDAP_authen.AcctConflict.allow.ldap.drupal - user authmapped to ldap
-
-==============================================
-Account Creation Tests (ACreate) from "Existing Drupal User Account Conflict"
------------------------
-
-Test by logging in with LDAP authenticated user with no existing account.
-
-LDAP_authen.AcctCreate.user_settings.Admin -- desired result:  no account created, user fails to logon
-LDAP_authen.AcctCreate.user_settings.Visitors -- desired result:  acount created and ldap authmapped
-LDAP_authen.AcctCreate.user_settings.AdminWithApproval -- desired result:  no account created, user fails to logon.  Acount should be created via account request form
-LDAP_authen.AcctCreate.ldap -- desired result:  acount created and ldap authmapped
-
-================================================
-User Forms User Interface (UFUI) Tests
-================================================
-setup:
-
-1. Toggle email user interface options on admin/config/people/ldap/authentication
-  EMAIL=hide
-  EMAIL=disable
-
-2. Toggle register accounts account settings at admin/config/accounts/settings
-  REGACCT.admin
-  REGACCT.visitors
-  REGACCT.visitors_w_approv
-
-3. Try with 4 types of users:
-  anon = anonymous user
-  user1 = authenticated user 1
-  drupal = authenticated drupal user
-  ldap = authenticated ldap user
--------------------------
-Tests and Desired Results
--------------------------
-Edit User Profile Form (/user/NN/edit), form id = user_profile_form
--------------------------
-LDAP_authen.user_profile_form.user1.password -- result: password fields and email address fields visible
-LDAP_authen.user_profile_form.drupal.password -- result: password fields visible
-LDAP_authen.user_profile_form.ldap.password -- result: password fields hidden
-
-
-LDAP_authen.user_profile_form.EMAIL=allow.* email field functions -- result: email field visible for all users
-LDAP_authen.user_profile_form.EMAIL=hide.ldap email field hidden -- result: email field hidden for ldap users
-LDAP_authen.user_profile_form.EMAIL=disable.ldap -- result: email field disabled but visible for ldap users
-
--------------------------
-User Logon block and logon forms (/user ), form_id = user_login_block and form_id = user_login
--------------------------
-
-LDAP_authen.login_forms.MM.anon  -- result: visible request new password link
-LDAP_authen.login_forms.EM.anon  -- result: hidden link or link to ldap help page
-
-NOTE:  Create new account link available based on user settings at admin/config/accounts/settings
-and not controlled by ldap module at all.
-
--------------------------
-Password Reset/Request New Form (user/password), form id = user_pass
--------------------------
-LDAP_authen.reset.anon -- result: form visible from url for all anonymous users
-LDAP_authen.reset.anon.EM  -- result: warning if ldap exclusive mode saying only works/available for user 1/admin and link to user ldap help page if link exists
-LDAP_authen.reset.ldap.validation.ldap -- result: validation error thrown if resetting password of ldap authenticated user
-LDAP_authen.reset.validation.user1 -- result: successfully able to reset password.
-
--------------------------
-User Register Form (user/register), form id = user_register_form
-- controlled by admin/config/accounts/settings and not affected by ldap modules.
-
-
-
-
- */
 }

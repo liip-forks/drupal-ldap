@@ -79,16 +79,46 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     * 4. Email
     */
 
-  $values['emailOptionOptions'] = array(
-    LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE => t('Don\'t show an email field on user forms.  LDAP derived email will be used for user and connot be changed by user'),
-    LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE => t('Show disabled email field on user forms with LDAP derived email.  LDAP derived email will be used for user and connot be changed by user'),
-    );
+    $values['emailOptionOptions'] = array(
+      LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE => t('Don\'t show an email field on user forms.  LDAP derived email will be used for user and connot be changed by user'),
+      LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE => t('Show disabled email field on user forms with LDAP derived email.  LDAP derived email will be used for user and connot be changed by user'),
+      );
 
-  $values['emailUpdateOptions'] = array(
-    LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY => t('Update stored email if LDAP email differs at login and notify user.'),
-    LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE => t('Update stored email if LDAP email differs at login but don\'t notify user.'),
-    LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE => t('Don\'t update stored email if LDAP email differs at login.'),
-    );
+    $values['emailUpdateOptions'] = array(
+      LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY => t('Update stored email if LDAP email differs at login and notify user.'),
+      LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE => t('Update stored email if LDAP email differs at login but don\'t notify user.'),
+      LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE => t('Don\'t update stored email if LDAP email differs at login.'),
+      );
+
+
+    /**
+     * 5. Single Sign-On / Seamless Sign-On
+     */
+
+    $values['ldapImplementationOptions'] = array(
+      'mod_auth_sspi' => t('mod_auth_sspi'),
+      );
+
+    $values['cookieExpirePeriod'] = array(0 => t('Immediately')) +
+      drupal_map_assoc(array(3600, 86400, 604800, 2592000, 31536000, 315360000), 'format_interval')
+      + array(-1 => t('Never'));
+
+    $values['ssoEnabledDescription'] = t('Turning on Single Sign-On will enable '.
+      'users of this site to be authenticated by visiting the URL '.
+      '"user/login/sso, or automatically if selecting "automated '.
+      'single sign-on" below. Set up of LDAP authentication must be '.
+      'performed on the web server. Please review the !readme file '.
+      'for more information.', array('!readme' =>
+      l(t('README.txt'), drupal_get_path('module', 'ldap_authentication'). '/README.txt')));
+
+    $values['seamlessLogInDescription'] = t('This requires that you '.
+      'have operational NTLM authentication turned on for at least '.
+      'the path user/login/sso, or for the whole domain.');
+    $values['cookieExpireDescription'] = t('If using the seamless login, a '.
+      'cookie is necessary to prevent automatic login after a user '.
+      'manually logs out. Select the lifetime of the cookie.');
+    $values['ldapImplementationDescription'] = t('Select the type of '.
+      'authentication mechanism you are using.');
 
     foreach ($values as $property => $default_value) {
       $this->$property = $default_value;
@@ -137,17 +167,28 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   public $emailUpdateDefault = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY;
   public $emailUpdateOptions;
 
+
+   /**
+   * 5. Single Sign-On / Seamless Sign-On
+   */
+
+  public $ssoEnabledDescription;
+  public $ldapImplementationOptions;
+  public $cookieExpirePeriod;
+  public $seamlessLogInDescription;
+  public $cookieExpireDescription;
+  public $ldapImplementationDescription;
+
+
   public $errorMsg = NULL;
   public $hasError = FALSE;
   public $errorName = NULL;
-
 
   public function clearError() {
     $this->hasError = FALSE;
     $this->errorMsg = NULL;
     $this->errorName = NULL;
   }
-
 
   public function save() {
     foreach ($this->saveable as $property) {
@@ -330,6 +371,48 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#options' => $this->emailUpdateOptions,
       );
 
+
+    /**
+     * Begin single sign-on settings
+     */
+    $form['sso'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Single Sign-On'),
+      '#collapsible' => TRUE,
+      '#collapsed' => (boolean)(!$this->ssoEnabled),
+    );
+
+
+    $form['sso']['ssoEnabled'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable Single Sign-On'),
+      '#description' => t($this->ssoEnabledDescription),
+      '#default_value' => $this->ssoEnabled,
+      );
+
+    $form['sso']['seamlessLogin'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Turn on automated single sign-on'),
+      '#description' => t($this->seamlessLogInDescription),
+      '#default_value' => $this->seamlessLogin,
+      );
+
+    $form['sso']['cookieExpire'] = array(
+      '#type' => 'select',
+      '#title' => t('Cookie Lifetime'),
+      '#description' => t($this->cookieExpireDescription),
+      '#default_value' => $this->cookieExpire,
+      '#options' => $this->cookieExpirePeriod,
+    );
+
+    $form['sso']['ldapImplementation'] = array(
+      '#type' => 'select',
+      '#title' => t('Authentication Mechanism'),
+      '#description' => t($this->ldapImplementationDescription),
+      '#default_value' => $this->ldapImplementation,
+      '#options' => $this->ldapImplementationOptions,
+    );
+
     $form['submit'] = array(
       '#type' => 'submit',
       '#value' => 'Save',
@@ -356,6 +439,24 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   public function validate() {
     $errors = array();
 
+    $enabled_servers = ldap_servers_get_servers(NULL, 'enabled');
+    if ($this->ssoEnabled) {
+      foreach ($this->sids as $sid) {
+        if ($enabled_servers[$sid]->bind_method == LDAP_SERVERS_BIND_METHOD_USER || $enabled_servers[$sid]->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+          $methods = array(
+            LDAP_SERVERS_BIND_METHOD_USER => 'Bind with Users Credentials',
+            LDAP_SERVERS_BIND_METHOD_ANON_USER => 'Anonymous Bind for search, then Bind with Users Credentials',
+          );
+          $tokens = array(
+            '!edit' => l($enabled_servers[$sid]->name, LDAP_SERVERS_INDEX_BASE_PATH . '/edit/' . $sid),
+            '%sid' => $sid,
+            '%bind_method' => $methods[$enabled_servers[$sid]->bind_method],
+          );
+
+          $errors['ssoEnabled'] = t('Single Sign On is not valid with the server !edit (id=%sid) because that server configuration uses %bind_method.  Since the user\'s credentials are never available to this module with single sign on enabled, there is no way for the ldap module to bind to the ldap server with credentials.', $tokens);
+        }
+      }
+    }
     return $errors;
   }
 
@@ -372,7 +473,10 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->excludeIfNoAuthorizations = ($values['excludeIfNoAuthorizations']) ? (int)$values['excludeIfNoAuthorizations'] : NULL;
     $this->emailOption  = ($values['emailOption']) ? (int)$values['emailOption'] : NULL;
     $this->emailUpdate  = ($values['emailUpdate']) ? (int)$values['emailUpdate'] : NULL;
-
+    $this->ssoEnabled = ($values['ssoEnabled']) ? (int)$values['ssoEnabled'] : NULL;
+    $this->seamlessLogin = ($values['seamlessLogin']) ? (int)$values['seamlessLogin'] : NULL;
+    $this->cookieExpire = ($values['cookieExpire']) ? (int)$values['cookieExpire'] : NULL;
+    $this->ldapImplementation = ($values['ldapImplementation']) ? (string)$values['ldapImplementation'] : NULL;
   }
 
   public function drupalFormSubmit($values) {

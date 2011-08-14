@@ -50,6 +50,7 @@ function ldap_servers_settings() {
     discovery of a clear text password.'),
     );
 
+ 
     // $options will be empty if server does not support mcrypt.
   // Disable the form field and explain this to the user.
   if (empty($options)) {

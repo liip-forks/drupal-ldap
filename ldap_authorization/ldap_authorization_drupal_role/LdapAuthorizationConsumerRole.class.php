@@ -66,6 +66,10 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
 
     // 2. create each role that is needed
     foreach ($roles_to_create as $i => $role_name_lowercase) {
+      if (strlen($role_name_lowercase) > 63) {
+        watchdog('ldap_authorization_drupal_role', 'Tried to create drupal role with name of over 63 characters (%group_name).  Please correct your drupal ldap_authorization settings', array('%group_name' => $role_name_lowercase));
+        continue;
+      }
       $role = new stdClass();
       $role->name = $roles_map_lc_to_mixed_case[$role_name_lowercase];
       if (! ($status = user_role_save($role))) {

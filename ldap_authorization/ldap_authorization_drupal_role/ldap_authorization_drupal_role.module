@@ -21,10 +21,9 @@ function ldap_authorization_drupal_role_ldap_authorization_consumer() {
     'consumer_short_name_plural' => t('roles'),
     'consumer_description' => t('A Drupal Role.'),
     'consumer_class_name' => 'LdapAuthorizationConsumerDrupalRole',
-    'consumer_class_file' => 'LdapAuthorizationConsumerDrupalRole.class.php',
+    'consumer_class_file' => 'LdapAuthorizationConsumerRole.class.php',
     'consumer_module' => 'ldap_authorization_drupal_role',
   );
 
   return $types;
 }
-
