@@ -29,7 +29,6 @@ function ldap_query_index() {
 function ldap_query_list($qid = NULL, $actions = FALSE) {
 
   $ldap_queries = ldap_query_get_queries($qid, 'all');
- // dpm($ldap_queries);
   $variables =  array(
     'ldap_queries' => $ldap_queries,
     'action' => TRUE,
@@ -251,13 +250,11 @@ function ldap_query_admin_enable_disable_submit($form, &$form_state) {
 
 
 function ldap_query_test($qid) {
- // print $qid; die;
-  dpm($qid);
+
   $ldap_query = ldap_query_get_queries($qid, 'all', TRUE);
-  dpm($ldap_query);
   $results = $ldap_query->query();
   $display = theme('ldap_query_results', array('results' => $results, 'ldap_query' => $ldap_query, 'show_query' => TRUE));
-  //dpm($display);
+
   return $display;
 
 

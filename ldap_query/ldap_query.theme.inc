@@ -34,7 +34,7 @@ function theme_ldap_query_list($variables) {
   if ($actions) {
     $table['header'][] = "Operations";
   }
- // dpm($ldap_queries);
+
   if (count($ldap_queries)) {
     foreach ($ldap_queries as $qid => $ldap_query ) {
       $row =  array(
@@ -72,7 +72,7 @@ function theme_ldap_query_list($variables) {
  */
 
 function theme_ldap_query($variables) {
- // dpm($variables);
+
   extract($variables);  // $ldap_query, $actions, $type (see above)
 
   require_once('LdapQuery.class.php');
@@ -136,7 +136,6 @@ function theme_ldap_query_results($variables) {
     //  unset($attr_data['count']);
 
     }
-    dpm($entry);
     unset($entry['count']);
     $table['rows'][] = $row;
   }

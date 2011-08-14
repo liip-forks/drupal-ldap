@@ -29,7 +29,7 @@ function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
       }
     }
   }
- // dpm($queries);
+
 
   if ($qid) {
     if (!isset($queries[$type][$qid])) {

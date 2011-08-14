@@ -110,14 +110,13 @@ class LdapQuery {
     $ldap_server->connect();
     $ldap_server->bind();
     $results = array();
-    dpm('attributes');
-    dpm($this->attributes);
+
     foreach ($this->baseDn as $base_dn) { //
       $result = $ldap_server->search($base_dn, $this->filter, $this->attributes, 0, $this->sizelimit, $this->timelimit, $this->deref);
-      dpm($result);
+
       $results = array_merge($results, $result);
     }
-    dpm($results);
+
     return $results;
   }
 
