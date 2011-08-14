@@ -51,91 +51,91 @@ function ldap_profile_info($field = 0) {
  * Implements hook_user_login().
  */
 function ldap_profile_user_login(&$edit, $account){
-	$servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);
-	$server = 0;
-	$changes = array();
-	$authuser = false;
-	$ldapuser = false;
-	$dn = "";
+  $servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);
+  $server = 0;
+  $changes = array();
+  $authuser = false;
+  $ldapuser = false;
+  $dn = "";
 
-	foreach ($account->roles as $role){
-		if ($role == 'authenticated user'){
-			$authuser = true;
-		}
-	}
+  foreach ($account->roles as $role){
+    if ($role == 'authenticated user'){
+      $authuser = true;
+    }
+  }
 
-	if (array_key_exists("ldap_authentication", $account->data)){
-		$authdata = $account->data["ldap_authentication"];
-		if (array_key_exists('init', $authdata)){
-			$authinit=$authdata['init'];
-			foreach ($servers as $s){
-				if ($s->sid == $authinit['sid']){
-					//OK we have found the right server
-					$server = $s;
-					$ldapuser = true;
-					if (array_key_exists('dn', $authinit)){
-						$dn = $authinit['dn'];
-					}
-				}
-			}
-		}
-	}
+  if (array_key_exists("ldap_authentication", $account->data)){
+    $authdata = $account->data["ldap_authentication"];
+    if (array_key_exists('init', $authdata)){
+      $authinit=$authdata['init'];
+      foreach ($servers as $s){
+        if ($s->sid == $authinit['sid']){
+          //OK we have found the right server
+          $server = $s;
+          $ldapuser = true;
+          if (array_key_exists('dn', $authinit)){
+            $dn = $authinit['dn'];
+          }
+        }
+      }
+    }
+  }
 
-	if ($authuser && $ldapuser && $dn != ""){
+  if ($authuser && $ldapuser && $dn != ""){
 
-		$ldapfields = array();
-		$mapping = ldap_profile_get_mapping();
-		foreach (array_keys($mapping) as $field){
-			if (strpos($field, "field_") !== false){
-				//We have a custom field
-				array_push($ldapfields, $mapping[$field]);
-			}
+    $ldapfields = array();
+    $mapping = ldap_profile_get_mapping();
+    foreach (array_keys($mapping) as $field){
+      if (strpos($field, "field_") !== false){
+        //We have a custom field
+        array_push($ldapfields, $mapping[$field]);
+      }
 
-		}
-		array_push($ldapfields, 'uid');
+    }
+    array_push($ldapfields, 'uid');
 
-		$ldapdata = $server->search($dn, "uid=*", $ldapfields);
-		var_dump($ldapdata);
-		foreach (array_keys($mapping) as $field){
-     	        	if (strpos($field, "field_") !== false){
-				if (array_key_exists('0', $ldapdata)){
-					if (array_key_exists($mapping[$field], $ldapdata[0])){
-						if (array_key_exists(0, $ldapdata[0][$mapping[$field]])){
-							$add = false;
+    $ldapdata = $server->search($dn, "uid=*", $ldapfields);
+    var_dump($ldapdata);
+    foreach (array_keys($mapping) as $field){
+                 if (strpos($field, "field_") !== false){
+        if (array_key_exists('0', $ldapdata)){
+          if (array_key_exists($mapping[$field], $ldapdata[0])){
+            if (array_key_exists(0, $ldapdata[0][$mapping[$field]])){
+              $add = false;
 
-							if (!property_exists($account, $field)){
-								$add = true;
-							} else {
-								$f = $account->$field;
-								if (array_key_exists("und",$f)){
-									if (array_key_exists("0", $f["und"])){
-										if (array_key_exists("value", $f["und"][0])){
-											if ($f["und"][0]["value"] != $ldapdata[0][$mapping[$field]][0]){
-												$add = true;
-											}
-										}
-									}
-								}
-							}
+              if (!property_exists($account, $field)){
+                $add = true;
+              } else {
+                $f = $account->$field;
+                if (array_key_exists("und",$f)){
+                  if (array_key_exists("0", $f["und"])){
+                    if (array_key_exists("value", $f["und"][0])){
+                      if ($f["und"][0]["value"] != $ldapdata[0][$mapping[$field]][0]){
+                        $add = true;
+                      }
+                    }
+                  }
+                }
+              }
 
-							if ($add) {
-								$changes[$field] = array('und' => array(
-										0 => array(
-											'value' => $ldapdata[0][$mapping[$field]][0]
-											)
-										)
-									);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+              if ($add) {
+                $changes[$field] = array('und' => array(
+                    0 => array(
+                      'value' => $ldapdata[0][$mapping[$field]][0]
+                      )
+                    )
+                  );
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
-	if (count($changes) > 0){
-		user_save($account, $changes);
-	}
+  if (count($changes) > 0){
+    user_save($account, $changes);
+  }
 }
 
 

@@ -1,5 +1,7 @@
 // $Id: CHANGELOG.txt,v 1.1.4.3 2011/02/08 20:19:24 johnbarclay Exp $
 
+Removed tabs from ldap_profile.module file
+Issue #1235698 by kbnielsen, Remove debug statements
 =================
 Merged head and 7.x-2.x branches
 From 7.x-2x in branch merge 7.x-1.x-dev to 7.x-2.x merge
