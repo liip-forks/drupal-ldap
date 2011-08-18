@@ -81,7 +81,7 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
     $this->assertTrue($correct_roles, 'verykool granted 2 roles on actual logon "content editors" and "content approvers" drupal roles ', $this->ldapTestId . '.duplicate_entry');
 
     $this->drupalGet('user/logout');
-    
+
 
 }
 

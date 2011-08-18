@@ -264,6 +264,12 @@ class LdapServer {
       );
       watchdog('ldap_server', $query, array());
     }
+    
+    // When checking multiple servers, there's a chance we might not be connected yet.
+    if (! $this->connection) {
+      $this->connect();
+      $this->bind();
+    }
 
     $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
     if ($result && ldap_count_entries($this->connection, $result)) {

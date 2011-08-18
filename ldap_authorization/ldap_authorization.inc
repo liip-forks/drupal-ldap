@@ -139,7 +139,8 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       continue;
     }
 
-    if (! ($user_ldap_entry = ldap_servers_get_user_ldap_data($user, $consumer->consumerConf->sid))) {
+    $consumer_sid = $consumer->consumerConf->deriveFromEntrySearchAll ? NULL : $consumer->consumerConf->sid;
+    if (! ($user_ldap_entry = ldap_servers_get_user_ldap_data($user, $consumer_sid))) {
       $notifications[$consumer_type][] = LDAP_AUTHORIZATION_USER_LDAP_NOT_FOUND;
       if ($detailed_watchdog_log) {
         watchdog('ldap_authorization', '%username : %consumer_type ldap user not found.', $watchdog_tokens, WATCHDOG_DEBUG);

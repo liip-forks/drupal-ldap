@@ -36,6 +36,8 @@ class LdapAuthorizationConsumerConf {
   public $deriveFromEntry = FALSE;
   public $deriveFromEntryEntries = NULL;
   public $deriveFromEntryAttr = NULL;
+  public $deriveFromEntrySearchAll = FALSE;
+
 
   public $mappings = array();
   public $useMappingsAsFilter = TRUE;
@@ -120,6 +122,8 @@ class LdapAuthorizationConsumerConf {
     $this->deriveFromAttr  = (bool)($consumer_conf->derive_from_attr);
     $this->deriveFromAttrAttr =  $this->linesToArray($consumer_conf->derive_from_attr_attr);
     $this->deriveFromAttrUseFirstAttr  = (bool)($consumer_conf->derive_from_attr_use_first_attr);
+    $this->deriveFromEntrySearchAll = (bool)($consumer_conf->derive_from_entry_search_all);
+
 
     $this->deriveFromEntry  = (bool)(@$consumer_conf->derive_from_entry);
     $this->deriveFromEntryEntries = $this->linesToArray($consumer_conf->derive_from_entry_entries);
@@ -160,6 +164,7 @@ class LdapAuthorizationConsumerConf {
     'deriveFromEntry',
     'deriveFromEntryEntries',
     'deriveFromEntryAttr',
+    'deriveFromEntrySearchAll',
     'mappings',
     'useMappingsAsFilter',
     'synchToLdap',
