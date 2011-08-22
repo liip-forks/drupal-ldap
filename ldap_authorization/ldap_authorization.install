@@ -12,7 +12,7 @@
 function ldap_authorization_requirements($phase) {
   $requirements = array();
 
-  if (db_field_exists('ldapauth', 'ldapgroups_in_dn' )) {
+if ($phase != "install" && db_field_exists('ldapauth', 'ldapgroups_in_dn' )) {
     $requirements['ldap_authorization_ldap_integration']['title'] = t('LDAP Integration LDAP Groups Upgrade Concern');
     $requirements['ldap_authorization_ldap_integration']['severity'] = REQUIREMENT_WARNING;
     $requirements['ldap_authorization_ldap_integration']['value'] = NULL;
@@ -125,4 +125,3 @@ function ldap_authorization_update_7102() {
   }
 
 }
-

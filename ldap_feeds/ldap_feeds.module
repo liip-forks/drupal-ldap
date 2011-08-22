@@ -85,6 +85,13 @@ function ldap_feeds_enable() {
  */
 
 function ldap_feeds_form_feeds_ui_mapping_form_alter(&$form, &$form_state, $form_id) {
+
+  if (@$form['#importer']->config['fetcher']['plugin_key'] != 'FeedsLdapQueryFetcher' &&
+      @$form['#importer']->config['fetcher']['plugin_key'] != 'FeedsDrupalUserLdapEntryFetcher'
+      ) { // FeedsSqlFetcher
+    return;
+  }
+
   $sources = array();
   $servers = ldap_servers_get_servers(NULL, 'enabled');
   $form['legendset']['#description'] = "";

@@ -12,7 +12,8 @@
  */
 function ldap_authentication_requirements($phase) {
   $requirements = array();
-  if (db_table_exists('ldapauth')) {
+  if ($phase != "install" && db_table_exists('ldapauth')) {
+
     $requirements['ldap_authentication_ldap_integration']['title'] = t('LDAP Integration LDAP Auth Upgrade Concern');
     $requirements['ldap_authentication_ldap_integration']['severity'] = REQUIREMENT_WARNING;
     $requirements['ldap_authentication_ldap_integration']['value'] = NULL;
