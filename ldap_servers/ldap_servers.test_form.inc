@@ -1,6 +1,7 @@
 <?php
 // $Id: ldap_servers.test_form.inc,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
+require_once('ldap_servers.functions.inc');
 
 /**
  * @file
