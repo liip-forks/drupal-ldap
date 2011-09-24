@@ -1,5 +1,6 @@
 // $Id: CHANGELOG.txt,v 1.1.4.3 2011/02/08 20:19:24 johnbarclay Exp $
 
+Issue #1267552 by stred.  object issue in sso hook_boot.
 Issue #1259628 by justintime, missing include in test form
 Issue #1256658 by matir, fix install time requirements for profiles.  also fixed feeds bug (see diff).
 Issue #1248116 by justintime, Allow users on one LDAP server to be assigned roles defined on a different server

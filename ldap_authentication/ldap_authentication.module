@@ -383,10 +383,7 @@ function ldap_authentication_user_logout($account) {
  *  regardless of cache
  */
 function ldap_authentication_boot() {
-  if ($GLOBALS['user']->uid == 0){
-    //Full bootstrap needed to load common.inc for redirects
-    drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-    $auth_conf = ldap_authentication_get_valid_conf();
+  if ($GLOBALS['user']->uid == 0) {
     if (!(isset($_COOKIE['seamless_login'])) || $_COOKIE['seamless_login'] == 'auto login'){
       if ((arg(0) == 'user' && !(is_numeric(arg(1)))) || arg(0) == 'logout' ){
         return;
@@ -395,11 +392,14 @@ function ldap_authentication_boot() {
         if (isset($_COOKIE['seamless_login_attempted']))
           $login_attempted = $_COOKIE['seamless_login_attempted'];
         else {
-          $login_attempted = false;
+          $login_attempted = FALSE;
         }
-        if ($auth_conf->seamlessLogin == 1 && ($login_attempted != 'true')){
+        if ($auth_conf = ldap_authentication_get_valid_conf() &&
+            $auth_conf->seamlessLogin == 1 && ($login_attempted != 'true')) {
           setcookie("seamless_login_attempted", 'true', time() + (int)$auth_conf->cookieExpire, base_path(), "");
           $_SESSION['seamless_login_attempted'] = $login_attempted;
+          //Full bootstrap needed to load common.inc for redirects
+          drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
           drupal_goto('user/login/sso', array('query' => array('destination' => rawurlencode($_GET['q']))));
         }
         else {
