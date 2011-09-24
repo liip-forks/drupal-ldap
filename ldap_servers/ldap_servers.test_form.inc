@@ -162,6 +162,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   }
 
   if (!$has_errors && @$values['testing_drupal_username']) {
+    require_once('ldap_servers.functions.inc');
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
     $_SESSION['ldap_server_test_data'] = array(
       'username' => $values['testing_drupal_username'],
