@@ -1,5 +1,6 @@
 // $Id: CHANGELOG.txt,v 1.1.4.3 2011/02/08 20:19:24 johnbarclay Exp $
 
+Issue #1296154 by mrryanjohnston fixed with patch from same author.  
 "final" release candidate plan of action. See http://drupal.org/node/1115704#comment-5045030
 Added ldap_query module into 7.1 branch.
 Issue #1202744 by slerby.  ldap_views integration module to 7.1 branch
