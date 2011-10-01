@@ -19,7 +19,7 @@ function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
     $queries = array();
   }
   if (!isset($queries['all'])) {
-    $queries['all'] = LdapQueryAdmin::getLdapQueryObjects('all');
+    $queries['all'] = LdapQueryAdmin::getLdapQueryObjects('all', 'all');
   }
   if (!isset($queries['enabled'])) {
     $queries['enabled'] = array();
@@ -49,7 +49,7 @@ function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
 function _ldap_query_get_simpletest_queries($qid, $type, $flatten, $reset = TRUE) {
   require_once('tests/LdapQueryTest.class.php');
 
-  $queries['all'] = LdapQueryTest::getLdapQueryObjects('all');
+  $queries['all'] = LdapQueryTest::getLdapQueryObjects('all', 'all');
 
   foreach ($queries['all'] as $_sid => $ldap_query) {
     if ($ldap_query->status == 1) {

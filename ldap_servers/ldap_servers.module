@@ -2,6 +2,9 @@
 // $Id: ldap_servers.module,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 
+define('LDAP_SCOPE_BASE', 1);
+define('LDAP_SCOPE_ONELEVEL', 2);
+define('LDAP_SCOPE_SUBTREE', 3);
 
 define('LDAP_SERVERS_PROJECT_TAG', 'ldap');
 define('LDAP_SERVERS_MENU_BASE_PATH', 'admin/config/people/ldap');

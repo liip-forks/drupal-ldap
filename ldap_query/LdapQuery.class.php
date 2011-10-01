@@ -33,6 +33,7 @@ class LdapQuery {
   public $sizelimit = 0;
   public $timelimit = 0;
   public $deref = LDAP_DEREF_NEVER;
+  public $scope = LDAP_SCOPE_SUBTREE;
 
 
   public $inDatabase = FALSE;
@@ -111,8 +112,8 @@ class LdapQuery {
     $ldap_server->bind();
     $results = array();
 
-    foreach ($this->baseDn as $base_dn) { //
-      $result = $ldap_server->search($base_dn, $this->filter, $this->attributes, 0, $this->sizelimit, $this->timelimit, $this->deref);
+    foreach ($this->baseDn as $base_dn) {
+      $result = $ldap_server->search($base_dn, $this->filter, $this->attributes, 0, $this->sizelimit, $this->timelimit, $this->deref, $this->scope);
 
       $results = array_merge($results, $result);
     }
@@ -193,7 +194,9 @@ class LdapQuery {
 
   protected function csvToArray($string) {
     $items = explode(',', $string);
-    array_walk($items, 'trim');
+    foreach ($items as $i => $item) {
+      $items[$i] = trim($item);
+    }
     return $items;
   }
 
@@ -334,8 +337,8 @@ class LdapQuery {
         'form' => array(
           'field_group' => 'query',
           '#type' => 'textarea',
-          '#title' => t('Attributes to return. '),
-          '#description' => t(' Enter as comma separated list. DN is automatically returned.  Leave empty to return all attributes. e.g. <code>objectClass, objectCategory, name, cn, sAMAccountName</code>'),
+          '#title' => t('Attributes to return.'),
+          '#description' => t('Enter as comma separated list. DN is automatically returned.  Leave empty to return all attributes. e.g. <code>objectClass,objectCategory,name,cn,sAMAccountName</code>'),
           '#cols' => 50,
           '#rows' => 6,
         ),
@@ -410,8 +413,27 @@ class LdapQuery {
         ),
         'form_to_prop_functions' => array('trim'),
       ),
-
-
+     'scope' => array(
+        'property_name' => 'scope',
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => LDAP_SCOPE_SUBTREE,
+        ),
+        'form' => array(
+          'field_group' => 'query_advanced',
+          '#type' => 'radios',
+          '#title' => t('Scope of search.'),
+          '#required' => 1,
+          '#options' => array(
+            LDAP_SCOPE_BASE => t('BASE. This value is used to indicate searching only the entry at the base DN, resulting in only that entry being returned (keeping in mind that it also has to meet the search filter criteria!).'),
+            LDAP_SCOPE_ONELEVEL => t('ONELEVEL. This value is used to indicate searching all entries one level under the base DN - but not including the base DN and not including any entries under that one level under the base DN.'),
+            LDAP_SCOPE_SUBTREE => t('SUBTREE. (default) This value is used to indicate searching of all entries at all levels under and including the specified base DN.'),
+          ),
+        ),
+        'form_to_prop_functions' => array('trim'),
+      ),
 
     );
     return $fields;

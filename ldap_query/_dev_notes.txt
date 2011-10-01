@@ -19,6 +19,11 @@ deref: deref
   * LDAP_DEREF_FINDING - aliases should be dereferenced when locating the base object but not during the search.
   * LDAP_DEREF_ALWAYS - aliases should be dereferenced always.
 
+scope: scope
+  * LDAP_DEREF_NEVER => t(default) aliases are never dereferenced.',
+  * LDAP_DEREF_SEARCHING=> 'aliases should be dereferenced during the search but not when locating the base object of the search.',
+  * LDAP_DEREF_FINDING => 'aliases should be dereferenced when locating the base object but not during the search.',
+  * LDAP_DEREF_ALWAYS => 'aliases should be dereferenced always.',
 
 inDatabase
 detailedWatchdogLog

@@ -242,7 +242,7 @@ class LdapServer {
    *   empty.
    */
 
-  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
+  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
         $base_dn = $this->basedn[0];
@@ -264,15 +264,28 @@ class LdapServer {
       );
       watchdog('ldap_server', $query, array());
     }
-    
+
     // When checking multiple servers, there's a chance we might not be connected yet.
     if (! $this->connection) {
       $this->connect();
       $this->bind();
     }
 
-    $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-    if ($result && ldap_count_entries($this->connection, $result)) {
+    switch ($scope) {
+      case LDAP_SCOPE_SUBTREE:
+        $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        break;
+
+      case LDAP_SCOPE_BASE:
+        $result = @ldap_read($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        break;
+
+      case LDAP_SCOPE_ONELEVEL:
+        $result = @ldap_list($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        break;
+    }
+
+     if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
       return $entries;
     }

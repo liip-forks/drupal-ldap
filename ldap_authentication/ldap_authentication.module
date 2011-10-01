@@ -397,8 +397,8 @@ function ldap_authentication_boot() {
         //Full bootstrap needed to load common.inc for redirects and for ldap_authentication_get_valid_conf()
         // to function.
         drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-        if ($auth_conf = ldap_authentication_get_valid_conf() &&
-            $auth_conf->seamlessLogin == 1 && ($login_attempted != 'true')) {
+        $auth_conf = ldap_authentication_get_valid_conf();
+        if ( $auth_conf && $auth_conf->seamlessLogin == 1 && ($login_attempted != 'true')) {
           setcookie("seamless_login_attempted", 'true', time() + (int)$auth_conf->cookieExpire, base_path(), "");
           $_SESSION['seamless_login_attempted'] = $login_attempted;
 
