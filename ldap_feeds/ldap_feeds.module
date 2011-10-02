@@ -1,5 +1,4 @@
 <?php
-// $Id:  $
 
 define('LDAP_FEEDS_FETCHER_SIZELIMIT', 50);
 define('LDAP_FEEDS_FETCHER_ATTRIBUTES', '"dn", "cn", "mail"');
@@ -45,28 +44,7 @@ function ldap_feeds_feeds_plugins() {
     ),
   );
 
-
   return $info;
-
-  /**
-   * this feed would be specific to drupal ldap authenticated or otherwise ldap identified users
-   * with the main use case being user profile or other user data synching from ldap to drupal
-   * it would use the FeedsLdapEntryParse.
-   */
-
-  /**
-  $info['FeedsLdapDrupalUserFetcher'] = array(
-    'name' => 'LDAP Drupal User Fetcher',
-    'description' => 'Fetch LDAP data associated with LDAP Authenticated users',
-    'handler' => array(
-      'parent' => 'FeedsFetcher', // This is the key name, not the class name.
-      'class' => 'FeedsDrupalUserFetcher',
-      'file' => 'FeedsLdapDrupalUserFetcher.inc',
-      'path' => $path,
-    ),
-  );
-
-  */
 
 }
 

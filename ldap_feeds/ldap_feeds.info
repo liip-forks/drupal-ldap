@@ -1,4 +1,4 @@
-name = LDAP Feeds Fetcher and Parser
+name = LDAP Feeds
 description = "VERY MUCH IN ALPHA STATE. Included feeds fetcher for a generic
 ldap query and ldap entry parser to turn fetcher data into feeds compatible parser result.
 Used to automate content creation based on ldap queries"

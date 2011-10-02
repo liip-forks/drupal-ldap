@@ -242,7 +242,7 @@ class LdapServer {
    *   empty.
    */
 
-  function search($base_dn = NULL, $filter, $attributes = NULL, $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
+  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = LDAP_SCOPE_SUBTREE) {
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
         $base_dn = $this->basedn[0];
@@ -251,17 +251,20 @@ class LdapServer {
         return FALSE;
       }
     }
+
+    $attr_display =  is_array($attributes) ? join(',', $attributes) : 'none';
+    $query = 'ldap_search() call: '. join(",\n", array(
+      'base_dn: ' . $base_dn,
+      'filter = ' . $filter,
+      'attributes: ' . $attr_display,
+      'attrsonly = ' .  $attrsonly,
+      'sizelimit = ' .  $sizelimit,
+      'timelimit = ' .  $timelimit,
+      'deref = ' .  $deref,
+      'scope = ' .  $scope,
+      )
+    );
     if ($this->detailed_watchdog_log) {
-      $query = 'ldap_search() call: '. join("<hr/>", array(
-        'base_dn: ' . $base_dn,
-        'filter = ' . $filter,
-        'attributes: ' .  join(',', $attributes),
-        'attrsonly = ' .  $attrsonly,
-        'sizelimit = ' .  $sizelimit,
-        'timelimit = ' .  $timelimit,
-        'deref = ' .  $deref,
-        )
-      );
       watchdog('ldap_server', $query, array());
     }
 
@@ -271,17 +274,33 @@ class LdapServer {
       $this->bind();
     }
 
+
     switch ($scope) {
       case LDAP_SCOPE_SUBTREE:
-        $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        $result = ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($this->hasError()) {
+          watchdog('ldap_server', 'ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query',
+            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            WATCHDOG_ERROR);
+        }
         break;
 
       case LDAP_SCOPE_BASE:
-        $result = @ldap_read($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        $result = ldap_read($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($this->hasError()) {
+          watchdog('ldap_server', 'ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query',
+            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            WATCHDOG_ERROR);
+        }
         break;
 
       case LDAP_SCOPE_ONELEVEL:
-        $result = @ldap_list($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        $result = ldap_list($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($this->hasError()) {
+          watchdog('ldap_server', 'ldap_list() function error. LDAP Error: %message, ldap_list() parameters: %query',
+            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            WATCHDOG_ERROR);
+        }
         break;
     }
 
@@ -338,9 +357,7 @@ class LdapServer {
    // print "$ldap_username from $drupal_user_name"; die;
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
-
       $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
-
       $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
