@@ -74,7 +74,7 @@ class LdapQuery {
       $query_record = $query_records[$qid];
       foreach ($this->fields() as $field_id => $field ) {
         if (isset($query_record->$field_id)) {
-          $this->{$field['property_name']} = $query_record->$db_field_name;
+          $this->{$field['property_name']} = @$query_record->$field_id;
         }
       }
     }
@@ -84,7 +84,7 @@ class LdapQuery {
     $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
 
     $this->baseDn = $this->linesToArray($this->base_dn_str);
-    $this->attributes = $this->csvToArray($this->attributes_str);
+    $this->attributes = ($this->attributes_str) ? $this->csvToArray($this->attributes_str) : array();
 
   }
 
@@ -114,7 +114,6 @@ class LdapQuery {
 
     foreach ($this->baseDn as $base_dn) {
       $result = $ldap_server->search($base_dn, $this->filter, $this->attributes, 0, $this->sizelimit, $this->timelimit, $this->deref, $this->scope);
-
       $results = array_merge($results, $result);
     }
 
@@ -338,7 +337,7 @@ class LdapQuery {
           'field_group' => 'query',
           '#type' => 'textarea',
           '#title' => t('Attributes to return.'),
-          '#description' => t('Enter as comma separated list. DN is automatically returned.  Leave empty to return all attributes. e.g. <code>objectClass,objectCategory,name,cn,sAMAccountName</code>'),
+          '#description' => t('Enter as comma separated list. DN is automatically returned. Leave empty to return all attributes. e.g. <code>objectclass,objectcategory,name,cn,samaccountname</code>'),
           '#cols' => 50,
           '#rows' => 6,
         ),

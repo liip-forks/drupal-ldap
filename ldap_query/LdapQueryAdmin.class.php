@@ -57,7 +57,13 @@ class LdapQueryAdmin extends LdapQuery {
 
     foreach ($this->fields() as $field_id => $field) {
       if (isset($field['form']) && property_exists('LdapQueryAdmin', $field['property_name'])) {
-        $this->{$field['property_name']} = $values[$field_id];
+        $value = $values[$field_id];
+        if (isset($field['form_to_prop_functions'])) {
+          foreach ($field['form_to_prop_functions'] as $function) {
+            $value = call_user_func($function, $value);
+          }
+        }
+        $this->{$field['property_name']} = $value;
       }
     }
     $this->inDatabase = ($op == 'edit');
@@ -214,9 +220,7 @@ class LdapQueryAdmin extends LdapQuery {
       '#weight' => 100,
     );
 
-
     return $form;
-
   }
 
 

@@ -194,8 +194,6 @@ function ldap_servers_menu() {
     'file' => 'ldap_servers.admin.inc',
   );
 
-
-
   return $items;
 }
 

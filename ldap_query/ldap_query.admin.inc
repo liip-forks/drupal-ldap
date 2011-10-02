@@ -13,7 +13,7 @@
 
 function ldap_query_index() {
 
-  return t('List of all queried'); // . ldap_query_list(NULL, TRUE);
+  return ldap_query_list(NULL, TRUE);
 
 }
 /**

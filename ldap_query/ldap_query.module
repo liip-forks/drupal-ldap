@@ -7,12 +7,14 @@ define('LDAP_QUERY_MENU_BASE_PATH', 'admin/config/people/ldap');
 define('LDAP_QUERY_INDEX_BASE_PATH', 'admin/config/people/ldap/servers');
 define('LDAP_QUERY_MENU_BASE_PATH_PARTS', 4); // for argument offsets
 
+
 function ldap_query_menu() {
   $menu_offset = 4;
 
   $items['admin/config/people/ldap/query'] = array(
     'title' => 'Queries',
     'page callback' => 'ldap_query_index',
+    'page arguments' => array(),
     'weight' => 6,
     'type' => MENU_LOCAL_TASK,
     'access arguments' => array('administer site configuration'),

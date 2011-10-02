@@ -242,7 +242,7 @@ class LdapServer {
    *   empty.
    */
 
-  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
+  function search($base_dn = NULL, $filter, $attributes = NULL, $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
         $base_dn = $this->basedn[0];
@@ -285,7 +285,7 @@ class LdapServer {
         break;
     }
 
-     if ($result && ldap_count_entries($this->connection, $result)) {
+    if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
       return $entries;
     }
