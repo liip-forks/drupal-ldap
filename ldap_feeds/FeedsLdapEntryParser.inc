@@ -1,5 +1,4 @@
 <?php
-// $Id: $
 
 /**
  * @file
@@ -23,9 +22,16 @@ class FeedsLdapEntryParser extends FeedsParser {
       $parsed_item = array('dn' => (string)$ldap_entry['dn']);
       foreach ($mappings as $j => $map) {
         $source = $map['source'];
-        if ($source != 'dn' && isset($ldap_entry[$source][0])) {
-          if ($ldap_entry[$source]['count'] == 1 && is_scalar($ldap_entry[$source][0])) {
-            $parsed_item[$source] = (string)$ldap_entry[$source][0];
+        if (isset($ldap_entry['attr'])) {
+          // exception need because of unconvential format of ldap data returned from $ldap_server->user_lookup
+          $ldap_attributes = $ldap_entry['attr'];
+        }
+        else {
+          $ldap_attributes = $ldap_entry;
+        }
+        if ($source != 'dn' && isset($ldap_attributes[$source][0])) {
+          if ($ldap_attributes[$source]['count'] == 1 && is_scalar($ldap_attributes[$source][0])) {
+            $parsed_item[$source] = (string)$ldap_attributes[$source][0];
           }
 /** removed until design decisions on multivalued attributes are made
           elseif ($ldap_entry['count'] > 1) {
@@ -51,12 +57,10 @@ class FeedsLdapEntryParser extends FeedsParser {
           }
  */
         }
-
       }
       $parsed_items[] = $parsed_item;
     }
     $result = new FeedsParserResult();
-
     $result->items = $parsed_items;
     return $result;
   }
@@ -71,15 +75,11 @@ class FeedsLdapEntryParser extends FeedsParser {
     if (empty($source_config)) {
       $source_config = $this->config;
     }
-
-
-    // Add extensions that might get importerd.
-    $fetcher = feeds_importer($this->id)->fetcher;
     return $form;
   }
 
   /**
-   * Override parent::sourceFormValidate().
+   * Override parent::configFormValidate().
    */
   public function configFormValidate(&$values) {
     $this->setConfig(array('sources' => $values));
@@ -134,13 +134,8 @@ class FeedsLdapEntryParser extends FeedsParser {
     return $form;
   }
 
-
   public function sourceDefaults() {
     return array();
   }
-
-
-
-
 
 }

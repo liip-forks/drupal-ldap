@@ -4,8 +4,12 @@ ldap query and ldap entry parser to turn fetcher data into feeds compatible pars
 Used to automate content creation based on ldap queries"
 
 package = "Lightweight Directory Access Protocol"
+
 dependencies[] = feeds
 dependencies[] = ldap_servers
 dependencies[] = ldap_query
+
+configure = admin/structure/feeds
+
 core = 7.x
 php = 5.2
