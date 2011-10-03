@@ -34,6 +34,7 @@ Includes 1 feeds parser:
 Testing steps for LDAPQuery Fetcher.  (need to convert to simpletest)
 ------------------------------------------------
    0.  Make sure ldap_servers, ldap_feeds, feeds, and feeds admin ui are enabled and at least one ldap server is configured.
+   0.A. Having a sample or test user in the ldap server configuration will help by giving more mapping hints in the feeds mapper.
    1.  create content type 'ldap_user'
    2.  add fields 'sn' and 'mail' to content type
    3.  Create ldap query admin/config/people/ldap/query named users
