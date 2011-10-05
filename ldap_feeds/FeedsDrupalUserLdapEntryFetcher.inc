@@ -37,20 +37,28 @@ class FeedsDrupalUserLdapEntryFetcherResult extends FeedsFetcherResult {
     $users = entity_load('user', array_keys($entities['user']));
 
     foreach ($users as $uid => $user) {
-      if ($this->filterLdapAuthenticated && !isset($user->data['ldap_authentication'])) {
+      if (
+        $uid == 0 ||
+        $uid == 1 ||
+        ($this->filterLdapAuthenticated && !isset($user->data['ldap_authentication']))
+        ) {
         continue;
       }
 
       if ($ldap_entry = ldap_servers_get_user_ldap_data($user)) {
-      unset($ldap_entry['mail']);
+        unset($ldap_entry['mail']);
+        $ldap_entry['attr']['count'] = $ldap_entry['attr']['count'] + count($this->availableDrupalUserAttributes);
         foreach ($this->availableDrupalUserAttributes as $attr_name => $attr_conf) {
+          $ldap_entry['attr'][] = $attr_conf['token'];
           $ldap_entry['attr'][$attr_conf['token']]['count'] = 1;
           $ldap_entry['attr'][$attr_conf['token']][0] = (string)$user->{$attr_name};
         }
+
         $results[] = $ldap_entry;
       }
     }
     $results['count'] = count($results);
+   // drupal_set_message("<pre>" . print_r($results, TRUE));
     return $results;
   }
 }

@@ -1,4 +1,6 @@
 // $Id: CHANGELOG.txt,v 1.1.4.3 2011/02/08 20:19:24 johnbarclay Exp $
+Moved readme to http://drupal.org/node/1300810
+Fixed bug with ldap_feeds users. Added documentation for one use case at http://drupal.org/node/1300812
 Fixed a number of ldap_feeds issues. Both feed fetchers work and parser now. But not heavily tested and no simpletest coverage.
 Update 7100 for ldap_query to add scope field to ldap_query table
 Issue #1296994 by johnbarclay.  case sensitivity issue in ldap query.
