@@ -1,4 +1,10 @@
-// $Id: CHANGELOG.txt,v 1.1.4.3 2011/02/08 20:19:24 johnbarclay Exp $
+
+==================
+7.x-1.0-beta5
+==================
+Updated documentation page http://drupal.org/node/997082
+Fix token in ldap_authorization config page
+Fixed ldap_help uninstall of straggling variable
 Moved readme to http://drupal.org/node/1300810
 Fixed bug with ldap_feeds users. Added documentation for one use case at http://drupal.org/node/1300812
 Fixed a number of ldap_feeds issues. Both feed fetchers work and parser now. But not heavily tested and no simpletest coverage.
@@ -20,11 +26,12 @@ Issue #1240782 by justintime, fixes flatten returned array in ldap servers
 Issue #1240782 by justintime, fixes _ldap_servers_get_user_ldap_data when sid is passed in.
 Issue #1236532, #986806 by johnbarclay, begin to deal with a number of username, email, and unique id issues.
 Issue #1224808#21 by mfulz, need to remove quotes from filter.
+
 ==================
 7.x-1.0-beta4
 ==================
 Issue #1227088 by hotspoons. Allow SSO for authentication http://drupal.org/project/ldap_sso
-Issue #1240966 by sunil.  Fix multiple consumer loads adn display on authorizations test page.
+Issue #1240966 by sunil.  Fix multiple consumer loads and display on authorizations test page.
 Issue #1235430 by kbnielsen.  Improve message of disabled password reset form.
 Issue #1238818 by showmanlkz.  Made sid required on server form.
 Backed out of quoting filter values.  Though valid syntax, doesn't seem to work.
