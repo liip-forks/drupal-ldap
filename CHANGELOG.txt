@@ -1,4 +1,6 @@
 
+added classes for specific ldap implementations: http://drupal.org/node/1115704#comment-5103276
+
 ==================
 7.x-1.0-beta5
 ==================
