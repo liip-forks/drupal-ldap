@@ -332,35 +332,69 @@ function ldap_servers_help($path, $arg) {
 }
 
 
-
-
 /**
- * Implements hook_ldap_server_type().
+ * @return list of ldap configuration classes and names
  */
-function ldap_servers_ldap_servers_type() {
+function ldap_servers_ldap_servers_types() {
 
   $path = drupal_get_path('module', 'ldap_servers') . '/ldap_types';
 
   $types['default'] =  array(
     'class' => t('LdapTypeDefault'),
     'directory_path' => $path,
+    'name' => 'Default LDAP',
   );
 
   $types['ad'] =  array(
     'class' => t('LdapTypeActiveDirectory'),
     'directory_path' => $path,
+    'name' => 'Active Directory',
   );
 
   $types['novell_edir'] =  array(
     'class' => t('LdapTypeNovell'),
     'directory_path' => $path,
+    'name' => 'Novell',
   );
 
   $types['openldap'] =  array(
     'class' => t('LdapTypeOpenLdap'),
     'directory_path' => $path,
+    'name' => 'Open LDAP',
   );
+
+  drupal_alter('ldap_servers_ldap_types', $types);
   return $types;
+
+}
+
+/**
+ * @param string or array ldap type id or conf array
+ * @return options for ldap type pulldown
+ */
+function ldap_servers_get_ldap_type_object($ldap_conf) {
+
+  if (!is_array($ldap_conf)) {
+    $ldap_confs = ldap_servers_ldap_servers_types();
+    $ldap_conf = $ldap_confs[$ldap_conf];
+  }
+
+  require_once($ldap_conf['directory_path'] . '/' . $ldap_conf['class'] . 'class.php');
+  $ldap_type_class = new $ldap_conf['class']();
+  return $ldap_type_class;
+
+}
+
+/**
+ * @return options for ldap type pulldown
+ */
+function ldap_servers_ldaps_option_array() {
+
+  $options = array();
+  foreach (ldap_servers_ldap_servers_types() as $ldap_id => $conf) {
+    $options[$ldap_id] = $conf['name'];
+  }
+  return $options;
 
 }
 
@@ -393,6 +427,3 @@ function ldap_servers_get_types($ldap_type = NULL, $reset = FALSE, $flatten = FA
     return $ldap_types;
   }
 }
-
-
-
