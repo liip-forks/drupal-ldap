@@ -55,7 +55,6 @@ class LdapAuthorizationDerivationsTests  extends LdapAuthorizationTestCase {
     $correct_roles = (bool)(isset($new_authorizations['drupal_role']) && in_array('guests', $new_authorizations['drupal_role']));
     $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "guests"', $this->ldapTestId . '.onematch');
 
-
     /**
      * test:  DeriveFromDN.manymatch many matches on dn attribute.
      *
@@ -127,10 +126,16 @@ class LdapAuthorizationDerivationsTests  extends LdapAuthorizationTestCase {
     $user = $this->drupalCreateUser(array());
     $jkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
+
+  debug($new_authorizations); debug($user);
+
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('sysadmins', $new_authorizations['drupal_role']));
     $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "sysadmins"', $this->ldapTestId . '.onematch');
-    user_delete($user->uid);
 
+
+    $correct_roles = (bool)(isset($new_authorizations['drupal_role']) && in_array('mailgroup17', $new_authorizations['drupal_role']));
+    $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "mailgroup17" from numeric ldap value', $this->ldapTestId . '.numeric_attr_value');
+    user_delete($user->uid);
 
     /**
      * test:  DeriveFromAttr.escaped:  same as DeriveFromAttr.onematch  with cn that has escaped commas in it.

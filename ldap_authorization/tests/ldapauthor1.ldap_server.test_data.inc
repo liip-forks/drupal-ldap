@@ -58,6 +58,7 @@ $servers['ldapauthor1']['users']['cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveris
 $servers['ldapauthor1']['users']['cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
     'dn' => 'cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
     'mail' => array( 0 => 'jkool@guests.myuniversity.edu', 'count' => 1),
+    'mailcode' => array( 0 => '17', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jkool', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
     'memberOf' => array( 0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),

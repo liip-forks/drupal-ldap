@@ -19,7 +19,7 @@ $authorization['drupal_role'] = array(
   'deriveFromDnAttr' => NULL,
 
   'deriveFromAttr' => 1,
-  'deriveFromAttrAttr' => array('memberOf'),
+  'deriveFromAttrAttr' => array('memberOf', 'mailcode'),
   'deriveFromAttrUseFirstAttr' => 0,
 
   'deriveFromEntry' => 0,
@@ -32,6 +32,7 @@ $authorization['drupal_role'] = array(
     array('cn=phone operators,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins'),
     array('netadmins', 'netadmins2'),
     array('punctuated,comma,freaks', 'comma freaks'),
+    array('17', 'mailgroup17'),
   ),
 
   'useMappingsAsFilter' => 1,

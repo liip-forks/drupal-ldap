@@ -186,7 +186,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
      * an array of filtered and mapped authorization ids
      */
 
-
     $filtered_ldap_authorizations = array();
     if ($consumer->consumerConf->useMappingsAsFilter) {
       foreach ($consumer->consumerConf->mappings as $mapping_filter) {
@@ -341,7 +340,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
       $pair = explode('=', $p);
       if (drupal_strtolower(trim($pair[0])) == drupal_strtolower($consumer_conf->deriveFromDnAttr)) {
         $id =  drupal_strtolower(trim($pair[1]));
-        $derive_from_dn_authorizations[$id] = $id;
+        $derive_from_dn_authorizations[$id] = (string)$id;
       }
     }
   }
@@ -363,7 +362,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
             $first_part = explode('=', $attr_parts[0]);
             $attr_lcase = str_replace('\\2C',',',trim($first_part[1])); // for matching should not expect escaped commas
           }
-          $derive_from_attr_authorizations[$attr_lcase] = $attr_lcase;
+          $derive_from_attr_authorizations[$attr_lcase] = (string)$attr_lcase;
         }
       }
     }
@@ -399,16 +398,17 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
           $derive_from_entry_authorizations[$entry['cn'][0]] = $entry['cn'][0];
         }
         elseif (isset($entry['dn'])) {
-          $derive_from_entry_authorizations[$entry['dn']] = $entry['dn'];
+          $derive_from_entry_authorizations[$entry['dn']] = (string)$entry['dn'];
         }
       }
     }
   }
 
-  $authz_ids = array_merge($derive_from_dn_authorizations, $derive_from_attr_authorizations, $derive_from_entry_authorizations);
+  $values = array_merge(array_values($derive_from_dn_authorizations), array_values($derive_from_attr_authorizations), array_values($derive_from_entry_authorizations));
+  $values = array_unique($values);
+  $authz_ids = array_combine($values, $values);
 
   if ($detailed_watchdog_log) {
-
     $watchdog_tokens['%username'] = $user->name;
     $watchdog_tokens['%ldap_server'] = $ldap_server->sid;
     $watchdog_tokens['%deriveFromDn'] = join(', ', array_keys($derive_from_dn_authorizations));
