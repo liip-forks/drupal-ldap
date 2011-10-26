@@ -222,6 +222,7 @@ function ldap_authentication_get_valid_conf() {
   if (is_object($auth_conf)) {
     return $auth_conf;
   }
+  module_load_include('module', 'ldap_servers');
   require_once('LdapAuthenticationConf.class.php');
   $auth_conf = new LdapAuthenticationConf();
   return ($auth_conf->inDatabase) ? $auth_conf : FALSE;
