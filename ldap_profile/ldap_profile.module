@@ -51,95 +51,150 @@ function ldap_profile_info($field = 0) {
  * Implements hook_user_login().
  */
 function ldap_profile_user_login(&$edit, $account) {
-  $servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);
-  $server = 0;
-  $changes = array();
-  $authuser = false;
-  $ldapuser = false;
-  $dn = "";
+   $servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);
+   $server = 0;
+   $changes = array();
+   $authuser = false;
+   $ldapuser = false;
+   $dn = "";
+   
+   module_load_include('functions.inc', 'ldap_servers');
 
-  foreach ($account->roles as $role) {
-    if ($role == 'authenticated user') {
-      $authuser = true;
-    }
-  }
-
-  if (array_key_exists("ldap_authentication", $account->data)) {
-    $authdata = $account->data["ldap_authentication"];
-    if (array_key_exists('init', $authdata)) {
-      $authinit=$authdata['init'];
-      foreach ($servers as $s) {
-        if ($s->sid == $authinit['sid']) {
-          //OK we have found the right server
-          $server = $s;
-          $ldapuser = true;
-          if (array_key_exists('dn', $authinit)) {
-            $dn = $authinit['dn'];
-          }
-        }
+   foreach ($account->roles as $role) {
+      if ($role == 'authenticated user') {
+         $authuser = true;
       }
-    }
-  }
+   }
 
-  if ($authuser && $ldapuser && $dn != "") {
-
-    $ldapfields = array();
-    $mapping = ldap_profile_get_mapping();
-    foreach (array_keys($mapping) as $field) {
-      if (strpos($field, "field_") !== false) {
-        //We have a custom field
-        array_push($ldapfields, $mapping[$field]);
-      }
-
-    }
-    array_push($ldapfields, 'uid');
-
-    $ldapdata = $server->search($dn, "uid=*", $ldapfields);
-    var_dump($ldapdata);
-    foreach (array_keys($mapping) as $field) {
-                 if (strpos($field, "field_") !== false) {
-        if (array_key_exists('0', $ldapdata)) {
-          if (array_key_exists($mapping[$field], $ldapdata[0])) {
-            if (array_key_exists(0, $ldapdata[0][$mapping[$field]])) {
-              $add = false;
-
-              if (!property_exists($account, $field)) {
-                $add = true;
-              }
-              else {
-                $f = $account->$field;
-                if (array_key_exists("und",$f)) {
-                  if (array_key_exists("0", $f["und"])) {
-                    if (array_key_exists("value", $f["und"][0])) {
-                      if ($f["und"][0]["value"] != $ldapdata[0][$mapping[$field]][0]) {
-                        $add = true;
-                      }
-                      elseif (empty($f)) {
-                        $add = true;
-                      }
-                    }
-                  }
-                }
-              }
-
-              if ($add) {
-                $changes[$field] = array('und' => array(
-                    0 => array(
-                      'value' => $ldapdata[0][$mapping[$field]][0]
-                      )
-                    )
-                  );
-              }
+   if (array_key_exists("ldap_authentication", $account->data)) {
+      $authdata = $account->data["ldap_authentication"];
+      if (array_key_exists('init', $authdata)) {
+         $authinit=$authdata['init'];
+         foreach ($servers as $s) {
+            if ($s->sid == $authinit['sid']) {
+               //OK we have found the right server
+               $server = $s;
+               $ldapuser = true;
+               if (array_key_exists('dn', $authinit)) {
+                  $dn = $authinit['dn'];
+               }
             }
-          }
-        }
+         }
       }
-    }
-  }
+   }
 
-  if (count($changes) > 0) {
-    user_save($account, $changes);
-  }
+   if ($authuser && $ldapuser && $dn != "") {
+
+      $ldapfields = array();
+      $dnLookups = array();
+      $mapping = ldap_profile_get_mapping();
+      $derivedMapping = ldap_profile_get_derived_mapping();
+
+      // Put all our mappings into the ldapfields array
+      if($mapping != null) {
+         foreach (array_keys($mapping) as $field) {
+            if (strpos($field, "field_") !== false) {
+               //We have a custom field
+               if(strpos($mapping[$field], "[") !== false) {
+                  $token_keys = ldap_server_tokens_needed_for_template($mapping[$field]);
+                  foreach ($token_keys as $token_key) {
+                     if(!in_array($token_key, $ldapfields)) {
+                        array_push($ldapfields, $token_key);
+                     }
+                  }
+               } else {
+                  array_push($ldapfields, $mapping[$field]);
+               }
+               // If we want to derive this field from a DN search..
+               if($derivedMapping[$field]['derive']) {
+                  if(!in_array($derivedMapping[$field]['derive_value'], $dnLookups)) {
+                     array_push($dnLookups, $derivedMapping[$field]['derive_value']);
+                     array_push($ldapfields, $derivedMapping[$field]['derive_value']);
+                  }
+               }
+            }
+         }
+      }
+
+      array_push($ldapfields, 'uid');
+      
+      // Acquire all fields from user's LDAP attributes
+      $ldapdata = $server->search($dn, "(objectClass=*)", $ldapfields);
+      $ldapdata = $ldapdata[0];
+      $dnLdapdata = array();
+
+      // Perform searches for all DNs set to derive information from
+      foreach($dnLookups as $curDnLookup) {
+         $curDnLookupResult = $server->search($ldapdata[$curDnLookup][0], "(objectClass=*)", $ldapfields);
+         if(array_key_exists(0, $curDnLookupResult)) {
+            $dnLdapdata[$curDnLookup] = $curDnLookupResult[0];
+         }
+      }
+      
+      // Set/Update profile field information
+      foreach (array_keys($mapping) as $field) {
+         if (strpos($field, "field_") !== false) {
+            $add = false;
+            $toAdd = '';
+            $ldapEntry = ($derivedMapping[$field]['derive']) ? $dnLdapdata[$derivedMapping[$field]['derive_value']] : $ldapdata;
+            
+            // If we havea tokenized mapping
+            if(strpos($mapping[$field], "[") !== false) {
+               $toAdd = ldap_server_token_replace($ldapEntry, $mapping[$field]);
+               $add = _ldap_profile_add_change($account, $field, $toAdd);
+            } else if (array_key_exists($mapping[$field], $ldapEntry)) {
+               if (array_key_exists(0, $ldapEntry[$mapping[$field]])) {
+                  $toAdd = $ldapEntry[$mapping[$field]][0];
+                  $add = _ldap_profile_add_change($account, $field, $toAdd);
+               }
+            }
+            if ($add) {
+               $changes[$field] = array('und' => array(
+                  0 => array(
+                     'value' => $toAdd
+                  )
+               ));
+            }
+         }
+      }
+   }
+
+   if (count($changes) > 0) {
+      user_save($account, $changes);
+   }
+}
+
+/**
+ * Implements hook_form_user_profile_form_alter().
+ **/
+function ldap_profile_form_user_profile_form_alter(&$form, $form_state) {
+   global $user;
+   if ($user->uid > 1) {
+      $mapping = ldap_profile_get_mapping();
+      if ($mapping != null) {
+         foreach (array_keys($mapping) as $field){
+            if (strpos($field, "field_") !== false){
+               if (array_key_exists($field, $form)){
+                  $form[$field]['#disabled'] = TRUE;
+                  $form[$field]['#description'] = t('This field is automatically set from the user database and may not be changed.');
+                  if(isset($form[$field]['und'][0])) {
+                     $form[$field]['und'][0]['#description'] = t('This field is automatically set from the user database and may not be changed.');
+                  }
+               }
+            }
+         }
+      }
+      // Disable the editing of the username
+      $form['account']['name']['#disabled'] = TRUE;
+      $form['account']['name']['#description'] = t('This username is automatically set and may not be changed.');
+   }
+   if($user->uid < 2) {
+      if($form['#user']->uid > 1) {
+         // Disable the editing of the username
+         $form['account']['name']['#disabled'] = TRUE;
+         $form['account']['name']['#description'] = t('This username is automatically set and may not be changed.');
+      }
+   }
 }
 
 
@@ -189,16 +244,85 @@ function ldap_profile_get_ldap_fields() {
  * Provides an array of all the current profile fields mappings with ldap fields
  */
 function ldap_profile_get_mapping($profile_field = '') {
-  $auth_conf = ldap_profile_get_valid_conf();
-  $result = array();
-  $mapping = $auth_conf->mapping;
+   $auth_conf = ldap_profile_get_valid_conf();
+   $result = array();
+   if ($auth_conf == null) {
+      return null;
+   }
+   $mapping = $auth_conf->mapping;
 
-  if($profile_field != '') {
-    if(array_key_exists($profile_field, $mapping)) {
-      $result = array($mapping[$profile_field]);
-    }
-  } else {
-    $result = $mapping;
-  }
-  return $result;
+   if($profile_field != '') {
+      if(array_key_exists($profile_field, $mapping)) {
+         $result = array($mapping[$profile_field]);
+      }
+   } else {
+      $result = $mapping;
+   }
+   return $result;
+}
+
+/**
+ * Provides an array of all the current derived profile field mappings with ldap fields
+ */
+function ldap_profile_get_derived_mapping($profile_field = '') {
+   $auth_conf = ldap_profile_get_valid_conf();
+   $result = array();
+   if ($auth_conf == null) {
+      return null;
+   }
+   $mapping = $auth_conf->derivedMapping;
+
+   if($profile_field != '') {
+      if(array_key_exists($profile_field, $mapping)) {
+         $result = array($mapping[$profile_field]);
+      }
+   } else {
+      $result = $mapping;
+   }
+   return $result;
+}
+
+/*****************************************
+ * HELPER METHODS
+ *****************************************/
+
+/**
+ * Helper method to check whether or not we should add the
+ * text to our changes array
+ *
+ * @param  $account  The user's account object
+ * @param  $field    The field for which we want to set/update
+ * @param  $change   String containing the value we want to
+ *                   change to (if nothing has changed)
+ *
+ * @return Boolean - True if we should add this change, 
+ *         false otherwise
+ **/
+function _ldap_profile_add_change($account, $field, $change) {
+   $add = false;
+   
+   if (!property_exists($account, $field)) {
+      $add = true;
+   }
+   else {
+      $f = $account->$field;
+      if (array_key_exists("und",$f)) {
+         if (array_key_exists("0", $f["und"])) {
+            if (array_key_exists("value", $f["und"][0])) {
+               if ($f["und"][0]["value"] != $change) {
+                  $add = true;
+               }
+               elseif (empty($f)) {
+                  $add = true;
+               }
+            }
+         }
+      } else if(is_array($f)) {
+         if(count($f) == 0) {
+            $add = true;
+         }
+      }
+   }
+   
+   return $add;
 }

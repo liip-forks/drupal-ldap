@@ -10,11 +10,13 @@ class LdapProfileConf {
 
   public $ldap_fields = array();
   public $mapping = array();
+  public $derivedMapping = array();
   public $inDatabase = FALSE;
 
   protected $saveable = array(
     'ldap_fields',
     'mapping',
+    'derivedMapping',
   );
   
   function __construct() {

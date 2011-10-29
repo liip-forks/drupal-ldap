@@ -65,10 +65,10 @@ class LdapProfileConfAdmin extends LdapProfileConf {
         '#markup' => t('<h1>LDAP Profile Settings</h1>'),
     );
 
-    $form['mapping'] = array(
+    $form['deafultMaps'] = array(
       '#type' => 'fieldset',
-      '#title' => 'Profile Fields to Ldap Fields Mapping',
-      '#collapsible' => true,
+      '#title' => 'Profile Fields Already Mapped to Ldap Fields',
+      '#collapsible' => FALSE,
       '#collapsed' => false,
       '#tree' => true,
     );
@@ -81,29 +81,58 @@ class LdapProfileConfAdmin extends LdapProfileConf {
       $mail_attr = $server->mail_attr;
     }
 
-    $form['mapping']['username'] = array(
+    $form['deafultMaps']['username'] = array(
         '#type' => 'textfield',
         '#title' => 'UserName',
         '#default_value' => $user_attr,
         '#disabled' => true,
         '#description' => 'This must be altered in the ldap server configuration page',
     );
-    $form['mapping']['mail'] = array(
+    $form['deafultMaps']['mail'] = array(
         '#type' => 'textfield',
         '#title' => 'Email',
         '#default_value' => $mail_attr,
         '#disabled' => true,
         '#description' => 'This must be altered in the ldap server configuration page',
     );
+    $form['mapping'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Profile Fields to Ldap Fields Mapping'),
+      '#collapsible' => FALSE,
+      '#collapsed' => FALSE,
+      '#tree' => true,
+    );
     foreach($profileFields as $field => $label) {
       $mapping = $this->mapping;
+      $derivedMapping = $this->derivedMapping;
+      
       if(!empty($mapping) && array_key_exists($field,$mapping)) $default = $mapping[$field];
       else $default = '';
       $form['mapping'][$field] = array(
+         '#type' => 'fieldset',
+         '#title' => $label.t(' Profile Field to LDAP Field Mapping'),
+         '#collapsible' => TRUE,
+         '#collapsed' => FALSE,
+      );
+      $form['mapping'][$field]['ldap'] = array(
         '#type' => 'textfield',
         '#title' => $label,
         '#default_value' => $default,
       );
+      if(!empty($derivedMapping) && array_key_exists($field,$derivedMapping) && array_key_exists('derive',$derivedMapping[$field])) $default = $derivedMapping[$field]['derive'];
+      else $default = '';
+      $form['mapping'][$field]['derive'] = array(
+         '#type' => 'checkbox',
+         '#title' => t('Derive from DN Search'),
+         '#default_value' =>  $default,
+       );
+      if(!empty($derivedMapping) && array_key_exists($field,$derivedMapping) && array_key_exists('derive_value',$derivedMapping[$field])) $default = $derivedMapping[$field]['derive_value'];
+      else $default = '';
+      $form['mapping'][$field]['derive_value'] = array(
+         '#type' => 'textfield',
+         '#title' => t('LDAP Field to Derive from'),
+         '#default_value' =>  $default,
+       );
     }
 
     $form['submit'] = array(
@@ -138,7 +167,7 @@ class LdapProfileConfAdmin extends LdapProfileConf {
   protected function populateFromDrupalForm($values) {
     $this->ldap_fields = array();
     $this->mapping = array();
-    foreach($values['mapping'] as $field => $value) {
+    foreach($values['deafultMaps'] as $field => $value) {
       if($value != '') {    
         //store value in lower case to fix a ldap searching bug
         $l_value = strtolower($value);
@@ -146,6 +175,21 @@ class LdapProfileConfAdmin extends LdapProfileConf {
         // don't add duplicates & ignore case
         if(!in_array($l_value, array_map('strtolower', $this->ldap_fields))) {
           $this->ldap_fields[] = $l_value;
+        }
+      }
+    }
+    foreach(array_keys($values['mapping']) as $field) {
+      if($values['mapping'][$field]['ldap'] != '') {    
+        //store value in lower case to fix a ldap searching bug
+        $l_value = strtolower($values['mapping'][$field]['ldap']);
+        $this->mapping[$field] = $l_value;
+        if((bool)($values['mapping'][$field]['derive']) && $values['mapping'][$field]['derive_value'] != '') {
+            $l_value = strtolower($values['mapping'][$field]['derive_value']);
+            $this->derivedMapping[$field]['derive'] = TRUE;
+            $this->derivedMapping[$field]['derive_value'] = $l_value;
+        } else {
+            $this->derivedMapping[$field]['derive'] = FALSE;
+            $this->derivedMapping[$field]['derive_value'] = '';
         }
       }
     }
