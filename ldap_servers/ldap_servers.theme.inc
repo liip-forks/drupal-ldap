@@ -75,7 +75,7 @@ function theme_ldap_servers_server($variables) {
   require_once('LdapServer.class.php');
   $properties = array();
   foreach (LdapServer::field_to_properties_map() as $field_name => $property_name) {
-      $properties[] = "$field_name = " . $ldap_server->$property_name; // $value";
+    $properties[] = "$field_name = " . print_r($ldap_server->$property_name, TRUE); 
   }
 
   if ($actions) {

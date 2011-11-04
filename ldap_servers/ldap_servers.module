@@ -253,6 +253,11 @@ function ldap_servers_get_servers($sid = NULL, $type, $flatten = FALSE, $reset =
   }
 }
 
+
+function ldap_servers_cache_clear() {
+  $discard = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE);
+}
+
 function ldap_servers_fields() {
   require_once('ldap_servers.inc');
   return _ldap_servers_fields();

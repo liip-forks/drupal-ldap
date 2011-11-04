@@ -279,7 +279,7 @@ function ldap_help_get_ldap_servers() {
     foreach ($props as $property) {
       $servers[$sid][] = array(
         'title' => $property,
-        'value' => $server_object->{$property},
+        'value' => print_r($server_object->{$property}, TRUE),
       );
     }
 

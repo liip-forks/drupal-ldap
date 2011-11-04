@@ -347,7 +347,7 @@ protected function warnings($op) {
 
     $warnings = array();
     if ($this->ldap_type) {
-      $defaults = ldap_servers_get_ldap_defaults($this->ldap_type);
+      $defaults = ldap_servers_ldaps_option_array();
       if (isset($defaults['user']['user_attr']) && ($this->user_attr != $defaults['user']['user_attr'])) {
         $tokens = array('%name' => $defaults['name'], '%default' => $defaults['user']['user_attr'], '%user_attr' => $this->user_attr);
         $warnings['user_attr'] =  t('The standard UserName attribute in %name is %default.  You have %user_attr. This may be correct
@@ -368,36 +368,37 @@ protected function warnings($op) {
       $warnings['mail_attr'] =  t('Mail attribute or Mail Template should be used for most user account functionality.');
     }
 
-    if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) { // Only for service account
-      $result = ldap_baddn($this->binddn, t('Service Account DN'));
-      if ($result['boolean'] == FALSE) {
-        $warnings['binddn'] =  $result['text'];
-      }
-    }
+   // commented out validation because too many false positives present usability errors.
+   // if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) { // Only for service account
+     // $result = ldap_baddn($this->binddn, t('Service Account DN'));
+     // if ($result['boolean'] == FALSE) {
+     //   $warnings['binddn'] =  $result['text'];
+     // }
+   // }
 
-    foreach ($this->basedn as $basedn) {
-      $result = ldap_baddn($basedn, t('User Base DN'));
-      if ($result['boolean'] == FALSE) {
-        $warnings['basedn'] =  $result['text'];
-      }
-    }
+   // foreach ($this->basedn as $basedn) {
+    //  $result = ldap_baddn($basedn, t('User Base DN'));
+     // if ($result['boolean'] == FALSE) {
+     //   $warnings['basedn'] =  $result['text'];
+    //  }
+   // }
 
-    $result = ldap_badattr($this->user_attr, t('User attribute'));
-    if ($result['boolean'] == FALSE) {
-      $warnings['user_attr'] =  $result['text'];
-    }
+   // $result = ldap_badattr($this->user_attr, t('User attribute'));
+   // if ($result['boolean'] == FALSE) {
+    //  $warnings['user_attr'] =  $result['text'];
+   // }
 
-    if ($this->mail_attr) {
-      $result = ldap_badattr($this->mail_attr, t('Mail attribute'));
-      if ($result['boolean'] == FALSE) {
-        $warnings['mail_attr'] =  $result['text'];
-      }
-    }
+   // if ($this->mail_attr) {
+  //    $result = ldap_badattr($this->mail_attr, t('Mail attribute'));
+   //   if ($result['boolean'] == FALSE) {
+    //    $warnings['mail_attr'] =  $result['text'];
+   //   }
+  //  }
 
-    $result = ldap_badattr($this->unique_persistent_attr, t('Unique Persistent Attribute'));
-    if ($result['boolean'] == FALSE) {
-      $warnings['unique_persistent_attr'] =  $result['text'];
-    }
+   // $result = ldap_badattr($this->unique_persistent_attr, t('Unique Persistent Attribute'));
+   // if ($result['boolean'] == FALSE) {
+    //  $warnings['unique_persistent_attr'] =  $result['text'];
+   // }
 
     return $warnings;
   }
