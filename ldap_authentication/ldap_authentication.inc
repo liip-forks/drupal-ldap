@@ -145,7 +145,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   }
 
  // if already succeeded at authentication, see if LDAP Exclusive is set
-  if (isset($form_state['uid']) && is_integer($form_state['uid'])) {
+  if (isset($form_state['uid']) && is_numeric($form_state['uid'])) {
     if ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_MIXED || $form_state['uid'] == 1) {
       if ($detailed_watchdog_log) {
       watchdog('ldap_authentication', '%username : Previously authenticated in mixed mode or uid=1', $watchdog_tokens, WATCHDOG_DEBUG);
