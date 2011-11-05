@@ -97,7 +97,7 @@ class LdapProfileConfAdmin extends LdapProfileConf {
     );
     $form['mapping'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Profile Fields to Ldap Fields Mapping'),
+      '#title' => t('Profile Fields that need Mapped to Ldap Fields'),
       '#collapsible' => FALSE,
       '#collapsed' => FALSE,
       '#tree' => true,
@@ -125,7 +125,7 @@ class LdapProfileConfAdmin extends LdapProfileConf {
          '#type' => 'checkbox',
          '#title' => t('Derive from DN Search'),
          '#default_value' =>  $default,
-       );
+      );
       if(!empty($derivedMapping) && array_key_exists($field,$derivedMapping) && array_key_exists('derive_value',$derivedMapping[$field])) $default = $derivedMapping[$field]['derive_value'];
       else $default = '';
       $form['mapping'][$field]['derive_value'] = array(

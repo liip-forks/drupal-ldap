@@ -31,6 +31,29 @@ function ldap_profile_menu() {
  */
 
 function ldap_profile_help($path, $arg) {
+   $url = url('admin/config/people/accounts/fields', array('absolute' => TRUE));
+   $link = '<a id="profileFieldEdit" href="'.$url.'" rel="'.$url.'">'.
+            t('edit profile fields').'</a>';
+   $profile_help = t('Map profile fields (').$link.
+                   t(') to LDAP attributes.  Add attributes that are contained '.
+                   'in an LDAP entry to a profile field.  You can use tokens '.
+                   'such as "[sn].[givenname]@myorg.com" or you can use just '.
+                   'the LDAP attribute name, such as "givenname" (all without '.
+                   'quotes).<br/><br/>'.
+                   'The <em>LDAP field to derive from</em> allows you to perform a search '.
+                   'from a given LDAP attribute that contains a DN, and then get '.
+                   'attribute data based off that search, rather than the current '.
+                   'user\'s attributes (i.e. - If you wanted to get a user\'s '.
+                   'manager information, you can set the <em>LDAP Field to Derive '.
+                   'from</em> textbox to "manager" and put a check-mark next '.
+                   'to <em>Derive from DN Search</em>, and then put in the '.
+                   'subsequent field to gather from there.).');
+
+  switch ($path) {
+    case 'admin/config/people/ldap/profile':
+      $output = '<p>' . $profile_help . '</p>';
+      return $output;
+  }
 }
 
 /**
