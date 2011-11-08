@@ -1,4 +1,3 @@
-; $Id: ldap_authentication.info,v 1.1.4.2 2011/02/08 06:01:00 johnbarclay Exp $
 name = LDAP Authentication
 description = "Implements LDAP authentication"
 package = "Lightweight Directory Access Protocol"
@@ -14,4 +13,3 @@ files[] = ldap_authentication.inc
 files[] = ldap_authentication.theme.inc
 files[] = ldap_authentication.admin.inc
 files[] = tests/ldap_authentication.test
-

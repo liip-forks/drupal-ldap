@@ -1,3 +1,6 @@
+Added LDAP Profile to 7.x-1.x branch and did quite a bit of code cleanup.  Also added display of mapping
+  example data on mapping page.  Limited servers being looked at for profile data to the servers user
+  is authenticating to.
 Issue #1334138 by benys: LDAP Authentication: Strip REMOTE_USER domain name
 Issue #1322786 by heatherwoz: Feeds: Return only users of a certain role in LDAP Drupal User LDAP Entry Fetcher
 Issue #1332410 by David Reid: improved usability of ldap_help and ldap server debug pages

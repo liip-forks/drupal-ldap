@@ -273,3 +273,27 @@ function ldap_server_tokens_needed_for_template($template, $pre = LDAP_SERVERS_T
 
 }
 
+function ldap_servers_show_sample_user_tokens($sid) {
+
+  $ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
+  $test_username = $ldap_server->testing_drupal_username;
+  if (!$test_username || ! (
+     $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
+     $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON
+    )
+   ) {
+    return FALSE;
+  }
+
+  if ($ldap_user = $ldap_server->user_lookup($test_username)) {
+    $table = theme('ldap_server_ldap_entry_table', array(
+      'entry' => $ldap_user['attr'],
+      'username' => $test_username,
+      ));
+  }
+  else {
+    $table = '<p>' . t('No sample user data found'). '</p>';
+  }
+
+  return $table;
+}

@@ -176,6 +176,10 @@ function ldap_servers_test_form_submit($form, &$form_state) {
 
 }
 
+/**
+ * Submit hook for the LDAP server form.
+ */
+
 
 function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw) {
 
