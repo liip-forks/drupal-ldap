@@ -111,6 +111,11 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       'for more information.', array('!readme' =>
       l(t('README.txt'), drupal_get_path('module', 'ldap_authentication'). '/README.txt')));
 
+    $values['ssoRemoteUserStripDomainNameDescription'] = t('Useful when the '.
+      'WWW server provides authentication in the form of user@realm and you '.
+      'want to have both SSO and regular forms based authentication '.
+      'available. Otherwise duplicate accounts with conflicting e-mail '.
+      'addresses may be created.');
     $values['seamlessLogInDescription'] = t('This requires that you '.
       'have operational NTLM authentication turned on for at least '.
       'the path user/login/sso, or for the whole domain.');
@@ -173,6 +178,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
    */
 
   public $ssoEnabledDescription;
+  public $ssoRemoteUserStripDomainNameDescription;
   public $ldapImplementationOptions;
   public $cookieExpirePeriod;
   public $seamlessLogInDescription;
@@ -390,6 +396,13 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#default_value' => $this->ssoEnabled,
       );
 
+    $form['sso']['ssoRemoteUserStripDomainName'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Strip REMOTE_USER domain name'),
+      '#description' => t($this->ssoRemoteUserStripDomainNameDescription),
+      '#default_value' => $this->ssoRemoteUserStripDomainName,
+    );
+
     $form['sso']['seamlessLogin'] = array(
       '#type' => 'checkbox',
       '#title' => t('Turn on automated single sign-on'),
@@ -474,6 +487,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->emailOption  = ($values['emailOption']) ? (int)$values['emailOption'] : NULL;
     $this->emailUpdate  = ($values['emailUpdate']) ? (int)$values['emailUpdate'] : NULL;
     $this->ssoEnabled = ($values['ssoEnabled']) ? (int)$values['ssoEnabled'] : NULL;
+    $this->ssoRemoteUserStripDomainName = ($values['ssoRemoteUserStripDomainName']) ? (int)$values['ssoRemoteUserStripDomainName'] : NULL;
     $this->seamlessLogin = ($values['seamlessLogin']) ? (int)$values['seamlessLogin'] : NULL;
     $this->cookieExpire = ($values['cookieExpire']) ? (int)$values['cookieExpire'] : NULL;
     $this->ldapImplementation = ($values['ldapImplementation']) ? (string)$values['ldapImplementation'] : NULL;

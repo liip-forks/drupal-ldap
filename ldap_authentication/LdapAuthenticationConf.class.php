@@ -22,6 +22,7 @@ class LdapAuthenticationConf {
   public $emailOption = LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT;
   public $emailUpdate = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DEFAULT;
   public $ssoEnabled = FALSE;
+  public $ssoRemoteUserStripDomainName = FALSE;
   public $seamlessLogin = FALSE;
   public $ldapImplementation = FALSE;
   public $cookieExpire = LDAP_AUTHENTICATION_COOKIE_EXPIRE;
@@ -57,6 +58,7 @@ class LdapAuthenticationConf {
     'allowTestPhp',
     'excludeIfNoAuthorizations',
     'ssoEnabled',
+    'ssoRemoteUserStripDomainName',
     'seamlessLogin',
     'ldapImplementation',
     'cookieExpire',

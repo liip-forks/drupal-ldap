@@ -494,6 +494,12 @@ function _ldap_authentication_user_login_sso() {
     }
 
     if ($remote_user){
+      if ($auth_conf->ssoRemoteUserStripDomainName){
+        $exploded = explode('@', $remote_user);
+        if (count($exploded) == 2){
+          $remote_user = $exploded[0];
+        }
+      }
       watchdog('ldap_authentication', '%username : $_SERVER[\'REMOTE_USER\'] found',
               array('%username' => $remote_user), WATCHDOG_DEBUG);
       $fake_form_state = array(
