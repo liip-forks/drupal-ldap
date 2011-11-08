@@ -1,3 +1,4 @@
+Issue #1322786 by heatherwoz: Feeds: Return only users of a certain role in LDAP Drupal User LDAP Entry Fetcher
 Issue #1332410 by David Reid: improved usability of ldap_help and ldap server debug pages
 Issue #1332350 by David Reid: mess from last commits removal of validation and switch to ldap type classes.
 Issue #1308854 by trprinty patch by joericapens: fixed check of uid as numeric, not integer
