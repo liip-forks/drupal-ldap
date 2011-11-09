@@ -80,6 +80,7 @@ function ldap_authentication_menu() {
  * Implements hook_menu_alter().
  * since menu items are cached, only useful to add or alter callbacks
  * for ldap authentication driven menu items.
+ *
  */
 function ldap_authentication_menu_alter(&$items) {
   require_once('ldap_authentication.inc');
@@ -88,10 +89,10 @@ function ldap_authentication_menu_alter(&$items) {
   if (@$auth_conf->ldapUserHelpLinkUrl) {
     $items['user/ldaphelp'] = array(
       'title' => $auth_conf->ldapUserHelpLinkText,
-      'page callback' => 'ldap_authentication_redirect_to_ldap_help',
+      'page callback' => 'drupal_goto',
+      'page arguments' => array($auth_conf->ldapUserHelpLinkUrl),
       'access callback' => 'ldap_authentication_show_ldap_help_link',
       'type' => MENU_LOCAL_TASK,
-      'file' => 'ldap_authentication.inc',
     );
   }
 }
@@ -257,14 +258,6 @@ function ldap_authentication_show_reset_pwd($user = NULL) {
 
 }
 
-
-
-/**
- * Implements hook_form_alter().
- */
-function ldap_authentication_form_alter(&$form, $form_state, $form_id) {
-
-}
 
 /**
  * Implements hook_form_FORM_ID_alter().
