@@ -23,8 +23,8 @@ function ldap_authorizations_admin_index() {
 
   $servers = ldap_servers_get_servers(NULL, 'enabled');
   if (count($servers) == 0) {
-    $tokens = array('%add_server_link' => l(t('Add LDAP Server'), 'admin/config/people/ldap/servers/add'));
-    return t('ldap authorization can not be set up until ldap servers are configured.  %add_server_link', $tokens);
+    return t('ldap authorization can not be set up until ldap servers are configured.') . '  '. 
+    l(t('Add LDAP Server'), 'admin/config/people/ldap/servers/add');
   }
 
   foreach ($consumers as $consumer_type => $consumer) {

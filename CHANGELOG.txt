@@ -1,3 +1,4 @@
+Issue #1329254 by Simon Georges: bad t() function call.
 Issue #1284632 by iKevin and heatherwoz: fixed link to external url in logon help url.
 Issue #1333714 by cmurph: LDAP Authentication: Add the ability to change user login description.
 Added LDAP Profile to 7.x-1.x branch and did quite a bit of code cleanup.  Also added display of mapping
