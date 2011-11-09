@@ -15,6 +15,8 @@ class LdapAuthenticationConf {
   public $servers = array(); // ldap server object
   public $inDatabase = FALSE;
   public $authenticationMode = LDAP_AUTHENTICATION_MODE_DEFAULT;
+  public $loginUIUsernameTxt;
+  public $loginUIPasswordTxt;
   public $ldapUserHelpLinkUrl;
   public $ldapUserHelpLinkText = LDAP_AUTHENTICATION_HELP_LINK_TEXT_DEFAULT;
   public $loginConflictResolve = LDAP_AUTHENTICATION_CONFLICT_RESOLVE_DEFAULT;
@@ -49,6 +51,8 @@ class LdapAuthenticationConf {
     'authenticationMode',
     'loginConflictResolve',
     'acctCreation',
+    'loginUIUsernameTxt',
+    'loginUIPasswordTxt',
     'ldapUserHelpLinkUrl',
     'ldapUserHelpLinkText',
     'emailOption',

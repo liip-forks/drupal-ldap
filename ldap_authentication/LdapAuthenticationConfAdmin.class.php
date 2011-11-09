@@ -11,6 +11,10 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
   protected function setTranslatableProperties() {
 
+    /**
+     * 0.  Logon Options
+     */
+
     $values['authenticationModeOptions']  = array(
       LDAP_AUTHENTICATION_MIXED => t('Mixed mode. Drupal authentication is tried first.  On failure, LDAP authentication is performed.'),
       LDAP_AUTHENTICATION_EXCLUSIVE => t('Only LDAP Authentication is allowed except for user 1.
@@ -23,6 +27,15 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $values['authenticationServersDescription'] = t('Check all LDAP server configurations to use in authentication.
      Each will be tested for authentication until successful or
      until each is exhausted.  In most cases only one server configuration is selected.');
+    
+    /**
+     * 1.  User Login Interface
+     */
+    $values['loginUIUsernameTxtDescription'] = t('Text to be displayed to user below the username field of
+     the user login screen.');
+    
+    $values['loginUIPasswordTxtDescription'] = t('Text to be displayed to user below the password field of
+     the user login screen.');
 
     $values['ldapUserHelpLinkUrlDescription'] = t('URL to LDAP user help/documentation for users resetting
      passwords etc. Should be of form http://domain.com/. Could be the institutions ldap password support page
@@ -131,13 +144,19 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   }
 
   /**
-   * 1.  logon options
+   * 0.  Logon Options
    */
   public $authenticationModeDefault = LDAP_AUTHENTICATION_MIXED;
   public $authenticationModeOptions;
 
   protected $authenticationServersDescription;
   protected $authenticationServersOptions = array();
+  
+  /**
+   * 1.  User Login Interface
+   */
+  protected $loginUIUsernameTxtDescription;
+  protected $loginUIPasswordTxtDescription;
   protected $ldapUserHelpLinkUrlDescription;
   protected $ldapUserHelpLinkTextDescription;
 
@@ -261,8 +280,31 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#options' => $this->authenticationServersOptions,
       '#description' => $this->authenticationServersDescription
     );
+    
+    $form['login_UI'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('User Login Interface'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
+    
+    $form['login_UI']['loginUIUsernameTxt'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Username Description Text'),
+      '#required' => 0,
+      '#default_value' => $this->loginUIUsernameTxt,
+      '#description' => $this->loginUIUsernameTxtDescription,
+    );
+    
+    $form['login_UI']['loginUIPasswordTxt'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Password Description Text'),
+      '#required' => 0,
+      '#default_value' => $this->loginUIPasswordTxt,
+      '#description' => $this->loginUIPasswordTxtDescription,
+    );
 
-    $form['logon']['ldapUserHelpLinkUrl'] = array(
+    $form['login_UI']['ldapUserHelpLinkUrl'] = array(
       '#type' => 'textfield',
       '#title' => t('LDAP Account User Help URL'),
       '#required' => 0,
@@ -271,7 +313,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     );
 
 
-    $form['logon']['ldapUserHelpLinkText'] = array(
+    $form['login_UI']['ldapUserHelpLinkText'] = array(
       '#type' => 'textfield',
       '#title' => t('LDAP Account User Help Link Text'),
       '#required' => 0,
@@ -481,6 +523,8 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->allowTestPhp = $values['allowTestPhp'];
     $this->loginConflictResolve  = ($values['loginConflictResolve']) ? (int)$values['loginConflictResolve'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;
+    $this->loginUIUsernameTxt = ($values['loginUIUsernameTxt']) ? (string)$values['loginUIUsernameTxt'] : NULL;
+    $this->loginUIPasswordTxt = ($values['loginUIPasswordTxt']) ? (string)$values['loginUIPasswordTxt'] : NULL;
     $this->ldapUserHelpLinkUrl = ($values['ldapUserHelpLinkUrl']) ? (string)$values['ldapUserHelpLinkUrl'] : NULL;
     $this->ldapUserHelpLinkText = ($values['ldapUserHelpLinkText']) ? (string)$values['ldapUserHelpLinkText'] : NULL;
     $this->excludeIfNoAuthorizations = ($values['excludeIfNoAuthorizations']) ? (int)$values['excludeIfNoAuthorizations'] : NULL;
