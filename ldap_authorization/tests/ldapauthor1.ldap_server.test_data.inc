@@ -33,13 +33,13 @@ $servers['ldapauthor1']['properties']  = array(
 
 $servers['ldapauthor1']['methodResponses']['connect'] = LDAP_SUCCESS;
 
-$servers['ldapauthor1']['search_results']['(member="cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu")']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
+$servers['ldapauthor1']['search_results']['(member=cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu)']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
     0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     1 => array('count' => 1, 'dn' => 'ou=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     'count' => 2,
   );
 
-$servers['ldapauthor1']['search_results']['(member="cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu")']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
+$servers['ldapauthor1']['search_results']['(member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu)']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
     0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     'count' => 1,
   );

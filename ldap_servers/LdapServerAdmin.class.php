@@ -773,7 +773,7 @@ public function drupalFormSubmit($op, $values) {
           '#cols' => 25,
           '#rows' => 5,
           '#title' => t('PHP to transform Drupal login username to LDAP UserName attribute.'),
-          '#description' => t('Enter PHP to transform Drupal username to the value of the UserName attribute.
+          '#description' => t('This will appear as disabled unless the "PHP filter" core module is enabled. Enter PHP to transform Drupal username to the value of the UserName attribute.
             The code should print the UserName attribute.
             PHP filter module must be enabled for this to work.
             The variable $name is available and is the user\'s login username.

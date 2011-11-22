@@ -165,7 +165,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
           One or more of the following 3 approaches may be used.', $consumer_tokens),
     );
     /**
-     *  derive from DN option
+     *  II A. derive from DN option
      */
     $form['derive_from_dn'] = array(
       '#type' => 'fieldset',
@@ -193,7 +193,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     );
 
      /**
-     *  derive from attributes option
+     *  II B. derive from attributes option
      */
 
     $form['derive_from_attr'] = array(
@@ -201,6 +201,15 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#title' => t('II.B. Derive !consumer_namePlural by attribute', $consumer_tokens),
       '#collapsible' => TRUE,
       '#collapsed' => !$this->deriveFromAttr,
+    );
+
+    $form['derive_from_attr']['derive_from_entry_preamble'] = array(
+        '#type' => 'item',
+        '#markup' => '<p>' .
+        t('Basically II. B. finds the user LDAP entry, then checks for groups listed in one or more of its attributes.  Its the converse of II.C.') .
+        ' ' .
+        t('The "Attribute names" field would be attribute containing the list of groups the user belonged to, such as <code>memberOf</code>') .
+        '</p>'
     );
 
     $form['derive_from_attr']['derive_from_attr'] = array(
@@ -226,7 +235,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
 
      /**
-     *  derive from attributes option
+     *  II C. derive from entry option
      */
 
     $form['derive_from_entry'] = array(
@@ -234,6 +243,22 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#title' => t('II.C. Derive !consumer_namePlural from entry', $consumer_tokens),
       '#collapsible' => TRUE,
       '#collapsed' => !$this->deriveFromEntry,
+    );
+
+
+    $form['derive_from_entry']['derive_from_entry_preamble'] = array(
+        '#type' => 'item',
+        '#markup' => '<p>' . t('Basically II. C. finds the group LDAP entry, then checks for members in the group LDAP entry.  Its the converse of II.B.') . '</p>' .
+        '<p>' . t('A typical use case is a group whose members are spread throughout the LDAP directory.') .
+         ' ' .
+         t('The "LDAP DNs containing roles..." field would be the group DN or DNs such as') .
+         ' ' .
+         ': <code>cn=DrupalStudents,o=uni,dc=ldap,dc=myuniveristy,dc=edu</code>' .
+         ' ' .
+         t('The "Attribute holding roles members" field would be the (multivalued) attribute within that ldap entry that contains the list of users/members.') .
+         ' ' .
+         t('Such as <code>member</code>') .
+         '</p>'
     );
 
     $form['derive_from_entry']['derive_from_entry'] = array(
@@ -254,7 +279,10 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     );
 
 
-
+    $form['derive_from_entry']['derive_from_entry_attr'] = array(
+      '#type' => 'markup',
+      '#markup' => t('<h3>Typical Use Case</h3>'),
+      );
 
     $form['derive_from_entry']['derive_from_entry_attr'] = array(
       '#type' => 'textfield',
