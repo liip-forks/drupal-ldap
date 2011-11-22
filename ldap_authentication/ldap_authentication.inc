@@ -81,10 +81,10 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
     $form['links']['#markup'] = theme('ldap_authentication_user_login_block_links', $vars);
   }
   ldap_servers_disable_http_check($form);
-  
+
   // Add help information for entering in username/password
   $auth_conf = ldap_authentication_get_valid_conf();
-  if($auth_conf) {
+  if ($auth_conf) {
     $form['name']['#description'] = t($auth_conf->loginUIUsernameTxt);
     $form['pass']['#description'] = t($auth_conf->loginUIPasswordTxt);
   }
@@ -275,7 +275,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     elseif ($sso_login) {
       $ldap_user = $ldap_server->user_lookup($name);
       if ($detailed_watchdog_log) {
-        $watchdog_tokens['%result'] = var_export($result, true);
+        $watchdog_tokens['%result'] = var_export($result, TRUE);
         watchdog('ldap_authentication', '%username : attempting single sign-on
           login in bind_method of LDAP_SERVERS_BIND_METHOD_USER. Result of
           user_lookup: <pre>%result</pre>', $watchdog_tokens, WATCHDOG_DEBUG);
@@ -296,7 +296,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
         break;
       }
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_FIND;
-       continue; // next server, please
+      continue; // next server, please
     }
 
     $watchdog_tokens['%dn'] = $ldap_user['dn'];
@@ -488,22 +488,22 @@ function _ldap_authentication_user_login_sso() {
   $auth_conf = ldap_authentication_get_valid_conf();
   $implementation = $auth_conf->ldapImplementation;
   $enabled = $auth_conf->ssoEnabled;
-  if($enabled == true){
-    switch($implementation) {
+  if ($enabled == TRUE) {
+    switch ($implementation) {
       case 'mod_auth_sspi' :
-        if(isset($_SERVER['REMOTE_USER']))
+        if (isset($_SERVER['REMOTE_USER']))
           $remote_user = $_SERVER['REMOTE_USER'];
-        elseif(isset($_SERVER['REDIRECT_REMOTE_USER']))
+        elseif (isset($_SERVER['REDIRECT_REMOTE_USER']))
           $remote_user = $_SERVER['REDIRECT_REMOTE_USER'];
         else
-          $remote_user = false;
+          $remote_user = FALSE;
         break;
     }
 
-    if ($remote_user){
-      if ($auth_conf->ssoRemoteUserStripDomainName){
+    if ($remote_user) {
+      if ($auth_conf->ssoRemoteUserStripDomainName) {
         $exploded = explode('@', $remote_user);
-        if (count($exploded) == 2){
+        if (count($exploded) == 2) {
           $remote_user = $exploded[0];
         }
       }
@@ -514,38 +514,38 @@ function _ldap_authentication_user_login_sso() {
           'name' => check_plain($remote_user),
          'pass' => user_password(20),
         ),
-        'sso_login' => true,
+        'sso_login' => TRUE,
       );
       $user = _ldap_authentication_user_login_authenticate_validate($fake_form_state);
-      if ($user && $user->uid > 0){
-        if ($auth_conf->seamlessLogin == 1){
+      if ($user && $user->uid > 0) {
+        if ($auth_conf->seamlessLogin == 1) {
           setcookie("seamless_login", 'auto login', time() + $auth_conf->cookieExpire, base_path(), "");
           $_SESSION['seamless_login'] = 'auto login';
           setcookie("seamless_login_attempted", '');
           unset($_SESSION['seamless_login_attempted']);
 
       }
-        drupal_set_message(theme('ldap_authentication_login_message',
+      drupal_set_message(theme('ldap_authentication_login_message',
                                   array('message' => t('You have been successfully authenticated'))));
-        drupal_goto('<front>');
+      drupal_goto('<front>');
       }
       else {
-        if ($auth_conf->seamlessLogin == 1){
+        if ($auth_conf->seamlessLogin == 1) {
           setcookie("seamless_login", 'do not auto login', time() + $auth_conf->cookieExpire, base_path(), "");
           $_SESSION['seamless_login'] = 'do not auto login';
       }
-        drupal_set_message(theme('ldap_authentication_message_not_found',
-                                   array('message' => t('Sorry, your LDAP credentials were not found, '.
-                                   'or the LDAP server is not available. You may log in '.
-                                    'with other credentials on the !user_login_form.',
-                                     array('!user_login_form' => l(t('user login form'), 'user/login'))))
-                                ), 'error');
-        drupal_goto('user/login');
+      drupal_set_message(theme('ldap_authentication_message_not_found',
+          array('message' => t('Sorry, your LDAP credentials were not found, ' .
+          'or the LDAP server is not available. You may log in ' .
+           'with other credentials on the !user_login_form.',
+            array('!user_login_form' => l(t('user login form'), 'user/login'))))
+        ), 'error');
+      drupal_goto('user/login');
       }
     }
     else {
       watchdog('ldap_authentication', '$_SERVER[\'REMOTE_USER\'] not found', array(), WATCHDOG_DEBUG);
-      if ($auth_conf->seamlessLogin == 1){
+      if ($auth_conf->seamlessLogin == 1) {
         setcookie("seamless_login", 'do not auto login', time() + $auth_conf->cookieExpire, base_path(), "");
         $_SESSION['seamless_login'] = 'do not auto login';
       }

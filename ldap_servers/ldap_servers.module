@@ -415,12 +415,12 @@ function ldap_servers_get_types($ldap_type = NULL, $reset = FALSE, $flatten = FA
   if ($reset || !is_array($ldap_types)) {
     $ldap_types = module_invoke_all('ldap_servers_type');
     if ($ldap_type) {
-      require_once($ldap_types[$ldap_type]['directory_path'] .'/' . $ldap_types[$ldap_type]['class'] . '.class.php');
+      require_once($ldap_types[$ldap_type]['directory_path'] . '/' . $ldap_types[$ldap_type]['class'] . '.class.php');
       $ldap_types[$ldap_type] = new $ldap_types[$ldap_type]['class'] . '.class.php';
     }
     else {
       foreach ($ldap_types as $ldap_type_id => $ldap_class_info) {
-        require_once($ldap_class_info['directory_path'] .'/' . $ldap_class_info['class'] . '.class.php');
+        require_once($ldap_class_info['directory_path'] . '/' . $ldap_class_info['class'] . '.class.php');
         $ldap_types[$ldap_type_id] = new $ldap_class_info['class'];
       }
     }

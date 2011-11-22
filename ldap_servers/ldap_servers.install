@@ -117,7 +117,7 @@ function ldap_servers_update_7100() {
 
 function ldap_servers_update_7101() {
 
-  db_add_field (
+  db_add_field(
     'ldap_servers',
     'allow_conflicting_drupal_accts',
     array(
@@ -128,7 +128,7 @@ function ldap_servers_update_7101() {
     )
   );
 
-  db_add_field (
+  db_add_field(
     'ldap_servers',
     'unique_persistent_attr',
     array(
@@ -138,7 +138,7 @@ function ldap_servers_update_7101() {
     )
   );
 
-  db_add_field (
+  db_add_field(
     'ldap_servers',
     'mail_template',
     array(
@@ -148,13 +148,13 @@ function ldap_servers_update_7101() {
     )
   );
 
-  db_change_field ('ldap_servers', 'ldap_to_drupal_user', 'ldap_to_drupal_user', array(
+  db_change_field('ldap_servers', 'ldap_to_drupal_user', 'ldap_to_drupal_user', array(
     'type' => 'varchar',
     'length' => 1024,
     'not null' => FALSE
   ));
 
-  db_change_field ('ldap_servers', 'binddn', 'binddn', array(
+  db_change_field('ldap_servers', 'binddn', 'binddn', array(
     'type' => 'varchar',
     'length' => 511,
   ));

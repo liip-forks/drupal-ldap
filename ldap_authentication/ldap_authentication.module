@@ -67,7 +67,7 @@ function ldap_authentication_menu() {
   );
 
   $items['user/login/sso'] = array(
-    'title' => t('Log In'),
+    'title' => 'Log In',
     'page callback' => 'ldap_authentication_user_login_sso',
     'access callback' => '_ldap_authentication_user_access',
     'type' => MENU_NORMAL_ITEM,
@@ -364,7 +364,7 @@ function ldap_authentication_user_login_sso() {
 
 function ldap_authentication_user_logout($account) {
   $auth_conf = ldap_authentication_get_valid_conf();
-  if ($auth_conf->seamlessLogin == 1){
+  if ($auth_conf->seamlessLogin == 1) {
     setcookie("seamless_login", 'do not auto login', time() + (int)$auth_conf->cookieExpire, base_path(), "");
     $_SESSION['seamless_login'] = $_COOKIE['seamless_login'];
   }
@@ -378,8 +378,8 @@ function ldap_authentication_user_logout($account) {
  */
 function ldap_authentication_boot() {
   if ($GLOBALS['user']->uid == 0) {
-    if (!(isset($_COOKIE['seamless_login'])) || $_COOKIE['seamless_login'] == 'auto login'){
-      if ((arg(0) == 'user' && !(is_numeric(arg(1)))) || arg(0) == 'logout' ){
+    if (!(isset($_COOKIE['seamless_login'])) || $_COOKIE['seamless_login'] == 'auto login') {
+      if ((arg(0) == 'user' && !(is_numeric(arg(1)))) || arg(0) == 'logout' ) {
         return;
       }
       else {

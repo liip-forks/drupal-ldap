@@ -206,7 +206,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     $num_entries = 0;
 
     if (empty($this->options['qid'])) {
-      watchdog('ldap_views', t("Query definition is empty"));
+      watchdog('ldap_views', 'Query definition is empty');
       return;
     }
     foreach ($this->fields as $field) {
@@ -227,7 +227,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     $functions = array('LDAP_SCOPE_BASE' => 'ldap_read', 'LDAP_SCOPE_ONELEVEL' => 'ldap_list', 'LDAP_SCOPE_SUBTREE' => 'ldap_search');
     $function  = isset($ldap_data->scope) && array_key_exists($ldap_data->scope, $functions) ? $functions[$ldap_data->scope] : $functions['LDAP_SCOPE_ONELEVEL']; // $functions['LDAP_SCOPE_SUBTREE']
     foreach ($this->build_ldap_basedn($ldap_data->baseDn) as $basedn) {
-      
+
     $result    = @$function($ldap_server->connection, $basedn, $this->build_ldap_filter($ldap_data->filter), array_values($attributes));
     if (!$result) {
       $msg = t("Could not retrieve data from LDAP. (Error %errno: %error) (BaseDN: %basedn) (Filter: %filter) (Attrs: %attrs).",
@@ -258,7 +258,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     unset($tmp1);
     unset($tmp2);
     }
-    
+
 //    $num_entries = array_shift($entries);
     $limit       = $view->query->limit;
     $offset      = $view->query->offset;

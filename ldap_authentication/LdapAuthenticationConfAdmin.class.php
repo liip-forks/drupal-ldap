@@ -27,13 +27,13 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $values['authenticationServersDescription'] = t('Check all LDAP server configurations to use in authentication.
      Each will be tested for authentication until successful or
      until each is exhausted.  In most cases only one server configuration is selected.');
-    
+
     /**
      * 1.  User Login Interface
      */
     $values['loginUIUsernameTxtDescription'] = t('Text to be displayed to user below the username field of
      the user login screen.');
-    
+
     $values['loginUIPasswordTxtDescription'] = t('Text to be displayed to user below the password field of
      the user login screen.');
 
@@ -116,26 +116,26 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       drupal_map_assoc(array(3600, 86400, 604800, 2592000, 31536000, 315360000), 'format_interval')
       + array(-1 => t('Never'));
 
-    $values['ssoEnabledDescription'] = t('Turning on Single Sign-On will enable '.
-      'users of this site to be authenticated by visiting the URL '.
-      '"user/login/sso, or automatically if selecting "automated '.
-      'single sign-on" below. Set up of LDAP authentication must be '.
-      'performed on the web server. Please review the !readme file '.
+    $values['ssoEnabledDescription'] = t('Turning on Single Sign-On will enable ' .
+      'users of this site to be authenticated by visiting the URL ' .
+      '"user/login/sso, or automatically if selecting "automated ' .
+      'single sign-on" below. Set up of LDAP authentication must be ' .
+      'performed on the web server. Please review the !readme file ' .
       'for more information.', array('!readme' =>
-      l(t('README.txt'), drupal_get_path('module', 'ldap_authentication'). '/README.txt')));
+      l(t('README.txt'), drupal_get_path('module', 'ldap_authentication') . '/README.txt')));
 
-    $values['ssoRemoteUserStripDomainNameDescription'] = t('Useful when the '.
-      'WWW server provides authentication in the form of user@realm and you '.
-      'want to have both SSO and regular forms based authentication '.
-      'available. Otherwise duplicate accounts with conflicting e-mail '.
+    $values['ssoRemoteUserStripDomainNameDescription'] = t('Useful when the ' .
+      'WWW server provides authentication in the form of user@realm and you ' .
+      'want to have both SSO and regular forms based authentication ' .
+      'available. Otherwise duplicate accounts with conflicting e-mail ' .
       'addresses may be created.');
-    $values['seamlessLogInDescription'] = t('This requires that you '.
-      'have operational NTLM authentication turned on for at least '.
+    $values['seamlessLogInDescription'] = t('This requires that you ' .
+      'have operational NTLM authentication turned on for at least ' .
       'the path user/login/sso, or for the whole domain.');
-    $values['cookieExpireDescription'] = t('If using the seamless login, a '.
-      'cookie is necessary to prevent automatic login after a user '.
+    $values['cookieExpireDescription'] = t('If using the seamless login, a ' .
+      'cookie is necessary to prevent automatic login after a user ' .
       'manually logs out. Select the lifetime of the cookie.');
-    $values['ldapImplementationDescription'] = t('Select the type of '.
+    $values['ldapImplementationDescription'] = t('Select the type of ' .
       'authentication mechanism you are using.');
 
     foreach ($values as $property => $default_value) {
@@ -151,7 +151,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
   protected $authenticationServersDescription;
   protected $authenticationServersOptions = array();
-  
+
   /**
    * 1.  User Login Interface
    */
@@ -280,14 +280,14 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#options' => $this->authenticationServersOptions,
       '#description' => $this->authenticationServersDescription
     );
-    
+
     $form['login_UI'] = array(
       '#type' => 'fieldset',
       '#title' => t('User Login Interface'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
-    
+
     $form['login_UI']['loginUIUsernameTxt'] = array(
       '#type' => 'textfield',
       '#title' => t('Username Description Text'),
@@ -295,7 +295,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#default_value' => $this->loginUIUsernameTxt,
       '#description' => $this->loginUIUsernameTxtDescription,
     );
-    
+
     $form['login_UI']['loginUIPasswordTxt'] = array(
       '#type' => 'textfield',
       '#title' => t('Password Description Text'),

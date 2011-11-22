@@ -58,17 +58,17 @@ function ldap_feeds_enable() {
 }
 
 function ldap_feeds_drupal_user_attributes() {
-  
+
   $attributes = array(
-    'uid' => array ('token' => 'drupal.uid', 'description' => 'Drupal used id.  e.g. 413'),
-    'name' => array ('token' => 'drupal.name', 'description' => 'Drupal username.  e.g. jdoe'),
-    'mail' => array ('token' => 'drupal.mail', 'description' => 'Drupal email address.  e.g. jdoe@gmail.com'),
-    'created' => array ('token' => 'drupal.created', 'description' => 'Drupal account created timestamp in unix e.g. 432432432'),
-    'status' => array ('token' => 'drupal.status', 'description' => 'Drupal user status  e.g. 1 or 0'),
-    'language' => array ('token' => 'drupal.language', 'description' => 'Drupal language.'),
-    'signature' => array ('token' => 'drupal.signature', 'description' => 'Drupal signature.  e.g. Happy Joe'),
-    'login' => array ('token' => 'drupal.login', 'description' => 'Drupal unix timestamp of last login  e.g. 1317494439'),
-    'init' => array ('token' => 'drupal.init', 'description' => 'Drupal user init  e.g. jdoe@gmail.com'),
+    'uid' => array('token' => 'drupal.uid', 'description' => 'Drupal used id.  e.g. 413'),
+    'name' => array('token' => 'drupal.name', 'description' => 'Drupal username.  e.g. jdoe'),
+    'mail' => array('token' => 'drupal.mail', 'description' => 'Drupal email address.  e.g. jdoe@gmail.com'),
+    'created' => array('token' => 'drupal.created', 'description' => 'Drupal account created timestamp in unix e.g. 432432432'),
+    'status' => array('token' => 'drupal.status', 'description' => 'Drupal user status  e.g. 1 or 0'),
+    'language' => array('token' => 'drupal.language', 'description' => 'Drupal language.'),
+    'signature' => array('token' => 'drupal.signature', 'description' => 'Drupal signature.  e.g. Happy Joe'),
+    'login' => array('token' => 'drupal.login', 'description' => 'Drupal unix timestamp of last login  e.g. 1317494439'),
+    'init' => array('token' => 'drupal.init', 'description' => 'Drupal user init  e.g. jdoe@gmail.com'),
   );
   // ldap_authentication and some other modules may want to add additional drupal user tokens
   // largely derived from the $user->data array, but possibly from related data such as authmaps

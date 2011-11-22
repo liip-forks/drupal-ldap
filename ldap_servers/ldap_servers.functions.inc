@@ -100,7 +100,7 @@ function ldap_baddn($dn, $dn_name) {
   if (!$match) {
     $tokens = array('%dn' => htmlspecialchars($dn), '%dn_name' => $dn_name);
     $result['text'] = t('Possible invalid format for:', $tokens)
-    . '<em>' . $tokens['%dn'] . '</em>.<br/>  '.
+    . '<em>' . $tokens['%dn'] . '</em>.<br/>  ' .
     t('The format may be correct for your ldap, but please double check.', $tokens);
   }
   return $result;
@@ -193,14 +193,14 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
   unset($dn_parts['count']);
   $parts_count = array();
   $parts_last_value = array();
-  foreach($dn_parts as $pair) {
+  foreach ($dn_parts as $pair) {
     list($attr_name, $attr_value) = explode('=', $pair);
     $attr_value = check_plain($attr_value);
     if (!isset($parts_count[$attr_name])) {
-      $tokens[$pre .  strtolower($attr_name) . $post] = $attr_value;
+      $tokens[$pre . strtolower($attr_name) . $post] = $attr_value;
       $parts_count[$attr_name] = 0;
     }
-    $tokens[$pre .  strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . (int)$parts_count[$attr_name] . $post] = $attr_value;
+    $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . (int)$parts_count[$attr_name] . $post] = $attr_value;
 
     $parts_last_value[$attr_name] = $attr_value;
     $parts_count[$attr_name]++;
@@ -221,13 +221,13 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
         $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[0]);
       }
       elseif (is_array($attr_value) && $attr_value['count'] > 1) {
-        $tokens[$pre .  strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last'. $post] = check_plain($attr_value[$attr_value['count']-1]);
+        $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[$attr_value['count']-1]);
         for ($i=0; $i<$attr_value['count']; $i++) {
-          $tokens[$pre .  strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = check_plain($attr_value[$i]);
+          $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = check_plain($attr_value[$i]);
         }
       }
-      elseif(is_scalar($attr_value)) {
-        $tokens[$pre .  strtolower($attr_name) . $post] = check_plain($attr_value);
+      elseif (is_scalar($attr_value)) {
+        $tokens[$pre . strtolower($attr_name) . $post] = check_plain($attr_value);
       }
     }
   }
@@ -248,12 +248,12 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
       else {
         $value = $ldap_entry[$token_key][0];
       }
-      $tokens[$pre .  strtolower($token_key) . $post] = check_plain($value);
+      $tokens[$pre . strtolower($token_key) . $post] = check_plain($value);
     }
   }
 
   // include the dn.  it will not be handled correctly by previous loops
-  $tokens[$pre .  'dn' . $post] = check_plain($ldap_entry['dn']);
+  $tokens[$pre . 'dn' . $post] = check_plain($ldap_entry['dn']);
 
   return $tokens;
 }
@@ -292,7 +292,7 @@ function ldap_servers_show_sample_user_tokens($sid) {
       ));
   }
   else {
-    $table = '<p>' . t('No sample user data found'). '</p>';
+    $table = '<p>' . t('No sample user data found') . '</p>';
   }
 
   return $table;

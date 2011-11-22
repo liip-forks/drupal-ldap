@@ -74,10 +74,10 @@ function ldap_authorization_og_form($form, &$form_state) {
   $allNodeTypes = $result->fetchAllKeyed();
   $groupNodeTypes = NULL;
 
-  foreach($allNodeTypes as $nodeType => $nodeTypeName){
-  	if(og_is_group_type('node',$nodeType)){
-  		$groupNodeTypes[$nodeType] = $nodeTypeName;
-  	}
+  foreach ($allNodeTypes as $nodeType => $nodeTypeName) {
+    if (og_is_group_type('node', $nodeType)) {
+      $groupNodeTypes[$nodeType] = $nodeTypeName;
+    }
   }
 
   $form['ldap_authorization_og_node_type'] = array(
@@ -103,6 +103,3 @@ function ldap_authorization_og_form($form, &$form_state) {
   return system_settings_form($form);
   //return $form;
 }
-
-
-

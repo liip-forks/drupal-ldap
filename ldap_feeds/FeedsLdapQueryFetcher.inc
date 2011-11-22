@@ -81,8 +81,9 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
       '#size' => min(10, count($query_options)),
       '#required' => TRUE,
       '#default_value' => $this->config['query_ids'],
-      '#description' => t('If more than one query is selected, results from all the queries will be returned.
-        Queries can be added and edited at !link', array('!link'=> l('LDAP Query Admin', LDAP_QUERY_INDEX_BASE_PATH))),
+      '#description' => t('If more than one query is selected, results from all the queries will be returned.') .
+        ' ' .
+        t('Queries can be added and edited at !link', array('!link' => l(t('LDAP Query Admin'), LDAP_QUERY_INDEX_BASE_PATH))),
       '#options' => $query_options,
     );
 
@@ -95,7 +96,7 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
   public function sourceForm($source_config) {
 
     $tokens = array(
-      '!edit_link' => l('admin/structure/feeds/edit/' . $this->id, 'admin/structure/feeds/edit/' . $this->id),
+      '!edit_link' => l(t('Edit Feed'), 'admin/structure/feeds/edit/' . $this->id),
     );
 
     $form_state = array();

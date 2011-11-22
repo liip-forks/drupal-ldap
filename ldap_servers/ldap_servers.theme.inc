@@ -75,7 +75,7 @@ function theme_ldap_servers_server($variables) {
   require_once('LdapServer.class.php');
   $properties = array();
   foreach (LdapServer::field_to_properties_map() as $field_name => $property_name) {
-    $properties[] = "$field_name = " . print_r($ldap_server->$property_name, TRUE); 
+    $properties[] = "$field_name = " . print_r($ldap_server->$property_name, TRUE);
   }
 
   if ($actions) {
@@ -116,7 +116,9 @@ function theme_ldap_server_token_table($variables) {
   foreach ($variables['tokens'] as $token => $value) {
     $rows[] = array('data' => array($token, $value));
   }
-  $token_table = '<div class="content"><h2>' . t('Available Tokens') . '</h2>' . theme_table(array('colgroups' => NULL,'caption' => 'tokens', 'header' => $header, 'rows' => $rows, 'sticky' => TRUE, 'attributes' => array(), 'empty' => 'No data')). '</div>';
+  $token_table = '<div class="content"><h2>' . t('Available Tokens') . '</h2>' .
+    theme_table(array('colgroups' => NULL, 'caption' => 'tokens', 'header' => $header, 'rows' => $rows, 'sticky' => TRUE, 'attributes' => array(), 'empty' => 'No data')) .
+    '</div>';
 
   return $token_table;
 }

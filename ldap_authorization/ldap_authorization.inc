@@ -360,7 +360,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
           if ($consumer_conf->deriveFromAttrUseFirstAttr) {
             $attr_parts = ldap_explode_dn($attr_lcase, 0);
             $first_part = explode('=', $attr_parts[0]);
-            $attr_lcase = str_replace('\\2C',',',trim($first_part[1])); // for matching should not expect escaped commas
+            $attr_lcase = str_replace('\\2C', ',', trim($first_part[1])); // for matching should not expect escaped commas
           }
           $derive_from_attr_authorizations[$attr_lcase] = (string)$attr_lcase;
         }

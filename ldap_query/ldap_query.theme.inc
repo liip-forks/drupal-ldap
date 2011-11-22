@@ -118,7 +118,7 @@ function theme_ldap_query_results($variables) {
 
   $attributes_display = array();
   if ($results[0]) { // searching on all attributes
-    foreach($results[0] as $k => $v) {
+    foreach ($results[0] as $k => $v) {
       if (is_numeric($k)) {
         $attributes_display[] = $v;
       }
@@ -126,7 +126,7 @@ function theme_ldap_query_results($variables) {
   }
 
 
-  foreach($attributes_display as $attr) {
+  foreach ($attributes_display as $attr) {
     $table['header'][] = $attr;
   }
 
