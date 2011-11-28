@@ -377,7 +377,7 @@ function ldap_authentication_user_logout($account) {
  *  regardless of cache
  */
 function ldap_authentication_boot() {
-  if ($GLOBALS['user']->uid == 0) {
+  if (!drupal_is_cli() && $GLOBALS['user']->uid == 0) {
     if (!(isset($_COOKIE['seamless_login'])) || $_COOKIE['seamless_login'] == 'auto login') {
       if ((arg(0) == 'user' && !(is_numeric(arg(1)))) || arg(0) == 'logout' ) {
         return;
