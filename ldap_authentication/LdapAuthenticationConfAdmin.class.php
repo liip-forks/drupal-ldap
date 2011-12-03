@@ -116,13 +116,16 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       drupal_map_assoc(array(3600, 86400, 604800, 2592000, 31536000, 315360000), 'format_interval')
       + array(-1 => t('Never'));
 
-    $values['ssoEnabledDescription'] = t('Turning on Single Sign-On will enable ' .
+    $values['ssoEnabledDescription'] = '<strong>' . t('Single Sign on is enabled.') .
+      '</strong> ' . t('To disable it, disable the LDAP SSO Module on the ') .  l('Modules Form', 'admin/modules') . '.<p>' .
+      t('Single Sign-On enables ' .
       'users of this site to be authenticated by visiting the URL ' .
       '"user/login/sso, or automatically if selecting "automated ' .
       'single sign-on" below. Set up of LDAP authentication must be ' .
       'performed on the web server. Please review the !readme file ' .
       'for more information.', array('!readme' =>
-      l(t('README.txt'), drupal_get_path('module', 'ldap_authentication') . '/README.txt')));
+      l(t('README.txt'), drupal_get_path('module', 'ldap_sso') . '/README.txt')))
+      . '</p>';
 
     $values['ssoRemoteUserStripDomainNameDescription'] = t('Useful when the ' .
       'WWW server provides authentication in the form of user@realm and you ' .
@@ -220,6 +223,13 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       $save[$property] = $this->{$property};
     }
     variable_set('ldap_authentication_conf', $save);
+  }
+
+  static public function getSaveableProperty($property) {
+    $ldap_authentication_conf = variable_get('ldap_authentication_conf', array());
+    debug($ldap_authentication_conf);
+    return isset($ldap_authentication_conf[$property]) ? $ldap_authentication_conf[$property] : FALSE;
+
   }
 
   static public function uninstall() {
@@ -430,19 +440,40 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#collapsed' => (boolean)(!$this->ssoEnabled),
     );
 
-
+/**
     $form['sso']['ssoEnabled'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable Single Sign-On'),
       '#description' => t($this->ssoEnabledDescription),
       '#default_value' => $this->ssoEnabled,
+      '#disabled' => (boolean)(!module_exists('ldap_sso')),
+      );
+**/
+    if ($this->ssoEnabled) {
+
+      $form['sso']['enabled'] = array(
+        '#type' => 'markup',
+        '#markup' => $this->ssoEnabledDescription,
       );
 
+    }
+    else {
+      $form['sso']['disabled'] = array(
+       '#type' => 'markup',
+       '#markup' => '<p><em>' . t('LDAP Single Sign-On module must be enabled for options below to work.')
+       . ' ' . t('It is currently disabled.')
+        . ' ' .  l('Modules Form', 'admin/modules') . '</p></em>',
+     );
+
+
+
+    }
     $form['sso']['ssoRemoteUserStripDomainName'] = array(
       '#type' => 'checkbox',
       '#title' => t('Strip REMOTE_USER domain name'),
       '#description' => t($this->ssoRemoteUserStripDomainNameDescription),
       '#default_value' => $this->ssoRemoteUserStripDomainName,
+      '#disabled' => (boolean)(!$this->ssoEnabled),
     );
 
     $form['sso']['seamlessLogin'] = array(
@@ -450,6 +481,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#title' => t('Turn on automated single sign-on'),
       '#description' => t($this->seamlessLogInDescription),
       '#default_value' => $this->seamlessLogin,
+      '#disabled' => (boolean)(!$this->ssoEnabled),
       );
 
     $form['sso']['cookieExpire'] = array(
@@ -458,6 +490,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#description' => t($this->cookieExpireDescription),
       '#default_value' => $this->cookieExpire,
       '#options' => $this->cookieExpirePeriod,
+      '#disabled' => (boolean)(!$this->ssoEnabled),
     );
 
     $form['sso']['ldapImplementation'] = array(
@@ -466,6 +499,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#description' => t($this->ldapImplementationDescription),
       '#default_value' => $this->ldapImplementation,
       '#options' => $this->ldapImplementationOptions,
+      '#disabled' => (boolean)(!$this->ssoEnabled),
     );
 
     $form['submit'] = array(
@@ -530,7 +564,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->excludeIfNoAuthorizations = ($values['excludeIfNoAuthorizations']) ? (int)$values['excludeIfNoAuthorizations'] : NULL;
     $this->emailOption  = ($values['emailOption']) ? (int)$values['emailOption'] : NULL;
     $this->emailUpdate  = ($values['emailUpdate']) ? (int)$values['emailUpdate'] : NULL;
-    $this->ssoEnabled = ($values['ssoEnabled']) ? (int)$values['ssoEnabled'] : NULL;
+   // $this->ssoEnabled = ($values['ssoEnabled']) ? (int)$values['ssoEnabled'] : NULL;
     $this->ssoRemoteUserStripDomainName = ($values['ssoRemoteUserStripDomainName']) ? (int)$values['ssoRemoteUserStripDomainName'] : NULL;
     $this->seamlessLogin = ($values['seamlessLogin']) ? (int)$values['seamlessLogin'] : NULL;
     $this->cookieExpire = ($values['cookieExpire']) ? (int)$values['cookieExpire'] : NULL;

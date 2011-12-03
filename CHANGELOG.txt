@@ -1,3 +1,4 @@
+Issue #1328750 by Gribnif.  Moved LDAP SSO to a separate module.  Details on issue queue item.
 11/22/2011 Coder Review formatting and tweaks.
 Issue #1328750. Not finished with issue, but added check for command line in hook_boot.  was breaking drush and other command line scripts.
 Issue #1317816 by johnbarclay.  LDAP Authorization simpletest was broken.  Improved authorization form directions.

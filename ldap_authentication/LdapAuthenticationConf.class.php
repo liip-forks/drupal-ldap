@@ -61,7 +61,6 @@ class LdapAuthenticationConf {
     'excludeIfTextInDn',
     'allowTestPhp',
     'excludeIfNoAuthorizations',
-    'ssoEnabled',
     'ssoRemoteUserStripDomainName',
     'seamlessLogin',
     'ldapImplementation',
@@ -97,6 +96,7 @@ class LdapAuthenticationConf {
       $this->inDatabase = FALSE;
     }
 
+    $this->ssoEnabled = module_exists('ldap_sso');
     $this->apiPrefs['requireHttps'] = variable_get('ldap_servers_require_ssl_for_credentails', 1);
     $this->apiPrefs['encryption'] = variable_get('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT);
 

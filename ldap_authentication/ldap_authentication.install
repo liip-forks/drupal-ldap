@@ -48,6 +48,22 @@ function ldap_authentication_uninstall() {
  * of what a cross grade function would do
  */
 
+
+/**
+ * ldap_authentication and ldap_sso.  enable ldap_sso if sso was enabled in ldap_authentication previously
+ */
+function ldap_authentication_update_7100() {
+  // if sso is enabled in ldap authentication, enable module ldap_sso
+  require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
+  $ssoEnabled = LdapAuthenticationConfAdmin::getSaveableProperty('ssoEnabled');
+	if ($ssoEnabled) {
+		module_enable(array('ldap_sso'));
+		return t('Enabled new LDAP SSO module if Single Sign on was previously enabled.  Code for LDAP Single Sign On was moved to new "LDAP SSO" included module.');
+	}
+
+}
+
+
 function ldap_authentication_ldap_integration6_to_ldap7() {
 
  // fix authmaps
