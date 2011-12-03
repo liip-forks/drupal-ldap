@@ -1,3 +1,4 @@
+Issue #1358174 by SangersDrupalDude.  Changed '0' to 0 to avoid schema errors.
 Issue #1328750 by Gribnif.  Moved LDAP SSO to a separate module.  Details on issue queue item.
 11/22/2011 Coder Review formatting and tweaks.
 Issue #1328750. Not finished with issue, but added check for command line in hook_boot.  was breaking drush and other command line scripts.

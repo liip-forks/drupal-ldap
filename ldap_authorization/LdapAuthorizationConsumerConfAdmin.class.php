@@ -756,7 +756,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
-          'default' => '0',
+          'default' => 0,
         ),
       ),
 
@@ -765,7 +765,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
-          'default' => '0',
+          'default' => 0,
         ),
       ),
 
@@ -774,7 +774,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
-          'default' => '0',
+          'default' => 0,
         ),
       ),
 
@@ -783,7 +783,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
-          'default' => '0',
+          'default' => 0,
         ),
       ),
 
@@ -792,7 +792,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
-          'default' => '0',
+          'default' => 0,
         ),
       ),
     );
