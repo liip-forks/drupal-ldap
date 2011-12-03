@@ -50,7 +50,7 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
   );
 
   if ( $form['binding']['bindpw']) {
-    $form['binding']['bindpw']['#description'] = t('<p>Leave emtpy to test with currently stored password.</p>');
+    $form['binding']['bindpw']['#description'] = t('<p>Leave empty to test with currently stored password.</p>');
   }
 
   $form['testing_drupal_username'] = array(

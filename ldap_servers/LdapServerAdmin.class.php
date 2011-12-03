@@ -235,7 +235,7 @@ EOF;
 
   if ($this->bindpw) {
     $pwd_directions = t('You currently have a password stored in the database.
-      Leave password field emtpy to leave password unchanged.  Enter a new password
+      Leave password field empty to leave password unchanged.  Enter a new password
       to replace the current password.  Check the checkbox below to simply
       remove it from the database.');
     $pwd_class = 'ldap-pwd-present';
