@@ -1,3 +1,4 @@
+Issue #1328750 by Gribnif. I forgot to remove hook_boot and hook_user_logout from ldap authentication.module
 Issue #1359600 by heatherwoz.  Fixed code that set all fields with not null in schema to required.  Made exception for checkboxes.
 Issue #1358174 by SangersDrupalDude.  Changed '0' to 0 to avoid schema errors.
 Issue #1328750 by Gribnif.  Moved LDAP SSO to a separate module.  Details on issue queue item.

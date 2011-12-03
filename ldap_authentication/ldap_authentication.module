@@ -342,55 +342,6 @@ function ldap_authentication_login_form_submit(&$form, $form_state) {
 
 
 /**
- * Implements hook_user_logout().
- *
- * The user just logged out.
- *
- */
-
-function ldap_authentication_user_logout($account) {
-  $auth_conf = ldap_authentication_get_valid_conf();
-  if ($auth_conf->seamlessLogin == 1) {
-    setcookie("seamless_login", 'do not auto login', time() + (int)$auth_conf->cookieExpire, base_path(), "");
-    $_SESSION['seamless_login'] = $_COOKIE['seamless_login'];
-  }
-}
-
-/**
- * Implements hook_boot().
- *  Perform setup tasks. This entry point is used because hook_user_load no
- *  longer runs on anonymous users, and hook_boot is guaranteed to run,
- *  regardless of cache
- */
-function ldap_authentication_boot() {
-  if (!drupal_is_cli() && $GLOBALS['user']->uid == 0) {
-    if (!(isset($_COOKIE['seamless_login'])) || $_COOKIE['seamless_login'] == 'auto login') {
-      if ((arg(0) == 'user' && !(is_numeric(arg(1)))) || arg(0) == 'logout' ) {
-        return;
-      }
-      else {
-        if (isset($_COOKIE['seamless_login_attempted']))
-          $login_attempted = $_COOKIE['seamless_login_attempted'];
-        else {
-          $login_attempted = FALSE;
-        }
-        require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
-        $seamlessLogin = LdapAuthenticationConfAdmin::getSaveableProperty('seamlessLogin');
-        if ( $seamlessLogin == 1 && ($login_attempted != 'true')) {
-          setcookie("seamless_login_attempted", 'true', time() + (int)$auth_conf->cookieExpire, base_path(), "");
-          $_SESSION['seamless_login_attempted'] = $login_attempted;
-          drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-          drupal_goto('user/login/sso', array('query' => array('destination' => rawurlencode($_GET['q']))));
-        }
-        else {
-          return;
-        }
-      }
-    }
-  }
-}
-
-/**
  * Implements hook_user_presave().
  *  A user account is about to be created or updated.
  */
