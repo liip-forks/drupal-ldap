@@ -208,7 +208,7 @@ EOF;
   foreach ($this->fields() as $field_id => $field) {
     if (isset($field['form'])) {
 
-      if (!isset($field['form']['required']) && isset($field['schema']['not null'])) {
+      if (!isset($field['form']['required']) && isset($field['schema']['not null']) && $field['form']['#type'] != 'checkbox') {
         $field['form']['#required'] = (boolean)$field['schema']['not null'];
       }
       if (isset($field['schema']['length']) && !isset($field['form']['#maxlength'])) {
