@@ -149,29 +149,31 @@ function ldap_profile_user_login(&$edit, $account) {
   }
 
   // Set/Update profile field information
-  foreach (array_keys($mapping) as $field) {
-    if (strpos($field, "field_") !== FALSE) {
-      $add = FALSE;
-      $toAdd = '';
-      $ldapEntry = ($derivedMapping[$field]['derive']) ? $dnLdapdata[$derivedMapping[$field]['derive_value']] : $ldapdata;
+  if (is_array($mapping)) {
+    foreach (array_keys($mapping) as $field) {
+      if (strpos($field, "field_") !== FALSE) {
+        $add = FALSE;
+        $toAdd = '';
+        $ldapEntry = ($derivedMapping[$field]['derive']) ? $dnLdapdata[$derivedMapping[$field]['derive_value']] : $ldapdata;
 
-      // If we havea tokenized mapping
-      if (strpos($mapping[$field], "[") !== FALSE) {
-        $toAdd = ldap_server_token_replace($ldapEntry, $mapping[$field]);
-        $add = _ldap_profile_add_change($account, $field, $toAdd);
-      }
-      elseif (array_key_exists($mapping[$field], $ldapEntry)) {
-        if (array_key_exists(0, $ldapEntry[$mapping[$field]])) {
-          $toAdd = $ldapEntry[$mapping[$field]][0];
+        // If we havea tokenized mapping
+        if (strpos($mapping[$field], "[") !== FALSE) {
+          $toAdd = ldap_server_token_replace($ldapEntry, $mapping[$field]);
           $add = _ldap_profile_add_change($account, $field, $toAdd);
         }
-      }
-      if ($add) {
-        $changes[$field] = array('und' => array(
-          0 => array(
-            'value' => $toAdd
-          )
-        ));
+        elseif (array_key_exists($mapping[$field], $ldapEntry)) {
+          if (array_key_exists(0, $ldapEntry[$mapping[$field]])) {
+            $toAdd = $ldapEntry[$mapping[$field]][0];
+            $add = _ldap_profile_add_change($account, $field, $toAdd);
+          }
+        }
+        if ($add) {
+          $changes[$field] = array('und' => array(
+            0 => array(
+              'value' => $toAdd
+            )
+          ));
+        }
       }
     }
   }

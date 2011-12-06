@@ -1,3 +1,5 @@
+Issue #1362480 by ybizeul to fix ldap profile warning/error.
+Some quick fixes to menus, debug statements and ldap_sso.
 Issue #1359222 by SangersDrupalDude.  theme_ldap_authorization_admin_index was sending empty array.
 Issue #1359574 by heatherwoz.  spelling error.
 Issue #1328750 by Gribnif. I forgot to remove hook_boot and hook_user_logout from ldap authentication.module
