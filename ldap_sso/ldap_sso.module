@@ -57,12 +57,14 @@ function ldap_sso_boot() {
         else {
           $login_attempted = FALSE;
         }
+        drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+        require_once('includes/common.inc');
         require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
         $seamlessLogin = LdapAuthenticationConfAdmin::getSaveableProperty('seamlessLogin');
         if ($seamlessLogin == 1 && ($login_attempted != 'true')) {
           setcookie("seamless_login_attempted", 'true', time() + (int)$auth_conf->cookieExpire, base_path(), "");
           $_SESSION['seamless_login_attempted'] = $login_attempted;
-          require_once('includes/common.inc');
+
           drupal_goto('user/login/sso', array('query' => array('destination' => rawurlencode($_GET['q']))));
         }
         else {

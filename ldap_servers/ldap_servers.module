@@ -154,7 +154,7 @@ function ldap_servers_menu() {
     'file' => 'ldap_servers.admin.inc',
   );
 
-  $items['admin/config/people/ldap/servers/edit'] = array(
+  $items['admin/config/people/ldap/servers/edit/%'] = array(
     'title' => 'Edit LDAP Server Configuration',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_form', 'edit', $menu_offset + 2),
@@ -162,7 +162,7 @@ function ldap_servers_menu() {
     'file' => 'ldap_servers.admin.inc',
   );
 
-  $items['admin/config/people/ldap/servers/test'] = array(
+  $items['admin/config/people/ldap/servers/test/%'] = array(
     'title' => 'Test LDAP Server Configuraion',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_test_form', $menu_offset + 1, $menu_offset + 2),
@@ -170,7 +170,7 @@ function ldap_servers_menu() {
     'file' => 'ldap_servers.test_form.inc',
   );
 
-  $items['admin/config/people/ldap/servers/delete'] = array(
+  $items['admin/config/people/ldap/servers/delete/%'] = array(
     'title' => 'Delete LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_delete', $menu_offset + 2),
@@ -178,7 +178,7 @@ function ldap_servers_menu() {
     'file' => 'ldap_servers.admin.inc',
   );
 
-  $items['admin/config/people/ldap/servers/enable'] = array(
+  $items['admin/config/people/ldap/servers/enable/%'] = array(
     'title' => 'Enable LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
@@ -186,7 +186,7 @@ function ldap_servers_menu() {
     'file' => 'ldap_servers.admin.inc',
   );
 
-  $items['admin/config/people/ldap/servers/disable'] = array(
+  $items['admin/config/people/ldap/servers/disable/%'] = array(
     'title' => 'Enable LDAP Server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),

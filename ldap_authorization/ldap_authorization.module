@@ -35,7 +35,7 @@ function ldap_authorization_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  $items['admin/config/people/ldap/authorization/edit'] = array(
+  $items['admin/config/people/ldap/authorization/edit/%'] = array(
      'title' => 'Edit LDAP Authorization Configuration',
      'page callback' => 'drupal_get_form',
      'page arguments' => array('ldap_authorization_admin_form', 6, 'edit'),
@@ -43,7 +43,7 @@ function ldap_authorization_menu() {
      'file' => 'ldap_authorization.admin.inc',
   );
 
-  $items['admin/config/people/ldap/authorization/delete'] = array(
+  $items['admin/config/people/ldap/authorization/delete/%'] = array(
      'title' => 'Delete LDAP Authorization Configuration',
      'description' => 'Delete an ldap authorization configuration',
      'page callback' => 'drupal_get_form',
@@ -52,7 +52,7 @@ function ldap_authorization_menu() {
      'file' => 'ldap_authorization.admin.inc',
   );
 
-  $items['admin/config/people/ldap/authorization/test'] = array(
+  $items['admin/config/people/ldap/authorization/test/%'] = array(
     'title' => 'Test LDAP Authorization Configuration',
     'description' => 'Test an ldap authorization configuration',
     'page callback' => 'drupal_get_form',
@@ -61,7 +61,7 @@ function ldap_authorization_menu() {
     'file' => 'ldap_authorization.admin.test.inc',
   );
 
-  $items['admin/config/people/ldap/authorization/add'] = array(
+  $items['admin/config/people/ldap/authorization/add/%'] = array(
     'title' => 'Add Authorization Configuration',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_authorization_admin_form', 6, 'add'),
