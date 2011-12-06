@@ -173,7 +173,7 @@ function ldap_servers_menu() {
   $items['admin/config/people/ldap/servers/delete/%'] = array(
     'title' => 'Delete LDAP Server',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_servers_admin_delete', $menu_offset + 2),
+    'page arguments' => array('ldap_servers_admin_delete', $menu_offset + 1, $menu_offset + 2),
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
