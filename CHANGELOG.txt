@@ -1,3 +1,4 @@
+Issue #1328750 by Gribnif, catch by memfis.  ldap_sso problems related to moving to own module.
 Issue #1362480 by ybizeul to fix ldap profile warning/error.
 Some quick fixes to menus, debug statements and ldap_sso.
 Issue #1359222 by SangersDrupalDude.  theme_ldap_authorization_admin_index was sending empty array.

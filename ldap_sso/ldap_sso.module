@@ -57,14 +57,11 @@ function ldap_sso_boot() {
         else {
           $login_attempted = FALSE;
         }
-        drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
         require_once('includes/common.inc');
-        require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
-        $seamlessLogin = LdapAuthenticationConfAdmin::getSaveableProperty('seamlessLogin');
-        if ($seamlessLogin == 1 && ($login_attempted != 'true')) {
+        $ldap_authentication_conf = variable_get('ldap_authentication_conf', array());
+        if ($ldap_authentication_conf['seamlessLogin'] == 1 && ($login_attempted != 'true')) {
           setcookie("seamless_login_attempted", 'true', time() + (int)$auth_conf->cookieExpire, base_path(), "");
           $_SESSION['seamless_login_attempted'] = $login_attempted;
-
           drupal_goto('user/login/sso', array('query' => array('destination' => rawurlencode($_GET['q']))));
         }
         else {
@@ -119,7 +116,7 @@ function ldap_sso_user_login_sso() {
         ),
         'sso_login' => TRUE,
       );
-      $user = _ldap_authentication_user_login_authenticate_validate($fake_form_state);
+      $user = ldap_authentication_user_login_authenticate_validate(array(), $fake_form_state);
       if ($user && $user->uid > 0) {
         if ($auth_conf->seamlessLogin == 1) {
           setcookie("seamless_login", 'auto login', time() + $auth_conf->cookieExpire, base_path(), "");
