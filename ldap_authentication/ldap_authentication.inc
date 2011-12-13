@@ -246,7 +246,8 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       // with sso enabled this method of binding isn't valid
       foreach ($ldap_server->basedn as $basedn) {
         $search = array('%basedn', '%username');
-        $replace = array($basedn, $name);
+        $transformname = $ldap_server->drupalToLdapNameTransform($name, $watchdog_tokens);
+        $replace = array($basedn, $transformname);
         $userdn = str_replace($search, $replace, $ldap_server->user_dn_expression);
         $bind_success = ($ldap_server->bind($userdn, $pass) == LDAP_SUCCESS);
         if ($bind_success) {

@@ -120,7 +120,6 @@ function ldap_servers_admin_form_submit($form, &$form_state) {
  */
 function ldap_servers_admin_delete($form, &$form_state, $op = NULL, $sid = NULL) {
 
-
   if ($sid && ($ldap_server = ldap_servers_get_servers($sid, 'all', TRUE))) {
     // array()
 

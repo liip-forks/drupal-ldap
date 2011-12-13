@@ -321,7 +321,29 @@ class LdapServer {
     }
   }
 
+  function drupalToLdapNameTransform($drupal_username, &$watchdog_tokens) {
+    if ($this->ldapToDrupalUserPhp && module_exists('php')) {
+      global $name;
+      $old_name_value = $name;
+      $name = $drupal_username;
+      $code = "<?php global \$name; \n". $this->ldapToDrupalUserPhp . "; \n ?>";
+      $watchdog_tokens['%code'] = $this->ldapToDrupalUserPhp;
+      $code_result = php_eval($code);
+      $watchdog_tokens['%code_result'] = $code_result;
+      $ldap_username = $code_result;
+      $watchdog_tokens['%ldap_username'] = $ldap_username;
+      $name = $old_name_value;  // important because of global scope of $name
+      if ($this->detailedWatchdogLog) {
+        watchdog('ldap_server', '%drupal_user_name tansformed to %ldap_username by applying code <code>%code</code>', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
+    }
+    else {
+      $ldap_username = $drupal_username;
+    }
 
+    return $ldap_username;
+
+  }
   /**
    * Queries LDAP server for the user.
    *
@@ -333,28 +355,12 @@ class LdapServer {
    */
   function user_lookup($drupal_user_name) {
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
-    if ($this->ldapToDrupalUserPhp && module_exists('php')) {
-      global $name;
-      $old_name_value = $name;
-      $name = $drupal_user_name;
-      $code = "<?php global \$name; \n". $this->ldapToDrupalUserPhp . "; \n ?>";
-      $watchdog_tokens['%code'] = $this->ldapToDrupalUserPhp;
-      $code_result = php_eval($code);
-      $watchdog_tokens['%code_result'] = $code_result;
-      $ldap_username = $code_result;
-      $watchdog_tokens['%ldap_username'] = $ldap_username;
-      $name = $old_name_value;
-      if ($this->detailedWatchdogLog) {
-        watchdog('ldap_server', '%drupal_user_name tansformed to %ldap_username by applying code <code>%code</code>', $watchdog_tokens, WATCHDOG_DEBUG);
-      }
-    }
-    else {
-      $ldap_username = $drupal_user_name;
-    }
+    $ldap_username = $this->drupalToLdapNameTransform($drupal_user_name, $watchdog_tokens);
+
     if (!$ldap_username) {
       return FALSE;
     }
-   // print "$ldap_username from $drupal_user_name"; die;
+
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
