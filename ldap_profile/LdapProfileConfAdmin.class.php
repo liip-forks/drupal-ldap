@@ -41,7 +41,7 @@ class LdapProfileConfAdmin extends LdapProfileConf {
     $auth_conf = ldap_authentication_get_valid_conf();
 
     if (count($this->auth_conf->servers) == 0) {
-      $message = ldap_servers_no_enabled_servers_msg('configure LDAP Authentication');
+      $message = ldap_servers_no_enabled_servers_msg('configure LDAP Profiles');
       $form['intro'] = array(
         '#type' => 'item',
         '#markup' => t('<h1>LDAP Profile Settings</h1>') . $message,

@@ -298,15 +298,4 @@ function ldap_servers_show_sample_user_tokens($sid) {
   return $table;
 }
 
-function ldap_servers_no_enabled_servers_msg($action) {
 
-  $servers = ldap_servers_get_servers(NULL, 'enabled');
-  if (count($servers) == 0) {
-
-    $message = t('At least one ldap server must configured and <em>enabled</em> before') .
-      $action . '. ' . t('Please go to') . ' ' . l('admin/config/people/ldap/servers', 'admin/config/people/ldap/servers') . ' to configure an LDAP server';
-
-    drupal_set_message($message, 'warning');
-    return $message;
-  }
-}
