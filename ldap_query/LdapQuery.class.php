@@ -84,7 +84,7 @@ class LdapQuery {
     $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
 
     $this->baseDn = $this->linesToArray($this->base_dn_str);
-    $this->attributes = ($this->attributes_str) ? $this->csvToArray($this->attributes_str) : array();
+    $this->attributes = ($this->attributes_str) ? $this->csvToArray($this->attributes_str, TRUE) : array();
 
   }
 
@@ -191,10 +191,13 @@ class LdapQuery {
     return $array;
   }
 
-  protected function csvToArray($string) {
+  protected function csvToArray($string, $strip_quotes = FALSE) {
     $items = explode(',', $string);
     foreach ($items as $i => $item) {
       $items[$i] = trim($item);
+      if ($strip_quotes) {
+        $items[$i] = trim($items[$i],'"');
+      }
     }
     return $items;
   }
