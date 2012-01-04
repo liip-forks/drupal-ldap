@@ -310,18 +310,17 @@ class LdapQuery {
       'filter' => array(
         'property_name' => 'filter',
         'schema' => array(
-          'type' => 'varchar',
-          'length' => '255',
+          'type' => 'text',
           'not null' => FALSE
         ),
         'form' => array(
           'field_group' => 'query',
-          '#type' => 'textfield',
+          '#type' => 'textarea',
           '#title' => t('Filter'),
           '#description' => t('LDAP query filter such as <code>(objectClass=group)</code> or <code>(&(objectCategory=user)(homePhone=*))
 </code>'),
-          '#size' => 70,
-          '#maxlength' => 255,
+          '#cols' => 50,
+          '#rows' => 1,
           '#required' => TRUE,
         ),
         'form_to_prop_functions' => array('trim'),

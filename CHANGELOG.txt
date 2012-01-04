@@ -1,3 +1,4 @@
+Issue #1393188 by mattyohe.  lengthened size of ldap query filter field.
 Issue #1357412 by nathangervais with patch.  ldap name transform php needed to be executed when binding with user ldap credentials.
 Issue #1328750 by Gribnif, catch by memfis.  ldap_sso problems related to moving to own module.
 Issue #1362480 by ybizeul to fix ldap profile warning/error.

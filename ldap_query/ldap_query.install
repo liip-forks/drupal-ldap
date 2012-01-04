@@ -85,3 +85,16 @@ function ldap_query_update_7100() {
   }
 
 }
+
+/**
+ * Make filter field type 'text' for longer filters
+ */
+function ldap_query_update_7101() {
+  db_change_field('ldap_query', 'filter', 'filter', array(
+    'type' => 'text',
+    'not null' => FALSE,
+  ));
+
+  return t('ldap_query table field "filter" changed to type "text"');
+}
+
