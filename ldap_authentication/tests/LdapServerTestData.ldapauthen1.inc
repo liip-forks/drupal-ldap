@@ -172,6 +172,22 @@ $test_data['ldap_authentication']['WL1'] = array(
     'excludeIfNoAuthorizations' => 0,
   );
 
+// single sign on tests
+$test_data['ldap_authentication']['MixedModeUserLogonSSO'] = $test_data['ldap_authentication']['MixedModeUserLogon'];
+$test_data['ldap_authentication']['MixedModeUserLogonSSO']['ssoRemoteUserStripDomainName'] = FALSE;
+$test_data['ldap_authentication']['MixedModeUserLogonSSO']['seamlessLogin'] = TRUE;
+$test_data['ldap_authentication']['MixedModeUserLogonSSO']['ldapImplementation'] = 'mod_auth_sspi';
+$test_data['ldap_authentication']['MixedModeUserLogonSSO']['cookieExpire'] = 3600;
+
+$test_data['ldap_authentication']['ExclusiveModeUserLogonSSO'] = $test_data['ldap_authentication']['ExclusiveModeUserLogon'];
+$test_data['ldap_authentication']['ExclusiveModeUserLogonSSO']['ssoRemoteUserStripDomainName'] = FALSE;
+$test_data['ldap_authentication']['ExclusiveModeUserLogonSSO']['seamlessLogin'] = FALSE;
+$test_data['ldap_authentication']['ExclusiveModeUserLogonSSO']['ldapImplementation'] = 'mod_auth_sspi';
+$test_data['ldap_authentication']['ExclusiveModeUserLogonSSO']['cookieExpire'] = 3600;
+
+
+
+
 $test_data['ldap_authorization_conf']['consumer_conf']['sid'] = 'ldapauthen1';
 
 $test_data['ldap_authorization_conf']['consumer_conf']['consumerType'] = 'drupal_role';  // change as desired

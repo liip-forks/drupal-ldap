@@ -21,7 +21,7 @@
 function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
 
 /**
- * make sure ldap_autentication is configured and valid first
+ * make sure ldap_authentication is configured and valid first
  */
 
   if (!$auth_conf = ldap_authentication_get_valid_conf()) {
@@ -464,8 +464,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
    * [#1009990]
    *
    */
-  $fake_form_state['uid'] = $account->uid;
-
+  $fake_form_state = array('uid' => $account->uid);
   user_login_submit(array(), $fake_form_state);
   global $user;
   $form_state['uid'] = $user->uid;

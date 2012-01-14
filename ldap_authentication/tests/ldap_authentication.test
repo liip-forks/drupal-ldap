@@ -107,7 +107,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
  */
 
 
-  function xtestMixedModeUserLogon() {
+  function testMixedModeUserLogon() {
 
     $sid = 'ldapauthen1';
     $testid = 'MixedModeUserLogon';
@@ -217,7 +217,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 /**
  *  LDAP Authentication Exclusive Mode User Logon Test (ids = LDAP_authen.EM.ULT.*)
  */
-  function xtestExclusiveModeUserLogon() {
+  function testExclusiveModeUserLogon() {
 
     $sid = 'ldapauthen1';
     $testid = 'ExclusiveModeUserLogon';
