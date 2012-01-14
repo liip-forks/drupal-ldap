@@ -186,6 +186,7 @@ should return tokens such as:
  */
 function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
 
+  $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
 
   // 1. tokenize dn
@@ -195,7 +196,16 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
   $parts_last_value = array();
   foreach ($dn_parts as $pair) {
     list($attr_name, $attr_value) = explode('=', $pair);
-    $attr_value = check_plain($attr_value);
+    try {
+      $attr_value = check_plain($attr_value);
+    }
+    catch (Exception $e) {
+      if ($detailed_watchdog_log) {
+        $watchdog_tokens = array('%attr_name' => $attr_name);
+        watchdog('ldap_servers', 'skipped tokenization of attribute %attr_name because the value would not pass check_plain function.', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
+       continue; // don't tokenize data that can't pass check_plain
+    }
     if (!isset($parts_count[$attr_name])) {
       $tokens[$pre . strtolower($attr_name) . $post] = $attr_value;
       $parts_count[$attr_name] = 0;
@@ -244,6 +254,9 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
         $discard = array_pop($parts);
         $attr_name = join(LDAP_SERVERS_TOKEN_DEL, $parts);
         $value = $ldap_entry[$attr_name][(int)$last_key];
+      }
+      elseif (empty($ldap_entry[$token_key])) {
+          continue;
       }
       else {
         $value = $ldap_entry[$token_key][0];
@@ -297,5 +310,3 @@ function ldap_servers_show_sample_user_tokens($sid) {
 
   return $table;
 }
-
-

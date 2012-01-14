@@ -1,3 +1,6 @@
+Fixed some error messaging in the test ldap server form.
+Issue #1398204 by froeser.  Add try catch to check_plain on token array.
+Issue #1396786 by thesaunterer.  patch to fix undefined token attributes.
 Issue #1393196 by mattyohe. fixed stripping of quotes in return attributes.
 Issue #1393188 by mattyohe.  lengthened size of ldap query filter field.
 Issue #1357412 by nathangervais with patch.  ldap name transform php needed to be executed when binding with user ldap credentials.

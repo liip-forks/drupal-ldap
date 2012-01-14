@@ -137,7 +137,6 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   // $ldap_server = NULL;
   list($has_errors, $more_results) = ldap_servers_test_binding_credentials($ldap_server, $bindpw);
   $results = array_merge($results, $more_results);
-
   if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
     $results = array_merge($results, $more_results);
@@ -164,13 +163,16 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   if (!$has_errors && @$values['testing_drupal_username']) {
     require_once('ldap_servers.functions.inc');
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
+    $results = array_merge($results, $more_results);
+    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? ldap_server_tokenize_entry($ldap_user['attr'], 'all') : array();
     $_SESSION['ldap_server_test_data'] = array(
       'username' => $values['testing_drupal_username'],
-      'Tokens Available' => ldap_server_tokenize_entry($ldap_user['attr'], 'all'),
+      'Tokens Available' => $tokens,
       'LDAP Entry' => $ldap_user['attr'],
     );
   }
-  $message =  theme_item_list(array('items' => $results, 'title' => t('Connection Info'), 'type' => 'ul', 'attributes' => array()));
+  $message =  theme_item_list(array('items' => $results, 'title' => t('Result Messages'), 'type' => 'ul', 'attributes' => array()));
+
   drupal_set_message(t($message), ($has_errors) ? 'error' : 'status');
   $form_state['redirect'] = LDAP_SERVERS_MENU_BASE_PATH . "/servers/test/$sid";
 
@@ -207,11 +209,17 @@ function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw) {
 }
 
 function ldap_servers_test_user_mapping($drupal_username, &$ldap_server) {
+
   $ldap_user = $ldap_server->user_lookup($drupal_username);
+
   $errors = FALSE;
   if (! $ldap_user ) {
     $results[] = t('Failed to find test user %username by searching on  %user_attr = %username.',
-      array('%username' => $drupal_username, '%user_attr' => $ldap_server->user_attr )) . $ldap_server->errorMsg('ldap');
+      array(
+        '%username' => $drupal_username,
+        '%user_attr' => $ldap_server->user_attr )
+      )
+    . ' ' . t('Error Message: ') . $ldap_server->errorMsg('ldap');
     $errors = TRUE;
   }
   else {
