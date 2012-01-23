@@ -1,3 +1,4 @@
+Issue #1341340 by marleythedod.  Views fix.
 Fixed some error messaging in the test ldap server form.
 Issue #1398204 by froeser.  Add try catch to check_plain on token array.
 Issue #1396786 by thesaunterer.  patch to fix undefined token attributes.

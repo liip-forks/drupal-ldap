@@ -221,27 +221,9 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     // TODO: Can't use sizelimit if it must be ordered || cache?
     // $ldap_server->search() hasn't orderby (ldap_sort)
     // But we can't use ldap_sort because there's no DESC option
-    // $entries     = $ldap_server->search($this->build_ldap_basedn($ldap_data->basedn), $this->build_ldap_filter($ldap_data->filter), array_values($attributes));
-    // TODO: this $functions array should be changed with a $ldap_server or a future $ldap_api method. Now $ldap_server->search only do a ldap_search() search,
-    //   there's no ldap_list() or ldap_read()
-    $functions = array('LDAP_SCOPE_BASE' => 'ldap_read', 'LDAP_SCOPE_ONELEVEL' => 'ldap_list', 'LDAP_SCOPE_SUBTREE' => 'ldap_search');
-    $function  = isset($ldap_data->scope) && array_key_exists($ldap_data->scope, $functions) ? $functions[$ldap_data->scope] : $functions['LDAP_SCOPE_ONELEVEL']; // $functions['LDAP_SCOPE_SUBTREE']
     foreach ($this->build_ldap_basedn($ldap_data->baseDn) as $basedn) {
 
-    $result    = @$function($ldap_server->connection, $basedn, $this->build_ldap_filter($ldap_data->filter), array_values($attributes));
-    if (!$result) {
-      $msg = t("Could not retrieve data from LDAP. (Error %errno: %error) (BaseDN: %basedn) (Filter: %filter) (Attrs: %attrs).",
-        array(
-          '%errno'  => ldap_errno($ldap_server->connection),
-          '%error'  => ldap_error($ldap_server->connection),
-          '%basedn' => $this->build_ldap_basedn($ldap_data->basedn),
-          '%filter' => $this->build_ldap_filter($ldap_data->filter),
-          '%attrs'  => implode(',', array_values($attributes))
-        )
-      );
-      watchdog('ldap_views', $msg);
-      return;
-    }
+      $result     = $ldap_server->search($basedn, $this->build_ldap_filter($ldap_data->filter), array_values($attributes), 0, $ldap_data->sizelimit, $ldap_data->timelimit, $ldap_data->deref, $ldap_data->scope);
 /***
     // ldap_sort can't be used because there's no DESC option
     if (!empty($this->orderby)) {
@@ -251,15 +233,10 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
       }
     }
  */
-    $tmp1         = ldap_get_entries($ldap_server->connection, $result);
-    $num_entries += array_shift($tmp1);
-    $tmp2         = array_merge($entries, $tmp1);
-    $entries      = $tmp2;
-    unset($tmp1);
-    unset($tmp2);
+      $entries = array_merge($entries, $result);
+      $num_entries += array_shift($result);
     }
 
-//    $num_entries = array_shift($entries);
     $limit       = $view->query->limit;
     $offset      = $view->query->offset;
     $result      = array();
@@ -274,27 +251,28 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
 
     foreach ($entries as $key => &$entry) {
         foreach ($view->field as $field) {
-          if (array_key_exists($field_alias[$field->field_alias], $entry)) {
-            if (is_array($entry[$field_alias[$field->field_alias]])) {
+          $alias = $field_alias[$field->field_alias];
+          if (array_key_exists($alias, $entry)) {
+            if (is_array($entry[$alias])) {
               switch ($field->options['multivalue']) {
                 case 'v-all':
                   // remove 'count' index
-                  array_shift($entry[$field_alias[$field->field_alias]]);
-                  $entry[$field_alias[$field->field_alias]] = implode($field->options['value_separator'], $entry[$field_alias[$field->field_alias]]);
+                  array_shift($entry[$alias]);
+                  $entry[$alias] = implode($field->options['value_separator'], $entry[$alias]);
                   break;
                 case 'v-count':
-                  $entry[$field_alias[$field->field_alias]] = $entry[$field_alias[$field->field_alias]]['count'];
+                  $entry[$alias] = $entry[$alias]['count'];
                   break;
                 case 'v-index':
-                  $index = $field->options['index_value'] >= 0 ? intval($field->options['index_value']) : $entry[$field_alias[$field->field_alias]]['count'] + $field->options['index_value'];
-                  $entry[$field_alias[$field->field_alias]] = array_key_exists($index, $entry[$field_alias[$field->field_alias]]) ? $entry[$field_alias[$field->field_alias]][$index] :
-                                                                                                                                    $entry[$field_alias[$field->field_alias]][0];
+                  $index = $field->options['index_value'] >= 0 ? intval($field->options['index_value']) : $entry[$alias]['count'] + $field->options['index_value'];
+                  $entry[$alias] = array_key_exists($index, $entry[$alias]) ? $entry[$alias][$index] :
+                                                                              $entry[$alias][0];
                   break;
             }
           }
           // order criteria
-          if (array_key_exists($field_alias[$field->field_alias], $sort_fields)) {
-            $sort_fields[$field_alias[$field->field_alias]]['data'][$key] = $entry[$field_alias[$field->field_alias]];
+          if (array_key_exists($alias, $sort_fields)) {
+            $sort_fields[$alias]['data'][$key] = $entry[$alias];
           }
         }
       }
@@ -317,7 +295,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
       call_user_func_array('array_multisort', $params);
     }
 
-    for ($i = 0; $i < $limit && $offset + $i < $num_entries; $i++) {
+    for ($i = 0; (!isset($limit) || $i < $limit) && $offset + $i < $num_entries; $i++) {
       $row = array();
       $entry = &$entries[$offset + $i];
       foreach ($view->field as $field) {
