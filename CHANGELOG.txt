@@ -1,3 +1,4 @@
+Issue #1421980 by clifmo.  Patch by chris.leversuch to fix ldap_feeds.info file
 Issue #1341340 by marleythedod.  Views fix.
 Fixed some error messaging in the test ldap server form.
 Issue #1398204 by froeser.  Add try catch to check_plain on token array.
