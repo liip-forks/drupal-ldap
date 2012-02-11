@@ -190,7 +190,7 @@ function ldap_profile_form_user_profile_form_alter(&$form, $form_state) {
 
   $not_changeable = t('This username is automatically set and may not be changed.');
   global $user;
-  if ($user->uid > 1) {
+  if ($user->uid > 1 && is_array($form_state['user']->data) && isset($form_state['user']->data['ldap_authentication'])) {
     $mapping = ldap_profile_get_mapping();
     if ($mapping != NULL) {
       foreach (array_keys($mapping) as $field) {
