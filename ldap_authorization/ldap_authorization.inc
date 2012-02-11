@@ -175,7 +175,8 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
 
     ldap_authorization_maps_alter_invoke($user, $user_ldap_entry, $ldap_server, $consumer->consumerConf, $proposed_ldap_authorizations, 'query');
     if ($detailed_watchdog_log) {
-      $watchdog_tokens['%proposed_authorizations'] = join(', ', $proposed_ldap_authorizations);
+      $_proposed_ldap_authorizations = is_array($_proposed_ldap_authorizations) ? : array();
+      $watchdog_tokens['%proposed_authorizations'] = join(', ', $_proposed_ldap_authorizations);
       watchdog('ldap_authorization', '%username : initial proposed authorization for %consumer_type: %proposed_authorizations.',
         $watchdog_tokens, WATCHDOG_DEBUG);
     }
@@ -406,7 +407,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
   $values = array_merge(array_values($derive_from_dn_authorizations), array_values($derive_from_attr_authorizations), array_values($derive_from_entry_authorizations));
   $values = array_unique($values);
-  $authz_ids = array_combine($values, $values);
+  $authz_ids = (count($values)) ? array_combine($values, $values) : array();
 
   if ($detailed_watchdog_log) {
     $watchdog_tokens['%username'] = $user->name;
