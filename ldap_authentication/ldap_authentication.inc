@@ -208,6 +208,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       watchdog('ldap_authentication', '%username : Existing Drupal User Account not found.  Continuing on to attempt ldap authentication', $watchdog_tokens, WATCHDOG_DEBUG);
     }
   }
+
   foreach ($auth_conf->servers as $sid => $ldap_server) {
     $watchdog_tokens['%sid'] = $sid;
     $watchdog_tokens['%bind_method'] = $ldap_server->bind_method;
@@ -343,6 +344,10 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     }
     else {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_SUCCESS;
+      if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+        $ldap_user = $ldap_server->user_lookup($name); // after successful bind, lookup user again to get private attributes
+        $watchdog_tokens['%mail'] = $ldap_user['mail'];
+      }
       break; //success
     }
   }  // end loop through servers
