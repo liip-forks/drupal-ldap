@@ -40,6 +40,7 @@ class LdapAuthorizationConsumerConf {
 
 
   public $mappings = array();
+  public $normalizedMappings = array(); // mappings in simples form.
   public $useMappingsAsFilter = TRUE;
 
   public $synchToLdap = FALSE;
@@ -74,6 +75,7 @@ class LdapAuthorizationConsumerConf {
       $this->inDatabase = TRUE;
       $this->loadFromDb();
     }
+    $this->normalizedMappings = $consumer->normalizeMappings($this->mappings);
   }
 
   protected function loadFromDb() {
@@ -130,7 +132,7 @@ class LdapAuthorizationConsumerConf {
     $this->deriveFromEntryAttr = $consumer_conf->derive_from_entry_attr;
 
     $this->mappings = $this->pipeListToArray($consumer_conf->mappings);
-    $this->useMappingsAsFilter  = (bool)(@$consumer_conf->use_filter);
+    $this->useMappingsAsFilter = (bool)(@$consumer_conf->use_filter);
 
     $this->synchToLdap = (bool)(@$consumer_conf->synch_to_ldap);
     $this->synchOnLogon = (bool)(@$consumer_conf->synch_on_logon);

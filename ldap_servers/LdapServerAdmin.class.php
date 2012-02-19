@@ -157,6 +157,7 @@ class LdapServerAdmin extends LdapServer {
 
     drupal_add_css(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.css', 'module', 'all');
 
+  //  $form['#validate'] = array('ldap_servers_admin_form_validate');
     $form['#prefix'] = <<<EOF
 <p>Setup an LDAP server configuration to be used by other modules such as LDAP Authentication,
 LDAP Authorization, etc.</p>
@@ -276,6 +277,12 @@ EOF;
       if (!$this->sid) {
         $errors['server_id_missing'] = 'Server id missing from delete form.';
       }
+      $warnings = module_invoke_all('ldap_server_in_use', $this->sid, $this->name);
+      if (count($warnings)) {
+        $errors['status'] = join("<br/>", array_values($warnings));
+      }
+
+
     }
     else {
       $this->populateFromDrupalForm($op, $values);
@@ -298,8 +305,17 @@ EOF;
           }
         }
       }
-
     }
+
+
+
+    if ($this->status == 0) { // check that no modules use this server
+      $warnings = module_invoke_all('ldap_server_in_use', $this->sid, $this->name);
+      if (count($warnings)) {
+        $errors['status'] = join("<br/>", array_values($warnings));
+      }
+    }
+
 
     if (!is_numeric($this->port)) {
       $errors['port'] =  t('The TCP/IP port must be an integer.');
@@ -327,7 +343,7 @@ EOF;
     return $errors;
   }
 
-public function drupalFormWarnings($op, $values)  {
+public function drupalFormWarnings($op, $values, $has_errors = NULL)  {
     $errors = array();
 
     if ($op == 'delete') {
@@ -337,13 +353,13 @@ public function drupalFormWarnings($op, $values)  {
     }
     else {
       $this->populateFromDrupalForm($op, $values);
-      $warnings = $this->warnings($op);
+      $warnings = $this->warnings($op, $has_errors);
     }
     return $warnings;
   }
 
 
-protected function warnings($op) {
+protected function warnings($op, $has_errors = NULL) {
 
     $warnings = array();
     if ($this->ldap_type) {
@@ -360,7 +376,7 @@ protected function warnings($op) {
           for your particular LDAP.', $tokens);
       }
     }
-    if (!$this->status) {
+    if (!$this->status && $has_errors != TRUE) {
       $warnings['status'] =  t('This server configuration is currently disabled.');
     }
 

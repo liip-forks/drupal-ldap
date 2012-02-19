@@ -370,7 +370,7 @@ class LdapServer {
       // Must find exactly one user for authentication to work.
       if ($result['count'] != 1) {
         $count = $result['count'];
-        watchdog('ldap_authentication', "Error: !count users found with $filter under $basedn.", array('!count' => $count), WATCHDOG_ERROR);
+        watchdog('ldap_servers', "Error: !count users found with $filter under $basedn.", array('!count' => $count), WATCHDOG_ERROR);
         continue;
       }
       $match = $result[0];

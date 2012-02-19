@@ -11,7 +11,7 @@ class LdapAuthorizationDerivationsTests  extends LdapAuthorizationTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'LDAP Authorization Tests: Derivations',
+      'name' => 'LDAP Authorization Tests: Derivations and Drupal Roles',
       'description' => 'Test ldap authorization logic for derivation of roles.  Tests are in absence of logons to isolate mapping logic.',
       'group' => 'LDAP Authorization'
     );

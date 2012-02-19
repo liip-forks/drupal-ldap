@@ -34,7 +34,6 @@ function ldap_authorization_help_watchdog() {  // remove after testing
 /**
  * return all desired authorizations for a given user
  *
-
  * @param object $user
  *
  * @param string $op =
@@ -60,7 +59,7 @@ function ldap_authorization_help_watchdog() {  // remove after testing
 
 
 function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $context) {
-
+  $debug = FALSE;
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $authorizations = array();
   $notifications = array();
@@ -121,6 +120,9 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       watchdog('ldap_authorization', '%username : testing with
          consumer type %consumer_type. ldap authenticated=%ldap_authenticated', $watchdog_tokens, WATCHDOG_DEBUG);
     }
+    if ($debug) {
+      debug(t('%username : testing with consumer type %consumer_type. ldap authenticated=%ldap_authenticated'), $watchdog_tokens);
+    }
 
     if ($context == 'logon' && !$consumer->consumerConf->synchOnLogon) {
       $notifications[$consumer_type][] = LDAP_AUTHORIZATION_MAP_NOT_CONF_FOR_LOGON;
@@ -174,12 +176,21 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
      */
 
     ldap_authorization_maps_alter_invoke($user, $user_ldap_entry, $ldap_server, $consumer->consumerConf, $proposed_ldap_authorizations, 'query');
-    if ($detailed_watchdog_log) {
-      $_proposed_ldap_authorizations = is_array($_proposed_ldap_authorizations) ? : array();
+
+    if ($detailed_watchdog_log || $debug) {
+      $_proposed_ldap_authorizations = is_array($proposed_ldap_authorizations) ? $proposed_ldap_authorizations : array();
       $watchdog_tokens['%proposed_authorizations'] = join(', ', $_proposed_ldap_authorizations);
+    }
+    if ($detailed_watchdog_log) {
       watchdog('ldap_authorization', '%username : initial proposed authorization for %consumer_type: %proposed_authorizations.',
         $watchdog_tokens, WATCHDOG_DEBUG);
     }
+    if ($debug) {
+      debug(t('%username : initial proposed authorization for %consumer_type: %proposed_authorizations.',
+        $watchdog_tokens));
+    }
+
+
 
     /**
      * 2.  filter is both a whitelist and a mapping of an ldap results to an authorization id.
@@ -189,7 +200,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
 
     $filtered_ldap_authorizations = array();
     if ($consumer->consumerConf->useMappingsAsFilter) {
-      foreach ($consumer->consumerConf->mappings as $mapping_filter) {
+      foreach ($consumer->consumerConf->normalizedMappings as $mapping_filter) {
         $map_from = $mapping_filter[0];
         $map_to = $mapping_filter[1];
         if (isset($proposed_ldap_authorizations[$map_from]) || isset($proposed_ldap_authorizations[strtolower($map_from)])) {
@@ -201,11 +212,18 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       $filtered_ldap_authorizations = array_keys($proposed_ldap_authorizations);
     }
     $filtered_ldap_authorizations = array_unique($filtered_ldap_authorizations);
+    $watchdog_tokens['%filtered_ldap_authorizations'] = join(', ', $filtered_ldap_authorizations);
     if ($detailed_watchdog_log) {
-      $watchdog_tokens['%filtered_ldap_authorizations'] = join(', ', $filtered_ldap_authorizations);
       watchdog('ldap_authorization', '%username : filtered authorization for %consumer_type: %filtered_ldap_authorizations.',
         $watchdog_tokens, WATCHDOG_DEBUG);
     }
+    if ($debug) {
+      debug(t('%username : filtered authorization for %consumer_type: %filtered_ldap_authorizations.',
+        $watchdog_tokens));
+    }
+
+    //debug('mapping filter in 211 of ldap_authorizationinc'); debug($consumer->consumerConf->mappings);
+    //debug('normalizedMappings'); debug($consumer->consumerConf->normalizedMappings);
 
     /**
      * 3. third, grant any proposed authorizations not already granted
@@ -317,7 +335,15 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
       <hr/>consumer containers existing after create call: %consumer_containers_final
       ', $watchdog_tokens, WATCHDOG_DEBUG);
   }
-
+  /** debug(t('%username : user_authorizations_set results for %consumer_type:
+      <hr/>authorization ids to add: %creates
+      <hr/>revokes: %revokes
+      <hr/>grants: %grants
+      <hr/>consumer containers initially existing: %consumer_containers_initial
+      <hr/>consumer containers needed to create: %consumer_containers_needed
+      <hr/>consumer containers existing after create call: %consumer_containers_final
+      ',$watchdog_tokens));
+**/
   /**
    *  3.G  save user object and user data
    */

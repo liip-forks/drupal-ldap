@@ -112,10 +112,13 @@ class LdapQuery {
     $ldap_server->bind();
     $results = array();
 
+    $count = 0;
     foreach ($this->baseDn as $base_dn) {
       $result = $ldap_server->search($base_dn, $this->filter, $this->attributes, 0, $this->sizelimit, $this->timelimit, $this->deref, $this->scope);
+      $count = $count + $result['count'];
       $results = array_merge($results, $result);
     }
+    $results['count'] = $count;
 
     return $results;
   }

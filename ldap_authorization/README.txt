@@ -27,7 +27,7 @@ Examples:  ldap_authorization_drupal_role
 
 
 ----------------------
-"Authorization ID"
+"Authorization ID" aka "Consumer ID"
 ----------------------
 The id of an individual authorization such as a drupal role or organic group.
 
@@ -49,3 +49,34 @@ LDAP Server Configuration
 Each Consumer Configuration will use a single ldap server configuration to bind
 and query ldap.  The ldap server configuration is also used to map the drupal
 username to an ldap user entry.
+
+
+----------------------
+LDAP Authorization data storage:
+---------------------
+
+Authorization data is stored in user->data array.  Ultimately these should be stored in $user entity fields to make integration with other modules better.
+
+$user->data['ldap_authorizations'][<consumerType>][<authorization_id>] => attributes
+
+such as:
+
+$user->data = array(
+  'ldap_authorizations' => array(
+    'og_group' => array (
+      '3-2' => array (
+        'date_granted' => 1329105152,
+      ),
+      '2-3' => array (
+        'date_granted' => 1329105152,
+      ),
+    ),
+    'drupal_role' => array (
+      '7' => array (
+        'date_granted' => 1329105152,
+      ),
+      '5' => array (
+        'date_granted' => 1329105152,
+      ),
+    ),
+  );

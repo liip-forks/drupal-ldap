@@ -189,7 +189,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
    */
 
   public $emailOptionDefault = LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE;
-  public $emailOptionOptions ;
+  public $emailOptionOptions;
 
   public $emailUpdateDefault = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY;
   public $emailUpdateOptions;

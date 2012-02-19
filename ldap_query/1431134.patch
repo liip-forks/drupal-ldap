@@ -1,0 +1,18 @@
+diff --git a/ldap_query/LdapQuery.class.php b/ldap_query/LdapQuery.class.php
+index a111b17..9b8089d 100644
+--- a/ldap_query/LdapQuery.class.php
++++ b/ldap_query/LdapQuery.class.php
+@@ -112,10 +112,13 @@ class LdapQuery {
+     $ldap_server->bind();
+     $results = array();
+ 
++    $count = 0;
+     foreach ($this->baseDn as $base_dn) {
+       $result = $ldap_server->search($base_dn, $this->filter, $this->attributes, 0, $this->sizelimit, $this->timelimit, $this->deref, $this->scope);
++      $count = $count + $result['count'];
+       $results = array_merge($results, $result);
+     }
++    $results['count'] = $count;
+ 
+     return $results;
+   }

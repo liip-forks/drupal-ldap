@@ -8,6 +8,7 @@
 
 function _ldap_servers_get_user_ldap_data($drupal_user, $sid) {
   $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
+  // print $sid; die;
   $servers = ldap_servers_get_servers($sid, 'enabled');
   foreach ($servers as $sid => $ldap_server)  {
     if ($ldap_user = $ldap_server->user_lookup($drupal_username)) {
@@ -32,6 +33,7 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
   if (!isset($servers['all'])) {
     $servers['all'] = LdapServerAdmin::getLdapServerObjects('all');
   }
+
   if (!isset($servers['enabled'])) {
     $servers['enabled'] = array();
     foreach ($servers['all'] as $_sid => $ldap_server) {

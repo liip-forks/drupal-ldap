@@ -23,7 +23,21 @@ function ldap_authorization_drupal_role_ldap_authorization_consumer() {
     'consumer_class_name' => 'LdapAuthorizationConsumerDrupalRole',
     'consumer_class_file' => 'LdapAuthorizationConsumerRole.class.php',
     'consumer_module' => 'ldap_authorization_drupal_role',
+    'consumer_mapping_directions' => '<p>Mappings should be of form:<br/>
+<code>[raw authorization id]|[group name]</code>
+<br/>such as:<br/>
+<code>Campus Accounts|authenticated user<br/>
+ou=Underlings,dc=myorg,dc=mytld|underlings<br/>
+ou=IT,dc=myorg,dc=mytld,dc=edu|administrator
+</code><br/>',
   );
 
   return $types;
+}
+
+/**
+ * implements hook_form_alter()
+ */
+function ldap_authorization_drupal_role_form_ldap_authorization_admin_form_alter(&$form, $form_state) {
+
 }

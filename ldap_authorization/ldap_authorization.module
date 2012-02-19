@@ -93,6 +93,25 @@ function ldap_authorization_maps_alter_invoke(&$user, &$user_ldap_entry, &$ldap_
   }
 }
 
+/**
+ * Implements hook_ldap_ldap_server_in_use().
+ */
+function ldap_authorization_ldap_server_in_use($sid, $server_name) {
+
+  $use_warnings = array();
+  $consumers = ldap_authorization_get_consumers(); //dpm($consumers);
+  foreach(ldap_authorization_get_consumers() as $consumer_type => $consumer_conf) {
+    $consumer_conf['%server_name'] = $server_name;
+    $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
+    if ($sid == $consumer_obj->consumerConf->sid) {
+      $use_warnings[] = t('This server (%server_name) may not
+        be deleted or disabled because it is being used by the module consumer_module to
+        authorize consumer_name_plural.', $consumer_conf);
+    }
+  }
+  return $use_warnings;
+}
+
 
 /**
  * Implements hook_ldap_authorization_maps_alter().
@@ -213,7 +232,7 @@ function ldap_authorization_tokens($consumer) {
 
   if (is_object($consumer)) {
     foreach (array('%', '!', '@') as $symbol) {
-      foreach (array('name', 'namePlural', 'shortName', 'shortNamePlural', 'description', 'consumerModule', 'consumerType') as $property) {
+      foreach (array('name', 'namePlural', 'shortName', 'shortNamePlural', 'description', 'consumerModule', 'consumerType', 'mappingDirections') as $property) {
         $tokens[$symbol . 'consumer_' . $property] = $consumer->$property;
       }
       if (is_object($consumer->consumerConf)) {

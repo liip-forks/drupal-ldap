@@ -223,7 +223,20 @@ function ldap_authentication_get_valid_conf() {
 
 }
 
+/**
+ * Implements hook_ldap_ldap_server_in_use().
+ */
+function ldap_authentication_ldap_server_in_use($sid, $server_name) {
 
+  $use_warnings = array();
+  $auth_conf = ldap_authentication_get_valid_conf();
+  if (in_array($sid, array_keys($auth_conf->sids))) {
+    $use_warnings[] = t('This server (%server_name) may not be deleted or
+      disabled because it is being used for ldap authentication.',
+      array('%server_name' => $server_name));
+  }
+  return $use_warnings;
+}
 
 function ldap_authentication_show_reset_pwd($user = NULL) {
 
@@ -328,7 +341,7 @@ function ldap_authentication_form_user_login_block_alter(&$form, &$form_state) {
  */
 function ldap_authentication_user_login_authenticate_validate($form, &$form_state) {
   require_once('ldap_authentication.inc');
-  _ldap_authentication_user_login_authenticate_validate($form_state);
+  return _ldap_authentication_user_login_authenticate_validate($form_state);
 }
 
 /**

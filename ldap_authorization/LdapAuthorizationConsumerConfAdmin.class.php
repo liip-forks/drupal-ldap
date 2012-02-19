@@ -111,14 +111,14 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
         '#markup' => t('<h1>LDAP to !consumer_name Configuration</h1>', $consumer_tokens),
     );
 
-    $form['status_intro'] = array(
-        '#type' => 'item',
-        '#title' => t('Part I.  Core Configuration.', $consumer_tokens),
-    );
+  //  $form['status_intro'] = array(
+   //     '#type' => 'item',
+     //   '#title' => t('Part I.  Basics.', $consumer_tokens),
+  //  );
 
     $form['status'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Core Configuration', $consumer_tokens),
+      '#title' => t('I.  Basics', $consumer_tokens),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
@@ -160,9 +160,8 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
     $form['mapping_intro'] = array(
         '#type' => 'item',
-        '#title' => t('Part II.  How are !consumer_name !consumer_namePlural derived from LDAP data?', $consumer_tokens),
-        '#markup' => t('First, we need to configure how LDAP data is used to derive !consumer_name !consumer_namePlural.
-          One or more of the following 3 approaches may be used.', $consumer_tokens),
+        '#title' => t('Part II.  How are !consumer_namePlural derived from LDAP data?', $consumer_tokens),
+        '#markup' => t('One or more of the following 3 approaches may be used.', $consumer_tokens),
     );
     /**
      *  II A. derive from DN option
@@ -178,7 +177,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#type' => 'checkbox',
       '#title' => t('!consumer_name is derived from user\'s DN', $consumer_tokens),
       '#default_value' => $this->deriveFromDn,
-      '#description' => t('<p>Check this option if your users\' DNs look like <code>cn=jdoe,<strong>ou=Group1</strong>,cn=example,cn=com</code> and <code>Group1</code> turns out to be the !consumer_name_short you want.</p>', $consumer_tokens),
+      '#description' => t('<p>Check this option if your users\' DNs look like <code>cn=jdoe,<strong>ou=Group1</strong>,cn=example,cn=com</code> and <code>Group1</code> turns out to be the !consumer_name you want.</p>', $consumer_tokens),
     );
 
     $form['derive_from_dn']['derive_from_dn_attr'] = array(
@@ -189,7 +188,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#maxlength' => 255,
       '#description' => t('The name of the attribute which contains the !consumer_shortName name. In the example above, it would be
         <code>ou</code>, as the DN contains the string <code>ou=Group1</code> and <code>Group1</code>
-        happens to be the desired !consumer_short_name name.', $consumer_tokens),
+        happens to be the desired !consumer_shortName.', $consumer_tokens),
     );
 
      /**
@@ -206,7 +205,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $form['derive_from_attr']['derive_from_entry_preamble'] = array(
         '#type' => 'item',
         '#markup' => '<p>' .
-        t('Basically II. B. finds the user LDAP entry, then checks for groups listed in one or more of its attributes.  Its the converse of II.C.') .
+        t('II. B. finds the user LDAP entry, then checks for groups listed in one or more of its attributes.  Its the converse of II.C.') .
         ' ' .
         t('The "Attribute names" field would be attribute containing the list of groups the user belonged to, such as <code>memberOf</code>') .
         '</p>'
@@ -248,7 +247,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
     $form['derive_from_entry']['derive_from_entry_preamble'] = array(
         '#type' => 'item',
-        '#markup' => '<p>' . t('Basically II. C. finds the group LDAP entry, then checks for members in the group LDAP entry.  Its the converse of II.B.') . '</p>' .
+        '#markup' => '<p>' . t('II. C. finds the group LDAP entry, then checks for members in the group LDAP entry.  Its the converse of II.B.') . '</p>' .
         '<p>' . t('A typical use case is a group whose members are spread throughout the LDAP directory.') .
          ' ' .
          t('The "LDAP DNs containing roles..." field would be the group DN or DNs such as') .
@@ -306,42 +305,41 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
      *  filter and whitelist
      */
 
-    $form['filter_intro'] = array(
-      '#type' => 'item',
-      '#title' => t('Part III.  Mapping and White List.', $consumer_tokens),
-      '#markup' => t('The rules in Part I. will create a list of !consumer_name !consumer_namePlural.
-        The next field allows you to transform the !consumer_name !consumer_namePlural derived in Part I.
-        By checking the checkbox below it, the same list can be used as a white list to limit which !consumer_name !consumer_namePlural
-        are mapped from LDAP.', $consumer_tokens),
-      );
+   // $form['filter_intro'] = array(
+   //   '#type' => 'item',
+   //   '#title' => t('Part III.  Mapping and White List.', $consumer_tokens),
+    //  '#markup' => t('The rules in Part I. and II. will create a list of "raw authorization ids".
+    //    Part III. determines how these are mapped to!consumer_namePlural.', $consumer_tokens),
+    //  );
 
+    if (method_exists($this->consumer, 'mappingExamples')) {
+      $consumer_tokens['!examples'] = '<fieldset class="collapsible collapsed form-wrapper" id="authorization-mappings">
+<legend><span class="fieldset-legend">' . t('Examples base on current !consumer_namePlural', $consumer_tokens) . '</span></legend>
+<div class="fieldset-wrapper">'. $this->consumer->mappingExamples($consumer_tokens) . '<div class="fieldset-wrapper">
+</fieldset>';
+    }
+    else {
+      $consumer_tokens['!examples'] = '';
+    }
     $form['filter_and_mappings'] = array(
       '#type' => 'fieldset',
-      '#title' => t('III.A. LDAP to !consumer_name mapping and filtering', $consumer_tokens),
+      '#title' => t('III. LDAP to !consumer_name mapping and filtering', $consumer_tokens),
       '#description' => t('
 The settings in part II generate a list of "raw authorization ids" which
 need to be converted to !consumer_namePlural.
-Raw authorization ids might look like the following depending on which of the options in II. are chosen:
+Raw authorization ids look like:
 <ul>
-<li>ou=Underlings,dc=myorg,dc=mytld,dc=edu</li>
-<li>ou=IT,dc=myorg,dc=mytld,dc=edu</li>
-<li>Campus Accounts</li>
+<li><code>Campus Accounts</code> (...from II.A)</li>
+<li><code>ou=Underlings,dc=myorg,dc=mytld,dc=edu</code> (...from II.B and II.C.)</li>
+<li><code>ou=IT,dc=myorg,dc=mytld,dc=edu</code> (...from II.B and II.C.)</li>
 </ul>
 
-<p>(II.B and II.C. should generate DNs for raw authorization ids as in the first 2 examples.
-II.A. will generate a simple string such
-as the third example.)</p>
+<p><strong>Mappings are often needed to convert these "raw authorization ids" to !consumer_namePlural.</strong></p>
 
-<p><strong>The mapping specified below will convert these raw authorization ids to !consumer_namePlural.</strong></p>
+!consumer_mappingDirections
 
-Mappings to deal with the above 3 examples might be:
-<pre>
-ou=Underlings,dc=myorg,dc=mytld|underlings
-ou=IT,dc=myorg,dc=mytld,dc=edu|administrator
-Campus Accounts|authenticated user
-</pre>
+!examples
 
-Enter one mapping per line with an <code>|</code> separating the raw authorization id and its !consumer_name.
 ', $consumer_tokens),
       '#collapsible' => TRUE,
       '#collapsed' => !($this->mappings || $this->useMappingsAsFilter),
@@ -349,7 +347,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
 
     $form['filter_and_mappings']['mappings'] = array(
       '#type' => 'textarea',
-      '#title' => t('Mapping of LDAP to !consumer_name', $consumer_tokens),
+      '#title' => t('Mapping of LDAP to !consumer_name (one per line)', $consumer_tokens),
       '#default_value' => $this->arrayToPipeList($this->mappings),
       '#cols' => 50,
       '#rows' => 5,
@@ -414,14 +412,20 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
     if ($this->regrantLdapProvisioned)  {
       $synchronization_actions[] = 'regrant_ldap_provisioned';
     }
+
+    $options =  array(
+      'revoke_ldap_provisioned' => t('Revoke !consumer_namePlural previously granted by LDAP Authorization but no longer valid.', $consumer_tokens),
+      'regrant_ldap_provisioned' => t('Re grant !consumer_namePlural previously granted by LDAP Authorization but removed manually.', $consumer_tokens),
+    );
+
+    if ($this->consumer->allowConsumerObjectCreation) {
+      $options['create_consumers'] = t('Create !consumer_namePlural if they do not exist.', $consumer_tokens);
+    }
+
     $form['misc_settings']['synchronization_actions'] = array(
       '#type' => 'checkboxes',
       '#title' => t('IV.C. What actions would you like performed when !consumer_namePlural are granted/revoked from user?', $consumer_tokens),
-      '#options' => array(
-          'revoke_ldap_provisioned' => t('Revoke !consumer_namePlural previously granted by LDAP Authorization but no longer valid.', $consumer_tokens),
-          'regrant_ldap_provisioned' => t('Re grant !consumer_namePlural previously granted by LDAP Authorization but removed manually.', $consumer_tokens),
-          'create_consumers' => t('Create !consumer_namePlural if they do not exist.', $consumer_tokens),
-      ),
+      '#options' => $options,
       '#default_value' => $synchronization_actions,
     );
     /**
@@ -438,7 +442,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
       break;
 
       case 'edit':
-      $action = 'Edit';
+      $action = 'Save';
       break;
 
       case 'delete':
@@ -490,7 +494,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
       $this->populateFromDrupalForm($op, $values);
 
 
-      $errors = $this->validate();
+      $errors = $this->validate($values);
       if (count($this->mappings) == 0 && trim($values['mappings'])) {
         $errors['mappings'] = t('Bad mapping syntax.  Text entered but not able to convert to array.');
       }
@@ -499,7 +503,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
     return $errors;
   }
 
-  public function validate() {
+  public function validate($form_values = array()) {
     $errors = array();
 
     if (!$this->consumerType) {
@@ -527,7 +531,13 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
     if (count($this->mappings) > 0) {
       foreach ($this->mappings as $mapping_item) {
         list($map_from, $map_to) = $mapping_item;
-      // validate $mapto is valid mapping consumer as much as possible.  perhaps alphanum or call hook validate to provider
+        list($type, $text) = $this->consumer->validateAuthorizationMappingTarget($map_to, $form_values);
+        if ($type == 'error') {
+          $errors['mappings'] = $text;
+        }
+        elseif ($type == 'warning' ||  $type == 'status') {
+          drupal_set_message($text, $type);
+        }
       }
     }
     if ($this->useMappingsAsFilter && !count($this->mappings)) {

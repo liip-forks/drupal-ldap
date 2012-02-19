@@ -1,6 +1,5 @@
-;$Id: ldap_authorization_og.info
 
-name = LDAP Authorization - OG
+name = LDAP Authorization - OG (Organic Groups)
 description = "Implements LDAP authorization for Organic Groups"
 package = "Lightweight Directory Access Protocol"
 dependencies[] = ldap_authorization
@@ -11,5 +10,5 @@ files[] = LdapAuthorizationConsumerOG.class.php
 files[] = ldap_authorization_og.module
 files[] = ldap_authorization_og.inc
 
-core = "7.x"
 
+core = "7.x"

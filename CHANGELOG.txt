@@ -1,3 +1,9 @@
+Reworked LDAP Authorization OG to improve user interface and to support mapping to more OG roles than "member".
+Reworked User Interface for LDAP Authorization.
+Issue #1416738 by fearlsgroove.  disable editing on ldap profile fields synched from ldap
+Issue #1328750#comment-5540222 by heydeniv.  misc ldap sso issues.
+Issue #1328750#comment-5540318 by haydeniv. Fix for ldap authentication validation function return.
+Issue #1430428 by resplin.  Added patch to with hook_ldap_server_in_use() so servers cannot be deleted or disabled when in use.
 Issue #1421980 by clifmo.  Patch by chris.leversuch to fix ldap_feeds.info file
 Issue #1341340 by marleythedod.  Views fix.
 Fixed some error messaging in the test ldap server form.
