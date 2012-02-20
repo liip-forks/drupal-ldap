@@ -1,3 +1,4 @@
+Issue #1446768 by johnbarclay.  refined ldap server ->search() method error handling
 Reworked LDAP Authorization OG to improve user interface and to support mapping to more OG roles than "member".
 Reworked User Interface for LDAP Authorization.
 Issue #1416738 by fearlsgroove.  disable editing on ldap profile fields synched from ldap

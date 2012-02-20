@@ -137,13 +137,16 @@ function ldap_profile_user_login(&$edit, $account) {
 
   // Acquire all fields from user's LDAP attributes
   $ldapdata = $server->search($dn, "(objectClass=*)", $ldapfields);
+  if ($ldapdata === FALSE) {
+    $ldapdata = array();
+  }
   $ldapdata = $ldapdata[0];
   $dnLdapdata = array();
 
   // Perform searches for all DNs set to derive information from
   foreach ($dnLookups as $curDnLookup) {
     $curDnLookupResult = $server->search($ldapdata[$curDnLookup][0], "(objectClass=*)", $ldapfields);
-    if (array_key_exists(0, $curDnLookupResult)) {
+    if ($curDnLookupResult && array_key_exists(0, $curDnLookupResult)) {
       $dnLdapdata[$curDnLookup] = $curDnLookupResult[0];
     }
   }

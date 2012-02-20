@@ -243,6 +243,15 @@ class LdapServer {
    */
 
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = LDAP_SCOPE_SUBTREE) {
+
+     /** pagingation issues:
+      * -- wait for php 5.4? https://svn.php.net/repository/php/php-src/tags/php_5_4_0RC6/NEWS (ldap_control_paged_result
+      * -- in some cases, sort by some id value and keep requerying with new filter based on previous max id
+      * -- http://sgehrig.wordpress.com/2009/11/06/reading-paged-ldap-results-with-php-is-a-show-stopper/
+      *
+      */
+
+
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
         $base_dn = $this->basedn[0];
@@ -277,8 +286,12 @@ class LdapServer {
 
     switch ($scope) {
       case LDAP_SCOPE_SUBTREE:
-        $result = ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-        if ($this->hasError()) {
+        $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+          // false positive error thrown.  do not result limit error when $sizelimit specified
+        }
+        elseif ($this->hasError()) {
+          // dpm('has_error' . $this->errorMsg('ldap') . $this->ldapErrorNumber());
           watchdog('ldap_server', 'ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query',
             array('%message' => $this->errorMsg('ldap'), '%query' => $query),
             WATCHDOG_ERROR);
@@ -286,8 +299,11 @@ class LdapServer {
         break;
 
       case LDAP_SCOPE_BASE:
-        $result = ldap_read($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-        if ($this->hasError()) {
+        $result = @ldap_read($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+          // false positive error thrown.  do not result limit error when $sizelimit specified
+        }
+        elseif ($this->hasError()) {
           watchdog('ldap_server', 'ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query',
             array('%message' => $this->errorMsg('ldap'), '%query' => $query),
             WATCHDOG_ERROR);
@@ -295,8 +311,11 @@ class LdapServer {
         break;
 
       case LDAP_SCOPE_ONELEVEL:
-        $result = ldap_list($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-        if ($this->hasError()) {
+        $result = @ldap_list($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+          // false positive error thrown.  do not result limit error when $sizelimit specified
+        }
+        elseif ($this->hasError()) {
           watchdog('ldap_server', 'ldap_list() function error. LDAP Error: %message, ldap_list() parameters: %query',
             array('%message' => $this->errorMsg('ldap'), '%query' => $query),
             WATCHDOG_ERROR);
@@ -314,7 +333,7 @@ class LdapServer {
         '%errno' => $this->ldapErrorNumber());
       watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
         %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
-      return array();
+      FALSE;
     }
     else {
       return array();

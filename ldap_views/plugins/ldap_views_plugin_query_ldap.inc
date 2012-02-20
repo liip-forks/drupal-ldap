@@ -223,7 +223,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     // But we can't use ldap_sort because there's no DESC option
     foreach ($this->build_ldap_basedn($ldap_data->baseDn) as $basedn) {
 
-      $result     = $ldap_server->search($basedn, $this->build_ldap_filter($ldap_data->filter), array_values($attributes), 0, $ldap_data->sizelimit, $ldap_data->timelimit, $ldap_data->deref, $ldap_data->scope);
+      $result = $ldap_server->search($basedn, $this->build_ldap_filter($ldap_data->filter), array_values($attributes), 0, $ldap_data->sizelimit, $ldap_data->timelimit, $ldap_data->deref, $ldap_data->scope);
 /***
     // ldap_sort can't be used because there's no DESC option
     if (!empty($this->orderby)) {
@@ -232,9 +232,10 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
         @ldap_sort($ldap_server->connection, $result, $field['field']);
       }
     }
- */
-      $entries = array_merge($entries, $result);
-      $num_entries += array_shift($result);
+ */   if ($result !== FALSE) { // not an error
+        $entries = array_merge($entries, $result);
+        $num_entries += array_shift($result);
+      }
     }
 
     $limit       = $view->query->limit;

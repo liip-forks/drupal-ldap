@@ -416,16 +416,18 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
     foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
       $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'] . ')';
       $entries = $ldap_server->search($branch, $filter, array('cn'));
-      if (empty($entries) || $entries['count'] == 0) {
+      if ($entries === FALSE || empty($entries) || $entries['count'] == 0) {
         $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user->name . ')';
         $entries = $ldap_server->search($branch, $filter, array('cn'));
       }
-      foreach ($entries as $entry) {
-        if (isset($entry['cn'])) {
-          $derive_from_entry_authorizations[$entry['cn'][0]] = $entry['cn'][0];
-        }
-        elseif (isset($entry['dn'])) {
-          $derive_from_entry_authorizations[$entry['dn']] = (string)$entry['dn'];
+      if ($entries !== FALSE) {
+        foreach ($entries as $entry) {
+          if (isset($entry['cn'])) {
+            $derive_from_entry_authorizations[$entry['cn'][0]] = $entry['cn'][0];
+          }
+          elseif (isset($entry['dn'])) {
+            $derive_from_entry_authorizations[$entry['dn']] = (string)$entry['dn'];
+          }
         }
       }
     }
