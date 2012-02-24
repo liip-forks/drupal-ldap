@@ -1,3 +1,4 @@
+Issue #1412030 by srinivas.kakde.  corrected problem where authentication binding by user was preserverd in authorization, etc.
 Issue #1441694 by haydeniv. fixed some needed include in ldap sso.
 Issue #1450932 by hotspoons. untested kerberos for ldap sso.
 Issue #1451778 by paulpaul.  bad variable used in dev verison.

@@ -350,7 +350,15 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       }
       break; //success
     }
+
+    if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
+        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+        $ldap_server->disconnect();
+    }
+
   }  // end loop through servers
+
+
 
 
 
