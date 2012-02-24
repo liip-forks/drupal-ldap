@@ -674,8 +674,7 @@ Raw authorization ids look like:
       ),
       'derive_from_dn_attr' => array(
         'schema' => array(
-          'type' => 'varchar',
-          'length' => 255,
+          'type' => 'text',
           'default' => NULL,
         )
       ),
@@ -689,8 +688,7 @@ Raw authorization ids look like:
       ),
       'derive_from_attr_attr' => array(
         'schema' => array(
-          'type' => 'varchar',
-          'length' => 255,
+          'type' => 'text',
           'default' => NULL,
         )
       ),

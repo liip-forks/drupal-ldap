@@ -128,3 +128,20 @@ function ldap_authorization_update_7102() {
   }
 
 }
+
+/**
+ * change derive_from_attr_attr and derive_from_entry fields to text instead of varchar 2555
+ */
+function ldap_authorization_update_7103() {
+
+  db_change_field('ldap_authorization', 'derive_from_attr_attr', 'derive_from_attr_attr', array(
+    'type' => 'text',
+    'not null' => FALSE,
+  ));
+
+  db_change_field('ldap_authorization', 'derive_from_entry', 'derive_from_attr_attr', array(
+    'type' => 'text',
+    'not null' => FALSE,
+  ));
+
+}
