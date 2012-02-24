@@ -9,29 +9,29 @@ function ldap_help_main() {
 
   $text = '<h3>' . t('LDAP Help Module') . '</h3><p>' .
   t('This module is meant to assist Drupal admins in configuring, debugging, sharing, and submitting
-  support and bug request related to LDAP modules.') . '<strong><em>' .
-  t('LDAP Help Module should be disabled unless you are debugging or configuring ldap problems.') . '</em></strong>' .
+  support and bug request related to LDAP modules.') . '<strong><em> ' .
+  t('LDAP Help Module should be disabled unless you are debugging or configuring ldap problems.') . ' </em></strong>' .
   t('It adds no functionality to the LDAP modules.') . '</p>';
 
   $path = drupal_get_path("module", "ldap_servers");
 
   $text .= <<<EOT
 
-  <h3>LDAP Integration Module Resources</h3>
+  <h3>LDAP Module Resources</h3>
   <ul>
     <li>The <a href="http://drupal.org/node/997082">Drupal.org Documentation</a> covers basics of module.</li>
-    <li>Search <a href="http://drupal.org/project/issues/search/ldap">issue que</a>  For best results,
+    <li>Search <a href="http://drupal.org/project/issues/search/ldap">issue queue</a>  For best results,
     select version and category before searching.</li>
     <li><a href="http://drupal.org/project/issues/ldap">View all issues</a></li>
     <li><a href="http://docs.moodle.org/20/en/LDAP_authentication">Moodle LDAP module documentation</a> is
     well done and provides insight into LDAP in a PHP environment.</li>
   </ul>
 
-  <h3>Your local ldap documentation and administrators</h3>
+  <h3>Your local LDAP Documentation and Administrators</h3>
   <p>You would be surprised how much is documented about your local ldap.  Find your organization's LDAP documentation and
      support staff before you stuggle blindly.  Know if ldap or ldaps is used.  Know if an odd port is used.
      Know how service accounts are expected to be used.
-     Below are examples of ldap implementation documentation.</p>
+     Below are examples of ldap implementation documentation:</p>
   <ul>
   <li><a href="http://www.it.northwestern.edu/bin/docs/CentralAuthenticationServicesThroughLDAP.pdf">Northwestern University</li>
   <li><a href="http://www.netid.washington.edu/documentation/ldapConfig.aspx">University of Washington</a></li>

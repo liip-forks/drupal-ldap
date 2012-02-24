@@ -19,14 +19,10 @@ function ldap_help_issues() {
   $text .= <<<EOT
 
   <ol>
-  <li>Search for existing issues. Be sure to include all statuses and versions
-      in your searches. An issue may be closed but still be relevant.
-    <ul>
-      <li>Use the advanced search (<a href="http://drupal.org/project/issues/search/ldap">http://drupal.org/project/issues/search/ldap</a>) in the issue queue, searching on the test id in <em>issue tags</em>
-        (e.g. LDAP_authen.user_profile_form.ldap.password) or
-        a shortened version of it (e.g. LDAP_authen.user_profile_form.ldap).
-      </li>
-      <li>Do other searches in issue queue as many issues may not be tagged by test id.</li>
+  <li>Search for existing issues. Include all statuses and versions
+      in you search; a closed issue may be relevant.
+<a href="http://drupal.org/project/issues/search/ldap">http://drupal.org/project/issues/search/ldap</a>
+</li>
 
   </ul>
 </li>
