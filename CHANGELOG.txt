@@ -1,3 +1,7 @@
+Issue #1441694 by haydeniv. fixed some needed include in ldap sso.
+Issue #1450932 by hotspoons. untested kerberos for ldap sso.
+Issue #1451778 by paulpaul.  bad variable used in dev verison.
+Issue #1452116 by paulpaul.  fixed db fields too short for ldap authorization
 Issue #1446768 by johnbarclay.  refined ldap server ->search() method error handling
 Reworked LDAP Authorization OG to improve user interface and to support mapping to more OG roles than "member".
 Reworked User Interface for LDAP Authorization.

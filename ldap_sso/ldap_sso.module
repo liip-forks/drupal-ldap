@@ -56,11 +56,13 @@ function ldap_sso_boot() {
           $login_attempted = FALSE;
         }
         require_once('includes/common.inc');
+        require_once('includes/path.inc');
         $ldap_authentication_conf = variable_get('ldap_authentication_conf', array());
         if ($ldap_authentication_conf['seamlessLogin'] == 1 && ($login_attempted != 'true')) {
           setcookie("seamless_login_attempted", 'true', time() + (int)$ldap_authentication_conf['cookieExpire'], base_path(), "");
           $_SESSION['seamless_login_attempted'] = $login_attempted;
-          drupal_goto('user/login/sso', array('query' => array('destination' => rawurlencode($_GET['q']))));
+          $ldap_sso_q = (!isset($_GET['q']) || $_GET['q'] == '') ? 'user' : $_GET['q'];
+          drupal_goto('user/login/sso', array('query' => array('destination' => rawurlencode($ldap_sso_q))));
         }
         else {
           return;
