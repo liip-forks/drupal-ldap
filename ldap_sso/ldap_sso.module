@@ -1,11 +1,9 @@
 <?php
-// $Id: ldap_authentication.module,v 1.1.4.3 2011/02/08 20:05:41 johnbarclay Exp $
 
 /**
  * @file
  * This module injects itself into Drupal's Authentication stack.
  */
-
 
 /**
  * Implements hook_menu().
@@ -60,7 +58,7 @@ function ldap_sso_boot() {
         require_once('includes/common.inc');
         $ldap_authentication_conf = variable_get('ldap_authentication_conf', array());
         if ($ldap_authentication_conf['seamlessLogin'] == 1 && ($login_attempted != 'true')) {
-          setcookie("seamless_login_attempted", 'true', time() + (int)$auth_conf->cookieExpire, base_path(), "");
+          setcookie("seamless_login_attempted", 'true', time() + (int)$ldap_authentication_conf['cookieExpire'], base_path(), "");
           $_SESSION['seamless_login_attempted'] = $login_attempted;
           drupal_goto('user/login/sso', array('query' => array('destination' => rawurlencode($_GET['q']))));
         }
