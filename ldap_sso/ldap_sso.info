@@ -5,4 +5,3 @@ dependencies[] = ldap_servers
 dependencies[] = ldap_authentication
 core = 7.x
 configure = admin/config/people/ldap/authentication
-files[] = tests/ldap_sso.module
