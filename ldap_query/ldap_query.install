@@ -64,3 +64,37 @@ function ldap_query_schema() {
 
   return $schema;
 }
+
+/**
+ * Add scope field to ldap_query table.
+ */
+function ldap_query_update_7100() {
+  require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.module'); // get LDAP_SCOPE_SUBTREE constant
+  // make sure 'create_consumers' field is there for old 7.x-1.x-dev versions
+  if (!db_field_exists('ldap_query', 'scope')) {
+    db_add_field('ldap_query', 'scope', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => FALSE,
+      'default' => LDAP_SCOPE_SUBTREE,
+    ));
+    return t('"scope" field added to ldap_query table');
+  }
+  else {
+    return t('No database changes made.');
+  }
+
+}
+
+/**
+ * Make filter field type 'text' for longer filters
+ */
+function ldap_query_update_7101() {
+  db_change_field('ldap_query', 'filter', 'filter', array(
+    'type' => 'text',
+    'not null' => FALSE,
+  ));
+
+  return t('ldap_query table field "filter" changed to type "text"');
+}
+

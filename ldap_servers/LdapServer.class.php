@@ -242,7 +242,16 @@ class LdapServer {
    *   empty.
    */
 
-  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
+  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = LDAP_SCOPE_SUBTREE) {
+
+     /** pagingation issues:
+      * -- wait for php 5.4? https://svn.php.net/repository/php/php-src/tags/php_5_4_0RC6/NEWS (ldap_control_paged_result
+      * -- in some cases, sort by some id value and keep requerying with new filter based on previous max id
+      * -- http://sgehrig.wordpress.com/2009/11/06/reading-paged-ldap-results-with-php-is-a-show-stopper/
+      *
+      */
+
+
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
         $base_dn = $this->basedn[0];
@@ -251,21 +260,69 @@ class LdapServer {
         return FALSE;
       }
     }
+
+    $attr_display =  is_array($attributes) ? join(',', $attributes) : 'none';
+    $query = 'ldap_search() call: '. join(",\n", array(
+      'base_dn: ' . $base_dn,
+      'filter = ' . $filter,
+      'attributes: ' . $attr_display,
+      'attrsonly = ' .  $attrsonly,
+      'sizelimit = ' .  $sizelimit,
+      'timelimit = ' .  $timelimit,
+      'deref = ' .  $deref,
+      'scope = ' .  $scope,
+      )
+    );
     if ($this->detailed_watchdog_log) {
-      $query = 'ldap_search() call: '. join("<hr/>", array(
-        'base_dn: ' . $base_dn,
-        'filter = ' . $filter,
-        'attributes: ' .  join(',', $attributes),
-        'attrsonly = ' .  $attrsonly,
-        'sizelimit = ' .  $sizelimit,
-        'timelimit = ' .  $timelimit,
-        'deref = ' .  $deref,
-        )
-      );
       watchdog('ldap_server', $query, array());
     }
 
-    $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+    // When checking multiple servers, there's a chance we might not be connected yet.
+    if (! $this->connection) {
+      $this->connect();
+      $this->bind();
+    }
+
+
+    switch ($scope) {
+      case LDAP_SCOPE_SUBTREE:
+        $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+          // false positive error thrown.  do not result limit error when $sizelimit specified
+        }
+        elseif ($this->hasError()) {
+          // dpm('has_error' . $this->errorMsg('ldap') . $this->ldapErrorNumber());
+          watchdog('ldap_server', 'ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query',
+            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            WATCHDOG_ERROR);
+        }
+        break;
+
+      case LDAP_SCOPE_BASE:
+        $result = @ldap_read($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+          // false positive error thrown.  do not result limit error when $sizelimit specified
+        }
+        elseif ($this->hasError()) {
+          watchdog('ldap_server', 'ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query',
+            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            WATCHDOG_ERROR);
+        }
+        break;
+
+      case LDAP_SCOPE_ONELEVEL:
+        $result = @ldap_list($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+          // false positive error thrown.  do not result limit error when $sizelimit specified
+        }
+        elseif ($this->hasError()) {
+          watchdog('ldap_server', 'ldap_list() function error. LDAP Error: %message, ldap_list() parameters: %query',
+            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            WATCHDOG_ERROR);
+        }
+        break;
+    }
+
     if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
       return $entries;
@@ -276,14 +333,36 @@ class LdapServer {
         '%errno' => $this->ldapErrorNumber());
       watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
         %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
-      return array();
+      FALSE;
     }
     else {
       return array();
     }
   }
 
+  function drupalToLdapNameTransform($drupal_username, &$watchdog_tokens) {
+    if ($this->ldapToDrupalUserPhp && module_exists('php')) {
+      global $name;
+      $old_name_value = $name;
+      $name = $drupal_username;
+      $code = "<?php global \$name; \n". $this->ldapToDrupalUserPhp . "; \n ?>";
+      $watchdog_tokens['%code'] = $this->ldapToDrupalUserPhp;
+      $code_result = php_eval($code);
+      $watchdog_tokens['%code_result'] = $code_result;
+      $ldap_username = $code_result;
+      $watchdog_tokens['%ldap_username'] = $ldap_username;
+      $name = $old_name_value;  // important because of global scope of $name
+      if ($this->detailedWatchdogLog) {
+        watchdog('ldap_server', '%drupal_user_name tansformed to %ldap_username by applying code <code>%code</code>', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
+    }
+    else {
+      $ldap_username = $drupal_username;
+    }
 
+    return $ldap_username;
+
+  }
   /**
    * Queries LDAP server for the user.
    *
@@ -295,40 +374,22 @@ class LdapServer {
    */
   function user_lookup($drupal_user_name) {
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
-    if ($this->ldapToDrupalUserPhp && module_exists('php')) {
-      global $name;
-      $old_name_value = $name;
-      $name = $drupal_user_name;
-      $code = "<?php global \$name; \n". $this->ldapToDrupalUserPhp . "; \n ?>";
-      $watchdog_tokens['%code'] = $this->ldapToDrupalUserPhp;
-      $code_result = php_eval($code);
-      $watchdog_tokens['%code_result'] = $code_result;
-      $ldap_username = $code_result;
-      $watchdog_tokens['%ldap_username'] = $ldap_username;
-      $name = $old_name_value;
-      if ($this->detailedWatchdogLog) {
-        watchdog('ldap_server', '%drupal_user_name tansformed to %ldap_username by applying code <code>%code</code>', $watchdog_tokens, WATCHDOG_DEBUG);
-      }
-    }
-    else {
-      $ldap_username = $drupal_user_name;
-    }
+    $ldap_username = $this->drupalToLdapNameTransform($drupal_user_name, $watchdog_tokens);
+
     if (!$ldap_username) {
       return FALSE;
     }
-   // print "$ldap_username from $drupal_user_name"; die;
+
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
-
       $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
-
       $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.
       if ($result['count'] != 1) {
         $count = $result['count'];
-        watchdog('ldap_authentication', "Error: !count users found with $filter under $basedn.", array('!count' => $count), WATCHDOG_ERROR);
+        watchdog('ldap_servers', "Error: !count users found with $filter under $basedn.", array('!count' => $count), WATCHDOG_ERROR);
         continue;
       }
       $match = $result[0];

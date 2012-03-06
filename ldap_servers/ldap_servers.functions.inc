@@ -8,36 +8,6 @@
 
 
 
-/**
- * returns new user account if created, otherwise integer error message such
- * as LDAP_CREATE_ACCOUNT_ALREADY_EXISTS, LDAP_CREATE_ERROR
- *
- */
-function ldap_create_drupal_account($name, $mail, $dn, $sid, $edit = array()) {
-
-  $edit['name'] = $name;
-  $edit['pass'] = user_password(20);
-  $edit['mail'] = $mail;
-  $edit['init'] = $mail;
-  $edit['status'] = 1;
-
-  // save 'init' data to know the origin of the ldap authentication provisioned account
-  $edit['data']['ldap_authentication']['init'] = array(
-    'sid'  => $sid,
-    'dn'   => $dn,
-    'mail' => $mail,
-  );
-
-  if (!$account = user_save( NULL, $edit)) {
-    drupal_set_message(t('User account creation failed because of system problems.'), 'error');
-    return FALSE;
-  }
-  else {
-    user_set_authmaps($account, array('authname_ldap_authentication' => $name));
-  }
-  return $account;
-}
-
 
 /**
   * Modify an LDAP Entry
@@ -100,7 +70,7 @@ function ldap_baddn($dn, $dn_name) {
   if (!$match) {
     $tokens = array('%dn' => htmlspecialchars($dn), '%dn_name' => $dn_name);
     $result['text'] = t('Possible invalid format for:', $tokens)
-    . '<em>' . $tokens['%dn'] . '</em>.<br/>  '.
+    . '<em>' . $tokens['%dn'] . '</em>.<br/>  ' .
     t('The format may be correct for your ldap, but please double check.', $tokens);
   }
   return $result;
@@ -186,6 +156,7 @@ should return tokens such as:
  */
 function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
 
+  $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
 
   // 1. tokenize dn
@@ -193,14 +164,23 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
   unset($dn_parts['count']);
   $parts_count = array();
   $parts_last_value = array();
-  foreach($dn_parts as $pair) {
+  foreach ($dn_parts as $pair) {
     list($attr_name, $attr_value) = explode('=', $pair);
-    $attr_value = check_plain($attr_value);
+    try {
+      $attr_value = check_plain($attr_value);
+    }
+    catch (Exception $e) {
+      if ($detailed_watchdog_log) {
+        $watchdog_tokens = array('%attr_name' => $attr_name);
+        watchdog('ldap_servers', 'skipped tokenization of attribute %attr_name because the value would not pass check_plain function.', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
+       continue; // don't tokenize data that can't pass check_plain
+    }
     if (!isset($parts_count[$attr_name])) {
-      $tokens[$pre .  strtolower($attr_name) . $post] = $attr_value;
+      $tokens[$pre . strtolower($attr_name) . $post] = $attr_value;
       $parts_count[$attr_name] = 0;
     }
-    $tokens[$pre .  strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . (int)$parts_count[$attr_name] . $post] = $attr_value;
+    $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . (int)$parts_count[$attr_name] . $post] = $attr_value;
 
     $parts_last_value[$attr_name] = $attr_value;
     $parts_count[$attr_name]++;
@@ -221,13 +201,13 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
         $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[0]);
       }
       elseif (is_array($attr_value) && $attr_value['count'] > 1) {
-        $tokens[$pre .  strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last'. $post] = check_plain($attr_value[$attr_value['count']-1]);
+        $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[$attr_value['count']-1]);
         for ($i=0; $i<$attr_value['count']; $i++) {
-          $tokens[$pre .  strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = check_plain($attr_value[$i]);
+          $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = check_plain($attr_value[$i]);
         }
       }
-      elseif(is_scalar($attr_value)) {
-        $tokens[$pre .  strtolower($attr_name) . $post] = check_plain($attr_value);
+      elseif (is_scalar($attr_value)) {
+        $tokens[$pre . strtolower($attr_name) . $post] = check_plain($attr_value);
       }
     }
   }
@@ -245,15 +225,18 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
         $attr_name = join(LDAP_SERVERS_TOKEN_DEL, $parts);
         $value = $ldap_entry[$attr_name][(int)$last_key];
       }
+      elseif (empty($ldap_entry[$token_key])) {
+          continue;
+      }
       else {
         $value = $ldap_entry[$token_key][0];
       }
-      $tokens[$pre .  strtolower($token_key) . $post] = check_plain($value);
+      $tokens[$pre . strtolower($token_key) . $post] = check_plain($value);
     }
   }
 
   // include the dn.  it will not be handled correctly by previous loops
-  $tokens[$pre .  'dn' . $post] = check_plain($ldap_entry['dn']);
+  $tokens[$pre . 'dn' . $post] = check_plain($ldap_entry['dn']);
 
   return $tokens;
 }
@@ -273,3 +256,27 @@ function ldap_server_tokens_needed_for_template($template, $pre = LDAP_SERVERS_T
 
 }
 
+function ldap_servers_show_sample_user_tokens($sid) {
+
+  $ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
+  $test_username = $ldap_server->testing_drupal_username;
+  if (!$test_username || ! (
+     $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
+     $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON
+    )
+   ) {
+    return FALSE;
+  }
+
+  if ($ldap_user = $ldap_server->user_lookup($test_username)) {
+    $table = theme('ldap_server_ldap_entry_table', array(
+      'entry' => $ldap_user['attr'],
+      'username' => $test_username,
+      ));
+  }
+  else {
+    $table = '<p>' . t('No sample user data found') . '</p>';
+  }
+
+  return $table;
+}

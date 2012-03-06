@@ -4,7 +4,7 @@
 
 
 define('LDAP_QUERY_MENU_BASE_PATH', 'admin/config/people/ldap');
-define('LDAP_QUERY_INDEX_BASE_PATH', 'admin/config/people/ldap/servers');
+define('LDAP_QUERY_INDEX_BASE_PATH', 'admin/config/people/ldap/query');
 define('LDAP_QUERY_MENU_BASE_PATH_PARTS', 4); // for argument offsets
 
 
@@ -14,6 +14,7 @@ function ldap_query_menu() {
   $items['admin/config/people/ldap/query'] = array(
     'title' => 'Queries',
     'page callback' => 'ldap_query_index',
+    'page arguments' => array(),
     'weight' => 6,
     'type' => MENU_LOCAL_TASK,
     'access arguments' => array('administer site configuration'),
@@ -35,7 +36,7 @@ function ldap_query_menu() {
     'file' => 'ldap_query.admin.inc',
   );
 
-  $items['admin/config/people/ldap/query/edit'] = array(
+  $items['admin/config/people/ldap/query/edit/%'] = array(
     'title' => 'Edit LDAP Query',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_query_admin_form', 'edit', $menu_offset + 2),
@@ -43,7 +44,7 @@ function ldap_query_menu() {
     'file' => 'ldap_query.admin.inc',
   );
 
-  $items['admin/config/people/ldap/query/test'] = array(
+  $items['admin/config/people/ldap/query/test/%'] = array(
     'title' => 'Test LDAP Query',
     'page callback' => 'ldap_query_test',
     'page arguments' => array($menu_offset + 2),
@@ -51,7 +52,7 @@ function ldap_query_menu() {
     'file' => 'ldap_query.admin.inc',
   );
 
-  $items['admin/config/people/ldap/query/delete'] = array(
+  $items['admin/config/people/ldap/query/delete/%'] = array(
     'title' => 'Delete LDAP Query',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_query_admin_delete', $menu_offset + 2),
@@ -59,7 +60,7 @@ function ldap_query_menu() {
     'file' => 'ldap_query.admin.inc',
   );
 
-  $items['admin/config/people/ldap/query/enable'] = array(
+  $items['admin/config/people/ldap/query/enable/%'] = array(
     'title' => 'Enable LDAP Query',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_query_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
@@ -67,7 +68,7 @@ function ldap_query_menu() {
     'file' => 'ldap_query.admin.inc',
   );
 
-  $items['admin/config/people/ldap/query/disable'] = array(
+  $items['admin/config/people/ldap/query/disable/%'] = array(
     'title' => 'Enable LDAP Query',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_query_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),

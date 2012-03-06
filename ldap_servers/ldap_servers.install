@@ -47,7 +47,7 @@ function ldap_servers_requirements($phase) {
     $requirements['ldap_extension_loaded']['description'] = t('No LDAP Extension is loaded for PHP, so LDAP will not work properly.');
   }
 
-  if (db_table_exists('ldapauth')) {
+  if ($phase != "install" && db_table_exists('ldapauth')) {
     $requirements['ldap_servers_ldap_integration']['title'] = t('LDAP Integration LDAP Auth to LDAP Servers Upgrade Concern');
     $requirements['ldap_servers_ldap_integration']['severity'] = REQUIREMENT_WARNING;
     $requirements['ldap_servers_ldap_integration']['value'] = NULL;
@@ -117,7 +117,7 @@ function ldap_servers_update_7100() {
 
 function ldap_servers_update_7101() {
 
-  db_add_field (
+  db_add_field(
     'ldap_servers',
     'allow_conflicting_drupal_accts',
     array(
@@ -128,7 +128,7 @@ function ldap_servers_update_7101() {
     )
   );
 
-  db_add_field (
+  db_add_field(
     'ldap_servers',
     'unique_persistent_attr',
     array(
@@ -138,7 +138,7 @@ function ldap_servers_update_7101() {
     )
   );
 
-  db_add_field (
+  db_add_field(
     'ldap_servers',
     'mail_template',
     array(
@@ -148,13 +148,13 @@ function ldap_servers_update_7101() {
     )
   );
 
-  db_change_field ('ldap_servers', 'ldap_to_drupal_user', 'ldap_to_drupal_user', array(
+  db_change_field('ldap_servers', 'ldap_to_drupal_user', 'ldap_to_drupal_user', array(
     'type' => 'varchar',
     'length' => 1024,
     'not null' => FALSE
   ));
 
-  db_change_field ('ldap_servers', 'binddn', 'binddn', array(
+  db_change_field('ldap_servers', 'binddn', 'binddn', array(
     'type' => 'varchar',
     'length' => 511,
   ));

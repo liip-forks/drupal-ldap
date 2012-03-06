@@ -66,11 +66,14 @@ function ldap_help_get_server($phpinfo, &$info) {
   $info['ldap']['text'] = $text;
 
   $modules = system_rebuild_module_data();
-  $ldapmodules = array('ldap_servers', 'ldap_authentication', 'ldap_authorization');
-  foreach ( $ldapmodules as $ldapmodule) {
+  $ldapmodules = array('ldap_servers', 'ldap_authentication', 'ldap_authorization',
+    'ldap_authorization_drupal_role', 'ldap_authorization_og', 'ldap_feeds',
+    'ldap_query', 'ldap_sso', 'ldap_views');
+
+  foreach ($ldapmodules as $ldapmodule) {
     $data['status'] = $modules[$ldapmodule]->status;
     $data['schema_version'] = $modules[$ldapmodule]->schema_version;
-    $data['version'] = $modules[$ldapmodule]->info['version'];
+    $data['version'] = ($modules[$ldapmodule]->info['version']) ? $modules[$ldapmodule]->info['version'] : 'unknown';
     $data['text'] = "status: " . $data['status']
       . ", schema_version: " . $data['schema_version']
       . ", v: " . $data['version'];
@@ -133,10 +136,6 @@ function ldap_help_get_server($phpinfo, &$info) {
 }
 
 function ldap_help_get_ldapauth(&$info) {
-  $info['ldapauth']['login_process_text'] = (LDAPAUTH_LOGIN_PROCESS == LDAPAUTH_AUTH_EXCLUSIVED) ? "LDAP directory only" : "Mixed Mode";
-  $info['ldapauth']['login_process_text'] .= " (" . LDAPAUTH_LOGIN_PROCESS . ')';
-  $info['ldapauth']['login_conflict_text'] = (LDAPAUTH_LOGIN_CONFLICT == LDAPAUTH_CONFLICT_RESOLVE) ? "Associate local account with the ldap entry" : "Disallow login and log the conflict";
-  $info['ldapauth']['login_conflict_text'] .= "  (" . LDAPAUTH_LOGIN_CONFLICT . ')';
 
   $status[] =  array(
     'title' => 'Authentication mode',
@@ -260,11 +259,6 @@ function ldap_help_get_ldap_servers() {
 
   $conf_form = ldap_servers_settings();
 
-  $status[] = array(
-      'title' => 'ssl required',
-      'value' => $conf_form['ssl']['ldap_servers_require_ssl_for_credentails']['#default_value'],
-    );
-
   $selected = @$conf_form['encryption']['ldap_servers_encryption']['#default_value'];
   $status[] = array(
       'title' => 'encryption',
@@ -276,10 +270,19 @@ function ldap_help_get_ldap_servers() {
   $field_to_properties = LdapServer::field_to_properties_map();
   $props = array_values($field_to_properties); // array('sid', 'name', 'status', 'ldap_type', 'port', 'tls', 'user_attr', 'mail_attr', 'user_dn_expression', 'ldap_to_drupal_user');
   foreach ($servers_objects as $sid => $server_object) {
+    $serverAdmin = new LdapServerAdmin($sid);
+    $form = $serverAdmin->drupalForm('update');
+
     foreach ($props as $property) {
+      $value = print_r($server_object->{$property}, TRUE);
+
+      if ($property == 'bind_method') {
+        $value = $form['bind_method']['bind_method']['#options'][$value];
+      }
+
       $servers[$sid][] = array(
-        'title' => $property,
-        'value' => $server_object->{$property},
+          'title' => $property,
+          'value' => $value,
       );
     }
 
@@ -312,12 +315,19 @@ function ldap_help_get_ldap_authentication() {
     $conf_form = $auth_conf->drupalForm();
 
   $items['logon']['authenticationMode'] = 'string';
-  $items['restrictions']['allowOnlyIfTextInDn'] = 'empty';
-  $items['restrictions']['excludeIfTextInDn'] = 'empty';
-  $items['restrictions']['allowTestPhp'] = 'empty';
-  $items['drupal_accounts']['loginConflictResolve'] = 'string';
-  $items['drupal_accounts']['acctCreation'] = 'string';
-  $items['email ']['emailOption '] = 'string';
+  $items['logon']['authenticationServers'] = 'checkbox';
+  $items['restrictions']['allowOnlyIfTextInDn'] = 'string';
+  $items['restrictions']['excludeIfTextInDn'] = 'string';
+  $items['restrictions']['allowTestPhp'] = 'string';
+  $items['restrictions']['excludeIfNoAuthorizations '] = 'checkbox';
+  $items['drupal_accounts']['loginConflictResolve'] = 'radios';
+  $items['drupal_accounts']['acctCreation'] = 'radios';
+  $items['email']['emailOption'] = 'radios';
+  $items['email']['emailUpdate'] = 'radios';
+  $items['sso']['ssoRemoteUserStripDomainName'] = 'checkbox';
+  $items['sso']['seamlessLogin'] = 'checkbox';
+  $items['sso']['cookieExpire '] = 'select';
+  $items['sso']['ldapImplementation'] = 'select';
 
   $status = ldap_help_parse_form($conf_form, $items);
 
@@ -404,6 +414,7 @@ function ldap_help_parse_form($form, $items) {
           case 'radios':
             $value = $field_data['#options'][$default_value];
             break;
+          case 'select':
           case 'checkboxes':
             $value = $default_value;
             break;

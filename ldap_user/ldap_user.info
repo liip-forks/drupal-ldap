@@ -1,0 +1,13 @@
+name = LDAP User Module
+description = "Module for ldap identified users.  User may be associated via ldap authentication, ldap authorization, or from account provisioning.
+This module is generally not installed unless another modules requires it."
+package = "Lightweight Directory Access Protocol"
+dependencies[] = ldap_servers
+dependencies[] = entity
+core = 7.x
+
+files[] = ldap_user.api.inc
+files[] = ldap_user.inc
+files[] = ldap_user.install
+files[] = ldap_user.module
+files[] = tests/BasicTests.test

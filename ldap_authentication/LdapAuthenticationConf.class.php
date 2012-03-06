@@ -15,6 +15,8 @@ class LdapAuthenticationConf {
   public $servers = array(); // ldap server object
   public $inDatabase = FALSE;
   public $authenticationMode = LDAP_AUTHENTICATION_MODE_DEFAULT;
+  public $loginUIUsernameTxt;
+  public $loginUIPasswordTxt;
   public $ldapUserHelpLinkUrl;
   public $ldapUserHelpLinkText = LDAP_AUTHENTICATION_HELP_LINK_TEXT_DEFAULT;
   public $loginConflictResolve = LDAP_AUTHENTICATION_CONFLICT_RESOLVE_DEFAULT;
@@ -22,6 +24,7 @@ class LdapAuthenticationConf {
   public $emailOption = LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT;
   public $emailUpdate = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DEFAULT;
   public $ssoEnabled = FALSE;
+  public $ssoRemoteUserStripDomainName = FALSE;
   public $seamlessLogin = FALSE;
   public $ldapImplementation = FALSE;
   public $cookieExpire = LDAP_AUTHENTICATION_COOKIE_EXPIRE;
@@ -48,6 +51,8 @@ class LdapAuthenticationConf {
     'authenticationMode',
     'loginConflictResolve',
     'acctCreation',
+    'loginUIUsernameTxt',
+    'loginUIPasswordTxt',
     'ldapUserHelpLinkUrl',
     'ldapUserHelpLinkText',
     'emailOption',
@@ -56,7 +61,7 @@ class LdapAuthenticationConf {
     'excludeIfTextInDn',
     'allowTestPhp',
     'excludeIfNoAuthorizations',
-    'ssoEnabled',
+    'ssoRemoteUserStripDomainName',
     'seamlessLogin',
     'ldapImplementation',
     'cookieExpire',
@@ -91,6 +96,7 @@ class LdapAuthenticationConf {
       $this->inDatabase = FALSE;
     }
 
+    $this->ssoEnabled = module_exists('ldap_sso');
     $this->apiPrefs['requireHttps'] = variable_get('ldap_servers_require_ssl_for_credentails', 1);
     $this->apiPrefs['encryption'] = variable_get('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT);
 

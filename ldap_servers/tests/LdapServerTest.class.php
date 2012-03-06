@@ -129,7 +129,7 @@ class LdapServerTest extends LdapServer {
    *   An array of matching entries->attributes, or FALSE if the search is
    *   empty.
    */
-  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
+  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
 
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {

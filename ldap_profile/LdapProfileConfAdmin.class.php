@@ -20,7 +20,7 @@ class LdapProfileConfAdmin extends LdapProfileConf {
     $this->errorName = NULL;
   }
 
-  
+
   public function save() {
     foreach ($this->saveable as $property) {
       $save[$property] = $this->{$property};
@@ -34,26 +34,22 @@ class LdapProfileConfAdmin extends LdapProfileConf {
 
   public function __construct() {
     parent::__construct();
-    if ($servers = ldap_servers_get_servers(NULL, 'enabled')) {
-      foreach ($servers as $sid => $ldap_server) {
-        $enabled = ($ldap_server->status) ? 'Enabled' : 'Disabled';
-        $this->authenticationServersOptions[$sid] = $ldap_server->name . ' (' . $ldap_server->address . ') Status: ' . $enabled;
-      }
-    }
   }
 
 
   public function drupalForm($accounts = array()) {
-    if (count($this->authenticationServersOptions) == 0) {
-      $message = ldap_servers_no_enabled_servers_msg('configure LDAP Authentication');
+    $auth_conf = ldap_authentication_get_valid_conf();
+
+    if (count($this->auth_conf->servers) == 0) {
+      $message = ldap_servers_no_enabled_servers_msg('configure LDAP Profiles');
       $form['intro'] = array(
         '#type' => 'item',
         '#markup' => t('<h1>LDAP Profile Settings</h1>') . $message,
       );
       return $form;
     }
-  
-    // grabs field information for a user account  
+
+    // grabs field information for a user account
     $fields = field_info_instances('user','user');
     $profileFields = array();
     foreach($fields as $key => $field) {
@@ -65,7 +61,7 @@ class LdapProfileConfAdmin extends LdapProfileConf {
         '#markup' => t('<h1>LDAP Profile Settings</h1>'),
     );
 
-    $form['deafultMaps'] = array(
+    $form['defaultMaps'] = array(
       '#type' => 'fieldset',
       '#title' => 'Profile Fields Already Mapped to Ldap Fields',
       '#collapsible' => FALSE,
@@ -73,28 +69,55 @@ class LdapProfileConfAdmin extends LdapProfileConf {
       '#tree' => true,
     );
 
-    $user_attr = 'No Value Set';
-    $mail_attr = 'No Value Set';
+    $user_attr = array();
+    $mail_attr = array();
     $servers = ldap_servers_get_servers('','enabled');
     foreach($servers as $key => $server) {
-      $user_attr = $server->user_attr;
-      $mail_attr = $server->mail_attr;
+      $user_attr[] = $server->user_attr;
+      $mail_attr[] = $server->mail_attr;
     }
+    $user_attr_display = (count($user_attr)) ? join(', ', $user_attr) : 'No Value Set';
+    $mail_attr_display = (count($mail_attr)) ? join(', ', $mail_attr) : 'No Value Set';
 
-    $form['deafultMaps']['username'] = array(
+    $form['defaultMaps']['username'] = array(
         '#type' => 'textfield',
         '#title' => 'UserName',
-        '#default_value' => $user_attr,
+        '#default_value' => $user_attr_display,
         '#disabled' => true,
         '#description' => 'This must be altered in the ldap server configuration page',
     );
-    $form['deafultMaps']['mail'] = array(
+    $form['defaultMaps']['mail'] = array(
         '#type' => 'textfield',
         '#title' => 'Email',
-        '#default_value' => $mail_attr,
+        '#default_value' => $mail_attr_display,
         '#disabled' => true,
         '#description' => 'This must be altered in the ldap server configuration page',
     );
+
+    if (count($this->auth_conf->servers)) {
+
+      $form['tokens'] = array(
+        '#type' => 'fieldset',
+        '#title' => 'Sample User Values and Tokens',
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#description' => t('Below is a list of attributes for sample users for a given server.
+          These may be used in the mappings below.  Singular attributes such as cn can be expressed
+          as [cn] or cn.  This will be empty if the server does not have a sample user or
+          uses a binding method other than service account or anonymous.'),
+      );
+
+      require_once(drupal_get_path('module','ldap_servers') . '/ldap_servers.functions.inc');
+      foreach ($this->auth_conf->servers as $sid => $server) {
+        if ($markup = ldap_servers_show_sample_user_tokens($sid)) {
+           $form['tokens'][$sid] = array(
+            '#type' => 'item',
+            '#markup' => $markup,
+          );
+        }
+      }
+    }
+
     $form['mapping'] = array(
       '#type' => 'fieldset',
       '#title' => t('Profile Fields that need Mapped to Ldap Fields'),
@@ -102,37 +125,49 @@ class LdapProfileConfAdmin extends LdapProfileConf {
       '#collapsed' => FALSE,
       '#tree' => true,
     );
-    foreach($profileFields as $field => $label) {
-      $mapping = $this->mapping;
-      $derivedMapping = $this->derivedMapping;
-      
-      if(!empty($mapping) && array_key_exists($field,$mapping)) $default = $mapping[$field];
-      else $default = '';
-      $form['mapping'][$field] = array(
-         '#type' => 'fieldset',
-         '#title' => $label.t(' Profile Field to LDAP Field Mapping'),
-         '#collapsible' => TRUE,
-         '#collapsed' => FALSE,
-      );
-      $form['mapping'][$field]['ldap'] = array(
-        '#type' => 'textfield',
-        '#title' => $label,
-        '#default_value' => $default,
-      );
-      if(!empty($derivedMapping) && array_key_exists($field,$derivedMapping) && array_key_exists('derive',$derivedMapping[$field])) $default = $derivedMapping[$field]['derive'];
-      else $default = '';
-      $form['mapping'][$field]['derive'] = array(
-         '#type' => 'checkbox',
-         '#title' => t('Derive from DN Search'),
-         '#default_value' =>  $default,
-      );
-      if(!empty($derivedMapping) && array_key_exists($field,$derivedMapping) && array_key_exists('derive_value',$derivedMapping[$field])) $default = $derivedMapping[$field]['derive_value'];
-      else $default = '';
-      $form['mapping'][$field]['derive_value'] = array(
-         '#type' => 'textfield',
-         '#title' => t('LDAP Field to Derive from'),
-         '#default_value' =>  $default,
-       );
+
+    if (count($profileFields) == 0) {
+         $form['mapping']['no_mappings'] = array(
+           '#type' => 'item',
+           '#title' => t('No custom User Fields Available'),
+           '#markup' => t('Additional fields must be created on the user
+              for mapping to work.  User fields are managed at: ') .
+             l('admin/config/people/accounts/fields','admin/config/people/accounts/fields'),
+        );
+    }
+    else {
+      foreach($profileFields as $field => $label) {
+        $mapping = $this->mapping;
+        $derivedMapping = $this->derivedMapping;
+
+        if(!empty($mapping) && array_key_exists($field,$mapping)) $default = $mapping[$field];
+        else $default = '';
+        $form['mapping'][$field] = array(
+           '#type' => 'fieldset',
+           '#title' => $label . t(' Profile Field to LDAP Field Mapping'),
+           '#collapsible' => TRUE,
+           '#collapsed' => FALSE,
+        );
+        $form['mapping'][$field]['ldap'] = array(
+          '#type' => 'textfield',
+          '#title' => $label,
+          '#default_value' => $default,
+        );
+        if(!empty($derivedMapping) && array_key_exists($field,$derivedMapping) && array_key_exists('derive',$derivedMapping[$field])) $default = $derivedMapping[$field]['derive'];
+        else $default = '';
+        $form['mapping'][$field]['derive'] = array(
+           '#type' => 'checkbox',
+           '#title' => t('Derive from DN Search'),
+           '#default_value' =>  $default,
+        );
+        if(!empty($derivedMapping) && array_key_exists($field,$derivedMapping) && array_key_exists('derive_value',$derivedMapping[$field])) $default = $derivedMapping[$field]['derive_value'];
+        else $default = '';
+        $form['mapping'][$field]['derive_value'] = array(
+           '#type' => 'textfield',
+           '#title' => t('LDAP Field to Derive from'),
+           '#default_value' =>  $default,
+         );
+      }
     }
 
     $form['submit'] = array(
@@ -167,8 +202,8 @@ class LdapProfileConfAdmin extends LdapProfileConf {
   protected function populateFromDrupalForm($values) {
     $this->ldap_fields = array();
     $this->mapping = array();
-    foreach($values['deafultMaps'] as $field => $value) {
-      if($value != '') {    
+    foreach($values['defaultMaps'] as $field => $value) {
+      if($value != '') {
         //store value in lower case to fix a ldap searching bug
         $l_value = strtolower($value);
         $this->mapping[$field] = $l_value;
@@ -178,18 +213,20 @@ class LdapProfileConfAdmin extends LdapProfileConf {
         }
       }
     }
-    foreach(array_keys($values['mapping']) as $field) {
-      if($values['mapping'][$field]['ldap'] != '') {    
-        //store value in lower case to fix a ldap searching bug
-        $l_value = strtolower($values['mapping'][$field]['ldap']);
-        $this->mapping[$field] = $l_value;
-        if((bool)($values['mapping'][$field]['derive']) && $values['mapping'][$field]['derive_value'] != '') {
-            $l_value = strtolower($values['mapping'][$field]['derive_value']);
-            $this->derivedMapping[$field]['derive'] = TRUE;
-            $this->derivedMapping[$field]['derive_value'] = $l_value;
-        } else {
-            $this->derivedMapping[$field]['derive'] = FALSE;
-            $this->derivedMapping[$field]['derive_value'] = '';
+    if (isset($values['mapping']) && is_array($values['mapping'])) {
+      foreach(array_keys($values['mapping']) as $field) {
+        if($values['mapping'][$field]['ldap'] != '') {
+          //store value in lower case to fix a ldap searching bug
+          $l_value = strtolower($values['mapping'][$field]['ldap']);
+          $this->mapping[$field] = $l_value;
+          if((bool)($values['mapping'][$field]['derive']) && $values['mapping'][$field]['derive_value'] != '') {
+              $l_value = strtolower($values['mapping'][$field]['derive_value']);
+              $this->derivedMapping[$field]['derive'] = TRUE;
+              $this->derivedMapping[$field]['derive_value'] = $l_value;
+          } else {
+              $this->derivedMapping[$field]['derive'] = FALSE;
+              $this->derivedMapping[$field]['derive_value'] = '';
+          }
         }
       }
     }

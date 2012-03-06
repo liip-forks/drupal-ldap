@@ -1,0 +1,7 @@
+name = LDAP SSO
+description = "Implements Single Sign On (SSO) LDAP Authentication"
+package = "Lightweight Directory Access Protocol"
+dependencies[] = ldap_servers
+dependencies[] = ldap_authentication
+core = 7.x
+configure = admin/config/people/ldap/authentication

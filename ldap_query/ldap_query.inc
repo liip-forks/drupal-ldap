@@ -3,14 +3,10 @@
 
 /**
  * @file
- * collection of functions that don't belong in server object
+ *
  */
 
 
-
-/**
- * see ldap_query_get_servers()
- */
 function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
   require_once('LdapQueryAdmin.class.php');
   static $queries;
@@ -19,7 +15,7 @@ function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
     $queries = array();
   }
   if (!isset($queries['all'])) {
-    $queries['all'] = LdapQueryAdmin::getLdapQueryObjects('all');
+    $queries['all'] = LdapQueryAdmin::getLdapQueryObjects('all', 'all');
   }
   if (!isset($queries['enabled'])) {
     $queries['enabled'] = array();
@@ -43,13 +39,11 @@ function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
   }
 }
 
-/**
- * see ldap_query_get_servers()
- */
+
 function _ldap_query_get_simpletest_queries($qid, $type, $flatten, $reset = TRUE) {
   require_once('tests/LdapQueryTest.class.php');
 
-  $queries['all'] = LdapQueryTest::getLdapQueryObjects('all');
+  $queries['all'] = LdapQueryTest::getLdapQueryObjects('all', 'all');
 
   foreach ($queries['all'] as $_sid => $ldap_query) {
     if ($ldap_query->status == 1) {

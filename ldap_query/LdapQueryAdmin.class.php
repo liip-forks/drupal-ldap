@@ -13,9 +13,10 @@ require_once('LdapQuery.class.php');
 class LdapQueryAdmin extends LdapQuery {
 
   /**
+   * @param string $sid either 'all' or the ldap server sid
    * @param $type = 'all', 'enabled'
    */
-  public static function getLdapQueryObjects($sid = NULL, $type = NULL, $class = 'LdapQuery') {
+  public static function getLdapQueryObjects($sid = 'all', $type = 'enabled', $class = 'LdapQuery') {
     $queries = array();
     if (module_exists('ctools')) {
       ctools_include('export');
@@ -34,7 +35,15 @@ class LdapQueryAdmin extends LdapQuery {
       }
     }
     foreach ($select as $result) {
-      $queries[$result->qid] = ($class == 'LdapQuery') ? new LdapQuery($result->qid) : new LdapQueryAdmin($result->qid);
+      $query = ($class == 'LdapQuery') ? new LdapQuery($result->qid) : new LdapQueryAdmin($result->qid);
+      if (
+          ($sid == 'all' || $query->sid == $sid)
+          &&
+          (!$type || $type == 'all' || ($query->status = 1 && $type == 'enabled'))
+        )
+      {
+        $queries[$result->qid] = $query;
+      }
     }
     return $queries;
 
@@ -48,7 +57,13 @@ class LdapQueryAdmin extends LdapQuery {
 
     foreach ($this->fields() as $field_id => $field) {
       if (isset($field['form']) && property_exists('LdapQueryAdmin', $field['property_name'])) {
-        $this->{$field['property_name']} = $values[$field_id];
+        $value = $values[$field_id];
+        if (isset($field['form_to_prop_functions'])) {
+          foreach ($field['form_to_prop_functions'] as $function) {
+            $value = call_user_func($function, $value);
+          }
+        }
+        $this->{$field['property_name']} = $value;
       }
     }
     $this->inDatabase = ($op == 'edit');
@@ -88,11 +103,19 @@ class LdapQueryAdmin extends LdapQuery {
       }
       $result = ctools_export_crud_save('ldap_query', $ctools_values);
     }
-    elseif ($op == 'edit') { // edit w/o ctools
-      $result = drupal_write_record('ldap_query', $values, 'qid');
-    }
-    else { // insert
-      $result = drupal_write_record('ldap_query', $values);
+    else {
+      $values = array();
+      foreach ($this->fields() as $field_id => $field) {
+        if (isset($field['schema'])) {
+          $values[$field_id] = $this->{$field['property_name']};
+        }
+      }
+      if ($op == 'edit') { // edit w/o ctools
+        $result = drupal_write_record('ldap_query', $values, 'qid');
+      }
+      else { // insert
+        $result = drupal_write_record('ldap_query', $values);
+      }
     }
 
     if ($result) {
@@ -197,9 +220,7 @@ class LdapQueryAdmin extends LdapQuery {
       '#weight' => 100,
     );
 
-
     return $form;
-
   }
 
 
@@ -221,7 +242,7 @@ class LdapQueryAdmin extends LdapQuery {
   protected function validate($op) {
     $errors = array();
     if ($op == 'add') {
-      $ldap_queries = $this->getLdapQueryObjects(NULL, 'all');
+      $ldap_queries = $this->getLdapQueryObjects('all', 'all');
       if (count($ldap_queries)) {
         foreach ($ldap_queries as $qid => $ldap_query) {
           if ($this->qid == $ldap_query->qid) {

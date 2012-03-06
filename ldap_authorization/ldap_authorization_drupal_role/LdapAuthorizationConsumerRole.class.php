@@ -151,5 +151,40 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     return array_values($user->roles);
   }
 
+public function validateAuthorizationMappingTarget($map_to, $form_values = NULL, $clear_cache = FALSE) {
+    $has_form_values = is_array($form_values);
+		$message_type = NULL;
+		$message_text = NULL;
+		$normalized = $this->normalizeMappings(array($map_to));
+		$tokens = array('!map_to' => $map_to);
+		$pass = FALSE;
+		if (is_array($normalized) && isset($normalized[0][1]) && $normalized[0][1] !== FALSE ) {
+			$available_authorization_ids = $this->availableConsumerIDs($clear_cache);
+			$pass = (in_array($normalized[0], $available_authorization_ids));
+		}
 
+		if (!$pass) {
+			$message_text = '<code>"' . t('!map_to', $tokens) . '</code>" ' . t('does not map to any existing Drupal roles. ');
+      if ($has_form_values) {
+        $create_consumers = (isset($form_values['synchronization_actions']['create_consumers']) && $form_values['synchronization_actions']['create_consumers']);
+      }
+      else {
+        $create_consumers = $this->consumerConf->create_consumers;
+      }
+			if ($create_consumers && $this->allowConsumerObjectCreation) {
+				$message_type = 'warning';
+        $message_text .= t('It will be created when needed.  If "!map_to" is not intentional, please fix it', $tokens);
+			}
+			elseif (!$this->allowConsumerObjectCreation) {
+				$message_type = 'error';
+				$message_text .= t('Since automatic Drupal role creation is not possible with this module, an existing role must be mapped to.');
+			}
+			elseif (!$create_consumers) {
+				$message_type = 'error';
+				$message_text .= t('Since automatic Drupal role creation is disabled, an existing role must be mapped to.  Either enable role creation or map to an existing role.');
+			}
+
+		}
+		return array($message_type, $message_text);
+	}
 }

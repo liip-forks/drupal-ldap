@@ -1,0 +1,13 @@
+
+
+- create new fields in user and add to .intall file
+- add authmap data to user->ldap_authmap_* fields
+- write script to move user->data to correct fields in $user-> entity
+- add update to execute previous script
+
+
+
+tests
+- make sure install creates fields
+- make sure uninstall removes fields
+

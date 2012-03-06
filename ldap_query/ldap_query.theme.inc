@@ -114,15 +114,26 @@ function theme_ldap_query_results($variables) {
     'empty' => '',
     'caption' => t('LDAP Query Results: count=%count', array('%count' => $results['count'])),
   );
+  unset($results['count']);
 
-  foreach($ldap_query->attributes as $attr) {
-    $table['header'][] = $attr;
+  $attributes_display = array();
+  if ($results[0]) { // searching on all attributes
+    foreach ($results[0] as $k => $v) {
+      if (is_numeric($k)) {
+        $attributes_display[] = $v;
+      }
+    }
   }
 
 
+  foreach ($attributes_display as $attr) {
+    $table['header'][] = $attr;
+  }
+
   foreach ($results as $i => $entry) {
     $row = array($entry['dn']);
-    foreach ($ldap_query->attributes as $i => $attr_name) {
+    foreach ($attributes_display as $i => $attr_name) {
+      $attr_name = drupal_strtolower($attr_name);
       if (!isset($entry[$attr_name])) {
         $row[] = 'no data';
       }

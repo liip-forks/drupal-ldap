@@ -11,6 +11,10 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
   protected function setTranslatableProperties() {
 
+    /**
+     * 0.  Logon Options
+     */
+
     $values['authenticationModeOptions']  = array(
       LDAP_AUTHENTICATION_MIXED => t('Mixed mode. Drupal authentication is tried first.  On failure, LDAP authentication is performed.'),
       LDAP_AUTHENTICATION_EXCLUSIVE => t('Only LDAP Authentication is allowed except for user 1.
@@ -23,6 +27,15 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $values['authenticationServersDescription'] = t('Check all LDAP server configurations to use in authentication.
      Each will be tested for authentication until successful or
      until each is exhausted.  In most cases only one server configuration is selected.');
+
+    /**
+     * 1.  User Login Interface
+     */
+    $values['loginUIUsernameTxtDescription'] = t('Text to be displayed to user below the username field of
+     the user login screen.');
+
+    $values['loginUIPasswordTxtDescription'] = t('Text to be displayed to user below the password field of
+     the user login screen.');
 
     $values['ldapUserHelpLinkUrlDescription'] = t('URL to LDAP user help/documentation for users resetting
      passwords etc. Should be of form http://domain.com/. Could be the institutions ldap password support page
@@ -95,44 +108,59 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
      * 5. Single Sign-On / Seamless Sign-On
      */
 
-    $values['ldapImplementationOptions'] = array(
-      'mod_auth_sspi' => t('mod_auth_sspi'),
-      );
+      $values['ldapImplementationOptions'] = array(
+        'mod_auth_sspi' => t('mod_auth_sspi'),
+        'mod_auth_kerb' => t('mod_auth_kerb'),
+        );
 
-    $values['cookieExpirePeriod'] = array(0 => t('Immediately')) +
-      drupal_map_assoc(array(3600, 86400, 604800, 2592000, 31536000, 315360000), 'format_interval')
-      + array(-1 => t('Never'));
+      $values['cookieExpirePeriod'] = array(0 => t('Immediately')) +
+        drupal_map_assoc(array(3600, 86400, 604800, 2592000, 31536000, 315360000), 'format_interval')
+        + array(-1 => t('Never'));
 
-    $values['ssoEnabledDescription'] = t('Turning on Single Sign-On will enable '.
-      'users of this site to be authenticated by visiting the URL '.
-      '"user/login/sso, or automatically if selecting "automated '.
-      'single sign-on" below. Set up of LDAP authentication must be '.
-      'performed on the web server. Please review the !readme file '.
-      'for more information.', array('!readme' =>
-      l(t('README.txt'), drupal_get_path('module', 'ldap_authentication'). '/README.txt')));
+      $values['ssoEnabledDescription'] = '<strong>' . t('Single Sign on is enabled.') .
+        '</strong> ' . t('To disable it, disable the LDAP SSO Module on the ') .  l('Modules Form', 'admin/modules') . '.<p>' .
+        t('Single Sign-On enables ' .
+        'users of this site to be authenticated by visiting the URL ' .
+        '"user/login/sso, or automatically if selecting "automated ' .
+        'single sign-on" below. Set up of LDAP authentication must be ' .
+        'performed on the web server. Please review the !readme file ' .
+        'for more information.', array('!readme' =>
+        l(t('README.txt'), drupal_get_path('module', 'ldap_sso') . '/README.txt')))
+        . '</p>';
 
-    $values['seamlessLogInDescription'] = t('This requires that you '.
-      'have operational NTLM authentication turned on for at least '.
-      'the path user/login/sso, or for the whole domain.');
-    $values['cookieExpireDescription'] = t('If using the seamless login, a '.
-      'cookie is necessary to prevent automatic login after a user '.
-      'manually logs out. Select the lifetime of the cookie.');
-    $values['ldapImplementationDescription'] = t('Select the type of '.
-      'authentication mechanism you are using.');
+      $values['ssoRemoteUserStripDomainNameDescription'] = t('Useful when the ' .
+        'WWW server provides authentication in the form of user@realm and you ' .
+        'want to have both SSO and regular forms based authentication ' .
+        'available. Otherwise duplicate accounts with conflicting e-mail ' .
+        'addresses may be created.');
+      $values['seamlessLogInDescription'] = t('This requires that you ' .
+        'have operational NTLM or Kerberos authentication turned on for at least ' .
+        'the path user/login/sso, or for the whole domain.');
+      $values['cookieExpireDescription'] = t('If using the seamless login, a ' .
+        'cookie is necessary to prevent automatic login after a user ' .
+        'manually logs out. Select the lifetime of the cookie.');
+      $values['ldapImplementationDescription'] = t('Select the type of ' .
+        'authentication mechanism you are using.');
 
-    foreach ($values as $property => $default_value) {
-      $this->$property = $default_value;
+      foreach ($values as $property => $default_value) {
+        $this->$property = $default_value;
+      }
     }
-  }
 
   /**
-   * 1.  logon options
+   * 0.  Logon Options
    */
   public $authenticationModeDefault = LDAP_AUTHENTICATION_MIXED;
   public $authenticationModeOptions;
 
   protected $authenticationServersDescription;
   protected $authenticationServersOptions = array();
+
+  /**
+   * 1.  User Login Interface
+   */
+  protected $loginUIUsernameTxtDescription;
+  protected $loginUIPasswordTxtDescription;
   protected $ldapUserHelpLinkUrlDescription;
   protected $ldapUserHelpLinkTextDescription;
 
@@ -162,7 +190,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
    */
 
   public $emailOptionDefault = LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE;
-  public $emailOptionOptions ;
+  public $emailOptionOptions;
 
   public $emailUpdateDefault = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY;
   public $emailUpdateOptions;
@@ -173,6 +201,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
    */
 
   public $ssoEnabledDescription;
+  public $ssoRemoteUserStripDomainNameDescription;
   public $ldapImplementationOptions;
   public $cookieExpirePeriod;
   public $seamlessLogInDescription;
@@ -195,6 +224,13 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       $save[$property] = $this->{$property};
     }
     variable_set('ldap_authentication_conf', $save);
+  }
+
+  static public function getSaveableProperty($property) {
+    $ldap_authentication_conf = variable_get('ldap_authentication_conf', array());
+  //  debug($ldap_authentication_conf);
+    return isset($ldap_authentication_conf[$property]) ? $ldap_authentication_conf[$property] : FALSE;
+
   }
 
   static public function uninstall() {
@@ -256,7 +292,30 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#description' => $this->authenticationServersDescription
     );
 
-    $form['logon']['ldapUserHelpLinkUrl'] = array(
+    $form['login_UI'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('User Login Interface'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
+
+    $form['login_UI']['loginUIUsernameTxt'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Username Description Text'),
+      '#required' => 0,
+      '#default_value' => $this->loginUIUsernameTxt,
+      '#description' => $this->loginUIUsernameTxtDescription,
+    );
+
+    $form['login_UI']['loginUIPasswordTxt'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Password Description Text'),
+      '#required' => 0,
+      '#default_value' => $this->loginUIPasswordTxt,
+      '#description' => $this->loginUIPasswordTxtDescription,
+    );
+
+    $form['login_UI']['ldapUserHelpLinkUrl'] = array(
       '#type' => 'textfield',
       '#title' => t('LDAP Account User Help URL'),
       '#required' => 0,
@@ -265,7 +324,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     );
 
 
-    $form['logon']['ldapUserHelpLinkText'] = array(
+    $form['login_UI']['ldapUserHelpLinkText'] = array(
       '#type' => 'textfield',
       '#title' => t('LDAP Account User Help Link Text'),
       '#required' => 0,
@@ -382,19 +441,48 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#collapsed' => (boolean)(!$this->ssoEnabled),
     );
 
-
+/**
     $form['sso']['ssoEnabled'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable Single Sign-On'),
       '#description' => t($this->ssoEnabledDescription),
       '#default_value' => $this->ssoEnabled,
+      '#disabled' => (boolean)(!module_exists('ldap_sso')),
       );
+**/
+    if ($this->ssoEnabled) {
+
+      $form['sso']['enabled'] = array(
+        '#type' => 'markup',
+        '#markup' => $this->ssoEnabledDescription,
+      );
+
+    }
+    else {
+      $form['sso']['disabled'] = array(
+       '#type' => 'markup',
+       '#markup' => '<p><em>' . t('LDAP Single Sign-On module must be enabled for options below to work.')
+       . ' ' . t('It is currently disabled.')
+        . ' ' .  l('Modules Form', 'admin/modules') . '</p></em>',
+     );
+
+
+
+    }
+    $form['sso']['ssoRemoteUserStripDomainName'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Strip REMOTE_USER domain name'),
+      '#description' => t($this->ssoRemoteUserStripDomainNameDescription),
+      '#default_value' => $this->ssoRemoteUserStripDomainName,
+      '#disabled' => (boolean)(!$this->ssoEnabled),
+    );
 
     $form['sso']['seamlessLogin'] = array(
       '#type' => 'checkbox',
       '#title' => t('Turn on automated single sign-on'),
       '#description' => t($this->seamlessLogInDescription),
       '#default_value' => $this->seamlessLogin,
+      '#disabled' => (boolean)(!$this->ssoEnabled),
       );
 
     $form['sso']['cookieExpire'] = array(
@@ -403,6 +491,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#description' => t($this->cookieExpireDescription),
       '#default_value' => $this->cookieExpire,
       '#options' => $this->cookieExpirePeriod,
+      '#disabled' => (boolean)(!$this->ssoEnabled),
     );
 
     $form['sso']['ldapImplementation'] = array(
@@ -411,6 +500,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#description' => t($this->ldapImplementationDescription),
       '#default_value' => $this->ldapImplementation,
       '#options' => $this->ldapImplementationOptions,
+      '#disabled' => (boolean)(!$this->ssoEnabled),
     );
 
     $form['submit'] = array(
@@ -468,12 +558,15 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->allowTestPhp = $values['allowTestPhp'];
     $this->loginConflictResolve  = ($values['loginConflictResolve']) ? (int)$values['loginConflictResolve'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;
+    $this->loginUIUsernameTxt = ($values['loginUIUsernameTxt']) ? (string)$values['loginUIUsernameTxt'] : NULL;
+    $this->loginUIPasswordTxt = ($values['loginUIPasswordTxt']) ? (string)$values['loginUIPasswordTxt'] : NULL;
     $this->ldapUserHelpLinkUrl = ($values['ldapUserHelpLinkUrl']) ? (string)$values['ldapUserHelpLinkUrl'] : NULL;
     $this->ldapUserHelpLinkText = ($values['ldapUserHelpLinkText']) ? (string)$values['ldapUserHelpLinkText'] : NULL;
     $this->excludeIfNoAuthorizations = ($values['excludeIfNoAuthorizations']) ? (int)$values['excludeIfNoAuthorizations'] : NULL;
     $this->emailOption  = ($values['emailOption']) ? (int)$values['emailOption'] : NULL;
     $this->emailUpdate  = ($values['emailUpdate']) ? (int)$values['emailUpdate'] : NULL;
-    $this->ssoEnabled = ($values['ssoEnabled']) ? (int)$values['ssoEnabled'] : NULL;
+   // $this->ssoEnabled = ($values['ssoEnabled']) ? (int)$values['ssoEnabled'] : NULL;
+    $this->ssoRemoteUserStripDomainName = ($values['ssoRemoteUserStripDomainName']) ? (int)$values['ssoRemoteUserStripDomainName'] : NULL;
     $this->seamlessLogin = ($values['seamlessLogin']) ? (int)$values['seamlessLogin'] : NULL;
     $this->cookieExpire = ($values['cookieExpire']) ? (int)$values['cookieExpire'] : NULL;
     $this->ldapImplementation = ($values['ldapImplementation']) ? (string)$values['ldapImplementation'] : NULL;

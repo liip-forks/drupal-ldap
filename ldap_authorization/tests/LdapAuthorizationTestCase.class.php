@@ -33,7 +33,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
   public $consumerType = 'drupal_role'; // current, or only, consumer type being tested
 
   function setUp() {
-    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role'));
+    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role', 'ldap_authorization_og'));
     variable_set('ldap_simpletest', 1);
     variable_set('ldap_help_watchdog_detail', 0);
   }

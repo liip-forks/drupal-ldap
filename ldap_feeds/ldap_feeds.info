@@ -1,7 +1,13 @@
-name = LDAP Feeds Parser
-description = "VERY MUCH IN ALPHA STATE. Included feeds fetcher for a generic ldap query and ldap entry parser to turn fetcher data into feeds compatible parser result.  Used to automate content creation based on ldap queries"
+name = LDAP Feeds
+description = VERY MUCH IN ALPHA STATE. Included feeds fetcher for a generic ldap query and ldap entry parser to turn fetcher data into feeds compatible parser result. Used to automate content creation based on ldap queries.
+
 package = "Lightweight Directory Access Protocol"
+
 dependencies[] = feeds
 dependencies[] = ldap_servers
+dependencies[] = ldap_query
+
+configure = admin/structure/feeds
+
 core = 7.x
 php = 5.2

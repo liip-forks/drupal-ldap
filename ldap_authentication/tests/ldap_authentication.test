@@ -107,7 +107,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
  */
 
 
-  function xtestMixedModeUserLogon() {
+  function testMixedModeUserLogon() {
 
     $sid = 'ldapauthen1';
     $testid = 'MixedModeUserLogon';
@@ -140,7 +140,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
     $this->assertText(t('Member for'), 'User 1 successfully authenticated', $testid);
     $this->drupalGet('user/logout');
 
-   /** LDAP_authen.MM.ULT.user1.badpwd  -- result: Drupal logon error message. **/
+    /** LDAP_authen.MM.ULT.user1.badpwd  -- result: Drupal logon error message. **/
 
     $edit = array(
       'name' => $user1->name,
@@ -217,7 +217,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 /**
  *  LDAP Authentication Exclusive Mode User Logon Test (ids = LDAP_authen.EM.ULT.*)
  */
-  function xtestExclusiveModeUserLogon() {
+  function testExclusiveModeUserLogon() {
 
     $sid = 'ldapauthen1';
     $testid = 'ExclusiveModeUserLogon';
@@ -468,13 +468,13 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
     $this->assertText(t('User disallowed'), 'User unable to authenticate  because php returned false (allowTestPhp).', $testid);
 
 
- /**
+  /**
     * clear LDAP_authen.WL.php
     */
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowTestPhp = '';
     $authenticationConf->save();
-   /***  multiple options used in whitelist **/
+  /***  multiple options used in whitelist **/
 
    /**
     * LDAP_authen.WL.allow[match].exclude[match] -- desired result: authenticate fail

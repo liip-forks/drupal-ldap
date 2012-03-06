@@ -102,7 +102,7 @@ function theme_ldap_authentication_user_pass_validate_ldap_authenticated($variab
  *
  * @ingroup themeable
  */
-function theme_ldap_authentication_login_message($variables){
+function theme_ldap_authentication_login_message($variables) {
   extract($variables);
   return $message;
 }
@@ -114,7 +114,7 @@ function theme_ldap_authentication_login_message($variables){
  *
  * @ingroup themeable
  */
-function theme_ldap_authentication_message_not_found($variables){
+function theme_ldap_authentication_message_not_found($variables) {
   extract($variables);
   return $message;
 }
@@ -126,7 +126,7 @@ function theme_ldap_authentication_message_not_found($variables){
  *
  * @ingroup themeable
  */
-function theme_ldap_authentication_message_not_authenticated($variables){
+function theme_ldap_authentication_message_not_authenticated($variables) {
   extract($variables);
   return $message;
 }

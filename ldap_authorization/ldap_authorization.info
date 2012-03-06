@@ -3,6 +3,7 @@ name = LDAP Authorization
 description = "Implements LDAP authorization (previously LDAP Groups)"
 package = "Lightweight Directory Access Protocol"
 dependencies[] = ldap_servers
+dependencies[] = ldap_user
 core = 7.x
 
 files[] = LdapAuthorizationConsumerAbstract.class.php
@@ -17,4 +18,5 @@ files[] = tests/BasicTests.test
 files[] = tests/Derivations.test
 files[] = tests/1197636.test
 files[] = tests/OtherAuthenticationIntegrationTests.test
+files[] = tests/OgTests.test
 configure = admin/config/people/ldap/authorization

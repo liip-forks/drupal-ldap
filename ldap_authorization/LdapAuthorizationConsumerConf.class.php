@@ -36,8 +36,11 @@ class LdapAuthorizationConsumerConf {
   public $deriveFromEntry = FALSE;
   public $deriveFromEntryEntries = NULL;
   public $deriveFromEntryAttr = NULL;
+  public $deriveFromEntrySearchAll = FALSE;
+
 
   public $mappings = array();
+  public $normalizedMappings = array(); // mappings in simples form.
   public $useMappingsAsFilter = TRUE;
 
   public $synchToLdap = FALSE;
@@ -72,6 +75,7 @@ class LdapAuthorizationConsumerConf {
       $this->inDatabase = TRUE;
       $this->loadFromDb();
     }
+    $this->normalizedMappings = $consumer->normalizeMappings($this->mappings);
   }
 
   protected function loadFromDb() {
@@ -120,13 +124,15 @@ class LdapAuthorizationConsumerConf {
     $this->deriveFromAttr  = (bool)($consumer_conf->derive_from_attr);
     $this->deriveFromAttrAttr =  $this->linesToArray($consumer_conf->derive_from_attr_attr);
     $this->deriveFromAttrUseFirstAttr  = (bool)($consumer_conf->derive_from_attr_use_first_attr);
+    $this->deriveFromEntrySearchAll = (bool)($consumer_conf->derive_from_entry_search_all);
+
 
     $this->deriveFromEntry  = (bool)(@$consumer_conf->derive_from_entry);
     $this->deriveFromEntryEntries = $this->linesToArray($consumer_conf->derive_from_entry_entries);
     $this->deriveFromEntryAttr = $consumer_conf->derive_from_entry_attr;
 
     $this->mappings = $this->pipeListToArray($consumer_conf->mappings);
-    $this->useMappingsAsFilter  = (bool)(@$consumer_conf->use_filter);
+    $this->useMappingsAsFilter = (bool)(@$consumer_conf->use_filter);
 
     $this->synchToLdap = (bool)(@$consumer_conf->synch_to_ldap);
     $this->synchOnLogon = (bool)(@$consumer_conf->synch_on_logon);
@@ -160,6 +166,7 @@ class LdapAuthorizationConsumerConf {
     'deriveFromEntry',
     'deriveFromEntryEntries',
     'deriveFromEntryAttr',
+    'deriveFromEntrySearchAll',
     'mappings',
     'useMappingsAsFilter',
     'synchToLdap',
