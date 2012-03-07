@@ -130,8 +130,6 @@ $test_data['servers']['ldapauthen1']['users']['cn=service-account,dc=ad,dc=myuni
 $test_data['ldap_authentication']['MixedModeUserLogon'] = array(
     'sids' => array('ldapauthen1' => 'ldapauthen1'),
     'authenticationMode' => LDAP_AUTHENTICATION_MIXED,
-    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
-    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
     'ldapUserHelpLinkUrl' => '',
     'ldapUserHelpLinkText' => '',
     'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
@@ -140,13 +138,17 @@ $test_data['ldap_authentication']['MixedModeUserLogon'] = array(
     'excludeIfTextInDn' => NULL,
     'allowTestPhp' => NULL,
     'excludeIfNoAuthorizations' => LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT,
+  );
+
+$test_data['ldap_user']['MixedModeUserLogon'] = array(
+    'sids' => array('ldapauthen1' => 'ldapauthen1'),
+    'loginConflictResolve' => LDAP_USER_CONFLICT_LOG,
+    'acctCreation' => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
   );
 
 $test_data['ldap_authentication']['ExclusiveModeUserLogon'] = array(
     'sids' => array('ldapauthen1' => 'ldapauthen1'),
     'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
-    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
-    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
     'ldapUserHelpLinkUrl' => '',
     'ldapUserHelpLinkText' => '',
     'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
@@ -157,11 +159,15 @@ $test_data['ldap_authentication']['ExclusiveModeUserLogon'] = array(
     'excludeIfNoAuthorizations' => LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT,
   );
 
+$test_data['ldap_user']['ExclusiveModeUserLogon'] = array(
+    'sids' => array('ldapauthen1' => 'ldapauthen1'),
+    'loginConflictResolve' => LDAP_USER_CONFLICT_LOG,
+    'acctCreation' => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
+  );
+
 $test_data['ldap_authentication']['WL1'] = array(
     'sids' => array('ldapauthen1' => 'ldapauthen1'),
     'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
-    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
-    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
     'ldapUserHelpLinkUrl' => '',
     'ldapUserHelpLinkText' => '',
     'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
@@ -170,6 +176,12 @@ $test_data['ldap_authentication']['WL1'] = array(
     'excludeIfTextInDn' => NULL,
     'allowTestPhp' => NULL,
     'excludeIfNoAuthorizations' => 0,
+  );
+
+$test_data['ldap_user']['WL1'] = array(
+    'sids' => array('ldapauthen1' => 'ldapauthen1'),
+    'loginConflictResolve' => LDAP_USER_CONFLICT_LOG,
+    'acctCreation' => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
   );
 
 // single sign on tests

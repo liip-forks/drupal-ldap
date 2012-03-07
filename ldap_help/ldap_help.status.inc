@@ -320,8 +320,6 @@ function ldap_help_get_ldap_authentication() {
   $items['restrictions']['excludeIfTextInDn'] = 'string';
   $items['restrictions']['allowTestPhp'] = 'string';
   $items['restrictions']['excludeIfNoAuthorizations '] = 'checkbox';
-  $items['drupal_accounts']['loginConflictResolve'] = 'radios';
-  $items['drupal_accounts']['acctCreation'] = 'radios';
   $items['email']['emailOption'] = 'radios';
   $items['email']['emailUpdate'] = 'radios';
   $items['sso']['ssoRemoteUserStripDomainName'] = 'checkbox';
@@ -333,6 +331,22 @@ function ldap_help_get_ldap_authentication() {
 
   return $status;
 }
+
+function ldap_help_get_ldap_user() {
+  require_once(drupal_get_path('module', 'ldap_user') . '/LdapUserConfAdmin.class.php');
+  $conf = new LdapUserConfAdmin();
+  $form = $conf->drupalForm();
+
+  $items['drupal_accounts']['loginConflictResolve'] = 'radios';
+  $items['drupal_accounts']['acctCreation'] = 'radios';
+
+  $status = ldap_help_parse_form($form, $items);
+
+  return $status;
+}
+
+
+
 
 function ldap_help_get_ldap_authorization() {
   $status = array();

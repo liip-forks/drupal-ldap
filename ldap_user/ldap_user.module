@@ -6,7 +6,68 @@
  *
  */
 
+define('LDAP_USER_DRUPAL_HELP_URL', 'http://drupal.org/node/997082');
+
+
+define('LDAP_USER_PROV_ON_LOGON', 1);
+define('LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE', 2);
+define('LDAP_USER_PROV_ON_ALL_USER_CREATION', 3);
+
+define('LDAP_USER_CONFLICT_LOG', 1);
+define('LDAP_USER_CONFLICT_RESOLVE', 2);
+define('LDAP_USER_CONFLICT_RESOLVE_DEFAULT', 2);
+
+define('LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR', 4);
+define('LDAP_USER_ACCT_CREATION_USER_SETTINGS_FOR_LDAP', 1);
+define('LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT', 4);
+
 require_once('ldap_user.api.inc');
+
+
+/**
+ * Implements hook_menu().
+ */
+function ldap_user_menu() {
+  $items = array();
+
+  $items['admin/config/people/ldap/user'] = array(
+    'title' => '3. User',
+    'description' => 'Settings related to user provisioning and data synching between ldap and drupal users.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_user_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+    'file' => 'ldap_user.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_help().
+ */
+
+function ldap_user_help($path, $arg) {
+
+  $authentication_help = t('LDAP user configuration determines how and when
+    Drupal accounts are provisioned/created from LDAP data and what user fields
+    are derived from LDAP.!helplink.',
+          array(
+            '!helplink' => l(LDAP_USER_DRUPAL_HELP_URL, LDAP_USER_DRUPAL_HELP_URL),
+          ));
+
+  switch ($path) {
+    case 'admin/config/people/ldap/user':
+      $output = '<p>' . $authentication_help . '</p>';
+      return $output;
+
+    case 'admin/help#ldap_user':
+      $output = '<p>' . $authentication_help . '</p>';
+      return $output;
+  }
+}
+
 
 /**
  * Implements hook_user_presave().

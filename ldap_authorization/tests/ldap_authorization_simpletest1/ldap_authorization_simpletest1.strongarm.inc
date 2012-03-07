@@ -20,8 +20,6 @@ function ldap_authorization_simpletest1_strongarm() {
       'ldapauthor1' => 'ldapauthor1',
     ),
     'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
-    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
-    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
     'ldapUserHelpLinkUrl' => 'https://passwords.cites.uiuc.edu/',
     'ldapUserHelpLinkText' => 'Illinois Passwords',
     'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,

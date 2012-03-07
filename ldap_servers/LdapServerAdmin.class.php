@@ -749,10 +749,12 @@ public function drupalFormSubmit($op, $values) {
           'fieldset' => 'users',
           '#type' => 'textfield',
           '#size' => 30,
-          '#title' => t('Persistent and Unique User Attribute'),
-          '#description' => t('[Not implemented yet.  This is in the user interface, but not the code]. In some LDAPs, a user\'s DN, CN, or mail value may change when a user\'s name changes or for other reasons.
+          '#title' => t('Persistent and Unique User ID Attribute'),
+          '#description' => t('In some LDAPs, a user\'s DN, CN, or mail value may
+            change when a user\'s name changes or for other reasons.
             In order to avoid creation of multiple accounts for that user or other ambiguities,
-            enter a unique and persistent ldap attribute for users.
+            enter a unique and persistent ldap attribute for users.  In cases
+            where DN does not change, enter "dn" here.
             If no such attribute exists, leave this blank.'
             ),
         ),

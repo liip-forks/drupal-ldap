@@ -7,8 +7,8 @@
 
 $authentication = array(
     'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
-    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
-    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
+    'loginConflictResolve' => LDAP_USER_CONFLICT_LOG,
+    'acctCreation' => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
     'ldapUserHelpLinkUrl' => '',
     'ldapUserHelpLinkText' => '',
     'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,

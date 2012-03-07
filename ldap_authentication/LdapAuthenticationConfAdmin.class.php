@@ -64,30 +64,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be
       enabled for this to work.');
 
-
-
-    /**
-    * 3. Drupal Account Provisioning and Syncing
-    */
-    $values['loginConflictResolveDescription'] = t('What should be done if a local Drupal or other external
-      authentication account already exists with the same login name.');
-    $values['loginConflictOptions'] = array(
-      LDAP_AUTHENTICATION_CONFLICT_LOG => t('Disallow login and log the conflict'),
-      LDAP_AUTHENTICATION_CONFLICT_RESOLVE => t('Associate local account with the LDAP entry.  This option
-      is useful for creating accounts and assigning roles before an ldap user authenticates.'),
-      );
-
-
-    $values['acctCreationOptions'] = array(
-      LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR => t('Create accounts automatically for ldap authenticated users.
-        Account creation settings at /admin/config/people/accounts/settings will only affect non-ldap authenticated accounts.'),
-      LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP => t('Use account creation policy
-         at /admin/config/people/accounts/settings under for both Drupal and LDAP Authenticated users.
-         "Visitors" option automatically creates and account when they successfully LDAP authenticate.
-         "Admin" and "Admin with approval" do not allow user to authenticate until the account is approved.'),
-      );
-
-
     /**
     * 4. Email
     */
@@ -172,18 +148,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   protected $allowOnlyIfTextInDnDescription;
   protected $excludeIfTextInDnDescription;
   protected $allowTestPhpDescription;
-
-   /**
-   * 3. Drupal Account Provisioning and Syncing
-   */
-  public $loginConflictResolveDescription;
-  public $loginConflictResolveDefault = LDAP_AUTHENTICATION_CONFLICT_LOG; // LDAP_CONFLICT_RESOLVE;
-  public $loginConflictOptions;
-
-  public $acctCreationDescription = '';
-  public $acctCreationDefault = LDAP_AUTHENTICATION_ACCT_CREATION_DEFAULT;
-  public $acctCreationOptions;
-
 
    /**
    * 4. Email
@@ -380,33 +344,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#disabled' => (boolean)(!module_exists('ldap_authorization')),
     );
 
-
-    $form['drupal_accounts'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Drupal User Account Creation'),
-      '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
-    );
-
-    $form['drupal_accounts']['loginConflictResolve'] = array(
-      '#type' => 'radios',
-      '#title' => t('Existing Drupal User Account Conflict'),
-      '#required' => 1,
-      '#default_value' => $this->loginConflictResolve,
-      '#options' => $this->loginConflictOptions,
-      '#description' => t( $this->loginConflictResolveDescription),
-    );
-
-
-    $form['drupal_accounts']['acctCreation'] = array(
-      '#type' => 'radios',
-      '#title' => t('Account Creation for LDAP Authenticated Users'),
-      '#required' => 1,
-      '#default_value' => $this->acctCreation,
-      '#options' => $this->acctCreationOptions,
-      '#description' => t($this->acctCreationDescription),
-    );
-
     $form['email'] = array(
       '#type' => 'fieldset',
       '#title' => t('Email'),
@@ -556,8 +493,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->allowOnlyIfTextInDn = $this->linesToArray($values['allowOnlyIfTextInDn']);
     $this->excludeIfTextInDn = $this->linesToArray($values['excludeIfTextInDn']);
     $this->allowTestPhp = $values['allowTestPhp'];
-    $this->loginConflictResolve  = ($values['loginConflictResolve']) ? (int)$values['loginConflictResolve'] : NULL;
-    $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;
     $this->loginUIUsernameTxt = ($values['loginUIUsernameTxt']) ? (string)$values['loginUIUsernameTxt'] : NULL;
     $this->loginUIPasswordTxt = ($values['loginUIPasswordTxt']) ? (string)$values['loginUIPasswordTxt'] : NULL;
     $this->ldapUserHelpLinkUrl = ($values['ldapUserHelpLinkUrl']) ? (string)$values['ldapUserHelpLinkUrl'] : NULL;

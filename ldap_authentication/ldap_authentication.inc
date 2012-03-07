@@ -198,7 +198,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   }
   else {  // account does not exist
     $account_exists = FALSE;
-    if ($auth_conf->createLDAPAccounts == FALSE) {
+    if ($auth_conf->ldapUser->createLDAPAccounts == FALSE) {
       if ($detailed_watchdog_log) {
         watchdog('ldap_authentication', '%username : Drupal User Account not found and configuration is set to not create new accounts.', $watchdog_tokens, WATCHDOG_DEBUG);
       }
@@ -431,8 +431,8 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
 
   }
   else {  // account already exists
-    if ($ldap_authentication_authmap == FALSE) {  // LDAP_authen.AC.disallow.ldap.drupal
-      if ($auth_conf->loginConflictResolve == LDAP_AUTHENTICATION_CONFLICT_LOG) {
+    if ($ldap_authentication_authmap == FALSE) {
+      if ($auth_conf->ldapUser->loginConflictResolve == LDAP_USER_CONFLICT_LOG) {
         $watchdog_tokens['%conflict_name'] = $account_with_same_email->name;
         watchdog('ldap_authentication', 'LDAP user with DN %dn has a naming conflict with a local drupal user %conflict_name', $watchdog_tokens, WATCHDOG_ERROR);
         drupal_set_message(t('Another user already exists in the system with the same login name. You should contact the system administrator in order to solve this conflict.'), 'error');

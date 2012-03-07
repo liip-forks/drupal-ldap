@@ -10,8 +10,6 @@ $variables['user_email_verification'] = 1;
 
 $authentication = array(
   'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
-  'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
-  'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
   'ldapUserHelpLinkUrl' => '',
   'ldapUserHelpLinkText' => '',
   'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
@@ -20,3 +18,9 @@ $authentication = array(
   'excludeIfTextInDn' => NULL,
   'allowTestPhp' => NULL,
 );
+
+$test_data['ldap_user']['WL1'] = array(
+    'sids' => array('ldapauthen1' => 'ldapauthen1'),
+  'loginConflictResolve' => LDAP_USER_CONFLICT_LOG,
+  'acctCreation' => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
+  );
