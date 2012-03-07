@@ -1,3 +1,6 @@
+Added ldap_user_puid, ldap_user_puid_property, ldap_user_puid_sid, and ldap_user_current_dn fields and attached to user object
+Added ldap_user module with focus of user provisioning and updateing.  Will have functionality of ldap provision, ldap profile, ldap synch, etc.
+Switch to 7.x-2.0 branch.
 Issue #1412030 by srinivas.kakde.  corrected problem where authentication binding by user was preserverd in authorization, etc.
 Issue #1441694 by haydeniv. fixed some needed include in ldap sso.
 Issue #1450932 by hotspoons. untested kerberos for ldap sso.

@@ -250,8 +250,9 @@ function ldap_servers_theme() {
 
       break;
 
+    }
   }
-  
+
 /**
  *
  * return ldap server conf objects

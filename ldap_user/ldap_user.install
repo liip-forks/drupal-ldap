@@ -26,6 +26,12 @@ function ldap_user_install() {
       field_create_instance($field_conf['instance']);
     }
   }
+
+  // make ldap user weight slightly less than other ldap modules so it can load
+  // user's associated ldap data first and save on ldap queries.
+
+  db_query("UPDATE {system} SET weight = -1 WHERE name = 'ldap_user'");
+
 }
 
 /**
@@ -63,9 +69,7 @@ function ldap_user_user_entity_fields() {
 
   $fields = array();
 
-  $prefix = 'ldap_user_';
-
-  $field_name = $prefix . 'provisioned_sid';
+  $field_name = 'ldap_user_puid_sid';
   $fields[$field_name]['field'] = array(
     'field_name' => $field_name,
     'type' => 'text',
@@ -82,7 +86,7 @@ function ldap_user_user_entity_fields() {
       'field_name' => $field_name,
       'entity_type' => 'user',
       'bundle' => 'user',
-      'label' => 'LDAP Server ID that provisioned user.',
+      'label' => 'LDAP Server ID that puid was derived from.  NULL if puid is independent of server configuration instance.',
       'description' => 'This field should not be edited.',
       'required' => 0,
       'default_value_function' => 'ldap_user_provisioned_sid_default',
@@ -110,7 +114,7 @@ function ldap_user_user_entity_fields() {
       ));
 
 
-  $field_name = $prefix . 'puid';
+  $field_name = 'ldap_user_puid';
   $fields[$field_name]['field'] = array(
       'field_name' => $field_name,
       'type' => 'text',
@@ -154,7 +158,7 @@ function ldap_user_user_entity_fields() {
         ),
       ));
 
-  $field_name = $prefix . 'puid_property';
+  $field_name = 'ldap_user_puid_property';
   $fields[$field_name]['field'] = array(
       'field_name' => $field_name,
       'type' => 'text',
@@ -198,7 +202,7 @@ function ldap_user_user_entity_fields() {
         ),
       ));
 
-  $field_name = $prefix . 'dn';
+  $field_name = 'ldap_user_current_dn';
   $fields[$field_name]['field'] = array(
       'field_name' => $field_name,
       'type' => 'text',

@@ -63,7 +63,7 @@ class LdapUserTestCase extends DrupalWebTestCase {
        // also need to create fake ldap server data.  use
 
       if (! (module_exists('ctools') && module_exists('strongarm') && module_exists('features') && module_exists('$this->featureName')) ) {
-        drupal_set_message(t('Features and Strongarm modules must be available to use Features as configuratio of simpletests'), 'warning');
+        drupal_set_message(t('Features and Strongarm modules must be available to use Features as configuration of simpletests'), 'warning');
       }
 
 
