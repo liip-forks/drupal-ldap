@@ -21,7 +21,15 @@ define('LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR', 4);
 define('LDAP_USER_ACCT_CREATION_USER_SETTINGS_FOR_LDAP', 1);
 define('LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT', 4);
 
-require_once('ldap_user.api.inc');
+define('LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER', 1);
+define('LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY', 2);
+
+define('LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER', 1);
+define('LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER', 2);
+define('LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER', 3);
+define('LDAP_USER_SYNCH_CONTEXT_CRON', 4);
+
+require_once('ldap_user.functions.inc');
 
 
 /**
@@ -44,36 +52,141 @@ function ldap_user_menu() {
   return $items;
 }
 
+function ldap_user_theme() {
+  return array('ldap_user_conf_form' => array(
+    'render element' => 'form',
+    'file' => 'ldap_user.theme.inc'
+    ),
+  );
+}
+
+function ldap_user_conf($type = 'admin', $reset = FALSE) {
+  static $ldap_user_conf;
+  static $ldap_user_conf_admin;
+
+  if ($type == 'admin' && ($reset || !is_object($ldap_user_conf_admin))) {
+    require_once('ldapUserConfAdmin.class.php');
+    $ldap_user_conf_admin = new LdapUserConfAdmin();
+  }
+  elseif ($type != 'admin' && ($reset || !is_object($ldap_user_conf))) {
+    require_once('ldapUserConf.class.php');
+    $ldap_user_conf = new LdapUserConf();
+  }
+
+  return ($type == 'admin') ? $ldap_user_conf_admin : $ldap_user_conf;
+}
+
+/**
+ * implements hook_ldap_attributes_needed_alter()
+ */
+function ldap_user_ldap_attributes_needed_alter(&$attributes, $op, $ldap_server) {
+  //dpm('ldap_user_ldap_attributes_needed_alter,op='. $op);
+  $ldap_user_conf = ldap_user_conf();
+  $attributes[] = 'dn';
+
+  if ($ldap_server) { // puid attributes are server specific
+    if (is_scalar($ldap_server)) {
+      $ldap_server = ldap_servers_get_servers($ldap_server, 'enabled', TRUE);
+    }
+    switch ($op) {
+
+      case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
+      case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
+        $attributes[] = $ldap_server->user_attr;
+        $attributes[] = $ldap_server->mail_attr;
+        ldap_servers_extract_attributes_from_token($attributes,  $ldap_server->mail_template);
+        $attributes[] = $ldap_server->unique_persistent_attr;
+      break;
+
+    }
+  }
+
+}
+
+/**
+ * implements hook_ldap_user_targets_list_alter().
+ */
+
+function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server) {
+
+  $tokens = array(
+    '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
+  );
+
+  // user properties
+  $available_user_targets['property_status'] = array(
+    'name' => 'Acount Status',
+    'configurable' => 1,
+    'configurable_text' => '1=enabled, 0=blocked.',
+  );
+  $available_user_targets['property_timezone'] = array(
+    'name' => 'User Timezone',
+    'configurable' => 1,
+    'configurable_text' => NULL,
+  );
+  $available_user_targets['property_signature'] = array(
+    'name' => 'User Signature',
+    'configurable' => 1,
+    'configurable_text' => NULL,
+  );
+
+
+  // fields
+  $user_fields = field_info_instances('user','user');
+  //dpm('user_fields'); dpm($user_fields);
+  foreach ($user_fields as $field_name => $field_instance) {
+    if (!isset($available_user_targets["field_$field_name"])) {
+      $available_user_targets['field_' . $field_name] = array(
+        'name' => $field_instance['label'],
+        'configurable' => 1,
+        'configurable_text' => NULL,
+      );
+    }
+  }
+
+
+  // profile2 fields
+
+  // $user->data array.  will need to be added manually.  perhaps better not to implement this at all?
+
+
+}
 /**
  * Implements hook_help().
  */
 
 function ldap_user_help($path, $arg) {
 
-  $authentication_help = t('LDAP user configuration determines how and when
-    Drupal accounts are provisioned/created from LDAP data and what user fields
-    are derived from LDAP.!helplink.',
+  $ldap_user_help = t('LDAP user configuration determines how and when
+    Drupal accounts are created based on LDAP data and which user fields
+    are derived from LDAP. See !helplink.',
           array(
             '!helplink' => l(LDAP_USER_DRUPAL_HELP_URL, LDAP_USER_DRUPAL_HELP_URL),
           ));
 
   switch ($path) {
     case 'admin/config/people/ldap/user':
-      $output = '<p>' . $authentication_help . '</p>';
+      $output = '<p>' . $ldap_user_help . '</p>';
       return $output;
 
     case 'admin/help#ldap_user':
-      $output = '<p>' . $authentication_help . '</p>';
+      $output = '<p>' . $ldap_user_help . '</p>';
       return $output;
   }
 }
+
 
 
 /**
  * Implements hook_user_presave().
  */
 function ldap_user_user_presave(&$edit, $account, $category) {
-
+  //dpm('hook_user_presave edit'); dpm($edit); dpm('account'); dpm($account); dpm('category'); dpm($category);
+  $ldap_user_conf = ldap_user_conf();
+  $save_context = ($account->is_new) ? LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER: LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER;
+  if ($ldap_user_conf->provisionMethods[LDAP_USER_PROV_ON_ALL_USER_CREATION]) {
+    ldap_user_add_ldap_data_for_user_save($edit, $account, $save_context);
+  }
   // not likely to be useful.  hook_user_insert and hook_user_update have clearer contexts for provisioning
 }
 
@@ -87,17 +200,32 @@ function ldap_user_user_login(&$edit, $account) {
 
 /**
  * Implements hook_user_insert().
+ *
  */
-function ldap_user_user_insert($account, $account, $category) {
-
-  //if the following fields are not provided, see if they
-  // should be derived automatically and then derive and populate them
-  //$edit['ldap_user_puid']['und'][0]['value'] = 'x';
- // $edit['ldap_user_puid_sid']['und'][0]['value'] = 'x';
- // $edit['ldap_user_puid_property']['und'][0]['value'] = 'x';
- // $edit['ldap_user_current_dn']['und'][0]['value'] = 'x';
+function ldap_user_user_insert(&$edit, $account, $category) {
 
 }
+
+/**
+ * get ldap data related to account being inserted
+ *   and store in user $edit variable which are passed
+ *   by reference
+ *
+ * @param array $edit, same as in hook_user_insert
+ * @param array $account, same as in hook_user_insert
+ *
+ */
+function ldap_user_add_ldap_data_for_user_save(&$edit, &$account, $op = LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER) {
+  //dpm('ldap_user_add_ldap_data_for_user_save');
+  $ldap_user_conf = ldap_user_conf();
+ // dpm($ldap_user_conf);
+  $user_ldap_entry = $ldap_user_conf->getLdapUserEntry($edit['name'], $op);
+  //dpm('ldap_entry:'. $edit['name']); dpm($user_ldap_entry);
+  $ldap_server = ldap_servers_get_servers($user_ldap_entry['sid'], 'enabled', TRUE);
+ // dpm('ldap_server'); dpm($ldap_server);
+  $ldap_user_conf->entryToUserEdit($user_ldap_entry, $ldap_server, $edit, $account, $op);
+}
+
 
 /**
  * Implements hook_user_update().

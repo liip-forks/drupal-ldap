@@ -6,8 +6,9 @@ dependencies[] = ldap_servers
 dependencies[] = entity
 core = 7.x
 
-files[] = ldap_user.api.inc
+files[] = ldap_user.api.php
 files[] = ldap_user.inc
 files[] = ldap_user.install
 files[] = ldap_user.module
+files[] = ldap_user.functions.inc
 files[] = tests/BasicTests.test

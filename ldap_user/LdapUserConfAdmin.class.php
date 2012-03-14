@@ -14,13 +14,20 @@ class LdapUserConfAdmin extends LdapUserConf {
     $values['provisionServersDescription'] = t('Check all LDAP server configurations to use
       in provisioning Drupal users and their user fields.');
 
-    $values['provisionMethodsDescription'] = t('When should provisioning/creation of Drupal accounts be done?
-      Provisioning includes associating a Drupal account with an LDAP entry.');
+    $values['provisionMethodsDescription'] = t('"LDAP Associated" Drupal user accounts (1) have
+      data mapping the account to an LDAP entry and (2) can leverage LDAP module functionality
+      such as authorization, profile field synching, etc.');
 
     $values['provisionMethodsOptions'] = array(
-      LDAP_USER_PROV_ON_LOGON => t('On successful user logon. '),
-      LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE => t('On manual creation of Drupal user accounts.'),
-      LDAP_USER_PROV_ON_ALL_USER_CREATION => t('When any user account is created. (via feeds, manual creation, other provisioning modules, etc.'),
+      LDAP_USER_PROV_ON_LOGON => t('On successful authentication with LDAP
+        credentials and no existing Drupal account, create "LDAP Associated" Drupal account.  (Requires LDAP Authentication module).'),
+      LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE => t('On manual creation of Drupal
+        user accounts, make account "LDAP Associated" if corresponding LDAP entry exists.
+        Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
+      LDAP_USER_PROV_ON_ALL_USER_CREATION => t('Anytime a Drupal user account
+        is created, make account "LDAP Associated" if corresponding LDAP entry exists.
+        (includes manual creation, feeds module, Shib, CAS, other provisioning modules, etc).
+        Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
     );
 
 
@@ -30,17 +37,17 @@ class LdapUserConfAdmin extends LdapUserConf {
     $values['userConflictResolveDescription'] = t('What should be done if a local Drupal or other external
       user account already exists with the same login name.');
     $values['userConflictOptions'] = array(
-      LDAP_USER_CONFLICT_LOG => t('Don\'t associate Drupal account with ldap.  Require user to use drupal password. Log the conflict'),
-      LDAP_USER_CONFLICT_RESOLVE => t('Associate local account with the LDAP entry.  This option
-      is useful for creating accounts and assigning roles before an ldap user authenticates.'),
+      LDAP_USER_CONFLICT_LOG => t('Don\'t associate Drupal account with LDAP.  Require user to use Drupal password. Log the conflict'),
+      LDAP_USER_CONFLICT_RESOLVE => t('Associate Drupal account with the LDAP entry.  This option
+      is useful for creating accounts and assigning roles before an LDAP user authenticates.'),
       );
 
 
     $values['acctCreationOptions'] = array(
-      LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR => t('Create accounts automatically for ldap authenticated users.
-        Account creation settings at /admin/config/people/accounts/settings will only affect non-ldap authenticated accounts.'),
-      LDAP_USER_ACCT_CREATION_USER_SETTINGS_FOR_LDAP => t('Use account creation policy
-         at /admin/config/people/accounts/settings for both Drupal and LDAP Authenticated users.
+      LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR => t('Account creation settings at
+        /admin/config/people/accounts/settings do not affect "LDAP Associated" Drupal accounts.'),
+      LDAP_USER_ACCT_CREATION_USER_SETTINGS_FOR_LDAP => t('Account creation policy
+         at /admin/config/people/accounts/settings applies to both Drupal and LDAP Authenticated users.
          "Visitors" option automatically creates and account when they successfully LDAP authenticate.
          "Admin" and "Admin with approval" do not allow user to authenticate until the account is approved.'),
       );
@@ -93,9 +100,7 @@ class LdapUserConfAdmin extends LdapUserConf {
 
   static public function getSaveableProperty($property) {
     $ldap_user_conf = variable_get('ldap_user_conf', array());
-  //  debug($ldap_user_conf);
     return isset($ldap_user_conf[$property]) ? $ldap_user_conf[$property] : FALSE;
-
   }
 
   static public function uninstall() {
@@ -113,7 +118,6 @@ class LdapUserConfAdmin extends LdapUserConf {
     }
   }
 
-
   public function drupalForm() {
 
     if (count($this->provisionServersOptions) == 0) {
@@ -125,11 +129,11 @@ class LdapUserConfAdmin extends LdapUserConf {
       return $form;
     }
 
-    $tokens = array();  // not sure what the tokens would be for this form?
+    $form['#theme'] = 'ldap_user_conf_form';
 
     $form['intro'] = array(
-        '#type' => 'item',
-        '#markup' => t('<h1>LDAP User Settings</h1>'),
+      '#type' => 'item',
+      '#markup' => t('<h1>LDAP User Settings</h1>'),
     );
 
     $form['basic'] = array(
@@ -150,7 +154,7 @@ class LdapUserConfAdmin extends LdapUserConf {
 
     $form['basic']['provisionMethods'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('Allowed Provisioning Methods'),
+      '#title' => t('New Account Provisioning Options'),
       '#required' => FALSE,
       '#default_value' => $this->provisionMethods,
       '#options' => $this->provisionMethodsOptions,
@@ -168,12 +172,30 @@ class LdapUserConfAdmin extends LdapUserConf {
 
     $form['basic']['acctCreation'] = array(
       '#type' => 'radios',
-      '#title' => t('Account Creation for LDAP Authenticated Users'),
+      '#title' => t('Application of Drupal Account settings to LDAP Authenticated Users'),
       '#required' => 1,
       '#default_value' => $this->acctCreation,
       '#options' => $this->acctCreationOptions,
       '#description' => t($this->acctCreationDescription),
     );
+
+    $form['server_mapping_preamble'] = array(
+      '#type' => 'markup',
+      '#markup' => t('
+The relationship between a Drupal user and an LDAP entry is defined within the LDAP server configurations.
+
+
+The mappings below are for user fields, properties, and profile2 data that are not automatically mapped elsewhere.
+Mappings such as username or email address that are configured elsewhere are shown at the top for clarity.
+When more than one ldap server is enabled for provisioning data (or simply more than one configuration for the same ldap server),
+mappings need to be setup for each server.
+'),
+    );
+
+    foreach($this->sids as $sid) {
+      $ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
+      $this->addServerMappingFields($ldap_server, $form);
+    }
 
     $form['submit'] = array(
       '#type' => 'submit',
@@ -182,6 +204,8 @@ class LdapUserConfAdmin extends LdapUserConf {
 
   return $form;
 }
+
+
 
 /**
  * validate form, not object
@@ -201,24 +225,96 @@ class LdapUserConfAdmin extends LdapUserConf {
   public function validate() {
     $errors = array();
 
-    $enabled_servers = ldap_servers_get_servers(NULL, 'enabled');
+    if (isset($this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER])) {
+      $enabled_servers = ldap_servers_get_servers(NULL, 'enabled');
+      $available_user_targets = array();
+      foreach ($enabled_servers as $sid => $ldap_server) {
+        $available_user_targets[$sid] = array();
+        drupal_alter('ldap_user_targets_list', $available_user_targets[$sid], $ldap_server);
+      }
+      foreach ($this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] as $user_target => $conf) {
+
+       // dpm('user_target'. $user_target); dpm($conf);
+        // neither of these should come up without altered form, but could check for:
+        // 1. is field configurable ?
+        // 2. is $user_target and $ldap_source both populated
+      }
+    }
+
+
+
     return $errors;
   }
 
   protected function populateFromDrupalForm($values) {
-
+   // dpm('populateFromDrupalForm'); dpm($values);
     $this->sids = $values['provisionServers'];
     $this->provisionMethods = $values['provisionMethods'];
     $this->userConflictResolve  = ($values['loginConflictResolve']) ? (int)$values['loginConflictResolve'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;
+    $this->synchMapping = $this->synchMappingsFromForm($values);
+    // $this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['property_mail'][sid] => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER),
+
+    //  $this->synchMapping = array();  // development just for clearing out old data.
+   // dpm('populateFromDrupalForm this->synchMapping'); dpm($this->synchMapping);
 
   }
 
-  public function drupalFormSubmit($values) {
+  private function synchMappingsFromForm($values) {
+    $mappings = array();
+    foreach ($values as $field => $value) {
+      $parts = explode('__', $field);
+      // $ldap_server->sid, 'add', 'user_target' ,  $i
+      $action = NULL;
+      if (count($parts) == 4 && in_array($parts[0], $this->sids) && $parts[2] == 'ldap_source' && $parts[1] == 'add') {
+        $field_template = join('__', array($parts[0], 'add', '[field]', $parts[3]));
+        $action = 'add';
+      }
+      elseif (count($parts) == 3 && in_array($parts[0], $this->sids) && $parts[2] == 'ldap_source') {
+        $user_target = $parts[1];
+        $field_template = join('__', array($parts[0], $user_target, '[field]'));
+        $action = 'update';
+      }
+      if ($action) {
+        $direction = LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER;
+        $sid = $parts[0];
 
+        $configurable_input_id = str_replace('[field]', 'configurable', $field_template);
+        $configurable = $values[$configurable_input_id];
+
+        $ldap_source_input_id = str_replace('[field]', 'ldap_source', $field_template);
+        $ldap_source = $values[$ldap_source_input_id];
+
+        $user_target_input_id = str_replace('[field]', 'user_target', $field_template);
+        $user_target = $values[$user_target_input_id];
+
+        $notes_input_id = str_replace('[field]', 'notes', $field_template);
+        $notes = $values[$notes_input_id];
+
+       // dpm("configurable=$configurable,configurable_input_id=$configurable_input_id,ldap_source=$ldap_source,user_target=$user_target");
+        if ($configurable && $ldap_source && $user_target) {
+          $mappings[$direction][$user_target] = array(
+            'sid' => $sid,
+            'ldap_source' => $ldap_source,
+            'notes' => $notes,
+            );
+          foreach ($this->synchTypes as $synch_context => $synch_context_name) {
+            $context_field_id = str_replace('[field]', $synch_context, $field_template);
+            if ($values[$context_field_id]) {
+              $mappings[$direction][$user_target]['contexts'][] = $synch_context;
+            }
+          }
+        }
+      }
+    }
+    return $mappings;
+  }
+
+  public function drupalFormSubmit($values) {
+   // dpm('drupalFormSubmit'); dpm($values);
     $this->populateFromDrupalForm($values);
     try {
-        $save_result = $this->save();
+      $save_result = $this->save();
     }
     catch (Exception $e) {
       $this->errorName = 'Save Error';
@@ -228,4 +324,212 @@ class LdapUserConfAdmin extends LdapUserConf {
 
   }
 
+
+private function addServerMappingFields($ldap_server, &$form) {
+
+  $synch_cols = count($this->synchTypes);
+
+  $table = array();
+  $table['#theme'] = 'table';
+  $table['#type'] = 'element';
+
+
+  // target options
+  $available_user_targets = array();
+  drupal_alter('ldap_user_targets_list', $available_user_targets, $ldap_server);
+ // dpm('available_user_targets'); dpm($available_user_targets);
+  $target_options = array('0' => 'Select Target');
+  foreach ($available_user_targets as $target_id => $mapping) {
+    if (!isset($mapping['configurable']) || $mapping['configurable']) {
+      $target_options[$target_id] = substr($mapping['name'], 0, 25);
+    }
+  }
+
+  $row = 0;
+
+  // loop through each mapping and add to form
+ //  dpm($available_user_targets);
+  foreach ($available_user_targets as $target_id => $mapping) {
+    if (!$mapping['configurable']) {
+      $id =  join('__', array($ldap_server->sid, 'configurable', $row));
+      $form[$id] = array(
+        '#id' => $id,
+        '#type' => 'hidden',
+        '#default_value' => 0,
+      );
+
+      $id = join('__', array($ldap_server->sid, 'ldap_source', $row));
+      $form[$id] = array(
+        '#id' => $id,
+        '#type' => 'item',
+        '#markup' => isset($mapping['source']) ? $mapping['source'] : '?',
+        '#row' => $row,
+        '#col' => 0,
+        );
+
+
+      $id =  join('__', array($ldap_server->sid, 'user_target' , $row));
+      $form[$id] = array(
+        '#id' => $id,
+        '#type' => 'item',
+        '#markup' => isset($mapping['name']) ? $mapping['name'] : '?',
+        '#row' => $row,
+        '#col' => 1,
+        );
+
+      $col = 1;
+      foreach ($this->synchTypes as $synch_method => $synch_method_name) {
+        $col++;
+        $id = join('__', array($ldap_server->sid, $synch_method, $row));
+        $form[$id] = array(
+          '#id' => $id ,
+          '#type' => 'checkbox',
+          '#default_value' => '',
+          '#options' => array(1,0),
+          '#row' => $row,
+          '#col' => $col,
+          '#disabled' => $this->synchMethodNotViable($ldap_server, $synch_method, $mapping),
+          );
+      }
+
+      $id =  join('__', array($ldap_server->sid, 'notes' , $row));
+      $form[$id] = array(
+        '#id' => $id,
+        '#type' => 'item',
+        '#markup' => isset($mapping['configurable_text']) ? $mapping['configurable_text'] : '?',
+        '#row' => $row,
+        '#col' => $synch_cols + 2,
+        );
+
+      $row ++;
+    }
+  }
+
+  if (isset($this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER])) {
+    foreach ($this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] as $user_target => $mapping) {
+
+      $row++;
+      $id =  join('__', array($ldap_server->sid, $user_target, 'configurable'));
+      $form[$id] = array(
+        '#id' => $id,
+        '#type' => 'hidden',
+        '#default_value' => 1,
+      );
+
+      $id =  join('__', array($ldap_server->sid, $user_target, 'ldap_source'));
+      $form[$id] = array(
+        '#id' => $id,
+        '#type' => 'textfield',
+        '#default_value' => $mapping['ldap_source'],
+        '#size' => 20,
+        '#maxlength' => 255,
+        '#row' => $row,
+        '#col' => 0,
+        );
+
+
+      $id =  join('__', array($ldap_server->sid, $user_target, 'user_target'));
+      $form[$id] = array(
+        '#id' => $id,
+        '#type' => 'select',
+        '#default_value' => $user_target,
+        '#options' => $target_options,
+        '#row' => $row,
+        '#col' => 1,
+        );
+
+      $col = 1;
+      foreach ($this->synchTypes as $synch_method => $synch_method_name) {
+        $col++;
+        $id = join('__', array($ldap_server->sid, $user_target, $synch_method));
+        $form[$id] = array(
+          '#id' => $id ,
+          '#type' => 'checkbox',
+          '#default_value' => (int)(in_array($synch_method, $mapping['contexts'])),
+          '#options' => array(1,0),
+          '#row' => $row,
+          '#col' => $col,
+          '#disabled' => $this->synchMethodNotViable($ldap_server, $synch_method, $mapping)
+          );
+      }
+
+      $id =  join('__', array($ldap_server->sid, $user_target, 'notes'));
+      $form[$id] = array(
+        '#id' => $id,
+        '#type' => 'textfield',
+        '#default_value' => $mapping['notes'],
+        '#size' => 40,
+        '#maxlength' => 255,
+        '#row' => $row,
+        '#col' => $col + 1,
+        );
+    }
+  }
+
+  for ($i=0; $i<4; $i++) {
+    $row++;
+    $id =  join('__', array($ldap_server->sid, 'add', 'configurable', $i));
+    $form[$id] = array(
+      '#id' => $id,
+      '#type' => 'hidden',
+      '#default_value' => 1,
+      );
+
+    $id =  join('__', array($ldap_server->sid, 'add', 'ldap_source', $i));
+    $form[$id] = array(
+      '#id' => $id,
+      '#type' => 'textfield',
+      '#default_value' => '',
+      '#size' => 20,
+      '#maxlength' => 255,
+      '#row' => $row,
+      '#col' => 0,
+      );
+
+
+    $id =  join('__', array($ldap_server->sid, 'add', 'user_target' ,  $i));
+    $form[$id] = array(
+      '#id' => $id,
+      '#type' => 'select',
+      '#default_value' => '',
+      '#options' => $target_options,
+      '#row' => $row,
+      '#col' => 1,
+      );
+
+    $col = 1;
+    foreach ($this->synchTypes as $synch_method => $synch_method_name) {
+      $col++;
+      $id = join('__', array($ldap_server->sid, 'add', $synch_method,  $i));
+      $form[$id] = array(
+        '#id' => $id ,
+        '#type' => 'checkbox',
+        '#default_value' => '',
+        '#options' => array(1,0),
+        '#row' => $row,
+        '#col' => $col,
+        '#disabled' => $this->synchMethodNotViable($ldap_server, $synch_method, $mapping)
+        );
+    }
+
+    $id =  join('__', array($ldap_server->sid, 'add', 'notes', $i));
+    $form[$id] = array(
+      '#id' => $id,
+      '#type' => 'textfield',
+      '#default_value' => '',
+      '#size' => 40,
+      '#maxlength' => 255,
+      '#row' => $row,
+      '#col' => $col + 1,
+      );
+  }
+
+  return $table;
+
+  }
+  private function synchMethodNotViable($ldap_server, $synch_method, $mapping) {
+   $viable = ((!isset($mapping['configurable']) || $mapping['configurable']) && ($ldap_server->queriableWithoutUserCredentials ||
+      $synch_method == LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER));
+   return (boolean)(!$viable);
+  }
 }

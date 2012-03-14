@@ -6,6 +6,7 @@ move data into ldap_user module structure
 - X move "Allow account conflicts" option from server conf to ldap user conf
 - X create new fields in user and add to .install file
 - X add authmap data to user->ldap_authmap_* fields
+- X add mapping form for user field and ldap entry mapping
 - write hook_user_* and entity_* functions to populate ldap data fields
 - test by creating users manually
 - write script to move user->data to correct fields in $user-> entity
@@ -14,8 +15,9 @@ move data into ldap_user module structure
 
 - make sure puid fields are stored in user fields
 - write code to check and resolve conflict with puid
-
-
+- bring ldap_provision code into module
+- allow rules for each field [sych on intitail provision, synch on logon, synch on periodic update, push to ldap entry]
+- implement drupal user -> ldap entry synching
 
 
 tests

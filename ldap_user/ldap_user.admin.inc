@@ -18,8 +18,10 @@
  */
 function ldap_user_admin_form($form, &$form_state) {
     require_once('LdapUserConfAdmin.class.php');
-    $auth_conf = new LdapUserConfAdmin();
-    return $auth_conf->drupalForm();
+    $ldap_user_conf = new LdapUserConfAdmin();
+    $form = $ldap_user_conf->drupalForm();
+   // dpm('ldap_user_admin_form'); dpm($form);
+    return $form;
 }
 
 
@@ -43,6 +45,7 @@ function ldap_user_admin_form_validate($form, &$form_state) {
  */
 
 function ldap_user_admin_form_submit($form, &$form_state) {
+ // dpm('ldap_user_admin_form_submit'); dpm($form_state);
   require_once('LdapUserConfAdmin.class.php');
   $conf = new LdapUserConfAdmin();
   $conf->drupalFormSubmit($form_state['values']);  // add form data to object and save or create

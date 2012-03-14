@@ -101,6 +101,25 @@ function ldap_badattr($attr, $attr_name) {
 }
 
 /**
+ * get array of required attributes for an ldap query
+ *
+ * @param string $op is operation being performed, user_update, user_insert, etc.
+ * @param string $sid server id being used
+ */
+function ldap_servers_attributes_needed($op, $sid = NULL) {
+  static $attributes;
+  if (!is_array($attributes)) {
+    $attributes = array();
+  }
+  if (!isset($attributes[$op])) {
+    drupal_alter('ldap_attributes_needed', $attributes[$op], $op, $sid);
+    // attributes array needs to have no gaps of ldap_search(), ldap_read(), ldap_list() so apply array_values()
+    $attributes[$op] = array_values(array_unique($attributes[$op]));
+  }
+  return $attributes[$op];
+}
+
+/**
  * @param array $ldap_entry
  * @param string $text
  * @return string text with tokens replaced
@@ -112,6 +131,22 @@ function ldap_server_token_replace($ldap_entry, $text) {
   $result = str_replace(array_keys($tokens), array_values($tokens), $text);
   return $result;
 }
+
+/**
+ * @param array $attributes array of attributes passed by reference
+ * @param string $text with tokens in it
+ *
+ * by reference return add ldap attribute names to $attributes
+ */
+function ldap_servers_extract_attributes_from_token(&$attributes,  $text) {
+  $tokens = ldap_server_tokens_needed_for_template($text);
+  foreach ($tokens as $token) {
+    $token = str_replace(array(LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST), array('',''), $token);
+    $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token);
+    $attributes[] = $parts[0];
+  }
+}
+
 
 
 /**

@@ -112,6 +112,8 @@ define('LDAP_MORE_RESULTS_TO_RETURN', 0x5f);
 define('LDAP_CLIENT_LOOP', 0x60);
 define('LDAP_REFERRAL_LIMIT_EXCEEDED', 0x61);
 
+require_once('ldap_servers.functions.inc');
+
 function ldap_servers_menu() {
   $menu_offset = 4;
 
@@ -231,27 +233,85 @@ function ldap_servers_theme() {
   );
 }
 
+
+
   /**
-   * implements hook_ldap_user_attributes_needed($op)
-   * by providing attribute names need for operations
+   * implements hook_ldap_attributes_needed_alter()
    */
-  function ldap_server_ldap_user_attributes_needed($op, $sid) {
+  function ldap_servers_ldap_attributes_needed_alter(&$attributes, $op, $ldap_server) {
 
-    // get server object
-    // determine if puid property is set
+    $attributes[] = 'dn';
+    if ($ldap_server) { // puid attributes are server specific
+      if (is_scalar($ldap_server)) {
+        $ldap_server = ldap_servers_get_servers($ldap_server, 'enabled', TRUE);
+      }
 
-    switch ($op) {
+      switch ($op) {
 
-      case 'provision_user':
+      case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
+      case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
+          // username attribute, email attribute,
+          // tokens used in such
+        break;
 
-      break;
+        case LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
+          ldap_servers_extract_attributes_from_token($attributes,  $ldap_server->user_dn_expression);
+        break;
 
-      case 'update_user':
-
-      break;
-
+      }
     }
+
   }
+
+
+/**
+ * implements hook_ldap_user_targets_list_alter().
+ */
+
+function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server) {
+  $tokens = array(
+    '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
+    '!sid' => $ldap_server->sid,
+  );
+
+  $available_user_targets['field_ldap_user_puid_sid'] =  array(
+    'name' => t('Server Configuration (sid) providing PUID'),
+    'configurable' => 0,
+    'configurable_text' => t('Not configurable.'),
+    'source' => t('set to "!sid"', $tokens),
+    );
+
+  $available_user_targets['field_ldap_user_puid'] =  array(
+    'name' => t('PUID (permanenty unique identifier)'),
+    'configurable' => 0,
+    'configurable_text' => t('User persistent unique id is derived based on ldap server configuration at !edit_link.', $tokens),
+    'source' => $ldap_server->unique_persistent_attr,
+    );
+
+  $available_user_targets['field_ldap_user_current_dn'] =  array(
+    'name' => t('Most recent DN'),
+    'configurable' => 0,
+    'configurable_text' => t('Configured in LDAP Servers configuration.'),
+    'source' => 'dn',
+    );
+
+  $available_user_targets['property_name'] = array(
+    'name' => 'Username',
+    'source' => $ldap_server->user_attr,
+    'configurable' => 0,
+    'configurable_text' => t('Username is derived based on ldap server configuration at !edit_link.', $tokens),
+    );
+
+  $available_user_targets['property_mail'] = array(
+    'name' => 'Email',
+    'source' => ($ldap_server->mail_template) ? $ldap_server->mail_template : $ldap_server->mail_attr,
+    'configurable' => 0,
+    'configurable_text' => t('Email is derived based on ldap server configuration at !edit_link.', $tokens),
+    );
+
+}
+
+
 
 /**
  *

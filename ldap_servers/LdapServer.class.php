@@ -43,6 +43,23 @@ class LdapServer {
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
   public $detailed_watchdog_log;
+  public $editPath;
+  public $queriableWithoutUserCredentials = FALSE; // can this server be queried without user credentials provided?
+  public $userAttributeNeededCache = array(); // array of attributes needed keyed on $op such as 'user_update'
+
+  public function derivePuidFromLdapEntry($user_ldap_entry) {
+    if ($this->unique_persistent_attr
+        && isset($user_ldap_entry['attr'][$this->unique_persistent_attr])
+        && is_scalar($user_ldap_entry['attr'][$this->unique_persistent_attr])
+        ) {
+      //@todo this should go through whatever standard detokenizing function ldap_server module has
+      return $user_ldap_entry['attr'][$this->unique_persistent_attr];
+    }
+    else {
+      return FALSE;
+    }
+
+  }
 
 
   public $inDatabase = FALSE;
@@ -127,6 +144,12 @@ class LdapServer {
       $this->bindpw = $server_record->bindpw;
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
+
+    $this->queriableWithoutUserCredentials = (boolean)(
+      $this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
+      $this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
+    );
+    $this->editPath = 'admin/config/people/ldap/servers/edit/' . $this->sid;
   }
 
   /**
@@ -282,8 +305,9 @@ class LdapServer {
       $this->connect();
       $this->bind();
     }
-
-
+ //   dpm('ldap search attributes 1:');dpm($attributes);
+  //  $attributes = array('dn', 'sAMAccountName', 'mail');
+  //   dpm('ldap search attributes 2:');dpm($attributes);
     switch ($scope) {
       case LDAP_SCOPE_SUBTREE:
         $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
@@ -369,10 +393,14 @@ class LdapServer {
    * @param $drupal_user_name
    *  drupal user name.
    *
+   * @param $op
+   *   provision, authenticate, etc. to help determine which attributes to return
+   *
    * @return
    *   An array with users LDAP data or NULL if not found.
    */
-  function user_lookup($drupal_user_name) {
+  function user_lookup($drupal_user_name, $op = 'user_update') {
+   // dpm("user_lookup, $drupal_user_name=$drupal_user_name, op=$op");
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
     $ldap_username = $this->drupalToLdapNameTransform($drupal_user_name, $watchdog_tokens);
 
@@ -380,10 +408,12 @@ class LdapServer {
       return FALSE;
     }
 
+    $attributes = ldap_servers_attributes_needed($op, $this);
+   // dpm('user_lookup attributes'); dpm($attributes);
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
-      $result = $this->search($basedn, $filter);
+      $result = $this->search($basedn, $filter, $attributes);  // ,
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.
@@ -411,6 +441,7 @@ class LdapServer {
             'dn' =>  $match['dn'],
             'mail' => $this->deriveEmailFromEntry($match),
             'attr' => $match,
+            'sid' => $this->sid,
             );
           return $result;
         }
@@ -433,6 +464,7 @@ class LdapServer {
             'dn' =>  $match['dn'],
             'mail' => $this->deriveEmailFromEntry($match),
             'attr' => $match,
+            'sid' => $this->sid,
           );
 
           return $result;

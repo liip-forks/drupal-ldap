@@ -92,4 +92,3 @@ function ldap_user_edit_form_validate(&$form, &$form_state) {
 function ldap_user_edit_form_submit(&$form, &$form_state) {
 
 }
-

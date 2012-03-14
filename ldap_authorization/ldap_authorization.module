@@ -117,6 +117,20 @@ function ldap_authorization_ldap_server_in_use($sid, $server_name) {
   return $use_warnings;
 }
 
+/**
+ * implements hook_ldap_user_targets_list_alter().
+ *
+ */
+
+function ldap_authorization_ldap_user_targets_list_alter(&$available_user_targets) {
+
+  $available_user_targets['property.role'] = array(
+    'name' => 'Drupal Roles',
+    'configurable' => 0,
+    'configurable_text' => 'Drupal roles are configured via LDAP Authorization module.',
+  );
+
+}
 
 /**
  * Implements hook_ldap_authorization_maps_alter().
