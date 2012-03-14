@@ -55,8 +55,8 @@ function ldap_sso_boot() {
         else {
           $login_attempted = FALSE;
         }
-        require_once('includes/common.inc');
-        require_once('includes/path.inc');
+        require_once(DRUPAL_ROOT . '/includes/common.inc');
+        require_once(DRUPAL_ROOT . '/includes/path.inc');
         $ldap_authentication_conf = variable_get('ldap_authentication_conf', array());
         if ($ldap_authentication_conf['seamlessLogin'] == 1 && ($login_attempted != 'true')) {
           setcookie("seamless_login_attempted", 'true', time() + (int)$ldap_authentication_conf['cookieExpire'], base_path(), "");

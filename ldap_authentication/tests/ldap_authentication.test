@@ -121,7 +121,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
     $user1 = user_load(1);
     $password = $this->randomString(20);
-    require_once('includes/password.inc');
+    require_once(DRUPAL_ROOT . '/includes/password.inc');
     $account = array(
       'name' => $user1->name,
       'pass' => user_hash_password(trim($password)),
@@ -231,7 +231,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
     $user1 = user_load(1);
     $password = $this->randomString(20);
-    require_once('includes/password.inc');
+    require_once(DRUPAL_ROOT . '/includes/password.inc');
     $account = array(
       'name' => $user1->name,
       'pass' => user_hash_password(trim($password)),
@@ -344,7 +344,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
     $user1 = user_load(1);
     $password = $this->randomString(20);
-    require_once('includes/password.inc');
+    require_once(DRUPAL_ROOT . '/includes/password.inc');
     $account = array(
       'name' => $user1->name,
       'pass' => user_hash_password(trim($password)),
