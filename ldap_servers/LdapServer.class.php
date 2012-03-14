@@ -238,8 +238,8 @@ class LdapServer {
    *  @param params same as ldap_search() params except $link_identifier is omitted.
    *
    * @return
-   *   An array of matching entries->attributes, or FALSE if the search is
-   *   empty.
+   *   An array of matching entries->attributes or empty array if none
+   *   or FALSE if the search is empty.
    */
 
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = LDAP_SCOPE_SUBTREE) {
@@ -325,7 +325,7 @@ class LdapServer {
 
     if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
-      return $entries;
+      return (is_array($entries)) ? $entries : FALSE;
     }
     elseif ($this->ldapErrorNumber()) {
       $watchdog_tokens =  array('%basedn' => $base_dn, '%filter' => $filter,
@@ -333,7 +333,7 @@ class LdapServer {
         '%errno' => $this->ldapErrorNumber());
       watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
         %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
-      FALSE;
+      RETURN FALSE;
     }
     else {
       return array();
