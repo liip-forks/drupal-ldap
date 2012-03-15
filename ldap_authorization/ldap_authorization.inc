@@ -175,7 +175,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
      *   -  a mapping configuration ($consumer_conf)
      */
 
-    ldap_authorization_maps_alter_invoke($user, $user_ldap_entry, $ldap_server, $consumer->consumerConf, $proposed_ldap_authorizations, 'query');
+    ldap_authorization_maps_alter_invoke($user, $user_ldap_entry, $ldap_server, $consumer->consumerConf, $proposed_ldap_authorizations, $op);
 
     if ($detailed_watchdog_log || $debug) {
       $_proposed_ldap_authorizations = is_array($proposed_ldap_authorizations) ? $proposed_ldap_authorizations : array();
@@ -228,6 +228,10 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     /**
      * 3. third, grant any proposed authorizations not already granted
      */
+
+    if ($op == 'test_query') {
+      $_SESSION['ldap_authorization_test_query']['tokens'] = $watchdog_tokens;
+    }
     if ($op == 'set') {
       _ldap_authorizations_user_authorizations_set($user, $consumer, $filtered_ldap_authorizations, $user_ldap_entry, $watchdog_tokens);
     }
@@ -371,6 +375,9 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
       }
     }
   }
+  if ($op == 'test_query') {
+    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 1. Derive from DN'] = ($consumer_conf->deriveFromDn) ? $derive_from_dn_authorizations : t('disabled');
+  }
 
   // Strategy 2: groups in user attributes
   $derive_from_attr_authorizations = array();
@@ -394,7 +401,9 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
       }
     }
   }
-
+  if ($op == 'test_query') {
+    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 2. Groups in User Attributes'] = ($consumer_conf->deriveFromAttr) ? $derive_from_attr_authorizations : t('disabled');
+  }
 
 /**
  *
@@ -431,6 +440,9 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
         }
       }
     }
+  }
+  if ($op == 'test_query') {
+    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 3. groups  as entries'] = ($consumer_conf->deriveFromEntry) ? $derive_from_entry_authorizations  : t('disabled');
   }
 
   $values = array_merge(array_values($derive_from_dn_authorizations), array_values($derive_from_attr_authorizations), array_values($derive_from_entry_authorizations));
