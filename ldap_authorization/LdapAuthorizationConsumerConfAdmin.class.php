@@ -26,13 +26,19 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values->only_ldap_authenticated = (int)$this->onlyApplyToLdapAuthenticated;
     $values->derive_from_dn = (int)$this->deriveFromDn;
     $values->derive_from_dn_attr = $this->deriveFromDnAttr;
+
     $values->derive_from_attr = (int)$this->deriveFromAttr;
     $values->derive_from_attr_attr = $this->arrayToLines($this->deriveFromAttrAttr);
     $values->derive_from_attr_use_first_attr = (int)$this->deriveFromAttrUseFirstAttr;
+    $values->derive_from_attr_nested = (int)$this->deriveFromAttrNested;
+
     $values->derive_from_entry = (int)$this->deriveFromEntry;
     $values->derive_from_entry_search_all = (int)$this->deriveFromEntrySearchAll;
     $values->derive_from_entry_entries = $this->arrayToLines($this->deriveFromEntryEntries);
     $values->derive_from_entry_attr = $this->deriveFromEntryAttr;
+    $values->derive_from_entry_user_ldap_attr = $this->deriveFromEntryUserLdapAttr;
+    $values->derive_from_entry_nested = (int)$this->deriveFromEntryNested;
+
     $values->mappings = $this->arrayToPipeList($this->mappings);
     $values->use_filter = (int)$this->useMappingsAsFilter;
     $values->synch_to_ldap = (int)$this->synchToLdap;
@@ -69,9 +75,10 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     // rever mappings to array and remove temporary properties from ctools export
     $this->mappings = $this->pipeListToArray($values->mappings);
     foreach (array('consumer_type', 'consumer_module', 'only_ldap_authenticated',
-      'derive_from_dn', 'derive_from_dn_attr', 'derive_from_attr', 'derive_from_attr_attr', 'derive_from_attr_use_first_attr',
-      'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'derive_from_entry_search_all', 'use_filter',
-      'synch_to_ldap', 'synch_on_logon', 'revoke_ldap_provisioned', 'create_consumers',
+      'derive_from_dn',
+      'derive_from_dn_attr', 'derive_from_attr', 'derive_from_attr_attr', 'derive_from_attr_use_first_attr', 'derive_from_attr_nested',
+      'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'derive_from_entry_search_all', 'deriveFromEntryNested',
+      'use_filter', 'synch_to_ldap', 'synch_on_logon', 'revoke_ldap_provisioned', 'create_consumers',
       'regrant_ldap_provisioned') as $prop_name) {
       unset($this->{$prop_name});
     }
@@ -232,6 +239,11 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#default_value' => $this->deriveFromAttrUseFirstAttr,
     );
 
+    $form['derive_from_attr']['derive_from_attr_nested'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Include nested groups.', $consumer_tokens),
+      '#default_value' => $this->deriveFromAttrNested,
+    );
 
      /**
      *  II C. derive from entry option
@@ -293,11 +305,25 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
          for example: memberUid', $consumer_tokens),
     );
 
+    $form['derive_from_entry']['derive_from_entry_user_ldap_attr'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Attribute holding user identifier.', $consumer_tokens),
+      '#default_value' => $this->deriveFromEntryUserLdapAttr,
+      '#size' => 50,
+      '#maxlength' => 255,
+      '#description' => t('This is almost always "dn"', $consumer_tokens),
+    );
 
     $form['derive_from_entry']['derive_from_entry_search_all'] = array(
       '#type' => 'checkbox',
       '#title' => t('Search all enabled LDAP servers for matching users.  (Enables roles on one server referencing users on another)'),
       '#default_value' => $this->deriveFromEntrySearchAll,
+    );
+
+    $form['derive_from_entry']['derive_from_entry_nested'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Include nested groups.', $consumer_tokens),
+      '#default_value' => $this->deriveFromEntryNested,
     );
 
 
@@ -565,11 +591,14 @@ Raw authorization ids look like:
     $this->deriveFromAttr  = (bool)($values['derive_from_attr']);
     $this->deriveFromAttrAttr = $values['derive_from_attr_attr'];
     $this->deriveFromAttrUseFirstAttr  = (bool)($values['derive_from_attr_use_first_attr']);
-    $this->deriveFromEntrySearchAll  = (bool)($values['derive_from_entry_search_all']);
+    $this->deriveFromAttrNested  = (bool)($values['derive_from_attr_nested']);
 
     $this->deriveFromEntry  = (bool)(@$values['derive_from_entry']);
     $this->deriveFromEntryEntries = $values['derive_from_entry_entries'];
     $this->deriveFromEntryAttr = $values['derive_from_entry_attr'];
+    $this->deriveFromEntryUserLdapAttr =  $values['derive_from_entry_user_ldap_attr'];
+    $this->deriveFromEntrySearchAll  = (bool)($values['derive_from_entry_search_all']);
+    $this->deriveFromEntryNested  = (bool)($values['derive_from_entry_nested']);
 
     $this->mappings = $values['mappings'];
     $this->useMappingsAsFilter  = (bool)(@$values['use_filter']);
@@ -700,7 +729,23 @@ Raw authorization ids look like:
           'default' => 0,
         )
       ),
+      'derive_from_attr_nested'  => array(
+          'schema' => array(
+            'type' => 'int',
+            'size' => 'tiny',
+            'not null' => TRUE,
+            'default' => 0,
+        )
+      ),
       'derive_from_entry'  => array(
+          'schema' => array(
+            'type' => 'int',
+            'size' => 'tiny',
+            'not null' => TRUE,
+            'default' => 0,
+        )
+      ),
+      'derive_from_entry_nested'  => array(
           'schema' => array(
             'type' => 'int',
             'size' => 'tiny',
@@ -724,13 +769,21 @@ Raw authorization ids look like:
         )
       ),
 
-      'derive_from_entry_search_all'  => array(
+      'derive_from_entry_search_all' => array(
           'schema' => array(
             'type' => 'int',
             'size' => 'tiny',
            'not null' => TRUE,
             'default' => 0,
         )
+      ),
+
+      'derive_from_entry_user_ldap_attr' => array(
+         'schema' => array(
+            'type' => 'varchar',
+            'length' => 255,
+            'default' => NULL,
+          ),
       ),
 
       'mappings'  => array(

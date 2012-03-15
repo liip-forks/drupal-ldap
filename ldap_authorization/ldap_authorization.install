@@ -157,3 +157,52 @@ function ldap_authorization_update_7104() {
   }
 
 }
+
+/**
+ * add derive_from_entry_user_ldap_attr field to allow user specification of dn or other identifier.
+ */
+function ldap_authorization_update_7105() {
+
+  if (!db_field_exists('ldap_authorization', 'derive_from_entry_user_ldap_attr')) {
+    db_add_field('ldap_authorization', 'derive_from_entry_user_ldap_attr', array(
+      'type' => 'varchar',
+      'length' => 255,
+      'default' => NULL,
+    ));
+    return t('"derive_from_entry_user_ldap_attr" field added to ldap_authorization table');
+  }
+  else {
+    return t('No database changes made.');
+  }
+
+}
+
+/**
+ * add nested checkboxes to derive from entry and attributes strategies.
+ */
+function ldap_authorization_update_7106() {
+
+  if (!db_field_exists('ldap_authorization', 'derive_from_attr_nested')) {
+    db_add_field('ldap_authorization', 'derive_from_attr_nested', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+    $msg = t('"derive_from_attr_nested" field added to ldap_authorization table');
+  }
+
+  if (!db_field_exists('ldap_authorization', 'derive_from_entry_nested')) {
+    db_add_field('ldap_authorization', 'derive_from_entry_nested', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+    $msg .=  t('"derive_from_entry_nested" field added to ldap_authorization table');
+  }
+
+  return ($msg) ? $msg :  t('No database changes made.');
+}
+
+

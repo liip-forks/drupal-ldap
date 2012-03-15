@@ -99,7 +99,7 @@ function ldap_authorization_maps_alter_invoke(&$user, &$user_ldap_entry, &$ldap_
 function ldap_authorization_ldap_server_in_use($sid, $server_name) {
 
   $use_warnings = array();
-  $consumers = ldap_authorization_get_consumers(); //dpm($consumers);
+  $consumers = ldap_authorization_get_consumers();
   foreach(ldap_authorization_get_consumers() as $consumer_type => $consumer_conf) {
     $consumer_conf['%server_name'] = $server_name;
     $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);

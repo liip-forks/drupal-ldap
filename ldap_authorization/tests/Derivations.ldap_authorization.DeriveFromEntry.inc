@@ -22,6 +22,7 @@ $authorization['drupal_role'] = array(
   'deriveFromEntry' => 1,
   'deriveFromEntryEntries' => array('ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
   'deriveFromEntryAttr' => 'member',
+  'deriveFromEntryUserLdapAttr' => 'dn',
 
   'mappings' => array(
     0 => array('ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu', 'content editors'),

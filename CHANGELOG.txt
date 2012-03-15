@@ -1,3 +1,5 @@
+Issue #1016728.  Added interface and db for nested groups config.
+Issue #1412076 by srinivas.kakde.  Allow specification of "Strategy 3: groups as entries" attribute
 johnbarclay added display of unfiltered authorizations to authorization debug/test interface
 Issue #1480236 by paulpaul.  foreach getting non array in ldap authorization include file.
 Issue #1481778 by dams_26.  includes without drupal root fixed.

@@ -422,20 +422,37 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
   $derive_from_entry_authorizations = array();
   if ($consumer_conf->deriveFromEntry) {
-    foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
-      $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'] . ')';
-      $entries = $ldap_server->search($branch, $filter, array('cn'));
-      if ($entries === FALSE || empty($entries) || $entries['count'] == 0) {
-        $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user->name . ')';
+    if ($consumer_conf->deriveFromEntryUserLdapAttrUndefined) {
+      // this condition will be removed in the 7.x-2.x branch,  its here to avoid breaking 7.x-1.x sites
+      // that use this somewhat flawed approach successfully.  see: http://drupal.org/node/1412076
+      foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
+        $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'] . ')';
         $entries = $ldap_server->search($branch, $filter, array('cn'));
-      }
-      if ($entries !== FALSE) {
-        foreach ($entries as $entry) {
-          if (isset($entry['cn'])) {
-            $derive_from_entry_authorizations[$entry['cn'][0]] = $entry['cn'][0];
+        if ($entries === FALSE || empty($entries) || $entries['count'] == 0) {
+          $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user->name . ')';
+          $entries = $ldap_server->search($branch, $filter, array('cn'));
+        }
+        if ($entries !== FALSE) {
+          foreach ($entries as $entry) {
+            if (isset($entry['cn'])) {
+              $derive_from_entry_authorizations[$entry['cn'][0]] = $entry['cn'][0];
+            }
+            elseif (isset($entry['dn'])) {
+              $derive_from_entry_authorizations[$entry['dn']] = (string)$entry['dn'];
+            }
           }
-          elseif (isset($entry['dn'])) {
-            $derive_from_entry_authorizations[$entry['dn']] = (string)$entry['dn'];
+        }
+      }
+    }
+    elseif (isset($user_ldap_entry[$consumer_conf->deriveFromEntryUserLdapAttr])) {
+      foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
+        $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry[$consumer_conf->deriveFromEntryUserLdapAttr] . ')';
+        $entries = $ldap_server->search($branch, $filter, array('dn'));
+        if ($entries !== FALSE) {
+          foreach ($entries as $entry) {
+            if (isset($entry['dn'])) {
+              $derive_from_entry_authorizations[$entry['dn']] = (string)$entry['dn'];
+            }
           }
         }
       }
