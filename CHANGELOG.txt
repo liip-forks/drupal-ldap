@@ -1,3 +1,4 @@
+Issue #1016728. Moved deriveFromAttrGroups and deriveFromEntryGroups functions out of ldap authorization and into ldap servers to help implement nested groups.
 Issue #1016728.  Added interface and db for nested groups config.
 Issue #1412076 by srinivas.kakde.  Allow specification of "Strategy 3: groups as entries" attribute
 johnbarclay added display of unfiltered authorizations to authorization debug/test interface

@@ -383,23 +383,19 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   $derive_from_attr_authorizations = array();
   if ($consumer_conf->deriveFromAttr) {
     foreach ($consumer_conf->deriveFromAttrAttr as $derive_from_attribute_name) {
-      foreach ($user_ldap_entry['attr'] as $user_attr_name => $user_attr_values) {
-        if (strcasecmp($derive_from_attribute_name, $user_attr_name) != 0) {
-          continue;
-        }
-        // patch 1050944
-        for ($i = 0; $i < $user_attr_values['count']; $i++) {
-          $attr_lcase = drupal_strtolower($user_attr_values[$i]);
-
-          if ($consumer_conf->deriveFromAttrUseFirstAttr) {
-            $attr_parts = ldap_explode_dn($attr_lcase, 0);
-            $first_part = explode('=', $attr_parts[0]);
-            $attr_lcase = str_replace('\\2C', ',', trim($first_part[1])); // for matching should not expect escaped commas
-          }
-          $derive_from_attr_authorizations[$attr_lcase] = (string)$attr_lcase;
+      $derive_from_attr_authorizations = $ldap_server->deriveFromAttrGroups($derive_from_attribute_name, $user_ldap_entry, $consumer_conf->deriveFromAttrNested);
+      if ($consumer_conf->deriveFromAttrUseFirstAttr) {
+        foreach ($derive_from_attr_authorizations as $id => $authorization) {
+          $attr_parts = ldap_explode_dn($authorization, 0);
+          $first_part = explode('=', $attr_parts[0]);
+          $attr_lcase = str_replace('\\2C', ',', trim($first_part[1])); // for matching should not expect escaped commas
+          $derive_from_attr_authorizations[$id] = $attr_lcase;
         }
       }
     }
+  }
+  if (count($derive_from_attr_authorizations)) {
+    $derive_from_attr_authorizations = array_combine($derive_from_attr_authorizations, $derive_from_attr_authorizations);
   }
   if ($op == 'test_query') {
     $_SESSION['ldap_authorization_test_query']['maps']['Strategy 2. Groups in User Attributes'] = ($consumer_conf->deriveFromAttr) ? $derive_from_attr_authorizations : t('disabled');
@@ -445,16 +441,15 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
       }
     }
     elseif (isset($user_ldap_entry[$consumer_conf->deriveFromEntryUserLdapAttr])) {
-      foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
-        $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry[$consumer_conf->deriveFromEntryUserLdapAttr] . ')';
-        $entries = $ldap_server->search($branch, $filter, array('dn'));
-        if ($entries !== FALSE) {
-          foreach ($entries as $entry) {
-            if (isset($entry['dn'])) {
-              $derive_from_entry_authorizations[$entry['dn']] = (string)$entry['dn'];
-            }
-          }
-        }
+      $derive_from_entry_authorizations = $ldap_server->deriveFromEntryGroups(
+        $consumer_conf->deriveFromEntryEntries,
+        $consumer_conf->deriveFromEntryAttr,
+        $consumer_conf->deriveFromEntryUserLdapAttr,
+        $user_ldap_entry,
+        $consumer_conf->deriveFromEntryNested
+      );
+      if (count($derive_from_entry_authorizations)) {
+        $derive_from_entry_authorizations = array_combine($derive_from_entry_authorizations, $derive_from_entry_authorizations);
       }
     }
   }

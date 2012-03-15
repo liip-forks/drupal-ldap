@@ -441,6 +441,59 @@ class LdapServer {
     }
   }
 
+  /**
+   * return by reference groups/authorizations when groups are defined from user attributes (such as memberOf)
+   *
+   *  @param array $derive_from_attribute_name.  e.g. memberOf
+   *  @param array $user_ldap_entry as returned by ldap php extension
+   *  @param boolean $nested if groups should be recursed or not.
+   *
+   *  @return array of groups specified in the derive from attribute
+   */
+
+  public function deriveFromAttrGroups($derive_from_attribute_name, $user_ldap_entry, $nested) {
+    // dpm($derive_from_attribute_name); dpm($user_ldap_entry);
+    $authorizations = array();
+    foreach ($user_ldap_entry['attr'] as $user_attr_name => $user_attr_values) {
+      if (strcasecmp($derive_from_attribute_name, $user_attr_name) != 0) {
+        continue;
+      }
+      // patch 1050944
+      for ($i = 0; $i < $user_attr_values['count']; $i++) {
+        $attr_lcase = drupal_strtolower($user_attr_values[$i]);
+        $authorizations[$attr_lcase] = (string)$attr_lcase;
+      }
+    }
+    return array_unique($authorizations);
+  }
+
+
+  /**
+   * return by reference groups/authorizations when groups are defined from entry
+   *
+   *  @param array $derive_from_entries_entries.  e.g. memberOf
+   *  @param string $derive_from_entry_attr
+   *  @param string $derive_from_entry_user_ldap_attr
+   *  @param boolean $nested if groups should be recursed or not.
+   *
+   *  @return array of groups specified in the derive from entry
+   */
+  private function deriveFromEntryGroups($derive_from_entries_entries, $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry, $nested) {
+    $authorizations = array();
+    foreach ($derive_from_entries_entries as $branch) {
+      $filter = '(' . $derive_from_entry_attr . '=' . $user_ldap_entry[$derive_from_entry_user_ldap_attr] . ')';
+      $entries = $ldap_server->search($branch, $filter, array('dn'));
+      if ($entries !== FALSE) {
+        foreach ($entries as $entry) {
+          if (isset($entry['dn'])) {
+            $authorizations[] = (string)$entry['dn'];
+          }
+        }
+      }
+    }
+    return $authorizations;
+  }
+
   public function deriveEmailFromEntry($ldap_entry) {
     if ($this->mail_attr) { // not using template
       return @$ldap_entry[$this->mail_attr][0];
