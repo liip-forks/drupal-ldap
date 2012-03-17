@@ -115,7 +115,7 @@ class LdapQuery {
     $count = 0;
     foreach ($this->baseDn as $base_dn) {
       $result = $ldap_server->search($base_dn, $this->filter, $this->attributes, 0, $this->sizelimit, $this->timelimit, $this->deref, $this->scope);
-      if ($result !== FALSE) {
+      if ($result !== FALSE && $result['count'] > 0) {
         $count = $count + $result['count'];
         $results = array_merge($results, $result);
       }
