@@ -34,13 +34,13 @@ $servers['ldapauthor1']['properties']  = array(
 $servers['ldapauthor1']['methodResponses']['connect'] = LDAP_SUCCESS;
 
 $servers['ldapauthor1']['search_results']['(member=cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu)']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
-    0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
-    1 => array('count' => 1, 'dn' => 'ou=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
+    0 => array('count' => 1, 'dn' => 'cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
+    1 => array('count' => 1, 'dn' => 'cn=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     'count' => 2,
   );
 
 $servers['ldapauthor1']['search_results']['(member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu)']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
-    0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
+    0 => array('count' => 1, 'dn' => 'cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     'count' => 1,
   );
 
@@ -121,6 +121,39 @@ $servers['ldapauthor1']['users']['cn=newkool,ou=special guests,ou=guest accounts
     'password' => array( 0 => 'goodpwd', 'count' => 1),
     'memberOf' => array( 0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
   );
+
+// nested groups
+$servers['ldapauthor1']['groups']['cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+    'dn' => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+    'memberOf' => array( 0 => 'cn=it,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
+  );
+
+$servers['ldapauthor1']['groups']['cn=it,ou=it,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+    'dn' => 'cn=it,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+    'memberOf' => array( 0 => 'cn=staff,ou=people,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
+    'memberOf' => array( 0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),  // bogus recursion to test bogus recursion
+  );
+
+$servers['ldapauthor1']['groups']['cn=staff,ou=people,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+    'dn' => 'cn=staff,ou=people,dc=ad,dc=myuniveristy,dc=edu',
+    'memberOf' => array( 0 => 'cn=people,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
+  );
+
+$servers['ldapauthor1']['groups']['cn=people,ou=it,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
+    'dn' => 'cn=people,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+    'memberOf' => array('count' => 0),
+  );
+
+
+// nested group queries
+$servers['ldapauthor1']['search_results']['(|((dn=cn=staff,ou=people,dc=ad,dc=myuniveristy,dc=edu)(dn=cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu))']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
+    0 => array('count' => 2,
+          'dn' => 'cn=staff,ou=people,dc=ad,dc=myuniveristy,dc=edu',
+          'dn' => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+          ),
+    'count' => 2,
+  );
+
 
 
 /**

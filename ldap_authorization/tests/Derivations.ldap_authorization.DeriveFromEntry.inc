@@ -25,8 +25,8 @@ $authorization['drupal_role'] = array(
   'deriveFromEntryUserLdapAttr' => 'dn',
 
   'mappings' => array(
-    0 => array('ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu', 'content editors'),
-    1 => array('ou=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu', 'content approvers'),
+    0 => array('cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu', 'content editors'),
+    1 => array('cn=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu', 'content approvers'),
   ),
 
   'useMappingsAsFilter' => 1,

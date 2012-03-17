@@ -31,8 +31,8 @@ $servers['fake_server1']['properties']  = array(
 $servers['fake_server1']['methodResponses']['connect'] = LDAP_SUCCESS;
 
 $servers['fake_server1']['search_results']['member=cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
-  0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
-  1 => array('count' => 1, 'dn' => 'ou=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
+  0 => array('count' => 1, 'dn' => 'cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
+  1 => array('count' => 1, 'dn' => 'cn=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
   'count' => 2,
 );
 

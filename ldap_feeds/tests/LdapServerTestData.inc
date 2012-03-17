@@ -83,7 +83,7 @@ $test_data['server']['search_results']['objectclass=user']['ou=campus accounts,d
   );
 
 $test_data['server']['search_results']['(member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu)']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
-    0 => array('count' => 1, 'dn' => 'ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
+    0 => array('count' => 1, 'dn' => 'cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
     'count' => 1,
   );
 

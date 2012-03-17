@@ -22,6 +22,7 @@ class LdapServerTest extends LdapServer {
   // LDAP Settings
 
   public $testUsers;
+  public $testGroups;
   public $methodResponses;
   public $searchResults;
   public $binddn = FALSE; // Default to an anonymous bind.
@@ -43,6 +44,7 @@ class LdapServerTest extends LdapServer {
     $this->sid = $sid;
     $this->methodResponses = $test_data['methodResponses'];
     $this->testUsers = $test_data['users'];
+    $this->testGroups = $test_data['groups'];
     $this->searchResults = $test_data['search_results'];
 
     $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
@@ -188,6 +190,46 @@ class LdapServerTest extends LdapServer {
       }
       else {
         $results[] = $user_data['attr'];
+      }
+    }
+
+    foreach ($this->testGroups as $dn => $group_data) {
+
+
+      // if not in basedn, skip
+      // eg. basedn ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu
+      // should be leftmost string in:
+      // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu
+      $pos = strpos($dn, $base_dn);
+      if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) == FALSE) {
+        continue; // not in basedn
+      }
+      else {
+      }
+
+      // if doesn't filter attribute has no data, continue
+      if (!isset($group_data['attr'][$filter_attribute])) {
+        continue;
+      }
+
+      // if doesn't match filter, continue
+      $contained_values = $group_data['attr'][$filter_attribute];
+      unset($contained_values['count']);
+      if (!in_array($filter_value, array_values($contained_values))) {
+        continue;
+      }
+
+      // loop through all attributes, if any don't match continue
+      $group_data['attr']['dn'] = $dn;
+      if ($attributes) {
+        $selected_group_data = array();
+        foreach ($attributes as $key => $value) {
+          $selected_group_data[$key] = (isset($group_data['attr'][$key])) ? $group_data['attr'][$key] : NULL;
+        }
+        $results[] = $selected_group_data;
+      }
+      else {
+        $results[] = $group_data['attr'];
       }
     }
 

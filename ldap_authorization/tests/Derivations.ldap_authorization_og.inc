@@ -36,10 +36,10 @@ $authorization['og_group'] = array(
   'deriveFromEntryAttr' => array(),
 
   'mappings' => array(
-    0 => array('ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu',
+    0 => array('cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu',
                'group-name=knitters,role-name=member',
                 ),
-    1 => array('ou=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu',
+    1 => array('cn=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu',
                'gid=3,rid=2'
                ),
     2 => array('guest accounts',
@@ -70,7 +70,7 @@ $authorization['og_group'] = array(
 );
 
   /**
-   *      5 => array('ou=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu',
+   *      5 => array('cn=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu',
                'node.field_state_id=IL,rid=2'
                ),
                **/
