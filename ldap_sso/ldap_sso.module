@@ -61,8 +61,10 @@ function ldap_sso_boot() {
         if ($ldap_authentication_conf['seamlessLogin'] == 1 && ($login_attempted != 'true')) {
           setcookie("seamless_login_attempted", 'true', time() + (int)$ldap_authentication_conf['cookieExpire'], base_path(), "");
           $_SESSION['seamless_login_attempted'] = $login_attempted;
-          $ldap_sso_q = (!isset($_GET['q']) || $_GET['q'] == '') ? 'user' : $_GET['q'];
-          drupal_goto('user/login/sso', array('query' => array('destination' => rawurlencode($ldap_sso_q))));
+          // removed with http://drupal.org/node/1485118 patch
+          //$ldap_sso_q = (!isset($_GET['q']) || $_GET['q'] == '') ? 'user' : $_GET['q'];
+          //drupal_goto('user/login/sso', array('query' => array('destination' => rawurlencode($ldap_sso_q))));
+          drupal_goto('user/login/sso', array('query' => drupal_get_destination()));
         }
         else {
           return;

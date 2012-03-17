@@ -1,3 +1,4 @@
+Issue #1485118 by paulpaul.  SSO redirect issue corrected with drupal get destination call.
 Issue #1484418. Missing ldap_servers.bind_method field for some unstable upgrades in update hook.
 Issue #1016728. Moved deriveFromAttrGroups and deriveFromEntryGroups functions out of ldap authorization and into ldap servers to help implement nested groups.
 Issue #1016728. Added interface and db for nested groups config.
