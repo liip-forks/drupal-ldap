@@ -163,3 +163,24 @@ function ldap_servers_update_7101() {
   return t('Updated LDAP Server to include "allow_conflicting_drupal_accts" and "unique_persistent_attr" fields.');
 }
 
+
+/**
+ * add bind_method field to ldap_servers table
+ */
+function ldap_servers_update_7102() {
+
+  if (!db_field_exists('ldap_servers', 'bind_method')) {
+    db_add_field('ldap_servers', 'bind_method', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+    $msg = t('"bind_method" field added to ldap_servers table');
+  }
+
+  return ($msg) ? $msg :  t('No database changes made.');
+}
+
+
+
