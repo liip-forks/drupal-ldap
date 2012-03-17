@@ -188,7 +188,6 @@ class LdapAuthorizationConsumerConf {
     'deriveFromEntryUserLdapAttr',
     'deriveFromEntryNested',
 
-
     'mappings',
     'useMappingsAsFilter',
     'synchToLdap',

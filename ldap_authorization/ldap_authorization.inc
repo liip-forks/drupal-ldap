@@ -383,20 +383,27 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   $derive_from_attr_authorizations = array();
   if ($consumer_conf->deriveFromAttr) {
     foreach ($consumer_conf->deriveFromAttrAttr as $derive_from_attribute_name) {
-      $derive_from_attr_authorizations = $ldap_server->deriveFromAttrGroups($derive_from_attribute_name, $user_ldap_entry, $consumer_conf->deriveFromAttrNested);
-      if ($consumer_conf->deriveFromAttrUseFirstAttr) {
-        foreach ($derive_from_attr_authorizations as $id => $authorization) {
+      $authorizations = $ldap_server->deriveFromAttrGroups($derive_from_attribute_name, $user_ldap_entry, $consumer_conf->deriveFromAttrNested);
+      //debug("_ldap_authorization_ldap_authorization_maps_alter, attribute=" . $derive_from_attribute_name); debug($authorizations);
+      foreach ($authorizations as $id => $authorization) {
+        if ($consumer_conf->deriveFromAttrUseFirstAttr) {
           $attr_parts = ldap_explode_dn($authorization, 0);
           $first_part = explode('=', $attr_parts[0]);
-          $attr_lcase = str_replace('\\2C', ',', trim($first_part[1])); // for matching should not expect escaped commas
-          $derive_from_attr_authorizations[$id] = $attr_lcase;
+          $derive_from_attr_authorizations[] = drupal_strtolower(str_replace('\\2C', ',', trim($first_part[1])));
+        }
+        else {
+          $derive_from_attr_authorizations[] = drupal_strtolower($authorization);
         }
       }
+    //  debug("_ldap_authorization_ldap_authorization_maps_alter after loop, attribute=derive_from_attr_authorizations"); debug($derive_from_attr_authorizations);
     }
   }
   if (count($derive_from_attr_authorizations)) {
+   // array_walk($derive_from_attr_authorizations, 'drupal_strtolower');
+    $derive_from_attr_authorizations = array_unique($derive_from_attr_authorizations);
     $derive_from_attr_authorizations = array_combine($derive_from_attr_authorizations, $derive_from_attr_authorizations);
   }
+//   debug("_ldap_authorization_ldap_authorization_maps_alter after loop, after filter"); debug($derive_from_attr_authorizations);
   if ($op == 'test_query') {
     $_SESSION['ldap_authorization_test_query']['maps']['Strategy 2. Groups in User Attributes'] = ($consumer_conf->deriveFromAttr) ? $derive_from_attr_authorizations : t('disabled');
   }
@@ -407,10 +414,10 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
  *
  *  given:
  *  - user dn = cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu
- *  - deriveFromEntryEntries = array(ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu)
+ *  - deriveFromEntryEntries = array(cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu)
  *  - deriveFromEntryAttr = 'member'
  *
- * search on member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu within basedn ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu
+ * search on member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu within basedn cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu
  *
  * returned entries dn or cn should be used to derive authorization mappings
  *
@@ -441,6 +448,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
       }
     }
     elseif (isset($user_ldap_entry[$consumer_conf->deriveFromEntryUserLdapAttr])) {
+      // $derive_from_entries_entries, $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry, $nested = FALSE
       $derive_from_entry_authorizations = $ldap_server->deriveFromEntryGroups(
         $consumer_conf->deriveFromEntryEntries,
         $consumer_conf->deriveFromEntryAttr,
@@ -449,6 +457,10 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
         $consumer_conf->deriveFromEntryNested
       );
       if (count($derive_from_entry_authorizations)) {
+        foreach ($derive_from_entry_authorizations as $i => $authorization) {
+          $derive_from_entry_authorizations[$i] = drupal_strtolower($authorization);
+        }
+        $derive_from_entry_authorizations = array_unique($derive_from_entry_authorizations);
         $derive_from_entry_authorizations = array_combine($derive_from_entry_authorizations, $derive_from_entry_authorizations);
       }
     }
@@ -459,6 +471,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
   $values = array_merge(array_values($derive_from_dn_authorizations), array_values($derive_from_attr_authorizations), array_values($derive_from_entry_authorizations));
   $values = array_unique($values);
+//  debug('after merge'); debug($values);
   $authz_ids = (count($values)) ? array_combine($values, $values) : array();
 
   if ($detailed_watchdog_log) {

@@ -77,7 +77,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     foreach (array('consumer_type', 'consumer_module', 'only_ldap_authenticated',
       'derive_from_dn',
       'derive_from_dn_attr', 'derive_from_attr', 'derive_from_attr_attr', 'derive_from_attr_use_first_attr', 'derive_from_attr_nested',
-      'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'derive_from_entry_search_all', 'deriveFromEntryNested',
+      'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'derive_from_entry_search_all', 'derive_from_entry_nested',
       'use_filter', 'synch_to_ldap', 'synch_on_logon', 'revoke_ldap_provisioned', 'create_consumers',
       'regrant_ldap_provisioned') as $prop_name) {
       unset($this->{$prop_name});
@@ -214,7 +214,8 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
         '#markup' => '<p>' .
         t('II. B. finds the user LDAP entry, then checks for groups listed in one or more of its attributes.  Its the converse of II.C.') .
         ' ' .
-        t('The "Attribute names" field would be attribute containing the list of groups the user belonged to, such as <code>memberOf</code>') .
+        t('The "Attribute names" field would be attribute containing the list of groups the user belonged to, such as <code>memberOf</code>.
+          See '). l('http://drupal.org/node/1487018' , 'http://drupal.org/node/1487018') . t(' for additional documentation.') .
         '</p>'
     );
 

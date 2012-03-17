@@ -291,7 +291,6 @@ class LdapServer {
           // false positive error thrown.  do not result limit error when $sizelimit specified
         }
         elseif ($this->hasError()) {
-          // dpm('has_error' . $this->errorMsg('ldap') . $this->ldapErrorNumber());
           watchdog('ldap_server', 'ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query',
             array('%message' => $this->errorMsg('ldap'), '%query' => $query),
             WATCHDOG_ERROR);
@@ -323,7 +322,7 @@ class LdapServer {
         break;
     }
 
-    if ($result && ldap_count_entries($this->connection, $result)) {
+    if ($result && (ldap_count_entries($this->connection, $result) !== FALSE) ) {
       $entries = ldap_get_entries($this->connection, $result);
       return (is_array($entries)) ? $entries : FALSE;
     }
@@ -336,7 +335,7 @@ class LdapServer {
       RETURN FALSE;
     }
     else {
-      return array();
+      return FALSE;
     }
   }
 
@@ -452,19 +451,91 @@ class LdapServer {
    */
 
   public function deriveFromAttrGroups($derive_from_attribute_name, $user_ldap_entry, $nested) {
-    // dpm($derive_from_attribute_name); dpm($user_ldap_entry);
-    $authorizations = array();
+    $all_groups = array();
+  //  debug($user_ldap_entry);
     foreach ($user_ldap_entry['attr'] as $user_attr_name => $user_attr_values) {
+     // debug("$derive_from_attribute_name, $derive_from_attribute_name, $user_attr_name");
       if (strcasecmp($derive_from_attribute_name, $user_attr_name) != 0) {
         continue;
       }
       // patch 1050944
       for ($i = 0; $i < $user_attr_values['count']; $i++) {
-        $attr_lcase = drupal_strtolower($user_attr_values[$i]);
-        $authorizations[$attr_lcase] = (string)$attr_lcase;
+        $all_groups[] = (string)$user_attr_values[$i];
+      }
+      if ($nested) {
+        $level = 0;
+        $groups_by_level = array($level => $all_groups);
+        // $this->deriveFromAttrGroupsResursive($all_groups, $groups_by_level, $level, $derive_from_attribute_name, 2); // LDAP_SERVER_GROUPS_RECURSE_DEPTH
       }
     }
-    return array_unique($authorizations);
+    return array_unique($all_groups);
+  }
+
+  /**
+   * not working yet
+   * will be ton of permission issues with service accounts
+   * need configurable obj type to avoid binding to a million user entries, printers, etc.
+   */
+  private function deriveFromAttrGroupsResursive(&$all_groups, &$groups_by_level, $level, $derive_from_attribute_name, $max_depth) {
+
+    // derive query with & of all groups at current level
+    // e.g. (|(distinguishedname=cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu)(distinguishedname=cn=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu))
+    // execute query and loop through it to populate $groups_by_level[$level + 1]
+    // call recursively provided max depth not excluded and $groups_by_level[$level + 1] > 0
+
+    // this needs to be configurable also and default per ldap implementation
+    $filter = "(&(objectCategory=group)(|($derive_from_attribute_name=" . join(")($derive_from_attribute_name=", $groups_by_level[$level]) . "))";
+    $level++;
+    $groups_by_level[$level] = array();
+    foreach ($this->basedn as $base_dn) {
+      $entries = $this->search($base_dn, $filter, array($derive_from_attribute_name));
+
+      foreach ($entries as $entry) {
+        $attr_values = array();
+        if (isset($entry['attr'][$derive_from_attribute_name])) {
+          $attr_values = $entry['attr'][$derive_from_attribute_name];
+        }
+        elseif (isset($entry['attr'][drupal_strtolower($derive_from_attribute_name)])) {
+          $attr_values = $entry['attr'][drupal_strtolower($derive_from_attribute_name)];
+        }
+        else {
+          foreach ($entry['attr'] as $attr_name => $values) {
+            if (strcasecmp($derive_from_attribute_name, $attr_name) != 0) {
+              continue;
+            }
+            $attr_values = $values;
+            break;
+          }
+        }
+        if (count($values)) {
+          for ($i = 0; $i < $attr_values['count']; $i++) {
+            $value = (string)$attr_values[$i];
+            if (!in_array($value, $all_groups)) {
+              $groups_by_level[$level][] = $value;
+              $all_groups[] = $value;
+            }
+          }
+        }
+      }
+      // get groups into all groups and groups by level + 1
+    }
+    if (isset($groups_by_level[$level]) && count($groups_by_level[$level]) && $level < $max_depth) {
+      $this->deriveFromAttrGroupsResursive($all_groups, $groups_by_level, $level, $attribute_name, $max_depth);
+    }
+  }
+
+  /**
+   * @param string ldap dn as  $dn
+   * @param string ldap attribute name $ldap_attribute_name
+   *
+   * @return array of all $ldap_attribute_name attribues for $dn
+   */
+
+  private function retrieveMultiAttribute($dn, $ldap_attribute_name) {
+
+
+
+
   }
 
 
@@ -478,7 +549,7 @@ class LdapServer {
    *
    *  @return array of groups specified in the derive from entry
    */
-  private function deriveFromEntryGroups($derive_from_entries_entries, $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry, $nested) {
+  private function deriveFromEntryGroups($derive_from_entries_entries, $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry, $nested = FALSE) {
     $authorizations = array();
     foreach ($derive_from_entries_entries as $branch) {
       $filter = '(' . $derive_from_entry_attr . '=' . $user_ldap_entry[$derive_from_entry_user_ldap_attr] . ')';
