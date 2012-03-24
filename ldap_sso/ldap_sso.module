@@ -115,9 +115,18 @@ function ldap_sso_user_login_sso() {
 
     if ($remote_user) {
       if ($auth_conf->ssoRemoteUserStripDomainName) {
-        $exploded = explode('@', $remote_user);
+        // might be in form <remote_user>@<domain> or <domain>\<remote_user>
+        $domain = NULL;
+        $exploded = preg_split('/[\@\\\\]/', $remote_user);
         if (count($exploded) == 2) {
-          $remote_user = $exploded[0];
+          if (strpos($remote_user, '@') !== FALSE) {
+            $remote_user = $exploded[0];
+            $domain = $exploded[1];
+          }
+          else {
+            $domain = $exploded[0];
+            $remote_user = $exploded[1];
+          }
         }
       }
       watchdog('ldap_authentication', '%username : $_SERVER[\'REMOTE_USER\'] found',
