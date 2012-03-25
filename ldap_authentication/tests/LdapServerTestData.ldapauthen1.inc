@@ -22,22 +22,23 @@ $test_data['servers']['ldapauthen1']['properties']  = array(
     'inDatabase' => TRUE,
     'status'  => 1,
     'type'  => 'ad',
-    'address'  => 'ad.myuniveristy.edu',
+    'address'  => 'ad.myuniversity.edu',
     'port'  => 389,
     'tls'  => FALSE,
     'bind_method' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
     'basedn'  => array(
-       'ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu',
-       'ou=education,dc=ad,dc=myuniveristy,dc=edu',
-       'ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
+       'ou=campus accounts,dc=ad,dc=myuniversity,dc=edu',
+       'ou=education,dc=ad,dc=myuniversity,dc=edu',
+       'ou=guest accounts,dc=ad,dc=myuniversity,dc=edu',
       ),
-    'binddn'  => 'cn=service-account,dc=ad,dc=myuniveristy,dc=edu',
+    'binddn'  => 'cn=service-account,dc=ad,dc=myuniversity,dc=edu',
     'bindpw' => 'goodpwd',
     'user_dn_expression' => 'user_dn_expression',
     'user_attr'  => 'sAMAccountName',
     'mail_attr'  => 'mail',
     'ldapToDrupalUserPhp'  => NULL,
-    'testingDrupalUsername'  => 'jdoe'
+    'testingDrupalUsername'  => 'jdoe',
+    'groupObjectClass' => 'group',
 
   );
 
@@ -57,52 +58,52 @@ $test_data['servers']['ldapauthen1']['properties']  = array(
 
 $test_data['servers']['ldapauthen1']['methodResponses']['connect'] = LDAP_SUCCESS;
 
-$test_data['servers']['ldapauthen1']['search_results']['member=cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
-    0 => array('count' => 1, 'dn' => 'cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
-    1 => array('count' => 1, 'dn' => 'cn=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
+$test_data['servers']['ldapauthen1']['search_results']['member=cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu']['ou=groups,dc=ad,dc=myuniversity,dc=edu'] = array(
+    0 => array('count' => 1, 'dn' => 'cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu'),
+    1 => array('count' => 1, 'dn' => 'cn=content approvers,ou=groups,dc=ad,dc=myuniversity,dc=edu'),
     'count' => 2,
   );
 
-$test_data['servers']['ldapauthen1']['search_results']['member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
-    0 => array('count' => 1, 'dn' => 'cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
+$test_data['servers']['ldapauthen1']['search_results']['member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu']['ou=groups,dc=ad,dc=myuniversity,dc=edu'] = array(
+    0 => array('count' => 1, 'dn' => 'cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu'),
     'count' => 1,
   );
 
 /**
  * fake user data array below 'attr' should mimick ldap user result data
  */
-$test_data['servers']['ldapauthen1']['users']['cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
-    'dn' => 'cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu',
+$test_data['servers']['ldapauthen1']['users']['cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
+    'dn' => 'cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu',
     'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jdoe', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
   );
 
 
-$test_data['servers']['ldapauthen1']['users']['cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
-    'dn' => 'cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
+$test_data['servers']['ldapauthen1']['users']['cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
+    'dn' => 'cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu',
     'mail' => array( 0 => 'jkool@guests.myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jkool', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
-    'memberOf' => array( 0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
+    'memberOf' => array( 0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'count' => 1),
   );
 
-$test_data['servers']['ldapauthen1']['users']['cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
-    'dn' => 'cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu',
+$test_data['servers']['ldapauthen1']['users']['cn=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
+    'dn' => 'cn=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu',
     'mail' => array( 0 => 'unkool@nowhere.myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jkool', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
-    'memberOf' => array( 0 => 'cn=unknown_people,ou=nowhere,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
+    'memberOf' => array( 0 => 'cn=unknown_people,ou=nowhere,dc=ad,dc=myuniversity,dc=edu', 'count' => 1),
   );
 
-$test_data['servers']['ldapauthen1']['users']['cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
-    'dn' => 'cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
+$test_data['servers']['ldapauthen1']['users']['cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
+    'dn' => 'cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu',
     'mail' => array( 0 => 'verykool@myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'verykool', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
     'meMBErof' => array(
-      0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
-      1 => 'CN=NETadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+      0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
+      1 => 'CN=NETadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
       'count' => 2,
       ),
   );
@@ -111,12 +112,12 @@ $test_data['servers']['ldapauthen1']['users']['cn=verykool,ou=special guests,ou=
 /**
  * test users should include service account if one is being used
  */
-$test_data['servers']['ldapauthen1']['users']['cn=service-account,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
-    'dn' => 'cn=service-account,dc=ad,dc=myuniveristy,dc=edu',
+$test_data['servers']['ldapauthen1']['users']['cn=service-account,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
+    'dn' => 'cn=service-account,dc=ad,dc=myuniversity,dc=edu',
     'mail' => array( 0 => 'service-account@myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'service-account', 'count' => 1),
     'memberOf' => array(
-      0 => 'CN=service_accounts,OU=ServiceAccountGroups,DC=ad,DC=myuniveristy,DC=edu',
+      0 => 'CN=service_accounts,OU=ServiceAccountGroups,DC=ad,DC=myuniversity,DC=edu',
       'count' => 2,
       ),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
@@ -210,7 +211,7 @@ $test_data['ldap_authorization_conf']['consumer_conf']['deriveFromEntryAttr'] = 
 $test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('Campus Accounts', 'campus accounts');
 $test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('guest accounts', 'guests');
 $test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('special guests', 'special guests');
-$test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'sysadmins');
+$test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'sysadmins');
 
 $test_data['ldap_authorization_conf']['consumer_conf']['useMappingsAsFilter'] = 1;
 

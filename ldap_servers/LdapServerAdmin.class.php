@@ -70,7 +70,7 @@ class LdapServerAdmin extends LdapServer {
     $this->allow_conflicting_drupal_accts = trim($values['allow_conflicting_drupal_accts']);
     $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
     $this->testingDrupalUsername = trim($values['testing_drupal_username']);
-
+    $this->groupObjectClass = trim($values['group_object_category']);
   }
 
   public function save($op) {
@@ -203,6 +203,15 @@ EOF;
        Needed for LDAP Authentication and Authorization functionality.'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
+  );
+
+  $form['groups'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('LDAP Groups'),
+    '#description' => t('How are groups defined on your LDAP server?  This varies slightly from one LDAP implementation to another
+      such as Active Directory, Novell, OpenLDAP, etc.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => !module_exists('ldap_authorization'),
   );
 
   $field_to_prop_maps = $this->field_to_properties_map();
@@ -668,8 +677,12 @@ public function drupalFormSubmit($op, $values) {
           '#type' => 'textarea',
           '#cols' => 50,
           '#rows' => 6,
-          '#title' => t('Base DNs for LDAP user entries'),
-          '#description' => t('What DNs have user accounts relavant to this configuration? e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>Enter one per line in case if you need more than one.'),
+          '#title' => t('Base DNs for LDAP users, groups, and other entries this server configuration.'),
+          '#description' => t('What DNs have entries relavant to this configuration?
+            e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>
+            Keep in mind that every additional basedn likely doubles the number of queries.  Place the
+            more heavily used one first and consider using one higher base DN rather than 2 or more lower base DNs.
+            Enter one per line in case if you need more than one.'),
         ),
         'schema' => array(
           'type' => 'text',
@@ -818,6 +831,23 @@ public function drupalFormSubmit($op, $values) {
           'not null' => FALSE,
         ),
       ),
+
+
+     'group_object_category' =>  array(
+        'form' => array(
+          'fieldset' => 'groups',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('Name of Group Object Class.'),
+          '#description' => t('This is used in ldap modules that use groups such as LDAP Authorization.'),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 64,
+          'not null' => FALSE,
+        ),
+      ),
+
 
       'weight' =>  array(
         'schema' => array(

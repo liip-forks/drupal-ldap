@@ -18,15 +18,17 @@ $authorization['drupal_role'] = array(
 
   'deriveFromAttr' => 0,
   'deriveFromAttrAttr' => array(),
+  'deriveFromAttrNested' => 0,
 
   'deriveFromEntry' => 1,
-  'deriveFromEntryEntries' => array('ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
-  'deriveFromEntryAttr' => 'member',
+  'deriveFromEntryEntries' => array('ou=groups,dc=ad,dc=myuniversity,dc=edu'),
+  'deriveFromEntryAttr' => 'uniquemember',
+  'deriveFromEntryNested' => 0,
   'deriveFromEntryUserLdapAttr' => 'dn',
-
+  
   'mappings' => array(
-    0 => array('cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu', 'content editors'),
-    1 => array('cn=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu', 'content approvers'),
+    0 => array('cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu', 'content editors'),
+    1 => array('cn=content approvers,ou=groups,dc=ad,dc=myuniversity,dc=edu', 'content approvers'),
   ),
 
   'useMappingsAsFilter' => 1,

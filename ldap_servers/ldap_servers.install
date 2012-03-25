@@ -182,5 +182,19 @@ function ldap_servers_update_7102() {
   return ($msg) ? $msg :  t('No database changes made.');
 }
 
+/**
+ * add group_object_category field to ldap_servers table
+ */
+function ldap_servers_update_7103() {
 
+  if (!db_field_exists('ldap_servers', 'group_object_category')) {
+    db_add_field('ldap_servers', 'group_object_category', array(
+      'type' => 'varchar',
+      'length' => 64,
+      'not null' => FALSE,
+    ));
+    $msg = t('"group_object_category" field added to ldap_servers table');
+  }
 
+  return ($msg) ? $msg :  t('No database changes made.');
+}

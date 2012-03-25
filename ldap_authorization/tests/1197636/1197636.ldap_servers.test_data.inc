@@ -10,29 +10,30 @@ $servers['fake_server1']['properties']  = array(
   'inDatabase' => TRUE,
   'status'  => 1,
   'ldap_type'  => 'ad',
-  'address'  => 'ad.myuniveristy.edu',
+  'address'  => 'ad.myuniversity.edu',
   'port'  => 389,
   'tls'  => FALSE,
   'bind_method' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
   'basedn'  => array(
-     'ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu',
-     'ou=education,dc=ad,dc=myuniveristy,dc=edu',
-     'ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
+     'ou=campus accounts,dc=ad,dc=myuniversity,dc=edu',
+     'ou=education,dc=ad,dc=myuniversity,dc=edu',
+     'ou=guest accounts,dc=ad,dc=myuniversity,dc=edu',
     ),
-  'binddn'  => 'cn=service-account,dc=ad,dc=myuniveristy,dc=edu',
+  'binddn'  => 'cn=service-account,dc=ad,dc=myuniversity,dc=edu',
   'bindpw' => 'goodpwd',
   'user_dn_expression' => 'user_dn_expression',
   'user_attr'  => 'sAMAccountName',
   'mail_attr'  => 'mail',
   'ldapToDrupalUserPhp'  => NULL,
-  'testingDrupalUsername'  => 'jdoe'
+  'testingDrupalUsername'  => 'jdoe',
+  'groupObjectClass' => 'group',
   );
 
 $servers['fake_server1']['methodResponses']['connect'] = LDAP_SUCCESS;
 
-$servers['fake_server1']['search_results']['member=cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['ou=groups,dc=ad,dc=myuniveristy,dc=edu'] = array(
-  0 => array('count' => 1, 'dn' => 'cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
-  1 => array('count' => 1, 'dn' => 'cn=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
+$servers['fake_server1']['search_results']['member=cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu']['ou=groups,dc=ad,dc=myuniversity,dc=edu'] = array(
+  0 => array('count' => 1, 'dn' => 'cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu'),
+  1 => array('count' => 1, 'dn' => 'cn=content approvers,ou=groups,dc=ad,dc=myuniversity,dc=edu'),
   'count' => 2,
 );
 
@@ -42,13 +43,13 @@ $servers['fake_server1']['search_results']['member=cn=verykool,ou=special guests
  *
  * users go in $servers[<sid>]['users'][<dn>] where <sid> is the server id
  */
-$servers['fake_server1']['users']['cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
-  'dn' => 'cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
+$servers['fake_server1']['users']['cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
+  'dn' => 'cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu',
   'mail' => array( 0 => 'verykool@myuniversity.edu', 'count' => 1),
   'sAMAccountName' => array( 0 => 'verykool', 'count' => 1),
   'password' => array( 0 => 'goodpwd', 'count' => 1),
   'memberOf' => array(
-    0 => 'cn=netadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+    0 => 'cn=netadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
     'count' => 1,
     ),
 );
@@ -56,12 +57,12 @@ $servers['fake_server1']['users']['cn=verykool,ou=special guests,ou=guest accoun
 /**
  * test users should include service account if one is being used
  */
-$servers['fake_server1']['users']['cn=service-account,dc=ad,dc=myuniveristy,dc=edu']['attr'] = array(
-  'dn' => 'cn=service-account,dc=ad,dc=myuniveristy,dc=edu',
+$servers['fake_server1']['users']['cn=service-account,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
+  'dn' => 'cn=service-account,dc=ad,dc=myuniversity,dc=edu',
   'mail' => array( 0 => 'service-account@myuniversity.edu', 'count' => 1),
   'sAMAccountName' => array( 0 => 'service-account', 'count' => 1),
   'memberOf' => array(
-    0 => 'CN=service_accounts,OU=ServiceAccountGroups,DC=ad,DC=myuniveristy,DC=edu',
+    0 => 'CN=service_accounts,OU=ServiceAccountGroups,DC=ad,DC=myuniversity,DC=edu',
     'count' => 1,
     ),
   'password' => array( 0 => 'goodpwd', 'count' => 1),

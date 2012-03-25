@@ -23,7 +23,7 @@ $authorization['drupal_role'] = array(
   'deriveFromEntryAttr' =>  NULL,
 
   'mappings' => array(
-    0 => array('cn=netadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins'),
+    0 => array('cn=netadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'netadmins'),
   ),
 
   'useMappingsAsFilter'  =>  1,

@@ -44,7 +44,6 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
        '#markup' => is_scalar($data) ?  "<h2>$map (without filter)</h2>" . $data : theme('item_list', array('items' => $data, 'type' => 'ul', 'title' => "$map (without filter)")),
       );
     }
-    unset($_SESSION['ldap_authorization_test_query']);
   }
 
 
@@ -65,7 +64,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
     $form['usernames'] = array(
       '#type' => 'textarea',
       '#title' => t('Drupal usernames to test !consumer_shortName authorizations results for.  One per line.', $consumer_tokens),
-      '#default_value' => @$_SESSION['ldap_authorization_test_form']['usernames'] ,
+      '#default_value' => @$_SESSION['ldap_authorization_test_query']['usernames'] ,
       '#cols' => 50,
       '#rows' => 6,
       '#description' => t('', $consumer_tokens),
@@ -81,7 +80,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
       '#type' => 'submit',
       '#value' => 'test',
     );
-
+    unset($_SESSION['ldap_authorization_test_query']);
   return $form;
 }
 

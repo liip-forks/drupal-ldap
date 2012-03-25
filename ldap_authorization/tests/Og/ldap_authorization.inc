@@ -9,10 +9,10 @@
  *
  *    mapping notes
 
-  jkool:  guest accounts, cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu
+  jkool:  guest accounts, cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu
   should yield: 'gid=3,rid=2', 'gid=3,rid=3'
 
-  verykool: 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', special guests, guest accounts
+  verykool: 'cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', special guests, guest accounts
   should yield: 'gid=3,rid=3', 'gid=3,rid=2', group-name=knitters,role-name=member
 
 **/
@@ -36,25 +36,25 @@ $authorization['og_group'] = array(
   'deriveFromEntryAttr' => array(),
 
   'mappings' => array(
-    0 => array('cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu',
+    0 => array('cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu',
                'group-name=knitters,role-name=member',
                 ),
-    1 => array('cn=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu',
+    1 => array('cn=content approvers,ou=groups,dc=ad,dc=myuniversity,dc=edu',
                'gid=3,rid=2'
                ),
     2 => array('guest accounts',
                'gid=3,rid=2'
                ),
-    3 => array('cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+    3 => array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
                'group-name=knitters,role-name=prince'
                ),
     4 => array('special guests',
                'group-name=knitters,role-name=member'
                ),
-    5 => array('cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+    5 => array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
                'group-name=knitters,role-name=administrator member'
                ),
-    6 => array('cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu',
+    6 => array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
                'gid=3,rid=3'
                ),
    ),
@@ -70,7 +70,7 @@ $authorization['og_group'] = array(
 );
 
   /**
-   *      5 => array('cn=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu',
+   *      5 => array('cn=content approvers,ou=groups,dc=ad,dc=myuniversity,dc=edu',
                'node.field_state_id=IL,rid=2'
                ),
                **/

@@ -39,5 +39,7 @@ ou=IT,dc=myorg,dc=mytld,dc=edu|administrator
  * implements hook_form_alter()
  */
 function ldap_authorization_drupal_role_form_ldap_authorization_admin_form_alter(&$form, $form_state) {
+  if ($form['status']['consumer_type']['#value'] == 'drupal_role') {
 
+  }
 }

@@ -9,7 +9,6 @@
 
   $authorization['consumer_conf']['drupal_role'] = array(
 
-
     'consumerType' => 'drupal_role',
     'consumerModule' => 'ldap_authorization_drupal_role',
 
@@ -22,16 +21,19 @@
 
     'deriveFromAttr' =>  0,
     'deriveFromAttrAttr' =>  array(),
+    'deriveFromAttrUseFirstAttr' => 0,
+    'deriveFromAttrNested' => 0,
 
     'deriveFromEntry' =>  0,
     'deriveFromEntryEntries' =>  NULL,
     'deriveFromEntryAttr' =>  NULL,
+    'deriveFromEntryNested' => 1,
 
     'mappings' => array(
       array('Campus Accounts', 'campus accounts'),
       array('guest accounts', 'guests'),
       array('special guests', 'special guests'),
-      array('cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'sysadmins'),
+      array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'sysadmins'),
     ),
     'useMappingsAsFilter' =>  1,
 
@@ -42,3 +44,5 @@
     'createConsumers' =>  1,
     'regrantLdapProvisioned' =>  1,
   );
+
+

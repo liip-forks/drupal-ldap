@@ -116,7 +116,6 @@ class LdapAuthorizationConsumerConf {
       if ($this->consumerType) {
         $select->condition('ldap_authorization.consumer_type',  $this->consumerType);
       }
-
       $consumer_conf = $select->execute()->fetchObject();
     }
 
@@ -142,9 +141,10 @@ class LdapAuthorizationConsumerConf {
     $this->deriveFromEntry  = (bool)(@$consumer_conf->derive_from_entry);
     $this->deriveFromEntryEntries = $this->linesToArray($consumer_conf->derive_from_entry_entries);
     $this->deriveFromEntryAttr = $consumer_conf->derive_from_entry_attr;
+    $this->deriveFromEntryUserLdapAttr = $consumer_conf->derive_from_entry_user_ldap_attr;
+
     $this->deriveFromEntrySearchAll = (bool)($consumer_conf->derive_from_entry_search_all);
     $this->deriveFromEntryNested = $consumer_conf->derive_from_entry_nested;
-
     $this->mappings = $this->pipeListToArray($consumer_conf->mappings);
     $this->useMappingsAsFilter = (bool)(@$consumer_conf->use_filter);
 

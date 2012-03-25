@@ -11,9 +11,10 @@ require_once(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapAutho
 class LdapAuthorizationOtherAuthenticationTests  extends LdapAuthorizationTestCase {
   public static function getInfo() {
     return array(
-      'name' => 'LDAP Authorization Tests: Tests for non ldap_authentication',
+      'group' => 'LDAP Authorization',
+      'name' => 'non ldap_authentication',
       'description' => 'Test for ldap authorization without ldap_authentication module authentication',
-      'group' => 'LDAP Authorization'
+
     );
   }
 
@@ -24,9 +25,9 @@ class LdapAuthorizationOtherAuthenticationTests  extends LdapAuthorizationTestCa
     $this->ldapTestId = $this->module_name . ': drupal authentication';
 
     $this->ldapTestId = 'AuthorizationIntegration';
-    $this->serversData = 'ldapauthor1.ldap_server.test_data.inc';
-    $this->authorizationData = 'OtherAuthenticationIntegration.ldap_authorization.inc';
-    $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
+    $this->serversData = 'Other/ldap_servers.inc';
+    $this->authorizationData = 'Other/ldap_authorization.inc';
+    $this->authenticationData = 'Other/ldap_authentication.inc';
     //set authentication data anyway even though module disabled to keep prepTestData() method simple
     $this->consumerType = 'drupal_role';
     $this->prepTestData();

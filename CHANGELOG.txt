@@ -1,3 +1,4 @@
+General commit of ldap authorization code with support for nested groups and improved, but broken, IIC derive from entry setup.
 Issue #1491244 by smsearcy.  Adjustment to work with IIS for strip domain name.
 Issue #1498616 by johnbarclay.  LDAP Authorization OG was hiding filter checkbox on ldap authorization drupal roles form.
 LDAP Query: added more theming and info to ldap query test query interface

@@ -158,7 +158,6 @@ class LdapAuthorizationConsumerAbstract {
    */
 
   public function authorizationGrant(&$user, &$user_auth_data, $consumer_ids, $ldap_entry = NULL, $user_save = TRUE) {
-    // debug("authorizationGrant,consumer_ids:"); debug($consumer_ids);
     $this->grantsAndRevokes('grant', $user, $user_auth_data, $consumer_ids, $ldap_entry, $user_save);
   }
 
@@ -185,7 +184,6 @@ class LdapAuthorizationConsumerAbstract {
    */
 
   public function authorizationRevoke(&$user, &$user_auth_data, $consumer_ids, $ldap_entry, $user_save = TRUE) {
-    // debug("authorizationRevoke,consumer_ids:"); debug($consumer_ids);
     $this->grantsAndRevokes('revoke', $user, $user_auth_data, $consumer_ids, $ldap_entry, $user_save);
   }
 
@@ -210,7 +208,7 @@ class LdapAuthorizationConsumerAbstract {
    */
 
   protected function grantsAndRevokes($op, &$user, &$user_auth_data, $consumer_ids, &$ldap_entry = NULL, $user_save = TRUE) {
-
+    $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
     $this->sortConsumerIds($op, $consumer_ids);
 
     $results = array();
@@ -222,22 +220,22 @@ class LdapAuthorizationConsumerAbstract {
     $watchdog_tokens['%action'] = $op;
     $consumer_ids_log = array();
     $users_authorization_ids = $this->usersAuthorizations($user);
-
     $watchdog_tokens['%users_authorization_ids'] = join(', ', $users_authorization_ids);
-    //debug("grantsAndRevokes,op=$op"); debug($consumer_ids);
+
     foreach ($consumer_ids as $consumer_id) {
-      //debug("consumer_id=$consumer_id, op=$op,");
+      if ($detailed_watchdog_log) {watchdog('ldap_authorization', "consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
       $log = "consumer_id=$consumer_id, op=$op,";
       $results[$consumer_id] = TRUE;
       if ($op == 'grant'  && !in_array($consumer_id, $users_authorization_ids)) {
+        if ($detailed_watchdog_log) {watchdog('ldap_authorization', "eeeeeee", $watchdog_tokens, WATCHDOG_DEBUG);}
         $log .='grant existing role, ';
-      //  debug('this->availableConsumerIDs(TRUE)'); debug($this->availableConsumerIDs(TRUE));
         if (!in_array($consumer_id, $this->availableConsumerIDs(TRUE))) {
           $log .= "consumer id not available for $op, ";
           if ($this->allowConsumerObjectCreation) {
-
+            if ($detailed_watchdog_log) {watchdog('ldap_authorization', "j", $watchdog_tokens, WATCHDOG_DEBUG);}
             $this->createConsumers(array($consumer_id));
             if (in_array($consumer_id, $this->availableConsumerIDs(TRUE))) {
+              if ($detailed_watchdog_log) {watchdog('ldap_authorization', "grantSingleAuthorization : consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
               $this->grantSingleAuthorization($user, $consumer_id, $user_auth_data);  // allow consuming module to add additional data to $user_auth_data
               $user_auth_data[$consumer_id] = array('date_granted' => time() );
               $log .= "created consumer object, ";
@@ -249,6 +247,7 @@ class LdapAuthorizationConsumerAbstract {
             }
           }
           else {
+             if ($detailed_watchdog_log) {watchdog('ldap_authorization', "z", $watchdog_tokens, WATCHDOG_DEBUG);}
             $log .= "consumer does not support creating consumer object, ";
             // out of luck. can't create new consumer id.
             $results[$consumer_id] = FALSE;
@@ -256,6 +255,7 @@ class LdapAuthorizationConsumerAbstract {
         }
 
         if ($results[$consumer_id]) {
+          if ($detailed_watchdog_log) {watchdog('ldap_authorization', "grantSingleAuthorization : consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
           $log .= "granting existing consumer object, ";
           $results[$consumer_id] = $this->grantSingleAuthorization($user, $consumer_id, $user_auth_data); // allow consuming module to add additional data to $user_auth_data
           if ($results[$consumer_id]) {
@@ -266,7 +266,6 @@ class LdapAuthorizationConsumerAbstract {
 
       }
       elseif ($op == 'revoke') {
-       // debug('grantsAndRevokes. user_auth_data='); debug($user_auth_data);
         if (isset($user_auth_data[$consumer_id])) {
           $log .= "revoking existing consumer object, ";
           if (in_array($consumer_id, $users_authorization_ids)) {
@@ -283,7 +282,7 @@ class LdapAuthorizationConsumerAbstract {
       }
       $consumer_ids_log[] = $log;
     }
-    //debug('consumer_ids_log:' . join('<hr/>', $consumer_ids_log));
+
     $watchdog_tokens['%consumer_ids_log'] = (count($consumer_ids_log)) ? join('<hr/>', $consumer_ids_log) : t('no actions');
     if ($user_save) {
       $user_edit = array();
@@ -295,8 +294,6 @@ class LdapAuthorizationConsumerAbstract {
       ',
       $watchdog_tokens, WATCHDOG_DEBUG);
 
-    //debug(t('%username:<hr/>LdapAuthorizationConsumerAbstract grantsAndRevokes() method log.  action=%action:<br/> %consumer_ids_log',
-     // $watchdog_tokens));
   }
 
   /**

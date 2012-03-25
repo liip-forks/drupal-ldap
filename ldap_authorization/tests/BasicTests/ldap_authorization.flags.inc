@@ -3,11 +3,10 @@
 
 /**
  * @file
- * ldap_authorization test data
+ * simpletest authorization configuration
  */
 
 $authorization['drupal_role'] = array(
-
   'consumerModule' => 'ldap_authorization_drupal_role',
 
   'description' => 'UIUC AD',
@@ -19,10 +18,12 @@ $authorization['drupal_role'] = array(
 
   'deriveFromAttr' => 0,
   'deriveFromAttrAttr' => array(),
+  'deriveFromAttrNested' => 0,
 
   'deriveFromEntry' => 0,
-  'deriveFromEntryEntries' => NULL,
+  'deriveFromEntryEntries' => array(),
   'deriveFromEntryAttr' => NULL,
+  'deriveFromEntryNested' => 0,
 
   'mappings' => array(
     array('Campus Accounts', 'campus accounts'),
@@ -39,5 +40,4 @@ $authorization['drupal_role'] = array(
   'revokeLdapProvisioned' => 1,
   'createConsumers' => 1,
   'regrantLdapProvisioned' => 1,
-
 );

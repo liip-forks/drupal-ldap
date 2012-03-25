@@ -12,18 +12,18 @@ class LdapAuthorizationTestCase1197636 extends LdapAuthorizationTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'LDAP Authorization Tests: Issue #1197636',
+      'group' => 'LDAP Authorization',
+      'name' => 'Issue #1197636',
       'description' => 'ldap authorization. Issue #1197636.  User cannot logon with ldap authorization enabled.',
-      'group' => 'LDAP Authorization'
     );
   }
 
   function testLogon() {
 
     $this->ldapTestId = 'Issue #1197636';
-    $this->serversData = '1197636.ldap_servers.test_data.inc';
-    $this->authorizationData = '1197636.ldap_authorization.test_data.inc';
-    $this->authenticationData = '1197636.ldap_authentication.test_data.inc';
+    $this->serversData = '1197636/1197636.ldap_servers.test_data.inc';
+    $this->authorizationData = '1197636/1197636.ldap_authorization.test_data.inc';
+    $this->authenticationData = '1197636/1197636.ldap_authentication.test_data.inc';
     $this->prepTestData();
 
     $edit = array(

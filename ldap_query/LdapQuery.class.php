@@ -325,7 +325,7 @@ class LdapQuery {
           'field_group' => 'query',
           '#type' => 'textarea',
           '#title' => t('Filter'),
-          '#description' => t('LDAP query filter such as <code>(objectClass=group)</code> or <code>(&(objectCategory=user)(homePhone=*))
+          '#description' => t('LDAP query filter such as <code>(objectClass=group)</code> or <code>(&(objectClass=user)(homePhone=*))
 </code>'),
           '#cols' => 50,
           '#rows' => 1,
@@ -344,7 +344,7 @@ class LdapQuery {
           'field_group' => 'query',
           '#type' => 'textarea',
           '#title' => t('Attributes to return.'),
-          '#description' => t('Enter as comma separated list. DN is automatically returned. Leave empty to return all attributes. e.g. <code>objectclass,objectcategory,name,cn,samaccountname</code>'),
+          '#description' => t('Enter as comma separated list. DN is automatically returned. Leave empty to return all attributes. e.g. <code>objectclass,name,cn,samaccountname</code>'),
           '#cols' => 50,
           '#rows' => 6,
         ),
@@ -412,7 +412,7 @@ class LdapQuery {
           '#required' => 1,
           '#options' => array(
             LDAP_DEREF_NEVER => t('(default) aliases are never dereferenced.'),
-            LDAP_DEREF_SEARCHING=> t('aliases should be dereferenced during the search but not when locating the base object of the search.'),
+            LDAP_DEREF_SEARCHING => t('aliases should be dereferenced during the search but not when locating the base object of the search.'),
             LDAP_DEREF_FINDING => t('aliases should be dereferenced when locating the base object but not during the search.'),
             LDAP_DEREF_ALWAYS => t('aliases should be dereferenced always.'),
           ),

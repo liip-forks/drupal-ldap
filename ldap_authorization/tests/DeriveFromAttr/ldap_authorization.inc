@@ -6,6 +6,7 @@
  * simpletest authorization configuration
  */
 
+
 $authorization['drupal_role'] = array(
 
   'consumerType' => 'drupal_role',  // change as desired
@@ -21,15 +22,17 @@ $authorization['drupal_role'] = array(
   'deriveFromAttr' => 1,
   'deriveFromAttrAttr' => array('memberOf', 'mailcode'),
   'deriveFromAttrUseFirstAttr' => 0,
+  'deriveFromAttrNested' => 0,
 
   'deriveFromEntry' => 0,
   'deriveFromEntryEntries' => NULL,
   'deriveFromEntryAttr' => NULL,
+  'deriveFromEntryNested' => 0,
 
   'mappings' => array(
-    array('cn=SYSadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'sysadmins'),
-    array('cn=netadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins'),
-    array('cn=phone operators,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'netadmins'),
+    array('cn=SYSadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'sysadmins'),
+    array('cn=netadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'netadmins'),
+    array('cn=phone operators,ou=it,dc=ad,dc=myuniversity,dc=edu', 'netadmins'),
     array('netadmins', 'netadmins2'),
     array('punctuated,comma,freaks', 'comma freaks'),
     array('17', 'mailgroup17'),

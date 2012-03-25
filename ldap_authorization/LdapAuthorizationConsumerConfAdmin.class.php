@@ -196,7 +196,12 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#description' => t('The name of the attribute which contains the !consumer_shortName name. In the example above, it would be
         <code>ou</code>, as the DN contains the string <code>ou=Group1</code> and <code>Group1</code>
         happens to be the desired !consumer_shortName.', $consumer_tokens),
-    );
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="derive_from_dn"]' => array('checked' => TRUE),
+        ),
+      ),
+      );
 
      /**
      *  II B. derive from attributes option
@@ -232,18 +237,37 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#cols' => 50,
       '#rows' => 6,
       '#description' => t('If the !consumer_shortNamePlural are stored in the user entries, along with the rest of their data, then enter here a list of attributes which may contain them.', $consumer_tokens),
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="derive_from_attr"]' => array('checked' => TRUE),
+        ),
+      ),
+
     );
 
     $form['derive_from_attr']['derive_from_attr_use_first_attr'] = array(
       '#type' => 'checkbox',
       '#title' => t('Convert full dn to value of first attribute.  e.g.  <code>cn=admin group,ou=it,dc=ad,dc=nebraska,dc=edu</code> would be converted to <code>admin group</code>', $consumer_tokens),
       '#default_value' => $this->deriveFromAttrUseFirstAttr,
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="derive_from_attr"]' => array('checked' => TRUE),
+        ),
+      ),
     );
+
+    $nested_warning =  t('Warning: this is fairly new and untested feature.  Please test a few users with the test form first.
+      Nested groups also involves more queries which require the service account or other binding account to be able to query the nested groups.');
 
     $form['derive_from_attr']['derive_from_attr_nested'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Include nested groups.', $consumer_tokens),
+      '#title' => t('Include nested groups. ', $consumer_tokens) . $nested_warning,
       '#default_value' => $this->deriveFromAttrNested,
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="derive_from_attr"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
      /**
@@ -265,7 +289,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
          ' ' .
          t('The "LDAP DNs containing roles..." field would be the group DN or DNs such as') .
          ' ' .
-         ': <code>cn=DrupalStudents,o=uni,dc=ldap,dc=myuniveristy,dc=edu</code>' .
+         ': <code>cn=DrupalStudents,o=uni,dc=ldap,dc=myuniversity,dc=edu</code>' .
          ' ' .
          t('The "Attribute holding roles members" field would be the (multivalued) attribute within that ldap entry that contains the list of users/members.') .
          ' ' .
@@ -275,7 +299,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
     $form['derive_from_entry']['derive_from_entry'] = array(
       '#type' => 'checkbox',
-      '#title' => t('!consumer_shortNamePlural exist as LDAP entries where a multivalued attribute contains the members\' CNs', $consumer_tokens),
+      '#title' => t('!consumer_shortNamePlural exist as LDAP entries where a multivalued attribute contains the members', $consumer_tokens),
       '#default_value' => $this->deriveFromEntry,
     );
 
@@ -286,8 +310,12 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#default_value' => $this->arrayToLines($this->deriveFromEntryEntries),
       '#cols' => 50,
       '#rows' => 6,
-      '#description' => t('Enter here a list of LDAP nodes from where !consumer_shortNamePlural should be searched for.
-        The module will look them up recursively from the given nodes.', $consumer_tokens),
+      '#description' => t('Enter here a list of LDAP entries from where !consumer_shortNamePlural should be searched for.', $consumer_tokens),
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="derive_from_entry"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
 
@@ -302,8 +330,13 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#default_value' => $this->deriveFromEntryAttr,
       '#size' => 50,
       '#maxlength' => 255,
-      '#description' => t('Name of the multivalued attribute which holds the CNs of !consumer_shortNamePlural members,
-         for example: memberUid', $consumer_tokens),
+      '#description' => t('Name of the multivalued attribute which holds the !consumer_shortNamePlural members,
+         for example: uniquemember, memberUid', $consumer_tokens),
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="derive_from_entry"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
     $form['derive_from_entry']['derive_from_entry_user_ldap_attr'] = array(
@@ -313,18 +346,33 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#size' => 50,
       '#maxlength' => 255,
       '#description' => t('This is almost always "dn"', $consumer_tokens),
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="derive_from_entry"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
     $form['derive_from_entry']['derive_from_entry_search_all'] = array(
       '#type' => 'checkbox',
       '#title' => t('Search all enabled LDAP servers for matching users.  (Enables roles on one server referencing users on another)'),
       '#default_value' => $this->deriveFromEntrySearchAll,
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="derive_from_entry"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
     $form['derive_from_entry']['derive_from_entry_nested'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Include nested groups.', $consumer_tokens),
+      '#title' => t('Include nested groups.', $consumer_tokens) . $nested_warning,
       '#default_value' => $this->deriveFromEntryNested,
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="derive_from_entry"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
 

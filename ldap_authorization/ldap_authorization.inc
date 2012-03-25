@@ -175,6 +175,13 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
      *   -  a mapping configuration ($consumer_conf)
      */
 
+    if ($detailed_watchdog_log || $debug) {
+      $_proposed_ldap_authorizations_pre_hook_maps_alter = is_array($proposed_ldap_authorizations) ? $proposed_ldap_authorizations : array();
+      $watchdog_tokens['%proposed_authorizations_pre_hook'] = join(', ', $_proposed_ldap_authorizations_pre_hook_maps_alter);
+      watchdog('ldap_authorization', '%username : initial proposed authorization brefore mapps_alter_invoke %consumer_type: %proposed_authorizations_pre_hook.',
+        $watchdog_tokens, WATCHDOG_DEBUG);
+    }
+
     ldap_authorization_maps_alter_invoke($user, $user_ldap_entry, $ldap_server, $consumer->consumerConf, $proposed_ldap_authorizations, $op);
 
     if ($detailed_watchdog_log || $debug) {
@@ -222,9 +229,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $watchdog_tokens));
     }
 
-    //debug('mapping filter in 211 of ldap_authorizationinc'); debug($consumer->consumerConf->mappings);
-    //debug('normalizedMappings'); debug($consumer->consumerConf->normalizedMappings);
-
     /**
      * 3. third, grant any proposed authorizations not already granted
      */
@@ -266,11 +270,12 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
     $user_auth_data = array();
     $initial_existing_ldap_authorizations = array();
   }
-
+  $watchdog_tokens['%initial'] = join(', ', $initial_existing_ldap_authorizations);
 
 
 
   $grants = $filtered_ldap_authorizations;
+  $watchdog_tokens['%filtered_ldap_authorizations'] = join(', ', $filtered_ldap_authorizations);
    /**
    * B. if regrantLdapProvisioned is false, $grants array should only be new authorizations
    */
@@ -306,6 +311,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
    * D.  Only grant authorization consumer ids that exist
    */
   $grants = array_intersect($consumer_containers_existing, $grants);
+  $watchdog_tokens['%grants2'] = (count($grants)) ? join(', ', $grants) :  t('none');
 
   /**
    * E. Do grants
@@ -313,8 +319,6 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
 
   $consumer->authorizationGrant($user, $user_auth_data, $grants, $ldap_entry, FALSE);
   $watchdog_tokens['%grants'] = (count($grants)) ? join(', ', $grants) :  t('none');
-
-
 
   /**
    *  3.F take away any authorizations not in proposed authorization,
@@ -331,23 +335,17 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
 
   if ($detailed_watchdog_log) {
     watchdog('ldap_authorization', '%username : user_authorizations_set results for %consumer_type:
-      <hr/>authorization ids to add: %creates
-      <hr/>revokes: %revokes
-      <hr/>grants: %grants
-      <hr/>consumer containers initially existing: %consumer_containers_initial
-      <hr/>consumer containers needed to create: %consumer_containers_needed
-      <hr/>consumer containers existing after create call: %consumer_containers_final
+      <hr/>1. Initial existing authorizations:  %initial
+      <hr/>1. Filtered Authorizations: %filtered_ldap_authorizations
+      <hr/>2. After filtering off previously granted authorizations: %grants1
+      <hr/>3. All available existing authorization ids: %consumer_containers_initial
+      <hr/>4. authorization ids that need to be created: %consumer_containers_needed
+      <hr/>5. consumer containers existing after create call (or non-call if og): %consumer_containers_final
+      <hr/>6. Grants passed to authorizationGrant(): %grants1
+      <hr/>7. revokes passed to authorizationRevoke(): %revokes
       ', $watchdog_tokens, WATCHDOG_DEBUG);
   }
-  /** debug(t('%username : user_authorizations_set results for %consumer_type:
-      <hr/>authorization ids to add: %creates
-      <hr/>revokes: %revokes
-      <hr/>grants: %grants
-      <hr/>consumer containers initially existing: %consumer_containers_initial
-      <hr/>consumer containers needed to create: %consumer_containers_needed
-      <hr/>consumer containers existing after create call: %consumer_containers_final
-      ',$watchdog_tokens));
-**/
+
   /**
    *  3.G  save user object and user data
    */
@@ -384,7 +382,6 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   if ($consumer_conf->deriveFromAttr) {
     foreach ($consumer_conf->deriveFromAttrAttr as $derive_from_attribute_name) {
       $authorizations = $ldap_server->deriveFromAttrGroups($derive_from_attribute_name, $user_ldap_entry, $consumer_conf->deriveFromAttrNested);
-      //debug("_ldap_authorization_ldap_authorization_maps_alter, attribute=" . $derive_from_attribute_name); debug($authorizations);
       foreach ($authorizations as $id => $authorization) {
         if ($consumer_conf->deriveFromAttrUseFirstAttr) {
           $attr_parts = ldap_explode_dn($authorization, 0);
@@ -395,7 +392,6 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
           $derive_from_attr_authorizations[] = drupal_strtolower($authorization);
         }
       }
-    //  debug("_ldap_authorization_ldap_authorization_maps_alter after loop, attribute=derive_from_attr_authorizations"); debug($derive_from_attr_authorizations);
     }
   }
   if (count($derive_from_attr_authorizations)) {
@@ -403,7 +399,6 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
     $derive_from_attr_authorizations = array_unique($derive_from_attr_authorizations);
     $derive_from_attr_authorizations = array_combine($derive_from_attr_authorizations, $derive_from_attr_authorizations);
   }
-//   debug("_ldap_authorization_ldap_authorization_maps_alter after loop, after filter"); debug($derive_from_attr_authorizations);
   if ($op == 'test_query') {
     $_SESSION['ldap_authorization_test_query']['maps']['Strategy 2. Groups in User Attributes'] = ($consumer_conf->deriveFromAttr) ? $derive_from_attr_authorizations : t('disabled');
   }
@@ -413,11 +408,11 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
  *  Strategy 3: groups as entries.
  *
  *  given:
- *  - user dn = cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu
- *  - deriveFromEntryEntries = array(cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu)
+ *  - user dn = cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu
+ *  - deriveFromEntryEntries = array(cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu)
  *  - deriveFromEntryAttr = 'member'
  *
- * search on member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu within basedn cn=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu
+ * search on member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu within basedn cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu
  *
  * returned entries dn or cn should be used to derive authorization mappings
  *
@@ -471,7 +466,6 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
   $values = array_merge(array_values($derive_from_dn_authorizations), array_values($derive_from_attr_authorizations), array_values($derive_from_entry_authorizations));
   $values = array_unique($values);
-//  debug('after merge'); debug($values);
   $authz_ids = (count($values)) ? array_combine($values, $values) : array();
 
   if ($detailed_watchdog_log) {

@@ -11,9 +11,9 @@ require_once(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapAutho
 class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
   public static function getInfo() {
     return array(
-      'name' => 'LDAP Authorization Tests: Basic Tests',
-      'description' => 'Test ldap authorization.  Basic functionality tests.',
-      'group' => 'LDAP Authorization'
+      'group' => 'LDAP Authorization',
+      'name' => 'Basic Tests',
+      'description' => 'Basic functionality tests.',
     );
   }
 
@@ -60,10 +60,10 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
     * this is geared toward testing logon functionality
     */
 
-    $this->ldapTestId = 'DeriveFromEntry';
-    $this->serversData = 'ldapauthor1.ldap_server.test_data.inc';
-    $this->authorizationData = 'Derivations.ldap_authorization.DeriveFromEntry.inc';
-    $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
+    $this->ldapTestId = 'BasicTests';
+    $this->serversData = 'BasicTests/ldap_servers.inc';
+    $this->authorizationData = 'BasicTests/ldap_authorization.simple.inc';
+    $this->authenticationData = 'BasicTests/ldap_authentication.inc';
     $this->consumerType = 'drupal_role';
     $this->prepTestData();
 
@@ -78,6 +78,10 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
 
     $verykool = user_load_by_name('verykool');
     $correct_roles = in_array('content editors', array_values($verykool->roles)) && in_array('content approvers', array_values($verykool->roles));
+    if (!$correct_roles) {
+      debug('verykool roles'); debug($verykool->roles);
+
+    }
     $this->assertTrue($correct_roles, 'verykool granted 2 roles on actual logon "content editors" and "content approvers" drupal roles ', $this->ldapTestId . '.duplicate_entry');
 
     $this->drupalGet('user/logout');
@@ -91,9 +95,9 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
 function testFlags() {
 
   $this->ldapTestId = 'Flags';
-  $this->serversData = 'ldapauthor1.ldap_server.test_data.inc';
-  $this->authorizationData = 'Basic.Flags.ldap_authorization.test_data.inc';
-  $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
+  $this->serversData = 'BasicTests/ldap_servers.inc';
+  $this->authorizationData = 'BasicTests/ldap_authorization.flags.inc';
+  $this->authenticationData = 'BasicTests/ldap_authentication.inc';
   $this->consumerType = 'drupal_role';
   $this->prepTestData();
 
@@ -111,6 +115,8 @@ function testFlags() {
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
   $roles2 = isset($new_authorizations[$this->consumerType]) ? $new_authorizations[$this->consumerType] : array();
   $this->assertTrue((count($roles1) == 1 && count($roles2) == 0), 'disable consumer configuration disallows authorizations.', $this->ldapTestId . '.enable');
+
+
 
 
   /**
@@ -194,7 +200,6 @@ function testFlags() {
 
   // set authorizations for user.  this should create role
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'set', 'drupal_role', 'logon');
-
   $jkool = user_load($jkool->uid);
   $guest_role_recreated = in_array('guests', array_values(user_roles()));
   $roles_by_name = array_flip(user_roles());
