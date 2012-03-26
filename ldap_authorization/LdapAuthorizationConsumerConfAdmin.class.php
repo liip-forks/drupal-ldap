@@ -21,7 +21,6 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values->sid = $this->sid;
     $values->consumer_type = $this->consumerType;
     $values->consumer_module = $this->consumer->consumerModule;
-    $values->description = $this->description;
     $values->status = (int)$this->status;
     $values->only_ldap_authenticated = (int)$this->onlyApplyToLdapAuthenticated;
     $values->derive_from_dn = (int)$this->deriveFromDn;
@@ -36,7 +35,8 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values->derive_from_entry_search_all = (int)$this->deriveFromEntrySearchAll;
     $values->derive_from_entry_entries = $this->arrayToLines($this->deriveFromEntryEntries);
     $values->derive_from_entry_attr = $this->deriveFromEntryAttr;
-    $values->derive_from_entry_user_ldap_attr = $this->deriveFromEntryUserLdapAttr;
+    $values->derive_from_entry_user_ldap_attr = $this->deriveFromEntryAttrMatchingUserAttr;
+    $values->derive_from_entry_use_first_attr = (int)$this->deriveFromEntryUseFirstAttr;
     $values->derive_from_entry_nested = (int)$this->deriveFromEntryNested;
 
     $values->mappings = $this->arrayToPipeList($this->mappings);
@@ -77,7 +77,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     foreach (array('consumer_type', 'consumer_module', 'only_ldap_authenticated',
       'derive_from_dn',
       'derive_from_dn_attr', 'derive_from_attr', 'derive_from_attr_attr', 'derive_from_attr_use_first_attr', 'derive_from_attr_nested',
-      'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'derive_from_entry_search_all', 'derive_from_entry_nested',
+      'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'derive_from_entry_search_all', 'derive_from_entry_use_first_attr', 'derive_from_entry_nested',
       'use_filter', 'synch_to_ldap', 'synch_on_logon', 'revoke_ldap_provisioned', 'create_consumers',
       'regrant_ldap_provisioned') as $prop_name) {
       unset($this->{$prop_name});
@@ -86,6 +86,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
   public $fields;
   public $consumers;
+
 
   public function delete() {
     if ($this->consumerType) {
@@ -144,14 +145,6 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#required' => 1,
     );
 
-    $form['status']['description'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Short description for this !consumer_shortName configuration.', $consumer_tokens),
-      '#default_value' => $this->description,
-      '#size' => 60,
-      '#maxlength' => 60,
-    );
-
     $form['status']['status'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable this configuration', $consumer_tokens),
@@ -168,34 +161,39 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $form['mapping_intro'] = array(
         '#type' => 'item',
         '#title' => t('Part II.  How are !consumer_namePlural derived from LDAP data?', $consumer_tokens),
-        '#markup' => t('One or more of the following 3 approaches may be used.', $consumer_tokens),
+        '#markup' => t('One or more of the following 3 strategies may be used.', $consumer_tokens),
     );
     /**
      *  II A. derive from DN option
      */
     $form['derive_from_dn'] = array(
       '#type' => 'fieldset',
-      '#title' => t('II.A. Derive !consumer_name from DN', $consumer_tokens),
+      '#title' => t('Strategy II.A. Derive !consumer_namePlural from DN in User\'s LDAP Entry ', $consumer_tokens),
       '#collapsible' => TRUE,
       '#collapsed' => !$this->deriveFromDn,
     );
 
+    $form['derive_from_dn']['derive_from_dn_preamble'] = array(
+        '#type' => 'item',
+        '#markup' =>  t('Use this strategy if your users\' LDAP entry DNs look like <code>cn=jdoe,<strong>ou=Group1</strong>,cn=example,cn=com</code>
+          and <code>Group1</code> maps to the !consumer_name you want.', $consumer_tokens) .
+        t(' See '). l('http://drupal.org/node/1498558' , 'http://drupal.org/node/1498558') . t(' for additional documentation.'),
+
+    );
+
     $form['derive_from_dn']['derive_from_dn'] = array(
       '#type' => 'checkbox',
-      '#title' => t('!consumer_name is derived from user\'s DN', $consumer_tokens),
+      '#title' => t('!consumer_namePlural are derived from user\'s LDAP entry DN', $consumer_tokens),
       '#default_value' => $this->deriveFromDn,
-      '#description' => t('<p>Check this option if your users\' DNs look like <code>cn=jdoe,<strong>ou=Group1</strong>,cn=example,cn=com</code> and <code>Group1</code> turns out to be the !consumer_name you want.</p>', $consumer_tokens),
     );
 
     $form['derive_from_dn']['derive_from_dn_attr'] = array(
       '#type' => 'textfield',
-      '#title' => t('Attribute of the DN which contains the !consumer_shortName name', $consumer_tokens),
+      '#title' => t('Attribute of the User\'s LDAP Entry DN which contains the !consumer_shortName name:', $consumer_tokens),
       '#default_value' => $this->deriveFromDnAttr,
       '#size' => 50,
       '#maxlength' => 255,
-      '#description' => t('The name of the attribute which contains the !consumer_shortName name. In the example above, it would be
-        <code>ou</code>, as the DN contains the string <code>ou=Group1</code> and <code>Group1</code>
-        happens to be the desired !consumer_shortName.', $consumer_tokens),
+      '#description' => t('In the example above, it would be <code>ou</code>', $consumer_tokens),
       '#states' => array(
         'visible' => array(   // action to take.
           ':input[name="derive_from_dn"]' => array('checked' => TRUE),
@@ -209,7 +207,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
     $form['derive_from_attr'] = array(
       '#type' => 'fieldset',
-      '#title' => t('II.B. Derive !consumer_namePlural by attribute', $consumer_tokens),
+      '#title' => t('Strategy II.B. Derive !consumer_namePlural from Attribute in User\'s LDAP Entry', $consumer_tokens),
       '#collapsible' => TRUE,
       '#collapsed' => !$this->deriveFromAttr,
     );
@@ -217,26 +215,24 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $form['derive_from_attr']['derive_from_entry_preamble'] = array(
         '#type' => 'item',
         '#markup' => '<p>' .
-        t('II. B. finds the user LDAP entry, then checks for groups listed in one or more of its attributes.  Its the converse of II.C.') .
-        ' ' .
-        t('The "Attribute names" field would be attribute containing the list of groups the user belonged to, such as <code>memberOf</code>.
-          See '). l('http://drupal.org/node/1487018' , 'http://drupal.org/node/1487018') . t(' for additional documentation.') .
+        t('Use this strategy if users\' LDAP entries contains an attribute such as <code>memberOf</code> that contains a list of groups
+          the user belongs to.  Typically only one attribute name would be used.  See '). l('http://drupal.org/node/1487018' , 'http://drupal.org/node/1487018') . t(' for additional documentation.') .
         '</p>'
     );
 
     $form['derive_from_attr']['derive_from_attr'] = array(
       '#type' => 'checkbox',
-      '#title' => t('!consumer_shortNamePlural are specified by LDAP attributes', $consumer_tokens),
+      '#title' => t('!consumer_namePlural are specified by LDAP attributes', $consumer_tokens),
       '#default_value' => $this->deriveFromAttr,
     );
 
     $form['derive_from_attr']['derive_from_attr_attr'] = array(
       '#type' => 'textarea',
-      '#title' => t('Attribute names (one per line)'),
+      '#title' => t('Attribute name(s) (one per line)'),
       '#default_value' => $this->arrayToLines($this->deriveFromAttrAttr),
       '#cols' => 50,
-      '#rows' => 6,
-      '#description' => t('If the !consumer_shortNamePlural are stored in the user entries, along with the rest of their data, then enter here a list of attributes which may contain them.', $consumer_tokens),
+      '#rows' => 1,
+      '#description' => NULL,
       '#states' => array(
         'visible' => array(   // action to take.
           ':input[name="derive_from_attr"]' => array('checked' => TRUE),
@@ -256,8 +252,9 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       ),
     );
 
-    $nested_warning =  t('Warning: this is fairly new and untested feature.  Please test a few users with the test form first.
-      Nested groups also involves more queries which require the service account or other binding account to be able to query the nested groups.');
+    $nested_warning =  t('Warning: this is fairly new and untested feature.  Please test a few users with the !consumer_testLink form first.
+      Nested groups also involves more queries which require the service account or other binding account to be able to query the nested groups.
+      If using nested groups, consider less, higher level base dns in the server configuration for more efficient queries.', $consumer_tokens);
 
     $form['derive_from_attr']['derive_from_attr_nested'] = array(
       '#type' => 'checkbox',
@@ -276,7 +273,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
     $form['derive_from_entry'] = array(
       '#type' => 'fieldset',
-      '#title' => t('II.C. Derive !consumer_namePlural from entry', $consumer_tokens),
+      '#title' => t('Strategy II.C. Derive !consumer_namePlural from LDAP Group entries', $consumer_tokens),
       '#collapsible' => TRUE,
       '#collapsed' => !$this->deriveFromEntry,
     );
@@ -284,22 +281,13 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
     $form['derive_from_entry']['derive_from_entry_preamble'] = array(
         '#type' => 'item',
-        '#markup' => '<p>' . t('II. C. finds the group LDAP entry, then checks for members in the group LDAP entry.  Its the converse of II.B.') . '</p>' .
-        '<p>' . t('A typical use case is a group whose members are spread throughout the LDAP directory.') .
-         ' ' .
-         t('The "LDAP DNs containing roles..." field would be the group DN or DNs such as') .
-         ' ' .
-         ': <code>cn=DrupalStudents,o=uni,dc=ldap,dc=myuniversity,dc=edu</code>' .
-         ' ' .
-         t('The "Attribute holding roles members" field would be the (multivalued) attribute within that ldap entry that contains the list of users/members.') .
-         ' ' .
-         t('Such as <code>member</code>') .
-         '</p>'
+        '#markup' => t('Use this strategy if your LDAP has entries for groups and strategy II.B. is not applicable.') .
+          t(' See ') . l('http://drupal.org/node/1499172' , 'http://drupal.org/node/1499172') . t(' for additional documentation.'),
     );
 
     $form['derive_from_entry']['derive_from_entry'] = array(
       '#type' => 'checkbox',
-      '#title' => t('!consumer_shortNamePlural exist as LDAP entries where a multivalued attribute contains the members', $consumer_tokens),
+      '#title' => t('!consumer_namePlural exist as LDAP entries where a multivalued attribute contains the members', $consumer_tokens),
       '#default_value' => $this->deriveFromEntry,
     );
 
@@ -310,7 +298,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#default_value' => $this->arrayToLines($this->deriveFromEntryEntries),
       '#cols' => 50,
       '#rows' => 6,
-      '#description' => t('Enter here a list of LDAP entries from where !consumer_shortNamePlural should be searched for.', $consumer_tokens),
+      '#description' => t('Enter a list of LDAP entries where !consumer_namePlural should be searched for.', $consumer_tokens),
       '#states' => array(
         'visible' => array(   // action to take.
           ':input[name="derive_from_entry"]' => array('checked' => TRUE),
@@ -318,19 +306,13 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       ),
     );
 
-
-    $form['derive_from_entry']['derive_from_entry_attr'] = array(
-      '#type' => 'markup',
-      '#markup' => t('<h3>Typical Use Case</h3>'),
-      );
-
     $form['derive_from_entry']['derive_from_entry_attr'] = array(
       '#type' => 'textfield',
-      '#title' => t('Attribute holding !consumer_shortNamePlural members', $consumer_tokens),
+      '#title' => t('Attribute holding !consumer_namePlural members', $consumer_tokens),
       '#default_value' => $this->deriveFromEntryAttr,
       '#size' => 50,
       '#maxlength' => 255,
-      '#description' => t('Name of the multivalued attribute which holds the !consumer_shortNamePlural members,
+      '#description' => t('Name of the multivalued attribute which holds the !consumer_namePlural members,
          for example: uniquemember, memberUid', $consumer_tokens),
       '#states' => array(
         'visible' => array(   // action to take.
@@ -338,14 +320,37 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
         ),
       ),
     );
-
+// deriveFromEntryAttrMatchingUserAttr
     $form['derive_from_entry']['derive_from_entry_user_ldap_attr'] = array(
       '#type' => 'textfield',
-      '#title' => t('Attribute holding user identifier.', $consumer_tokens),
-      '#default_value' => $this->deriveFromEntryUserLdapAttr,
+      '#title' => t('User LDAP Entry attribute held in "', $consumer_tokens) . $form['derive_from_entry']['derive_from_entry_attr']['#title'] . '"',
+      '#default_value' => $this->deriveFromEntryAttrMatchingUserAttr,
       '#size' => 50,
       '#maxlength' => 255,
-      '#description' => t('This is almost always "dn"', $consumer_tokens),
+      '#description' => t('This is almost always "dn" or "cn".') . '<br/>' .
+      t('For example if the attribute holding members is "uniquemember" and that the group entry has the following uniquemember values: ') .
+      '<code>
+      uniquemember[0]=uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu<br/>
+      uniquemember[1]=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu
+      </code><br/>' .
+      t('"dn" would be used because uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu and cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu are the dn\'s of the LDAP entries.') . '<br/>' .
+      t('If the attribute holding members is member and that the group entry has: ') .
+      '<br/><code>
+      member[0]=joeprogrammer<br/>
+      member[1]=sysadmins
+      </code><br/>' .
+      t('"cn" would be used because joeprogrammer and sysadmins are the cn\'s of the LDAP entries.'),
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="derive_from_entry"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    $form['derive_from_entry']['derive_from_entry_use_first_attr'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Convert full dn to value of first attribute.  e.g.  <code>cn=admin group,ou=it,dc=ad,dc=nebraska,dc=edu</code> would be converted to <code>admin group</code>', $consumer_tokens),
+      '#default_value' => $this->deriveFromEntryUseFirstAttr,
       '#states' => array(
         'visible' => array(   // action to take.
           ':input[name="derive_from_entry"]' => array('checked' => TRUE),
@@ -355,7 +360,9 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
     $form['derive_from_entry']['derive_from_entry_search_all'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Search all enabled LDAP servers for matching users.  (Enables roles on one server referencing users on another)'),
+      '#title' => t('Search all enabled LDAP servers for matching users.  This Enables roles on one server referencing users on another.
+        This can lead to [Number of Enabled Servers] x [Number of Base DNs] x [Number of Groups] queries;
+        so don\'t enable this unless you know its useful to your use case.'),
       '#default_value' => $this->deriveFromEntrySearchAll,
       '#states' => array(
         'visible' => array(   // action to take.
@@ -437,7 +444,7 @@ Raw authorization ids look like:
 
     $form['advanced_intro'] = array(
         '#type' => 'item',
-        '#title' => t('Part IV.  More Settings.', $consumer_tokens),
+        '#title' => t('Part IV.  Even More Settings.', $consumer_tokens),
         '#markup' => t('', $consumer_tokens),
     );
 
@@ -630,7 +637,6 @@ Raw authorization ids look like:
 
     $this->sid = $values['sid'];
     $this->consumerType = $values['consumer_type'];
-    $this->description = $values['description'];
     $this->status = (bool)$values['status'];
     $this->onlyApplyToLdapAuthenticated  = (bool)(@$values['only_ldap_authenticated']);
 
@@ -645,7 +651,8 @@ Raw authorization ids look like:
     $this->deriveFromEntry  = (bool)(@$values['derive_from_entry']);
     $this->deriveFromEntryEntries = $values['derive_from_entry_entries'];
     $this->deriveFromEntryAttr = $values['derive_from_entry_attr'];
-    $this->deriveFromEntryUserLdapAttr =  $values['derive_from_entry_user_ldap_attr'];
+    $this->deriveFromEntryAttrMatchingUserAttr =  $values['derive_from_entry_user_ldap_attr'];
+    $this->deriveFromEntryUseFirstAttr  = (bool)($values['derive_from_entry_use_first_attr']);
     $this->deriveFromEntrySearchAll  = (bool)($values['derive_from_entry_search_all']);
     $this->deriveFromEntryNested  = (bool)($values['derive_from_entry_nested']);
 
@@ -715,14 +722,6 @@ Raw authorization ids look like:
             'type' => 'varchar',
             'length' => 30,
             'not null' => TRUE,
-        )
-      ),
-
-      'description' => array(
-        'schema' => array(
-          'type' => 'varchar',
-          'length' => '60',
-          'not null' => FALSE
         )
       ),
 
@@ -824,6 +823,15 @@ Raw authorization ids look like:
             'size' => 'tiny',
            'not null' => TRUE,
             'default' => 0,
+        )
+      ),
+
+      'derive_from_entry_use_first_attr' => array(
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
         )
       ),
 

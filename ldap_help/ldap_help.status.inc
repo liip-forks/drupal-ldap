@@ -362,15 +362,18 @@ function ldap_help_get_ldap_authorization() {
 
   $items['derive_from_attr']['derive_from_attr'] = 'string';
   $items['derive_from_attr ']['derive_from_attr_attr'] = 'string';
-
+  $items['derive_from_attr']['derive_from_attr_use_first_attr'] = 'checkbox';
 
   $items['derive_from_entry']['derive_from_entry'] = 'string';
-  $items['derive_from_entry ']['derive_from_entry_entries'] = 'string';
+  $items['derive_from_entry']['derive_from_entry_entries'] = 'string';
   $items['derive_from_entry']['derive_from_entry_attr'] = 'string';
-
+  $items['derive_from_entry']['derive_from_entry_user_ldap_attr'] = 'string';
+  $items['derive_from_entry']['derive_from_entry_nested'] = 'checkbox';
+  $items['derive_from_entry']['derive_from_entry_use_first_attr'] = 'checkbox';
 
   // $items['filter_and_mappings']['mappings'] = 'string';
   $items['use_filter']['mappings'] = 'string';
+
 
   $items['misc_settings']['allow_synch_both_directions'] = 'string';
   $items['misc_settings']['synchronization_modes'] = 'string';

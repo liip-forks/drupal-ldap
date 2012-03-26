@@ -31,7 +31,7 @@ function theme_ldap_authorization_admin_index(&$variables) {
 
     $table['rows'][] = array(
       $consumer->consumerConf->sid,
-      $consumer->description,
+      $consumer->name,
       $consumer->consumerModule,
       $consumer_type,
       ($consumer->consumerConf->status) ? t('Yes') : t('No'),

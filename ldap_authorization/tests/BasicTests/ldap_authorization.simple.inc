@@ -24,7 +24,7 @@ $authorization['drupal_role'] = array(
   'deriveFromEntryEntries' => array('ou=groups,dc=ad,dc=myuniversity,dc=edu'),
   'deriveFromEntryAttr' => 'uniquemember',
   'deriveFromEntryNested' => 0,
-  'deriveFromEntryUserLdapAttr' => 'dn',
+  'deriveFromEntryAttrMatchingUserAttr' => 'dn',
   
   'mappings' => array(
     0 => array('cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu', 'content editors'),

@@ -19,6 +19,8 @@ class LdapAuthorizationConsumerAbstract {
   public $description;
   public $consumerConf; // each consumer type has cosumer conf object
   public $consumerModule;
+  public $testLink;
+  public $editLink;
 
   protected $_availableConsumerIDs;
 
@@ -84,12 +86,14 @@ class LdapAuthorizationConsumerAbstract {
     $this->namePlural= $params['consumer_name_plural'];
     $this->shortName = $params['consumer_short_name'];
     $this->shortNamePlural= $params['consumer_short_name_plural'];
-    $this->description = $params['consumer_description'];
     $this->consumerModule = $params['consumer_module'];
     $this->mappingDirections = $params['consumer_mapping_directions'];
+    $this->testLink = l(t('test') . ' ' . $this->name, LDAP_SERVERS_MENU_BASE_PATH . '/authorization/test/' . $this->consumerType);
+    $this->editLink = l(t('edit') . ' ' . $this->name, LDAP_SERVERS_MENU_BASE_PATH . '/authorization/edit/' . $this->consumerType);
 
     require_once('LdapAuthorizationConsumerConfAdmin.class.php');
     $this->consumerConf = new LdapAuthorizationConsumerConf($this);
+
   }
 
 

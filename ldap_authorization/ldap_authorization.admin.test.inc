@@ -36,13 +36,15 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
      '#markup' => t('Below are the "raw authorizations" and which strategy they are derived from.  If enabled, the mapping filter is applied to these.'),
     );
 
-    $i = 0;
-    foreach ($_SESSION['ldap_authorization_test_query']['maps'] as $map => $data) {
-      $i++;
-      $form['pre-filtered']['map' . $i] = array(
-       '#type' => 'item',
-       '#markup' => is_scalar($data) ?  "<h2>$map (without filter)</h2>" . $data : theme('item_list', array('items' => $data, 'type' => 'ul', 'title' => "$map (without filter)")),
-      );
+    if (isset($_SESSION['ldap_authorization_test_query']['maps'])) {
+      $i = 0;
+      foreach ($_SESSION['ldap_authorization_test_query']['maps'] as $map => $data) {
+        $i++;
+        $form['pre-filtered']['map' . $i] = array(
+         '#type' => 'item',
+         '#markup' => is_scalar($data) ?  "<h2>$map (without filter)</h2>" . $data : theme('item_list', array('items' => $data, 'type' => 'ul', 'title' => "$map (without filter)")),
+        );
+      }
     }
   }
 
@@ -103,6 +105,7 @@ function ldap_authorization_test_form_validate($form, &$form_state) {
 
 
 function ldap_authorization_test_form_submit($form, &$form_state) {
+
   $consumer_type = $form_state['values']['consumer_type'];
   $consumer = ldap_authorization_get_consumer_object($consumer_type);
   $consumer_tokens = ldap_authorization_tokens($consumer);

@@ -199,8 +199,8 @@ class LdapAuthenticationConf {
       $user->ldap_authenticated = TRUE; // fake user property added for query
       $consumers = ldap_authorization_get_consumers();
       $has_enabled_consumers = FALSE;
-      foreach ($consumers as $consumer_type => $consumer_config) {
 
+      foreach ($consumers as $consumer_type => $consumer_config) {
         $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
         if ($consumer_obj->consumerConf->status) {
           $has_enabled_consumers = TRUE;

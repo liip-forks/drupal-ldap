@@ -205,4 +205,28 @@ function ldap_authorization_update_7106() {
   return ($msg) ? $msg :  t('No database changes made.');
 }
 
+/**
+ * add derive_from_entry_use_first_attr field to and remove description field from ldap_authorization table
+ */
+function ldap_authorization_update_7107() {
 
+  $changes = '';
+
+  if (!db_field_exists('ldap_authorization', 'derive_from_entry_use_first_attr')) {
+    db_add_field('ldap_authorization', 'derive_from_entry_use_first_attr', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+    $changes .= t('"derive_from_entry_use_first_attr" field added to ldap_authorization table');
+  }
+
+  if (db_field_exists('ldap_authorization', 'description')) {
+    db_drop_field('ldap_authorization', 'description');
+    $changes .=  t('"description" field dropped from to ldap_authorization table');
+  }
+
+  return ($changes) ? $changes : t('No database changes made.');
+
+}

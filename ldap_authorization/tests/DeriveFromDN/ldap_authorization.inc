@@ -24,6 +24,9 @@ $authorization['drupal_role'] =  array(
   'deriveFromEntryEntries' =>  NULL,
   'deriveFromEntryAttr' =>  NULL,
   'deriveFromEntryNested' => 0,
+  'deriveFromEntryUseFirstAttr' => 0,
+
+
   'mappings' =>  array(
     0 =>  array('Campus Accounts', 'campus accounts'),
     1 =>  array('guest accounts', 'guests'),

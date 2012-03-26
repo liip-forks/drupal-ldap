@@ -539,14 +539,11 @@ class LdapServer {
   public function deriveFromEntryGroups($derive_from_entries_entries, $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry, $nested = FALSE) {
 
     $authorizations = array();
-
+    $matching_user_value = $user_ldap_entry[$derive_from_entry_user_ldap_attr];
     $filter  = "(|\n    (distinguishedName=" . join(")\n    (distinguishedName=", $derive_from_entries_entries) . ")\n)";
     if (!$nested) {
-      $filter =  "(&\n  $filter  \n  (" . $derive_from_entry_attr . "=" . $user_ldap_entry[$derive_from_entry_user_ldap_attr] . ")  \n)";
+      $filter =  "(&\n  $filter  \n  (" . $derive_from_entry_attr . "=" .  $matching_user_value . ")  \n)";
     }
-
-    // // debug("deriveFromEntryGroups derive_from_entry_attr=$derive_from_entry_attr, derive_from_entry_user_ldap_attr=$derive_from_entry_user_ldap_attr, $nested"); debug($derive_from_entries_entries); debug($user_ldap_entry); debug('this'); debug($this->properties);
-
 
     /**
      * $filter nested example:
@@ -576,13 +573,12 @@ class LdapServer {
           };
           foreach ($entries as $i => $entry) {
             $dn = (string)$entry['dn'];
-            //debug("top function entry,dn=$dn"); debug($entry); debug(isset($entry[$derive_from_entry_attr]));
             if (!in_array($dn, $tested_groups) && isset($entry[$derive_from_entry_attr])) {
               $members = $entry[$derive_from_entry_attr];
               //debug('members'); debug($members);
               unset($members['count']);
               // user may be direct member of group
-              if (in_array($user_ldap_entry[$derive_from_entry_user_ldap_attr], array_values($members))) {
+              if (in_array($matching_user_value, array_values($members))) {
                 $authorizations[] = $dn;
               }
               else {  // $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry
@@ -607,8 +603,8 @@ class LdapServer {
    * which one.
    */
   public function groupsByEntryIsMember($dn, $members, $base_dn, &$tested_groups, $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry, $depth, $max_depth) {
-    // query for all members
-    $filter = "(|\n  (distinguishedName=" . join(")\n    (distinguishedName=", $members) . ")\n  )";
+    // query for all members that are groups
+    $filter = "(&(objectClass=". $this->groupObjectClass . ")(|\n  (distinguishedName=" . join(")\n    (distinguishedName=", $members) . ")\n  ))";
 
     $entries = $this->search($base_dn, $filter, array('dn', $derive_from_entry_attr));
    //debug('groupsByEntryIsMember,derive_from_entry_attr='.$derive_from_entry_attr); debug($filter); debug($base_dn);

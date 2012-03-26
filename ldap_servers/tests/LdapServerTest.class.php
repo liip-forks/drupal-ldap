@@ -134,7 +134,7 @@ class LdapServerTest extends LdapServer {
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
 
     $filter = trim(str_replace(array("\n", "  "),array('',''), $filter)); // for test matching simplicity remove line breaks and tab spacing
-   // debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");
+    //debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");
 
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
@@ -147,7 +147,7 @@ class LdapServerTest extends LdapServer {
 
     // return prepolulated search results in test data array if present
     if (isset($this->searchResults[$filter][$base_dn])) {
-      //debug('search-results'); debug($this->searchResults[$filter][$base_dn]);
+      debug('search-results'); debug($this->searchResults[$filter][$base_dn]);
       return $this->searchResults[$filter][$base_dn];
     }
     $base_dn = drupal_strtolower($base_dn);
@@ -237,7 +237,7 @@ class LdapServerTest extends LdapServer {
     }
 
     $results['count'] = count($results);
-   // debug('search-results'); debug($results);
+   // debug('search-results 2'); debug($results);
     return $results;
   }
 

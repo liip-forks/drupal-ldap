@@ -27,6 +27,7 @@ $authorization['drupal_role'] = array(
   'deriveFromEntry' => 0,
   'deriveFromEntryEntries' => NULL,
   'deriveFromEntryAttr' => NULL,
+  'deriveFromEntryUseFirstAttr' => 0,
   'deriveFromEntryNested' => 0,
 
   'mappings' => array(

@@ -64,7 +64,8 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
   $authorizations = array();
   $notifications = array();
   $watchdog_tokens = array('%username' => $user->name);
-  $consumers = ldap_authorization_get_consumers($consumer_type);
+  $consumers = ldap_authorization_get_consumers($consumer_type, FALSE, FALSE);
+
   $servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);
 
   /**
@@ -104,6 +105,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     if (!$consumer->consumerConf->status) {
       continue;
     }
+
     $proposed_ldap_authorizations = array();
     $watchdog_tokens['%consumer_type'] = $consumer_type;
     $watchdog_tokens['%sid'] = $consumer->consumerConf->sid;
@@ -241,7 +243,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     }
 
     $authorizations[$consumer_type] = $filtered_ldap_authorizations;
-  } //  end foreach $consumer type
+  } //  end foreach $consumers
   return array($authorizations, $notifications);
 
 }
@@ -420,7 +422,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
   $derive_from_entry_authorizations = array();
   if ($consumer_conf->deriveFromEntry) {
-    if ($consumer_conf->deriveFromEntryUserLdapAttrUndefined) {
+    if ($consumer_conf->deriveFromEntryAttrMatchingUserAttrUndefined) {
       // this condition will be removed in the 7.x-2.x branch,  its here to avoid breaking 7.x-1.x sites
       // that use this somewhat flawed approach successfully.  see: http://drupal.org/node/1412076
       foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
@@ -442,18 +444,25 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
         }
       }
     }
-    elseif (isset($user_ldap_entry[$consumer_conf->deriveFromEntryUserLdapAttr])) {
+    elseif (isset($user_ldap_entry[$consumer_conf->deriveFromEntryAttrMatchingUserAttr])) {
       // $derive_from_entries_entries, $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry, $nested = FALSE
       $derive_from_entry_authorizations = $ldap_server->deriveFromEntryGroups(
         $consumer_conf->deriveFromEntryEntries,
         $consumer_conf->deriveFromEntryAttr,
-        $consumer_conf->deriveFromEntryUserLdapAttr,
+        $consumer_conf->deriveFromEntryAttrMatchingUserAttr,
         $user_ldap_entry,
         $consumer_conf->deriveFromEntryNested
       );
       if (count($derive_from_entry_authorizations)) {
         foreach ($derive_from_entry_authorizations as $i => $authorization) {
-          $derive_from_entry_authorizations[$i] = drupal_strtolower($authorization);
+          if ($consumer_conf->deriveFromEntryUseFirstAttr) {
+            $attr_parts = ldap_explode_dn($authorization, 0);
+            $first_part = explode('=', $attr_parts[0]);
+            $derive_from_entry_authorizations[$i] = drupal_strtolower(str_replace('\\2C', ',', trim($first_part[1])));
+          }
+          else {
+            $derive_from_entry_authorizations[$i] = drupal_strtolower($authorization);
+          }
         }
         $derive_from_entry_authorizations = array_unique($derive_from_entry_authorizations);
         $derive_from_entry_authorizations = array_combine($derive_from_entry_authorizations, $derive_from_entry_authorizations);

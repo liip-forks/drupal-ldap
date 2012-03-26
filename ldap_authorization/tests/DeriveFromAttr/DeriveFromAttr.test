@@ -100,8 +100,10 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
     $user = $this->drupalCreateUser(array());
     $verykool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'verykool', 'mail' =>  'verykool@guests.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query');  // just see if the correct ones are derived.
-  //  debug('new authorizations'); debug($new_authorizations);
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('netadmins2', $new_authorizations['drupal_role']));
+    if (!$correct_roles) {
+      debug('new authorizations'); debug($new_authorizations);
+    }
     $this->assertTrue($correct_roles, 'user account verykool tested for granting drupal_role "netadmins2"', $this->ldapTestId . '.deriveFromAttrUseFirstAttr');
     $consumer_conf_admin->deriveFromAttrUseFirstAttr = 0;
     $consumer_conf_admin->save();

@@ -170,6 +170,12 @@ $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     0 => $servers['ldapauthor1']['users']['uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu']['attr'],
   );
 
+$filter = '(&(objectClass=groupOfUniqueNames)(|(distinguishedName=uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu)))';
+$servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
+    'count' => 1,
+    0 => $servers['ldapauthor1']['users']['uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu']['attr'],
+  );
+
 
 // search filter for non nested groups
 $filter = '(&(|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu))(uniquemember=uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu))';
@@ -178,7 +184,7 @@ $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     0 => $servers['ldapauthor1']['groups']['cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'] ,
   );
 
-$filter = "(|(distinguishedName=cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu))";
+$filter = "(&(objectClass=groupOfUniqueNames)(|(distinguishedName=cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu)))";
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 2,
     0 => $servers['ldapauthor1']['groups']['cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],
@@ -223,70 +229,3 @@ $servers['ldapauthor1']['search_results']['(|((dn=cn=staff,ou=people,dc=ad,dc=my
     ),
 
   );
-
-/** walk through of nested strategy for confiugration:
-  authorization.deriveFromEntry' = 1
-  authorization.deriveFromEntryEntries' = array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu')
-  authorization.deriveFromEntryAttr' = 'uniquemember'
-  authorization.deriveFromEntryNested' = 1
-  authorization.deriveFromEntryUserLdapAttr' = 'dn'
-  server.groupObjectClass = 'groupOfUniqueNames'
-  user dn in question = 'cn=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu'
-
-  start tree:
-  $tree['cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu']
-  $tree['cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu']
-
-  query:
-  (&
-    (|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu))
-  )
-
-  entries returned:
-
-    'dn' => 'cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu',
-    'objectclass' => array( 0 => 'groupofuniquenames', 'count' => 1),
-    'uniquemember' => array(
-       'count' => 2,
-       0 => 'cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu',
-       1 => 'cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu',
-    ),
-
-    'dn' => 'cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu',
-    'objectclass' => array( 0 => 'groupofuniquenames', 'count' => 1),
-    'uniquemember' => array(
-      'count' => 3,
-      0 => 'cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu',
-      1 => 'cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu',
-      2 => 'uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu',
-    ),
-
-
-  loop through returned entries:
-    - if uniquemember instance = cn=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu add to authorizations
-
-    - add to tree  tradeoff between big tree in memory and many queries
-      $tree['cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu']['cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu']
-      $tree['cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu']['cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu']
-
-      $tree['cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu']['cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu']
-      $tree['cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu']['cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu']
-      $tree['cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu']['uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu']
-
-      query recursively adding top ancestor group and ending recursion if member
-      (&
-        (|(distinguishedName=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu)(
-        distinguishedName=cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu))
-      )
-
-      (&
-        (|(distinguishedName=cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-        (distinguishedName=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-        (uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu)
-        )
-      )
-
-
-
-**/
-// nested group queries
