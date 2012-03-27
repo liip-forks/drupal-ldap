@@ -34,7 +34,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values->derive_from_entry = (int)$this->deriveFromEntry;
     $values->derive_from_entry_search_all = (int)$this->deriveFromEntrySearchAll;
     $values->derive_from_entry_entries = $this->arrayToLines($this->deriveFromEntryEntries);
-    $values->derive_from_entry_attr = $this->deriveFromEntryAttr;
+    $values->derive_from_entry_attr = $this->deriveFromEntryMembershipAttr;
     $values->derive_from_entry_user_ldap_attr = $this->deriveFromEntryAttrMatchingUserAttr;
     $values->derive_from_entry_use_first_attr = (int)$this->deriveFromEntryUseFirstAttr;
     $values->derive_from_entry_nested = (int)$this->deriveFromEntryNested;
@@ -309,7 +309,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $form['derive_from_entry']['derive_from_entry_attr'] = array(
       '#type' => 'textfield',
       '#title' => t('Attribute holding !consumer_namePlural members', $consumer_tokens),
-      '#default_value' => $this->deriveFromEntryAttr,
+      '#default_value' => $this->deriveFromEntryMembershipAttr,
       '#size' => 50,
       '#maxlength' => 255,
       '#description' => t('Name of the multivalued attribute which holds the !consumer_namePlural members,
@@ -606,7 +606,7 @@ Raw authorization ids look like:
     if ($this->deriveFromEntry && !count($this->deriveFromEntryEntries)) {
       $errors['derive_from_entry'] = t('Nodes are missing.');
     }
-    if ($this->deriveFromEntry && !trim($this->deriveFromEntryAttr)) {
+    if ($this->deriveFromEntry && !trim($this->deriveFromEntryMembershipAttr)) {
       $errors['derive_from_entry_attribute'] = t('Attribute is missing.');
     }
 
@@ -650,7 +650,7 @@ Raw authorization ids look like:
 
     $this->deriveFromEntry  = (bool)(@$values['derive_from_entry']);
     $this->deriveFromEntryEntries = $values['derive_from_entry_entries'];
-    $this->deriveFromEntryAttr = $values['derive_from_entry_attr'];
+    $this->deriveFromEntryMembershipAttr = $values['derive_from_entry_attr'];
     $this->deriveFromEntryAttrMatchingUserAttr =  $values['derive_from_entry_user_ldap_attr'];
     $this->deriveFromEntryUseFirstAttr  = (bool)($values['derive_from_entry_use_first_attr']);
     $this->deriveFromEntrySearchAll  = (bool)($values['derive_from_entry_search_all']);

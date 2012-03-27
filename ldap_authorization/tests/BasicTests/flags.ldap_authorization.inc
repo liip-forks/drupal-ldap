@@ -26,7 +26,7 @@
 
     'deriveFromEntry' =>  0,
     'deriveFromEntryEntries' =>  NULL,
-    'deriveFromEntryAttr' =>  NULL,
+    'deriveFromEntryMembershipAttr' =>  NULL,
     'deriveFromEntryNested' => 1,
 
     'mappings' => array(
@@ -44,5 +44,3 @@
     'createConsumers' =>  1,
     'regrantLdapProvisioned' =>  1,
   );
-
-

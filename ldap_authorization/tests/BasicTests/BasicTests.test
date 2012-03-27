@@ -12,7 +12,7 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
   public static function getInfo() {
     return array(
       'group' => 'LDAP Authorization',
-      'name' => 'Basic Tests',
+      'name' => 'LDAP Authorization: Basic Tests',
       'description' => 'Basic functionality tests.',
     );
   }

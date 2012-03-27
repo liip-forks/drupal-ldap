@@ -1,40 +1,5 @@
 
-========================================
-Derive From Entry Configuration Options:
-========================================
-0. Use Derive from Entry
-Property: authorization.deriveFromEntry as boolean
-
-1a. List of groups' ldap entry attribute values.  Can be cn, uid, dn etc. of the entry.   These entries contain multivalued attributes which are member users or nested groups.
-Property:  authorization.deriveFromEntryEntries as array of ldap entry attributes
-e.g.: array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu')
-e.g.: array('it', 'people')
-
-1b. Attribute who's value is contained in 1a.  This pair will be used to search from group entries.
-Property:  authorization.deriveFromEntryEntriesAttr as LDAP attribute name
-e.g. 'dn', 'cn', ...
-
-2. Name of multivalued attribute whose value contains members.
-Property:  authorization.deriveFromEntryMembershipAttr as LDAP attribute name
-e.g.: 'uniquemember', 'member'
-
-3. User's LDAP Entry Attribute which will be held in deriveFromEntryMembershipAttr
-Property: authorization.deriveFromEntryAttrMatchingUserAttr as LDAP attribute name
-e.g.: 'dn', 'cn'
-
-4. Search all enabled LDAP servers for matching users
-Property: authorization.deriveFromEntrySearchAll as boolean
-
-5. Include nested groups.
-Property: authorization.deriveFromEntryNested: boolean
-
-6. Convert full dn to value of first attribute.
-Property: authorization.deriveFromEntryUseFirstAttr: boolean
-
-7. Class of entries that represent groupgs.
-Property: server.groupObjectClass as LDAP attribute value held in objectClass.
-e.g.: 'groupOfUniqueNames', 'group'
-
+This is a counterpart to DeriveFromEntry.notes.txt using cn, groupOfUniqueNames, and uid
 
 ========================================
 Derive From Entry walk-through NOT nested:
@@ -42,13 +7,13 @@ Derive From Entry walk-through NOT nested:
 
 --- configuration ------
 0. authorization.deriveFromEntry = 1
-1. authorization.deriveFromEntryEntries = array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu')
-1b. authorization.deriveFromEnryEntryAttribute' = 'distinguishedName'
+1. authorization.deriveFromEntryEntries = array('group1', 'group2')
+1b. authorization.deriveFromEnryEntryAttribute' = 'cn'
 2. authorization.deriveFromEntryMembershipAttr = 'uniquemember'
-3. authorization.deriveFromEntryAttrMatchingUserAttr = 'dn'
+2a. authorization.deriveFromEntryAttrMatchingUserAttr = 'dn'
 4. authorization.deriveFromEntrySearchAll = 0
 5. authorization.deriveFromEntryNested = 0
-6. authorization.deriveFromEntryUseFirstAttr = 1
+6. authorization.deriveFromEntryUseFirstAttr = 0
 7. server.groupObjectClass = 'groupOfUniqueNames'
 
 user ldap entry in question:
@@ -64,7 +29,7 @@ user ldap entry in question:
 
 (&
 (objectClass=groupOfUniqueNames)
-(|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=people,cn=groups,dc=ad,dc=myuniversity,dc=edu))
+(|(cn=group1)(cn=group2))
 (uniquemember=cn=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu)
 )
 
@@ -87,13 +52,13 @@ Derive From Entry walk-through NESTED:
 
 --- configuration ------
 0. authorization.deriveFromEntry = 1
-1. authorization.deriveFromEntryEntries = array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu')
-1b. authorization.deriveFromEnryEntryAttribute = 'distinguishedName'
+1. authorization.deriveFromEntryEntries = array('it', 'people')
+1b. authorization.deriveFromEnryEntryAttribute' = 'cn'
 2. authorization.deriveFromEntryMembershipAttr = 'uniquemember'
-3. authorization.deriveFromEntryAttrMatchingUserAttr = 'dn'
+2b. authorization.deriveFromEntryAttrMatchingUserAttr = 'dn'
 4. authorization.deriveFromEntrySearchAll = 0
 5. authorization.deriveFromEntryNested = 1
-6. authorization.deriveFromEntryUseFirstAttr = 1
+6. authorization.deriveFromEntryUseFirstAttr = 0
 7. server.groupObjectClass = 'groupOfUniqueNames'
 
 user ldap entry in question:
@@ -107,7 +72,7 @@ user ldap entry in question:
 
 (&
 (objectClass=groupOfUniqueNames)
-(|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu))
+(|(cn=it)(cn=people))
 )
 
 in psuedo code:
@@ -120,14 +85,16 @@ in psuedo code:
 2. All entries returned represent groups that user MIGHT be a member of.  examples:
 
   'dn' => 'cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+  'cn' => array( 0 => 'it'),
   'objectclass' => array( 0 => 'groupofuniquenames'),
   'uniquemember' => array(
-    0 => 'cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+    0 => 'developers,cn=groups,dc=ad,dc=myuniversity,dc=edu',
     1 => 'cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu',
     2 => 'uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu',
   ),
 
   'dn' => 'cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+  'cn' => array( 0 => 'people'),
   'objectclass' => array( 0 => 'groupofuniquenames'),
   'uniquemember' => array(
      0 => 'cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu',
@@ -146,7 +113,6 @@ in psuedo code:
 
   else recurse through uniquemembers.  if user's entry is found, add corresponding
   authorization.deriveFromEntryEntries entry to authorizations
-  (not the DN that has the user in uniquemembers)
 
 
 4A.  recursion:
@@ -155,21 +121,23 @@ In the above example the first recursion query looks like:
 (&
   (objectClass=groupofuniquenames)
   (|
-    (distinguishedName=cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-    (distinguishedName=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=eduu)
-    (distinguishedName=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu)
+    (cn=developers)
+    (cn=sysadmins)
+    (cn=joeprojectmanager)
   )
 )
 
 which might return:
 
     'dn' => 'cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+    'cn' => array( 0 => 'developers'),
     'objectclass' => array( 0 => 'groupofuniquenames'),
     'uniquemember' => array(
       0 => 'uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu',
     ),
 
     'dn' => 'cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+    'cn' => array( 0 => 'sysadmins'),
     'objectclass' => array( 0 => 'groupofuniquenames'),
     'uniquemember' => array(
       0 => 'uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu',
@@ -177,9 +145,7 @@ which might return:
     ),
 
 since uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu is found in the first entry,
-  cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu (the ancestor group) is added
-  to the list of authorizations.
-  Since authorization.deriveFromEntryUseFirstAttr = 1, its truncated to "it"
+  "it" (the ancestor group) is added to the list of authorizations.
 
 
 4B.  In the above example the second recursion query would look like:
@@ -187,14 +153,15 @@ since uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu is found in the first
 (&
   (objectClass=groupofuniquenames)
   (|
-    (distinguishedName=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-    (distinguishedName=cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu)
+    (cn=students)
+    (cn=staff)
   )
 )
 
 which returns:
 
     'dn' => 'cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+    'cn' => array( 0 => 'staff'),
     'objectclass' => array( 0 => 'groupofuniquenames'),
     'uniquemember' => array(
       0 => 'cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu',
@@ -203,6 +170,7 @@ which returns:
 
 
     'dn' => 'cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+    'cn' => array( 0 => 'students'),
     'objectclass' => array( 0 => 'groupofuniquenames'),
     'uniquemember' => array(
       0 => 'uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu',
@@ -213,7 +181,7 @@ which returns:
 (&
   (objectClass=groupofuniquenames)
   (|
-    (distinguishedName=uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu)
+    (cn=jdoe)
   )
 )
 ...which returns no entries
@@ -223,17 +191,17 @@ and
 (&
   (objectClass=groupofuniquenames)
   (|
-    (distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-    (distinguishedName=uid=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu)
+    (cn=it)
+    (cn=unkool)
   )
 )
 
 which returns:
 
   'dn' => 'cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+  'cn' => array( 0 => 'it'),
   'objectclass' => array( 0 => 'groupofuniquenames'),
   'uniquemember' => array(
-
     0 => 'cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu',
     1 => 'cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu',
     2 => 'uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu',
@@ -244,21 +212,23 @@ which returns:
   (&
     (objectClass=groupofuniquenames)
     (|
-      (distinguishedName=cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-      (distinguishedName=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-      (distinguishedName=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu)
+      (cn=developers)
+      (cn=sysadmins)
+      (cn=joeprojectmanager)
     )
   )
 
 which returns:
 
   'dn' => 'cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+  'cn' => array( 0 => 'developers'),
   'objectclass' => array( 0 => 'groupofuniquenames'),
   'uniquemember' => array(
     0 => 'uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu',
   ),
 
   'dn' => 'cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+  'cn' => array( 0 => 'sysadmins'),
   'objectclass' => array( 0 => 'groupofuniquenames'),
   'uniquemember' => array(
     0 => 'uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu',
@@ -266,9 +236,6 @@ which returns:
   ),
 
 since uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu is found in the first entry,
-cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu (the ancestor group)
-is added to the list of authorizations.
-Since authorization.deriveFromEntryUseFirstAttr = 1, its truncated to "people"
-
+"people" (the ancestor group) is added to the list of authorizations.
 
 ==================================================================

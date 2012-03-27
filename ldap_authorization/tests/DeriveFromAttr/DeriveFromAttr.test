@@ -12,7 +12,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
   public static function getInfo() {
     return array(
       'group' => 'LDAP Authorization',
-      'name' => 'Derive from User Attributes',
+      'name' => 'LDAP Authorization: Derive from User Attributes',
       'description' => 'e.g. memberOf attribute in Active Directory.  Tests are in absence of logons to isolate mapping logic.',
     );
   }

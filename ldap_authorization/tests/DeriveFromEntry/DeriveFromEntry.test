@@ -12,7 +12,7 @@ class LdapAuthorizationDerivationsTests  extends LdapAuthorizationTestCase {
   public static function getInfo() {
     return array(
       'group' => 'LDAP Authorization',
-      'name' => 'Derive From Entry',
+      'name' => 'LDAP Authorization: Derive From Entry',
       'description' => 'Tests are in absence of logons to isolate mapping logic.',
 
     );

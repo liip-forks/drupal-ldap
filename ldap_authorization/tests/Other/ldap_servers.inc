@@ -174,7 +174,7 @@ $servers['ldapauthor1']['groups']['cn=people,ou=it,dc=ad,dc=myuniversity,dc=edu'
 
 /**
  *  derive by entry entries
- *    deriveFromEntryAttr=members
+ *    deriveFromEntryMembershipAttr=members
  *    deriveFromEntryAttrMatchingUserAttr=dn
  *    groupObjectClass=group
  */

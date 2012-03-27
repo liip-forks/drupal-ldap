@@ -36,7 +36,7 @@ class LdapAuthorizationConsumerConf {
 
   public $deriveFromEntry = FALSE;
   public $deriveFromEntryEntries = NULL;
-  public $deriveFromEntryAttr = NULL;
+  public $deriveFromEntryMembershipAttr = NULL;
   public $deriveFromEntrySearchAll = FALSE;
   public $deriveFromEntryAttrMatchingUserAttr = FALSE; // can be removed in 2.0 branch
   public $deriveFromEntryAttrMatchingUserAttrUndefined = TRUE;
@@ -140,7 +140,7 @@ class LdapAuthorizationConsumerConf {
 
     $this->deriveFromEntry  = (bool)(@$consumer_conf->derive_from_entry);
     $this->deriveFromEntryEntries = $this->linesToArray($consumer_conf->derive_from_entry_entries);
-    $this->deriveFromEntryAttr = $consumer_conf->derive_from_entry_attr;
+    $this->deriveFromEntryMembershipAttr = $consumer_conf->derive_from_entry_attr;
     $this->deriveFromEntryAttrMatchingUserAttr = $consumer_conf->derive_from_entry_user_ldap_attr;
     $this->deriveFromEntrySearchAll = (bool)($consumer_conf->derive_from_entry_search_all);
     $this->deriveFromEntryUseFirstAttr  = (bool)($consumer_conf->derive_from_entry_use_first_attr);
@@ -183,7 +183,7 @@ class LdapAuthorizationConsumerConf {
 
     'deriveFromEntry',
     'deriveFromEntryEntries',
-    'deriveFromEntryAttr',
+    'deriveFromEntryMembershipAttr',
     'deriveFromEntrySearchAll',
     'deriveFromEntryAttrMatchingUserAttr',
     'deriveFromEntryUseFirstAttr',

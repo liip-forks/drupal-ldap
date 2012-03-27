@@ -412,7 +412,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
  *  given:
  *  - user dn = cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu
  *  - deriveFromEntryEntries = array(cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu)
- *  - deriveFromEntryAttr = 'member'
+ *  - deriveFromEntryMembershipAttr = 'member'
  *
  * search on member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu within basedn cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu
  *
@@ -426,10 +426,10 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
       // this condition will be removed in the 7.x-2.x branch,  its here to avoid breaking 7.x-1.x sites
       // that use this somewhat flawed approach successfully.  see: http://drupal.org/node/1412076
       foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
-        $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'] . ')';
+        $filter = '(' . $consumer_conf->deriveFromEntryMembershipAttr . '=' . $user_ldap_entry['dn'] . ')';
         $entries = $ldap_server->search($branch, $filter, array('cn'));
         if ($entries === FALSE || empty($entries) || $entries['count'] == 0) {
-          $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user->name . ')';
+          $filter = '(' . $consumer_conf->deriveFromEntryMembershipAttr . '=' . $user->name . ')';
           $entries = $ldap_server->search($branch, $filter, array('cn'));
         }
         if ($entries !== FALSE) {
@@ -448,7 +448,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
       // $derive_from_entries_entries, $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry, $nested = FALSE
       $derive_from_entry_authorizations = $ldap_server->deriveFromEntryGroups(
         $consumer_conf->deriveFromEntryEntries,
-        $consumer_conf->deriveFromEntryAttr,
+        $consumer_conf->deriveFromEntryMembershipAttr,
         $consumer_conf->deriveFromEntryAttrMatchingUserAttr,
         $user_ldap_entry,
         $consumer_conf->deriveFromEntryNested
