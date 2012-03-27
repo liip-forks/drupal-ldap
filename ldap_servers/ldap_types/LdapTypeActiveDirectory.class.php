@@ -24,7 +24,7 @@ class LdapTypeActiveDirectory extends LdapTypeAbstract {
   public $groupDerivationModelDefault = LDAP_SERVERS_DERIVE_GROUP_FROM_ATTRIBUTE;
 
   public $groupDeriveFromAttributeNameDefault = 'memberOf';
-  public $groupDeriveFromAttrDnAttrDefault = 'distinguishedName';
+  public $groupDeriveFromAttrDnAttrDefault = 'distinguishedname';
 
 
   // other ldap implementation specific methods

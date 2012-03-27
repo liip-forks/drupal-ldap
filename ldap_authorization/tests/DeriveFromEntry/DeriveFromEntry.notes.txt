@@ -43,7 +43,7 @@ Derive From Entry walk-through NOT nested:
 --- configuration ------
 0. authorization.deriveFromEntry = 1
 1. authorization.deriveFromEntryEntries = array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu')
-1b. authorization.deriveFromEnryEntryAttribute' = 'distinguishedName'
+1b. authorization.deriveFromEnryEntryAttribute' = 'distinguishedname'
 2. authorization.deriveFromEntryMembershipAttr = 'uniquemember'
 3. authorization.deriveFromEntryAttrMatchingUserAttr = 'dn'
 4. authorization.deriveFromEntrySearchAll = 0
@@ -64,7 +64,7 @@ user ldap entry in question:
 
 (&
 (objectClass=groupOfUniqueNames)
-(|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=people,cn=groups,dc=ad,dc=myuniversity,dc=edu))
+(|(distinguishedname=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=people,cn=groups,dc=ad,dc=myuniversity,dc=edu))
 (uniquemember=cn=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu)
 )
 
@@ -88,7 +88,7 @@ Derive From Entry walk-through NESTED:
 --- configuration ------
 0. authorization.deriveFromEntry = 1
 1. authorization.deriveFromEntryEntries = array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu')
-1b. authorization.deriveFromEnryEntryAttribute = 'distinguishedName'
+1b. authorization.deriveFromEnryEntryAttribute = 'distinguishedname'
 2. authorization.deriveFromEntryMembershipAttr = 'uniquemember'
 3. authorization.deriveFromEntryAttrMatchingUserAttr = 'dn'
 4. authorization.deriveFromEntrySearchAll = 0
@@ -107,7 +107,7 @@ user ldap entry in question:
 
 (&
 (objectClass=groupOfUniqueNames)
-(|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu))
+(|(distinguishedname=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu))
 )
 
 in psuedo code:
@@ -155,9 +155,9 @@ In the above example the first recursion query looks like:
 (&
   (objectClass=groupofuniquenames)
   (|
-    (distinguishedName=cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-    (distinguishedName=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=eduu)
-    (distinguishedName=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu)
+    (distinguishedname=cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu)
+    (distinguishedname=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=eduu)
+    (distinguishedname=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu)
   )
 )
 
@@ -187,8 +187,8 @@ since uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu is found in the first
 (&
   (objectClass=groupofuniquenames)
   (|
-    (distinguishedName=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-    (distinguishedName=cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu)
+    (distinguishedname=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu)
+    (distinguishedname=cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu)
   )
 )
 
@@ -213,7 +213,7 @@ which returns:
 (&
   (objectClass=groupofuniquenames)
   (|
-    (distinguishedName=uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu)
+    (distinguishedname=uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu)
   )
 )
 ...which returns no entries
@@ -223,8 +223,8 @@ and
 (&
   (objectClass=groupofuniquenames)
   (|
-    (distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-    (distinguishedName=uid=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu)
+    (distinguishedname=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)
+    (distinguishedname=uid=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu)
   )
 )
 
@@ -244,9 +244,9 @@ which returns:
   (&
     (objectClass=groupofuniquenames)
     (|
-      (distinguishedName=cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-      (distinguishedName=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu)
-      (distinguishedName=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu)
+      (distinguishedname=cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu)
+      (distinguishedname=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu)
+      (distinguishedname=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu)
     )
   )
 

@@ -485,7 +485,7 @@ class LdapServer {
 
     // this needs to be configurable also and default per ldap implementation
     $group_values = ldap_pear_escape_filter_value($groups_by_level[$derive_from_attribute_name][$level]);
-    $filter = "(&\n  (objectClass=" . $this->groupObjectClass . ")\n  (" . $derive_from_attribute_name . "=*)\n  (|\n    (distinguishedName=" . join(")\n    (distinguishedName=", $group_values) . ")\n  )\n)";
+    $filter = "(&\n  (objectClass=" . $this->groupObjectClass . ")\n  (" . $derive_from_attribute_name . "=*)\n  (|\n    (distinguishedname=" . join(")\n    (distinguishedname=", $group_values) . ")\n  )\n)";
     $level++;
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
       $entries = $this->search($base_dn, $filter, array($derive_from_attribute_name));
@@ -582,8 +582,9 @@ class LdapServer {
                 }
               }
             }
+            $tested_groups[] = $group_id;
           }
-          $tested_groups[] = $dn;
+
         }
       }
     }

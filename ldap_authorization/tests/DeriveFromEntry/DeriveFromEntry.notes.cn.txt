@@ -7,7 +7,7 @@ Derive From Entry walk-through NOT nested:
 
 --- configuration ------
 0. authorization.deriveFromEntry = 1
-1. authorization.deriveFromEntryEntries = array('group1', 'group2')
+1. authorization.deriveFromEntryEntries = array('it', 'people')
 1b. authorization.deriveFromEnryEntryAttribute' = 'cn'
 2. authorization.deriveFromEntryMembershipAttr = 'uniquemember'
 2a. authorization.deriveFromEntryAttrMatchingUserAttr = 'dn'
@@ -29,7 +29,7 @@ user ldap entry in question:
 
 (&
 (objectClass=groupOfUniqueNames)
-(|(cn=group1)(cn=group2))
+(|(cn=it)(cn=people))
 (uniquemember=cn=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu)
 )
 

@@ -30,11 +30,11 @@ $servers['ldapauthor1']['properties']  = array(
 
 $servers['ldapauthor1']['methodResponses']['connect'] = LDAP_SUCCESS;
 
-$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedName=cn=people,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
+$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedname=cn=people,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
     'count' => 0,
   );
 
-$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedName=cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
+$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedname=cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
   'count' => 1,
   0 =>
   array (
@@ -60,7 +60,7 @@ $servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(d
   );
 
 
-$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedName=cn=developers,ou=it,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
+$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedname=cn=developers,ou=it,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
   'count' => 1,
   0 => array(
     'count' => 2,
@@ -72,7 +72,7 @@ $servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(d
     ),
   );
 
-$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedName=cn=it,ou=it,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
+$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedname=cn=it,ou=it,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
   'count' => 1,
   0 => array(
     'count' => 2,
@@ -84,7 +84,7 @@ $servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(d
     ),
   );
 
-$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedName=cn=staff,ou=people,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
+$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedname=cn=staff,ou=people,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
   'count' => 1,
   0 => array(
     'count' => 2,
@@ -232,7 +232,7 @@ $servers['ldapauthor1']['groups']['cn=lessrecursive,dc=ad,dc=myuniversity,dc=edu
     'memberOf' => array( 0 => 'cn=recursive,dc=ad,dc=myuniversity,dc=edu', 'count' => 1),
   );
 
-$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedName=cn=lessrecursive,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
+$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedname=cn=lessrecursive,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
   'count' => 1,
   0 => array(
     'count' => 2,
@@ -244,7 +244,7 @@ $servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(d
     ),
   );
 
-$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedName=cn=recursive,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
+$servers['ldapauthor1']['search_results']['(&(objectClass=group)(memberOf=*)(|(distinguishedname=cn=recursive,dc=ad,dc=myuniversity,dc=edu)))']['dc=ad,dc=myuniversity,dc=edu'] = array(
   'count' => 1,
   0 => array(
     'count' => 2,
