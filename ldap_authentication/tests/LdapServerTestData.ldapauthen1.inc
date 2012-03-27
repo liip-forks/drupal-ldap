@@ -206,7 +206,9 @@ $test_data['ldap_authorization_conf']['consumer_conf']['deriveFromAttrAttr'] = a
 
 $test_data['ldap_authorization_conf']['consumer_conf']['deriveFromEntry'] = 0;
 $test_data['ldap_authorization_conf']['consumer_conf']['deriveFromEntryEntries'] = NULL;
+$test_data['ldap_authorization_conf']['consumer_conf']['deriveFromEntryEntriesAttr'] = NULL;
 $test_data['ldap_authorization_conf']['consumer_conf']['deriveFromEntryMembershipAttr'] = NULL;
+
 
 $test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('Campus Accounts', 'campus accounts');
 $test_data['ldap_authorization_conf']['consumer_conf']['mappings'][] = array('guest accounts', 'guests');

@@ -230,3 +230,23 @@ function ldap_authorization_update_7107() {
   return ($changes) ? $changes : t('No database changes made.');
 
 }
+
+
+/**
+ * add derive_from_entry_entries_attr field to allow user specification of attribute representing group in queries.
+ */
+function ldap_authorization_update_7108() {
+
+  if (!db_field_exists('ldap_authorization', 'derive_from_entry_entries_attr')) {
+    db_add_field('ldap_authorization', 'derive_from_entry_entries_attr', array(
+      'type' => 'varchar',
+      'length' => 255,
+      'default' => NULL,
+    ));
+    return t('"derive_from_entry_entries_attr" field added to ldap_authorization table');
+  }
+  else {
+    return t('No database changes made.');
+  }
+
+}

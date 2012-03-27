@@ -34,6 +34,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values->derive_from_entry = (int)$this->deriveFromEntry;
     $values->derive_from_entry_search_all = (int)$this->deriveFromEntrySearchAll;
     $values->derive_from_entry_entries = $this->arrayToLines($this->deriveFromEntryEntries);
+    $values->derive_from_entry_entries_attr = $this->deriveFromEntryEntriesAttr;
     $values->derive_from_entry_attr = $this->deriveFromEntryMembershipAttr;
     $values->derive_from_entry_user_ldap_attr = $this->deriveFromEntryAttrMatchingUserAttr;
     $values->derive_from_entry_use_first_attr = (int)$this->deriveFromEntryUseFirstAttr;
@@ -299,6 +300,20 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#cols' => 50,
       '#rows' => 6,
       '#description' => t('Enter a list of LDAP entries where !consumer_namePlural should be searched for.', $consumer_tokens),
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="derive_from_entry"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    $form['derive_from_entry']['derive_from_entry_entries_attr'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Attribute holding the previous list of values. e.g. cn, dn', $consumer_tokens),
+      '#default_value' => $this->deriveFromEntryEntriesAttr,
+      '#size' => 50,
+      '#maxlength' => 255,
+      '#description' => t('If the above lists are ldap cns, this should be "cn", if they are ldap dns, this should be "dn"', $consumer_tokens),
       '#states' => array(
         'visible' => array(   // action to take.
           ':input[name="derive_from_entry"]' => array('checked' => TRUE),
@@ -604,10 +619,13 @@ Raw authorization ids look like:
       $errors['derive_from_attr'] = t('Attribute names are missing.');
     }
     if ($this->deriveFromEntry && !count($this->deriveFromEntryEntries)) {
-      $errors['derive_from_entry'] = t('Nodes are missing.');
+      $errors['derive_from_entry'] = t('Group entries are missing.');
+    }
+    if ($this->deriveFromEntry && !$this->deriveFromEntryEntriesAttr) {
+      $errors['derive_from_entry'] = t('Attribute holding the previous list of values is empty.');
     }
     if ($this->deriveFromEntry && !trim($this->deriveFromEntryMembershipAttr)) {
-      $errors['derive_from_entry_attribute'] = t('Attribute is missing.');
+      $errors['derive_from_entry_attribute'] = t('Membership Attribute is missing.');
     }
 
     if (count($this->mappings) > 0) {
@@ -650,6 +668,7 @@ Raw authorization ids look like:
 
     $this->deriveFromEntry  = (bool)(@$values['derive_from_entry']);
     $this->deriveFromEntryEntries = $values['derive_from_entry_entries'];
+    $this->deriveFromEntryEntriesAttr = $values['derive_from_entry_entries_attr'];
     $this->deriveFromEntryMembershipAttr = $values['derive_from_entry_attr'];
     $this->deriveFromEntryAttrMatchingUserAttr =  $values['derive_from_entry_user_ldap_attr'];
     $this->deriveFromEntryUseFirstAttr  = (bool)($values['derive_from_entry_use_first_attr']);
@@ -806,6 +825,14 @@ Raw authorization ids look like:
         'schema' => array(
           'default' => NULL,
           'type' => 'text',
+        )
+      ),
+
+      'derive_from_entry_entries_attr' => array(
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'default' => NULL,
         )
       ),
 

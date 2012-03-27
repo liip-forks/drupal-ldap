@@ -1,3 +1,4 @@
+added deriveFromEntryEntriesAttr for strategy IIC in ldap authorization to deal with admin specified attributes so groups can contain cn, dns, etc
 renamed property deriveFromEntryAttr to deriveFromEntryMembershipAttr
 Fixed bug in basic authorization unit test (had wrong server configuration values)
 General commit of ldap authorization code which is still broken, but need feedback on authorization IIC and nested groups.

@@ -26,6 +26,7 @@ $authorization['drupal_role'] = array(
 
   'deriveFromEntry' => 1,
   'deriveFromEntryEntries' => array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu'),
+  'deriveFromEntryEntriesAttr' => 'distinguishedname',
   'deriveFromEntryMembershipAttr' => 'uniquemember',
   'deriveFromEntryNested' => 1,
   'deriveFromEntryUseFirstAttr' => 0,

@@ -41,6 +41,7 @@ $servers['ldapauthor1']['methodResponses']['connect'] = LDAP_SUCCESS;
 
 $servers['ldapauthor1']['users']['uid=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'dn' => 'uid=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'uid=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu'),
     'mail' => array( 0 => 'unkool@nowhere.myuniversity.edu', 'count' => 1),
     'uid' => array( 0 => 'unkool', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
@@ -48,6 +49,7 @@ $servers['ldapauthor1']['users']['uid=unkool,ou=lost,dc=ad,dc=myuniversity,dc=ed
 
 $servers['ldapauthor1']['users']['uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'dn' => 'uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu'),
     'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
     'uid' => array( 0 => 'jdoe', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
@@ -55,6 +57,7 @@ $servers['ldapauthor1']['users']['uid=jdoe,ou=campus accounts,dc=ad,dc=myunivers
 
 $servers['ldapauthor1']['users']['uid=joesysadmin,ou=it,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'dn' => 'uid=joesysadmin,ou=it,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'uid=joesysadmin,ou=it,dc=ad,dc=myuniversity,dc=edu'),
     'mail' => array( 0 => 'joesysadmin@myuniversity.edu', 'count' => 1),
     'uid' => array( 0 => 'joesysadmin', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
@@ -62,6 +65,7 @@ $servers['ldapauthor1']['users']['uid=joesysadmin,ou=it,dc=ad,dc=myuniversity,dc
 
 $servers['ldapauthor1']['users']['uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'dn' => 'uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu'),
     'mail' => array( 0 => 'joeprojectmanager@myuniversity.edu', 'count' => 1),
     'uid' => array( 0 => 'joeprojectmanager', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
@@ -69,6 +73,7 @@ $servers['ldapauthor1']['users']['uid=joeprojectmanager,ou=it,dc=ad,dc=myunivers
 
 $servers['ldapauthor1']['users']['uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'dn' => 'uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu'),
     'mail' => array( 0 => 'joeprogrammer@myuniversity.edu', 'count' => 1),
     'uid' => array( 0 => 'joeprogrammer', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
@@ -76,6 +81,7 @@ $servers['ldapauthor1']['users']['uid=joeprogrammer,ou=it,dc=ad,dc=myuniversity,
 
 $servers['ldapauthor1']['users']['uid=service-account,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'dn' => 'uid=service-account,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'uid=service-account,dc=ad,dc=myuniversity,dc=edu'),
     'mail' => array( 0 => 'service-account@myuniversity.edu', 'count' => 1),
     'uid' => array( 0 => 'service-account', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
@@ -151,26 +157,26 @@ $servers['ldapauthor1']['groups']['cn=people,cn=groups,dc=ad,dc=myuniversity,dc=
 $base_dn = 'dc=ad,dc=myuniversity,dc=edu';
 
 
-$filter = '(&(|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu)))(uniquemember=uid=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu))';
+$filter = '(&(|(distinguishedname=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu)))(uniquemember=uid=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu))';
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 0,
   );
 
 // search filter for non nested groups
 
-$filter = '(&(|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu))(uniquemember=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu))';
+$filter = '(&(|(distinguishedname=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu))(uniquemember=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu))';
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 1,
     0 => $servers['ldapauthor1']['groups']['cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],
   );
 
-$filter = '(|(distinguishedName=uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu))';
+$filter = '(|(distinguishedname=uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu))';
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 1,
     0 => $servers['ldapauthor1']['users']['uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu']['attr'],
   );
 
-$filter = '(&(objectClass=groupOfUniqueNames)(|(distinguishedName=uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu)))';
+$filter = '(&(objectClass=groupOfUniqueNames)(|(distinguishedname=uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu)))';
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 1,
     0 => $servers['ldapauthor1']['users']['uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu']['attr'],
@@ -178,13 +184,13 @@ $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
 
 
 // search filter for non nested groups
-$filter = '(&(|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu))(uniquemember=uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu))';
+$filter = '(&(|(distinguishedname=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu))(uniquemember=uid=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu))';
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 1,
     0 => $servers['ldapauthor1']['groups']['cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'] ,
   );
 
-$filter = "(&(objectClass=groupOfUniqueNames)(|(distinguishedName=cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu)))";
+$filter = "(&(objectClass=groupOfUniqueNames)(|(distinguishedname=cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu)))";
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 2,
     0 => $servers['ldapauthor1']['groups']['cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],
@@ -192,14 +198,14 @@ $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     2 => $servers['ldapauthor1']['users']['uid=joeprojectmanager,ou=it,dc=ad,dc=myuniversity,dc=edu']['attr'],
   );
 
-$filter = '(|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu))';
+$filter = '(|(distinguishedname=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu))';
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 2,
     0 => $servers['ldapauthor1']['groups']['cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],
     1 => $servers['ldapauthor1']['groups']['cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],
   );
 
-$filter = '(|(distinguishedName=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu))';
+$filter = '(|(distinguishedname=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu))';
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 2,
     0 => $servers['ldapauthor1']['groups']['cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'] ,
@@ -207,14 +213,14 @@ $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
   );
 
 
-$filter = '(|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedName=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu))';
+$filter = '(|(distinguishedname=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu))';
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 2,
     0 => $servers['ldapauthor1']['groups']['cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],
     1 => $servers['ldapauthor1']['groups']['cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],
   );
 
-$filter = '(&(|(distinguishedName=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu)))';
+$filter = '(&(|(distinguishedname=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu)))';
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 2,
     0 => $servers['ldapauthor1']['groups']['cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],

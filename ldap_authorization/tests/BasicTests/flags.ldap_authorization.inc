@@ -26,6 +26,7 @@
 
     'deriveFromEntry' =>  0,
     'deriveFromEntryEntries' =>  NULL,
+    'deriveFromEntryEntriesAttr' => NULL,
     'deriveFromEntryMembershipAttr' =>  NULL,
     'deriveFromEntryNested' => 1,
 

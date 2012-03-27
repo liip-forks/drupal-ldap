@@ -33,6 +33,7 @@ $authorization['og_group'] = array(
 
   'deriveFromEntry' => 0,
   'deriveFromEntryEntries' => array(),
+    'deriveFromEntryEntriesAttr' => NULL,
   'deriveFromEntryMembershipAttr' => array(),
 
   'mappings' => array(

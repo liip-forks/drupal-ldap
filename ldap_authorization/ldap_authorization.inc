@@ -448,6 +448,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
       // $derive_from_entries_entries, $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry, $nested = FALSE
       $derive_from_entry_authorizations = $ldap_server->deriveFromEntryGroups(
         $consumer_conf->deriveFromEntryEntries,
+        $consumer_conf->deriveFromEntryEntriesAttr,
         $consumer_conf->deriveFromEntryMembershipAttr,
         $consumer_conf->deriveFromEntryAttrMatchingUserAttr,
         $user_ldap_entry,
