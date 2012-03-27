@@ -555,7 +555,9 @@ class LdapServer {
         if (!$nested) {  // if not nested all returned entries are groups that user is member of
           foreach ($entries as $entry) {
             if (isset($entry[$entries_attr])) {
-              $authorizations[] = (string)$entry[$entries_attr];
+              $group_id = (string)($entries_attr == 'dn') ? (string)$entry['dn'] : (string)$entry[$entries_attr][0];
+              $authorizations[] = $group_id;
+              $tested_groups[] = $group_id;
             }
           }
         }
@@ -584,7 +586,6 @@ class LdapServer {
             }
             $tested_groups[] = $group_id;
           }
-
         }
       }
     }

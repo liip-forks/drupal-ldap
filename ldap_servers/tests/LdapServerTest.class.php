@@ -147,7 +147,7 @@ class LdapServerTest extends LdapServer {
 
     // return prepolulated search results in test data array if present
     if (isset($this->searchResults[$filter][$base_dn])) {
-      debug('search-results'); debug($this->searchResults[$filter][$base_dn]);
+     // debug('search-results'); debug($this->searchResults[$filter][$base_dn]);
       return $this->searchResults[$filter][$base_dn];
     }
     $base_dn = drupal_strtolower($base_dn);
