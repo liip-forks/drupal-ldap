@@ -91,6 +91,7 @@ $servers['ldapauthor1']['users']['uid=service-account,dc=ad,dc=myuniversity,dc=e
 
 $servers['ldapauthor1']['groups']['cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'dn' => 'cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu'),
     'objectclass' => array( 0 => 'groupofuniquenames', 'count' => 1),
     'uniquemember' => array(
       'count' => 2,
@@ -101,6 +102,7 @@ $servers['ldapauthor1']['groups']['cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,
 
 $servers['ldapauthor1']['groups']['cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'dn' => 'cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu'),
     'objectclass' => array( 0 => 'groupofuniquenames', 'count' => 1),
     'uniquemember' => array(
       'count' => 1,
@@ -111,6 +113,7 @@ $servers['ldapauthor1']['groups']['cn=developers,cn=groups,dc=ad,dc=myuniversity
 $servers['ldapauthor1']['groups']['cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'count' => 3,
     'dn' => 'cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu'),
     'objectclass' => array( 0 => 'groupofuniquenames', 'count' => 1),
     'uniquemember' => array(
       'count' => 3,
@@ -123,6 +126,7 @@ $servers['ldapauthor1']['groups']['cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu'
 
 $servers['ldapauthor1']['groups']['cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'dn' => 'cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu'),
     'objectclass' => array( 0 => 'groupofuniquenames', 'count' => 1),
     'uniquemember' => array(
     'count' => 2,
@@ -133,6 +137,7 @@ $servers['ldapauthor1']['groups']['cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=e
 
 $servers['ldapauthor1']['groups']['cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'dn' => 'cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu'),
     'objectclass' => array( 0 => 'groupofuniquenames', 'count' => 1),
     'uniquemember' => array(
       'count' => 1,
@@ -142,6 +147,7 @@ $servers['ldapauthor1']['groups']['cn=students,cn=groups,dc=ad,dc=myuniversity,d
 
 $servers['ldapauthor1']['groups']['cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'] = array(
     'dn' => 'cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+    'distinguishedname' => array( 0 => 'cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu'),
     'objectclass' => array( 0 => 'groupofuniquenames', 'count' => 1),
     'uniquemember' => array(
        'count' => 2,
@@ -208,8 +214,8 @@ $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
 $filter = '(|(distinguishedname=cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu))';
 $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
     'count' => 2,
-    0 => $servers['ldapauthor1']['groups']['cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'] ,
-    1 => $servers['ldapauthor1']['groups']['cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'] ,
+    0 => $servers['ldapauthor1']['groups']['cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],
+    1 => $servers['ldapauthor1']['groups']['cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],
   );
 
 
@@ -230,8 +236,8 @@ $servers['ldapauthor1']['search_results'][$filter][$base_dn] = array(
 $servers['ldapauthor1']['search_results']['(|((dn=cn=staff,ou=people,dc=ad,dc=myuniversity,dc=edu)(dn=cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu))']['ou=groups,dc=ad,dc=myuniversity,dc=edu'] = array(
     'count' => 1,
     0 => array('count' => 2,
-      'dn' => 'cn=staff,ou=people,dc=ad,dc=myuniversity,dc=edu',
-      'dn' => 'cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
+    0 => $servers['ldapauthor1']['groups']['cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],
+    1 => $servers['ldapauthor1']['groups']['cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu']['attr'],
     ),
 
   );
