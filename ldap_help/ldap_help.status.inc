@@ -60,8 +60,14 @@ function ldap_help_get_server($phpinfo, &$info) {
   $info['ldap'] = $phpinfo['ldap'];
 
   $text = "";
+
   foreach ($phpinfo['ldap'] as $key => $value) {
-    $text .= "<br/>$key: " . $value;
+    if (is_scalar($value)) {
+      $text .= "<br/>$key: " . $value;
+    }
+    else {
+      $text .= "<br/>$key: " . print_r($value, TRUE);
+    }
   }
   $info['ldap']['text'] = $text;
 
