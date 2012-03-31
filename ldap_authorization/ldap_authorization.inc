@@ -213,11 +213,12 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $map_from = $mapping_filter[0];
         $map_to = $mapping_filter[1];
         if (isset($proposed_ldap_authorizations[$map_from]) || isset($proposed_ldap_authorizations[strtolower($map_from)])) {
-          $filtered_ldap_authorizations[] = $map_to;
+          $filtered_ldap_authorizations[] = drupal_strtolower($map_to);
         }
       }
     }
     else {
+      array_walk($proposed_ldap_authorizations,'drupal_strtolower');
       $filtered_ldap_authorizations = array_keys($proposed_ldap_authorizations);
     }
     $filtered_ldap_authorizations = array_unique($filtered_ldap_authorizations);
@@ -312,15 +313,18 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
    /**
    * D.  Only grant authorization consumer ids that exist
    */
+
+
+  $watchdog_tokens['%consumer_containers_existing'] = (count($consumer_containers_existing)) ? join(', ', $consumer_containers_existing) :  t('none');
+  $watchdog_tokens['%grants_pre_intersect'] = (count($grants)) ? join(', ', $grants) :  t('none');
   $grants = array_intersect($consumer_containers_existing, $grants);
-  $watchdog_tokens['%grants2'] = (count($grants)) ? join(', ', $grants) :  t('none');
+  $watchdog_tokens['%grants_post_intersect'] = (count($grants)) ? join(', ', $grants) :  t('none');
 
   /**
    * E. Do grants
    */
 
   $consumer->authorizationGrant($user, $user_auth_data, $grants, $ldap_entry, FALSE);
-  $watchdog_tokens['%grants'] = (count($grants)) ? join(', ', $grants) :  t('none');
 
   /**
    *  3.F take away any authorizations not in proposed authorization,
@@ -343,7 +347,9 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
       <hr/>3. All available existing authorization ids: %consumer_containers_initial
       <hr/>4. authorization ids that need to be created: %consumer_containers_needed
       <hr/>5. consumer containers existing after create call (or non-call if og): %consumer_containers_final
-      <hr/>6. Grants passed to authorizationGrant(): %grants1
+      <hr/>6a. consumer_containers_existing: %consumer_containers_existing
+      <hr/>6b. grants_pre_intersect: %grants_pre_intersect
+      <hr/>6c. grants_post_intersect: %grants_post_intersec
       <hr/>7. revokes passed to authorizationRevoke(): %revokes
       ', $watchdog_tokens, WATCHDOG_DEBUG);
   }

@@ -231,12 +231,10 @@ class LdapAuthorizationConsumerAbstract {
       $log = "consumer_id=$consumer_id, op=$op,";
       $results[$consumer_id] = TRUE;
       if ($op == 'grant'  && !in_array($consumer_id, $users_authorization_ids)) {
-        if ($detailed_watchdog_log) {watchdog('ldap_authorization', "eeeeeee", $watchdog_tokens, WATCHDOG_DEBUG);}
         $log .='grant existing role, ';
         if (!in_array($consumer_id, $this->availableConsumerIDs(TRUE))) {
           $log .= "consumer id not available for $op, ";
           if ($this->allowConsumerObjectCreation) {
-            if ($detailed_watchdog_log) {watchdog('ldap_authorization', "j", $watchdog_tokens, WATCHDOG_DEBUG);}
             $this->createConsumers(array($consumer_id));
             if (in_array($consumer_id, $this->availableConsumerIDs(TRUE))) {
               if ($detailed_watchdog_log) {watchdog('ldap_authorization', "grantSingleAuthorization : consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
@@ -251,7 +249,6 @@ class LdapAuthorizationConsumerAbstract {
             }
           }
           else {
-             if ($detailed_watchdog_log) {watchdog('ldap_authorization', "z", $watchdog_tokens, WATCHDOG_DEBUG);}
             $log .= "consumer does not support creating consumer object, ";
             // out of luck. can't create new consumer id.
             $results[$consumer_id] = FALSE;
