@@ -44,6 +44,13 @@ class LdapServer {
   public $testingDrupalUsername;
   public $detailed_watchdog_log;
 
+  public $paginationEnabled = FALSE; // (boolean)(function_exists('ldap_control_paged_result_response') && function_exists('ldap_control_paged_result'));
+
+  public $searchPagination = FALSE;
+  public $searchPageSize = 1000;
+  public $searchPageStart = 0;
+  public $searchPageEnd = NULL;
+
   public $groupObjectClass;
 
   public $inDatabase = FALSE;
@@ -70,6 +77,8 @@ class LdapServer {
     'ldap_to_drupal_user'  => 'ldapToDrupalUserPhp',
     'testing_drupal_username'  => 'testingDrupalUsername',
     'group_object_category' => 'groupObjectClass',
+    'search_pagination' => 'searchPagination',
+    'search_page_size' => 'searchPageSize',
     );
 
   }
@@ -81,6 +90,8 @@ class LdapServer {
     if (!is_scalar($sid)) {
       return;
     }
+
+
     $this->detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
     $server_record = array();
     if (module_exists('ctools')) {
@@ -129,6 +140,7 @@ class LdapServer {
       $this->bindpw = $server_record->bindpw;
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
+    $this->paginationEnabled = (boolean)(ldap_servers_php_supports_pagination() && $this->searchPagination);
   }
 
   /**
@@ -244,15 +256,15 @@ class LdapServer {
    *   or FALSE if the search is empty.
    */
 
-  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = LDAP_SCOPE_SUBTREE) {
+  function search($base_dn = NULL, $filter, $attributes = array(),
+    $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = LDAP_SCOPE_SUBTREE) {
 
-     /** pagingation issues:
+     /**
+      * pagingation issues:
+      * -- see documentation queue: http://markmail.org/message/52w24iae3g43ikix#query:+page:1+mid:bez5vpl6smgzmymy+state:results
       * -- wait for php 5.4? https://svn.php.net/repository/php/php-src/tags/php_5_4_0RC6/NEWS (ldap_control_paged_result
-      * -- in some cases, sort by some id value and keep requerying with new filter based on previous max id
       * -- http://sgehrig.wordpress.com/2009/11/06/reading-paged-ldap-results-with-php-is-a-show-stopper/
-      *
       */
-
 
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
@@ -275,6 +287,7 @@ class LdapServer {
       'scope = ' .  $scope,
       )
     );
+
     if ($this->detailed_watchdog_log) {
       watchdog('ldap_server', $query, array());
     }
@@ -285,60 +298,195 @@ class LdapServer {
       $this->bind();
     }
 
+    $ldap_query_params = array(
+      'connection' => $this->connection,
+      'base_dn' => $base_dn,
+      'filter' => $filter,
+      'attributes' => $attributes,
+      'attrsonly' => $attrsonly,
+      'sizelimit' => $sizelimit,
+      'timelimit' => $timelimit,
+      'deref' => $deref,
+      'query_display' => $query,
+      'scope' => $scope,
+    );
+   // dpm($ldap_query_params); dpm("searchPagination=" . $this->searchPagination .",paginationEnabled=". $this->paginationEnabled .", searchPageStart=" . $this->searchPageStart);
+    if ($this->searchPagination && $this->paginationEnabled) {
+      $aggregated_entries = $this->pagedLdapQuery($ldap_query_params);
+      return $aggregated_entries;
+    }
+    else {
+      $result = $this->ldapQuery($scope, $ldap_query_params);
+      if ($result && (ldap_count_entries($this->connection, $result) !== FALSE) ) {
+        $entries = ldap_get_entries($this->connection, $result);
+        return (is_array($entries)) ? $entries : FALSE;
+      }
+      elseif ($this->ldapErrorNumber()) {
+        $watchdog_tokens =  array('%basedn' => $ldap_query_params['base_dn'], '%filter' => $ldap_query_params['filter'],
+          '%attributes' => print_r($ldap_query_params['attributes'], TRUE), '%errmsg' => $this->errorMsg('ldap'),
+          '%errno' => $this->ldapErrorNumber());
+        watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
+          %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
+        RETURN FALSE;
+      }
+      else {
+        return FALSE;
+      }
+    }
+  }
+
+
+  /**
+   * execute a paged ldap query and return entries as one aggregated array
+   *
+   * $this->searchPageStart and $this->searchPageEnd should be set before calling if
+   *   a particular set of pages is desired
+   *
+   * @param array $ldap_query_params of form:
+      'base_dn' => base_dn,
+      'filter' =>  filter,
+      'attributes' => attributes,
+      'attrsonly' => attrsonly,
+      'sizelimit' => sizelimit,
+      'timelimit' => timelimit,
+      'deref' => deref,
+      'scope' => scope,
+
+      (this array of parameters is primarily passed on to ldapQuery() method)
+   *
+   * @return array of ldap entries or FALSE on error.
+   *
+   */
+  public function pagedLdapQuery($ldap_query_params) {
+
+    if (!($this->searchPagination && $this->paginationEnabled)) {
+      watchdog('ldap', "LDAP server pagedLdapQuery() called when functionality not available in php install or
+        not enabled in ldap server configuration.  error. basedn: %basedn| filter: %filter| attributes:
+         %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
+      RETURN FALSE;
+    }
+
+    $paged_entries = array();
+    $page_token = '';
+    $page = 0;
+    $estimated_entries = 0;
+    $aggregated_entries = array();
+    $aggregated_entries_count = 0;
+    $has_page_results = FALSE;
+
+    do {
+      ldap_control_paged_result($this->connection, $this->searchPageSize, true, $page_token);
+      $result = $this->ldapQuery($ldap_query_params['scope'], $ldap_query_params);
+
+      if ($page >= $this->searchPageStart) {
+        $skipped_page = FALSE;
+        if ($result && (ldap_count_entries($this->connection, $result) !== FALSE) ) {
+          $page_entries = ldap_get_entries($this->connection, $result);
+          unset($page_entries['count']);
+          $has_page_results = (is_array($page_entries) && count($page_entries) > 0);
+          $aggregated_entries = array_merge($aggregated_entries, $page_entries);
+          $aggregated_entries_count = count($aggregated_entries);
+        }
+        elseif ($this->ldapErrorNumber()) {
+          $watchdog_tokens =  array('%basedn' => $ldap_query_params['base_dn'], '%filter' => $ldap_query_params['filter'],
+            '%attributes' => print_r($ldap_query_params['attributes'], TRUE), '%errmsg' => $this->errorMsg('ldap'),
+            '%errno' => $this->ldapErrorNumber());
+          watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
+            %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
+          RETURN FALSE;
+        }
+        else {
+          return FALSE;
+        }
+      }
+      else {
+        $skipped_page = TRUE;
+      }
+      @ldap_control_paged_result_response($this->connection, $result, $page_token, $estimated_entries);
+      if ($ldap_query_params['sizelimit'] && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+        // false positive error thrown.  do not set result limit error when $sizelimit specified
+      }
+      elseif ($this->hasError()) {
+        watchdog('ldap_server', 'ldap_control_paged_result_response() function error. LDAP Error: %message, ldap_list() parameters: %query',
+          array('%message' => $this->errorMsg('ldap'), '%query' => $ldap_query_params['query_display']),
+          WATCHDOG_ERROR);
+      }
+
+    /**
+     * wtf is this page_token?
+      dpm("estimated_entries=$estimated_entries");
+      dpm("page_token isset"); dpm(isset($page_token));
+      dpm("page_token len"); dpm(strlen($page_token));
+      dpm("page_token gettype"); dpm(gettype($page_token));
+      dpm("page_token is null"); dpm((int)($page_token === NULL));
+      dpm("page_token is == '' "); dpm((int)($page_token == ''));
+      dpm("page_token str_split"); dpm(str_split($page_token));
+      dpm("page_token bin2hex"); dpm(bin2hex($page_token));
+      dpm("page_token convert_uudecode"); dpm(convert_uudecode($page_token));
+      dpm("page_token bindec"); dpm(bindec($page_token));
+   **/
+
+      if (isset($ldap_query_params['sizelimit']) && $ldap_query_params['sizelimit'] && $aggregated_entries_count >= $ldap_query_params['sizelimit']) {
+        $discarded_entries = array_splice($aggregated_entries, $ldap_query_params['sizelimit']);
+        break;
+      }
+      elseif ($this->searchPageEnd !== NULL && $page >= $this->searchPageEnd) { // user defined pagination has run out
+        break;
+      }
+      elseif ($page_token === NULL || $page_token == '') { // ldap reference pagination has run out
+        break;
+      }
+      $page++;
+    } while ($skipped_page || $has_page_results);
+
+    $aggregated_entries['count'] = count($aggregated_entries);
+  //  dpm('aggregated_entries'); dpm($aggregated_entries);
+    return $aggregated_entries;
+  }
+
+  function ldapQuery($scope, $params) {
 
     switch ($scope) {
       case LDAP_SCOPE_SUBTREE:
-        $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
-          // false positive error thrown.  do not result limit error when $sizelimit specified
+        $result = @ldap_search($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
+          $params['sizelimit'], $params['timelimit'], $params['deref']);
+        if ($params['sizelimit'] && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+          // false positive error thrown.  do not return result limit error when $sizelimit specified
         }
         elseif ($this->hasError()) {
           watchdog('ldap_server', 'ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query',
-            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            array('%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']),
             WATCHDOG_ERROR);
         }
         break;
 
       case LDAP_SCOPE_BASE:
-        $result = @ldap_read($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+        $result = @ldap_read($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
+           $params['sizelimit'], $params['timelimit'], $params['deref']);
+        if ($params['sizelimit'] && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
           // false positive error thrown.  do not result limit error when $sizelimit specified
         }
         elseif ($this->hasError()) {
           watchdog('ldap_server', 'ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query',
-            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            array('%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']),
             WATCHDOG_ERROR);
         }
         break;
 
       case LDAP_SCOPE_ONELEVEL:
-        $result = @ldap_list($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+        $result = @ldap_list($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
+           $params['sizelimit'], $params['timelimit'], $params['deref']);
+        if ($params['sizelimit'] && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
           // false positive error thrown.  do not result limit error when $sizelimit specified
         }
         elseif ($this->hasError()) {
           watchdog('ldap_server', 'ldap_list() function error. LDAP Error: %message, ldap_list() parameters: %query',
-            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            array('%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']),
             WATCHDOG_ERROR);
         }
         break;
     }
-
-    if ($result && (ldap_count_entries($this->connection, $result) !== FALSE) ) {
-      $entries = ldap_get_entries($this->connection, $result);
-      return (is_array($entries)) ? $entries : FALSE;
-    }
-    elseif ($this->ldapErrorNumber()) {
-      $watchdog_tokens =  array('%basedn' => $base_dn, '%filter' => $filter,
-        '%attributes' => print_r($attributes, TRUE), '%errmsg' => $this->errorMsg('ldap'),
-        '%errno' => $this->ldapErrorNumber());
-      watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
-        %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
-      RETURN FALSE;
-    }
-    else {
-      return FALSE;
-    }
+    return $result;
   }
 
   function drupalToLdapNameTransform($drupal_username, &$watchdog_tokens) {

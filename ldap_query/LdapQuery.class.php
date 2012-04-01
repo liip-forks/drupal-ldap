@@ -113,6 +113,7 @@ class LdapQuery {
     $results = array();
 
     $count = 0;
+    // for debugging paginations, set: $ldap_server->searchPageStart = NULL, 0, 1, ... ; $ldap_server->searchPageEnd = NULL, 0, 1, ...;
     foreach ($this->baseDn as $base_dn) {
       $result = $ldap_server->search($base_dn, $this->filter, $this->attributes, 0, $this->sizelimit, $this->timelimit, $this->deref, $this->scope);
       if ($result !== FALSE && $result['count'] > 0) {

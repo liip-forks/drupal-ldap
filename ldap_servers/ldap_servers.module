@@ -321,6 +321,10 @@ function ldap_servers_decrypt($encrypted, $encryption = NULL) {
   return _ldap_servers_decrypt($encrypted, $encryption);
 }
 
+function ldap_servers_php_supports_pagination() {
+  return (boolean)(function_exists('ldap_control_paged_result_response') && function_exists('ldap_control_paged_result'));
+}
+
 
 function ldap_servers_help($path, $arg) {
 
