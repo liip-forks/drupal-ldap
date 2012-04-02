@@ -1,3 +1,4 @@
+Issue #1272190 by jrm402.  Fix ability to apply mapping to authorization without filtering.
 Issue #1446758 for pagination and size limit of ldap queries.
 fix for case sensitivity in ldap authorization mappings
 added deriveFromEntryEntriesAttr for strategy IIC in ldap authorization to deal with admin specified attributes so groups can contain cn, dns, etc
