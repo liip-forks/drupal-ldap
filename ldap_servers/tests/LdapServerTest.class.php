@@ -22,6 +22,7 @@ class LdapServerTest extends LdapServer {
   // LDAP Settings
 
   public $testUsers;
+  public $testGroups;
   public $methodResponses;
   public $searchResults;
   public $binddn = FALSE; // Default to an anonymous bind.
@@ -43,7 +44,8 @@ class LdapServerTest extends LdapServer {
     $this->sid = $sid;
     $this->methodResponses = $test_data['methodResponses'];
     $this->testUsers = $test_data['users'];
-    $this->searchResults = $test_data['search_results'];
+    $this->testGroups = (is_array($test_data) && isset($test_data['groups'])) ? $test_data['groups'] : array();
+    $this->searchResults = (isset($test_data['search_results'])) ? $test_data['search_results'] : array();
 
     $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
     foreach ($test_data['properties'] as $property_name => $property_value ) {
@@ -131,6 +133,9 @@ class LdapServerTest extends LdapServer {
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
 
+    $filter = trim(str_replace(array("\n", "  "),array('',''), $filter)); // for test matching simplicity remove line breaks and tab spacing
+    //debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");
+
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
         $base_dn = $this->basedn[0];
@@ -142,6 +147,7 @@ class LdapServerTest extends LdapServer {
 
     // return prepolulated search results in test data array if present
     if (isset($this->searchResults[$filter][$base_dn])) {
+     // debug('search-results'); debug($this->searchResults[$filter][$base_dn]);
       return $this->searchResults[$filter][$base_dn];
     }
 
@@ -151,13 +157,14 @@ class LdapServerTest extends LdapServer {
     list($filter_attribute, $filter_value) = explode('=', $filter);
     // need to perform feaux ldap search here with data in
     $results = array();
+   // debug($this->testUsers);
     foreach ($this->testUsers as $dn => $user_data) {
 
 
       // if not in basedn, skip
-      // eg. basedn ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu
+      // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       // should be leftmost string in:
-      // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu
+      // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       $pos = strpos($dn, $base_dn);
       if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) == FALSE) {
         continue; // not in basedn
@@ -188,6 +195,46 @@ class LdapServerTest extends LdapServer {
       }
       else {
         $results[] = $user_data['attr'];
+      }
+    }
+
+    foreach ($this->testGroups as $dn => $group_data) {
+
+
+      // if not in basedn, skip
+      // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
+      // should be leftmost string in:
+      // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
+      $pos = strpos($dn, $base_dn);
+      if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) == FALSE) {
+        continue; // not in basedn
+      }
+      else {
+      }
+
+      // if doesn't filter attribute has no data, continue
+      if (!isset($group_data['attr'][$filter_attribute])) {
+        continue;
+      }
+
+      // if doesn't match filter, continue
+      $contained_values = $group_data['attr'][$filter_attribute];
+      unset($contained_values['count']);
+      if (!in_array($filter_value, array_values($contained_values))) {
+        continue;
+      }
+
+      // loop through all attributes, if any don't match continue
+      $group_data['attr']['dn'] = $dn;
+      if ($attributes) {
+        $selected_group_data = array();
+        foreach ($attributes as $key => $value) {
+          $selected_group_data[$key] = (isset($group_data['attr'][$key])) ? $group_data['attr'][$key] : NULL;
+        }
+        $results[] = $selected_group_data;
+      }
+      else {
+        $results[] = $group_data['attr'];
       }
     }
 

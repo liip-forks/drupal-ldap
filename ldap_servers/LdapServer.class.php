@@ -59,8 +59,14 @@ class LdapServer {
       return FALSE;
     }
 
-  }
+  public $paginationEnabled = FALSE; // (boolean)(function_exists('ldap_control_paged_result_response') && function_exists('ldap_control_paged_result'));
 
+  public $searchPagination = FALSE;
+  public $searchPageSize = 1000;
+  public $searchPageStart = 0;
+  public $searchPageEnd = NULL;
+
+  public $groupObjectClass;
 
   public $inDatabase = FALSE;
 
@@ -84,7 +90,10 @@ class LdapServer {
     'unique_persistent_attr' => 'unique_persistent_attr',
     'allow_conflicting_drupal_accts' => 'allow_conflicting_drupal_accts',
     'ldap_to_drupal_user'  => 'ldapToDrupalUserPhp',
-    'testing_drupal_username'  => 'testingDrupalUsername'
+    'testing_drupal_username'  => 'testingDrupalUsername',
+    'group_object_category' => 'groupObjectClass',
+    'search_pagination' => 'searchPagination',
+    'search_page_size' => 'searchPageSize',
     );
 
   }
@@ -144,6 +153,7 @@ class LdapServer {
       $this->bindpw = $server_record->bindpw;
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
+	$this->paginationEnabled = (boolean)(ldap_servers_php_supports_pagination() && $this->searchPagination);
 
     $this->queriableWithoutUserCredentials = (boolean)(
       $this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
@@ -261,17 +271,18 @@ class LdapServer {
    *  @param params same as ldap_search() params except $link_identifier is omitted.
    *
    * @return
-   *   An array of matching entries->attributes, or FALSE if the search is
-   *   empty.
+   *   An array of matching entries->attributes or empty array if none
+   *   or FALSE if the search is empty.
    */
 
-  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = LDAP_SCOPE_SUBTREE) {
+  function search($base_dn = NULL, $filter, $attributes = array(),
+    $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = LDAP_SCOPE_SUBTREE) {
 
-     /** pagingation issues:
+     /**
+      * pagingation issues:
+      * -- see documentation queue: http://markmail.org/message/52w24iae3g43ikix#query:+page:1+mid:bez5vpl6smgzmymy+state:results
       * -- wait for php 5.4? https://svn.php.net/repository/php/php-src/tags/php_5_4_0RC6/NEWS (ldap_control_paged_result
-      * -- in some cases, sort by some id value and keep requerying with new filter based on previous max id
       * -- http://sgehrig.wordpress.com/2009/11/06/reading-paged-ldap-results-with-php-is-a-show-stopper/
-      *
       */
 
 
@@ -305,63 +316,196 @@ class LdapServer {
       $this->connect();
       $this->bind();
     }
- //   dpm('ldap search attributes 1:');dpm($attributes);
-  //  $attributes = array('dn', 'sAMAccountName', 'mail');
-  //   dpm('ldap search attributes 2:');dpm($attributes);
+
+    $ldap_query_params = array(
+      'connection' => $this->connection,
+      'base_dn' => $base_dn,
+      'filter' => $filter,
+      'attributes' => $attributes,
+      'attrsonly' => $attrsonly,
+      'sizelimit' => $sizelimit,
+      'timelimit' => $timelimit,
+      'deref' => $deref,
+      'query_display' => $query,
+      'scope' => $scope,
+    );
+   // dpm($ldap_query_params); dpm("searchPagination=" . $this->searchPagination .",paginationEnabled=". $this->paginationEnabled .", searchPageStart=" . $this->searchPageStart);
+    if ($this->searchPagination && $this->paginationEnabled) {
+      $aggregated_entries = $this->pagedLdapQuery($ldap_query_params);
+      return $aggregated_entries;
+    }
+    else {
+      $result = $this->ldapQuery($scope, $ldap_query_params);
+      if ($result && (ldap_count_entries($this->connection, $result) !== FALSE) ) {
+        $entries = ldap_get_entries($this->connection, $result);
+        return (is_array($entries)) ? $entries : FALSE;
+      }
+      elseif ($this->ldapErrorNumber()) {
+        $watchdog_tokens =  array('%basedn' => $ldap_query_params['base_dn'], '%filter' => $ldap_query_params['filter'],
+          '%attributes' => print_r($ldap_query_params['attributes'], TRUE), '%errmsg' => $this->errorMsg('ldap'),
+          '%errno' => $this->ldapErrorNumber());
+        watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
+          %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
+        RETURN FALSE;
+      }
+      else {
+        return FALSE;
+      }
+    }
+  }
+
+
+  /**
+   * execute a paged ldap query and return entries as one aggregated array
+   *
+   * $this->searchPageStart and $this->searchPageEnd should be set before calling if
+   *   a particular set of pages is desired
+   *
+   * @param array $ldap_query_params of form:
+      'base_dn' => base_dn,
+      'filter' =>  filter,
+      'attributes' => attributes,
+      'attrsonly' => attrsonly,
+      'sizelimit' => sizelimit,
+      'timelimit' => timelimit,
+      'deref' => deref,
+      'scope' => scope,
+
+      (this array of parameters is primarily passed on to ldapQuery() method)
+   *
+   * @return array of ldap entries or FALSE on error.
+   *
+   */
+  public function pagedLdapQuery($ldap_query_params) {
+
+    if (!($this->searchPagination && $this->paginationEnabled)) {
+      watchdog('ldap', "LDAP server pagedLdapQuery() called when functionality not available in php install or
+        not enabled in ldap server configuration.  error. basedn: %basedn| filter: %filter| attributes:
+         %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
+      RETURN FALSE;
+    }
+
+    $paged_entries = array();
+    $page_token = '';
+    $page = 0;
+    $estimated_entries = 0;
+    $aggregated_entries = array();
+    $aggregated_entries_count = 0;
+    $has_page_results = FALSE;
+
+    do {
+      ldap_control_paged_result($this->connection, $this->searchPageSize, true, $page_token);
+      $result = $this->ldapQuery($ldap_query_params['scope'], $ldap_query_params);
+
+      if ($page >= $this->searchPageStart) {
+        $skipped_page = FALSE;
+        if ($result && (ldap_count_entries($this->connection, $result) !== FALSE) ) {
+          $page_entries = ldap_get_entries($this->connection, $result);
+          unset($page_entries['count']);
+          $has_page_results = (is_array($page_entries) && count($page_entries) > 0);
+          $aggregated_entries = array_merge($aggregated_entries, $page_entries);
+          $aggregated_entries_count = count($aggregated_entries);
+        }
+        elseif ($this->ldapErrorNumber()) {
+          $watchdog_tokens =  array('%basedn' => $ldap_query_params['base_dn'], '%filter' => $ldap_query_params['filter'],
+            '%attributes' => print_r($ldap_query_params['attributes'], TRUE), '%errmsg' => $this->errorMsg('ldap'),
+            '%errno' => $this->ldapErrorNumber());
+          watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
+            %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
+          RETURN FALSE;
+        }
+        else {
+          return FALSE;
+        }
+      }
+      else {
+        $skipped_page = TRUE;
+      }
+      @ldap_control_paged_result_response($this->connection, $result, $page_token, $estimated_entries);
+      if ($ldap_query_params['sizelimit'] && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+        // false positive error thrown.  do not set result limit error when $sizelimit specified
+      }
+      elseif ($this->hasError()) {
+        watchdog('ldap_server', 'ldap_control_paged_result_response() function error. LDAP Error: %message, ldap_list() parameters: %query',
+          array('%message' => $this->errorMsg('ldap'), '%query' => $ldap_query_params['query_display']),
+          WATCHDOG_ERROR);
+      }
+
+    /**
+     * wtf is this page_token?
+      dpm("estimated_entries=$estimated_entries");
+      dpm("page_token isset"); dpm(isset($page_token));
+      dpm("page_token len"); dpm(strlen($page_token));
+      dpm("page_token gettype"); dpm(gettype($page_token));
+      dpm("page_token is null"); dpm((int)($page_token === NULL));
+      dpm("page_token is == '' "); dpm((int)($page_token == ''));
+      dpm("page_token str_split"); dpm(str_split($page_token));
+      dpm("page_token bin2hex"); dpm(bin2hex($page_token));
+      dpm("page_token convert_uudecode"); dpm(convert_uudecode($page_token));
+      dpm("page_token bindec"); dpm(bindec($page_token));
+   **/
+
+      if (isset($ldap_query_params['sizelimit']) && $ldap_query_params['sizelimit'] && $aggregated_entries_count >= $ldap_query_params['sizelimit']) {
+        $discarded_entries = array_splice($aggregated_entries, $ldap_query_params['sizelimit']);
+        break;
+      }
+      elseif ($this->searchPageEnd !== NULL && $page >= $this->searchPageEnd) { // user defined pagination has run out
+        break;
+      }
+      elseif ($page_token === NULL || $page_token == '') { // ldap reference pagination has run out
+        break;
+      }
+      $page++;
+    } while ($skipped_page || $has_page_results);
+
+    $aggregated_entries['count'] = count($aggregated_entries);
+  //  dpm('aggregated_entries'); dpm($aggregated_entries);
+    return $aggregated_entries;
+  }
+
+  function ldapQuery($scope, $params) {
+
     switch ($scope) {
       case LDAP_SCOPE_SUBTREE:
-        $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
-          // false positive error thrown.  do not result limit error when $sizelimit specified
+        $result = @ldap_search($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
+          $params['sizelimit'], $params['timelimit'], $params['deref']);
+        if ($params['sizelimit'] && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+          // false positive error thrown.  do not return result limit error when $sizelimit specified
         }
         elseif ($this->hasError()) {
-          // dpm('has_error' . $this->errorMsg('ldap') . $this->ldapErrorNumber());
           watchdog('ldap_server', 'ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query',
-            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            array('%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']),
             WATCHDOG_ERROR);
         }
         break;
 
       case LDAP_SCOPE_BASE:
-        $result = @ldap_read($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+        $result = @ldap_read($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
+           $params['sizelimit'], $params['timelimit'], $params['deref']);
+        if ($params['sizelimit'] && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
           // false positive error thrown.  do not result limit error when $sizelimit specified
         }
         elseif ($this->hasError()) {
           watchdog('ldap_server', 'ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query',
-            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            array('%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']),
             WATCHDOG_ERROR);
         }
         break;
 
       case LDAP_SCOPE_ONELEVEL:
-        $result = @ldap_list($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-        if ($sizelimit && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
+        $result = @ldap_list($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
+           $params['sizelimit'], $params['timelimit'], $params['deref']);
+        if ($params['sizelimit'] && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
           // false positive error thrown.  do not result limit error when $sizelimit specified
         }
         elseif ($this->hasError()) {
           watchdog('ldap_server', 'ldap_list() function error. LDAP Error: %message, ldap_list() parameters: %query',
-            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            array('%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']),
             WATCHDOG_ERROR);
         }
         break;
     }
-
-    if ($result && ldap_count_entries($this->connection, $result)) {
-      $entries = ldap_get_entries($this->connection, $result);
-      return $entries;
-    }
-    elseif ($this->ldapErrorNumber()) {
-      $watchdog_tokens =  array('%basedn' => $base_dn, '%filter' => $filter,
-        '%attributes' => print_r($attributes, TRUE), '%errmsg' => $this->errorMsg('ldap'),
-        '%errno' => $this->ldapErrorNumber());
-      watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
-        %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
-      FALSE;
-    }
-    else {
-      return array();
-    }
+    return $result;
   }
 
   function drupalToLdapNameTransform($drupal_username, &$watchdog_tokens) {
@@ -471,6 +615,211 @@ class LdapServer {
         }
       }
     }
+  }
+
+  /**
+   * return by reference groups/authorizations when groups are defined from user attributes (such as memberOf)
+   *
+   *  @param array $derive_from_attribute_name.  e.g. memberOf
+   *  @param array $user_ldap_entry as returned by ldap php extension
+   *  @param boolean $nested if groups should be recursed or not.
+   *
+   *  @return array of groups specified in the derive from attribute
+   */
+
+  public function deriveFromAttrGroups($derive_from_attribute_name, $user_ldap_entry, $nested) {
+    $all_groups = array();
+    $groups_by_level = array();
+    $level = 0;
+    foreach ($user_ldap_entry['attr'] as $user_attr_name => $user_attr_values) {
+      if (strcasecmp($derive_from_attribute_name, $user_attr_name) != 0) {
+        continue;
+      }
+      // patch 1050944
+      for ($i = 0; $i < $user_attr_values['count']; $i++) {
+        $all_groups[] = (string)$user_attr_values[$i];
+        $groups_by_level[$derive_from_attribute_name][$level][] = (string)$user_attr_values[$i];
+      }
+      if ($nested) {
+        $this->deriveFromAttrGroupsResursive($all_groups, $groups_by_level, $level, $derive_from_attribute_name, 10); // LDAP_SERVER_GROUPS_RECURSE_DEPTH
+      }
+    }
+    return array_unique($all_groups);
+  }
+
+  /**
+   * not working yet
+   * will be ton of permission issues with service accounts
+   * need configurable obj type to avoid binding to a million user entries, printers, etc.
+   */
+  private function deriveFromAttrGroupsResursive(&$all_groups, &$groups_by_level, $level, $derive_from_attribute_name, $max_depth) {
+    // derive query with & of all groups at current level
+    // e.g. (|(distinguishedname=cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=cn=content approvers,ou=groups,dc=ad,dc=myuniversity,dc=edu))
+    // execute query and loop through it to populate $groups_by_level[$level + 1]
+    // call recursively provided max depth not excluded and $groups_by_level[$level + 1] > 0
+
+    // this needs to be configurable also and default per ldap implementation
+    $group_values = ldap_pear_escape_filter_value($groups_by_level[$derive_from_attribute_name][$level]);
+    $filter = "(&\n  (objectClass=" . $this->groupObjectClass . ")\n  (" . $derive_from_attribute_name . "=*)\n  (|\n    (distinguishedname=" . join(")\n    (distinguishedname=", $group_values) . ")\n  )\n)";
+    $level++;
+    foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
+      $entries = $this->search($base_dn, $filter, array($derive_from_attribute_name));
+      foreach ($entries as $entry) {
+        $attr_values = array();
+        if (is_array($entry) && count($entry)) {
+          if (isset($entry[$derive_from_attribute_name])) {
+            $attr_values = $entry[$derive_from_attribute_name];
+          }
+          elseif (isset($entry[drupal_strtolower($derive_from_attribute_name)])) {
+            $attr_values = $entry[drupal_strtolower($derive_from_attribute_name)];
+          }
+          else {
+            foreach ($entry as $attr_name => $values) {
+              if (strcasecmp($derive_from_attribute_name, $attr_name) != 0) {
+                continue;
+              }
+              $attr_values = $entry[$attr_name];
+              break;
+            }
+          }
+          if (count($attr_values)) {
+            for ($i = 0; $i < $attr_values['count']; $i++) {
+              $value = (string)$attr_values[$i];
+              if (!in_array($value, $all_groups)) {
+                $groups_by_level[$derive_from_attribute_name][$level][] = $value;
+                $all_groups[] = $value;
+              }
+            }
+          }
+        }
+      }
+    }
+    if (isset($groups_by_level[$derive_from_attribute_name][$level]) && count($groups_by_level[$derive_from_attribute_name][$level]) && $level < $max_depth) {
+      $this->deriveFromAttrGroupsResursive($all_groups, $groups_by_level, $level, $derive_from_attribute_name, $max_depth);
+    }
+  }
+
+  /**
+   * return by reference groups/authorizations when groups are defined from entry
+   *
+   *  @param array $entries.  e.g. array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu')
+   *  @param string ldap attribute name $entries_attr e.g. dn, cn
+   *
+   *  @param string $membership_attr e.g. uniquemember
+   *  @param string $user_ldap_attr e.g.  cn, dn, etc.
+   *  @param boolean $nested if groups should be recursed or not.
+   *
+   *  @return array of groups specified in the derive from entry
+   *
+   *  @see tests/DeriveFromEntry/ldap_servers.inc for fuller notes and test example
+   */
+  public function deriveFromEntryGroups($entries, $entries_attr, $membership_attr, $user_ldap_attr, $user_ldap_entry, $nested = FALSE) {
+
+    $authorizations = array();
+    $matching_user_value = ($user_ldap_attr == 'dn') ? $user_ldap_entry['dn'] : $user_ldap_entry[$user_ldap_attr][0];
+    $filter  = "(|\n    ($entries_attr=" . join(")\n    ($entries_attr=", $entries) . ")\n)";
+    if (!$nested) {
+      $filter =  "(&\n  $filter  \n  (" . $membership_attr . "=" .  $matching_user_value . ")  \n)";
+    }
+
+    $tested_groups = array(); // array of dns already tested to avoid excess queried
+    foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
+      $entries = $this->search($base_dn, $filter, array('dn', $membership_attr, $entries_attr, $user_ldap_attr, 'objectClass'));  // query for all dns list
+     // debug("deriveFromEntryGroups, nested=$nested"); debug($filter); debug($base_dn);  debug('entries'); debug($entries);
+      if ($entries !== FALSE) {
+        if (!$nested) {  // if not nested all returned entries are groups that user is member of
+          foreach ($entries as $entry) {
+            if (isset($entry[$entries_attr])) {
+              $group_id = (string)($entries_attr == 'dn') ? (string)$entry['dn'] : (string)$entry[$entries_attr][0];
+              $authorizations[] = $group_id;
+              $tested_groups[] = $group_id;
+            }
+          }
+        }
+        else { // if nested all returned entries are groups.  user is not necessarily a member of them
+          if (isset($entries['count'])) {
+            unset($entries['count']);
+          };
+          foreach ($entries as $i => $entry) {
+            $group_id = ($entries_attr == 'dn') ? (string)$entry['dn'] : (string)$entry[$entries_attr][0];
+            if (!in_array($group_id, $tested_groups) && isset($entry[$membership_attr])) {
+              $members = $entry[$membership_attr];
+              //debug('members'); debug($members);
+              unset($members['count']);
+              // user may be direct member of group
+              if (in_array($matching_user_value, array_values($members))) {
+                $authorizations[] = $group_id;
+              }
+              else {  // $derive_from_entry_attr, $user_ldap_attr, $user_ldap_entry $entries, $entries_attr,
+                //debug('top level check child groups:'); debug($members);
+                $is_member_via_child_groups = $this->groupsByEntryIsMember($members, $entries_attr, $base_dn,  $tested_groups, $membership_attr, $matching_user_value, 0, 10);
+                //debug("is member via child groups: $is_member_via_child_groups, dn=$dn"); debug($members);
+                if ($is_member_via_child_groups) {
+                   $authorizations[] = $group_id;
+                }
+              }
+            }
+            $tested_groups[] = $group_id;
+          }
+        }
+      }
+    }
+
+    return $authorizations;
+  }
+
+  /** looking at all members of a child group.  only need to determine if member of one of the groups, doesn't matter which one.
+   *
+   *  @param string ldap attribute value $group_id. represents group in question
+   *  @param array $members. list of current group members  e.g. array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu')
+   *  @param string ldap attribute name $entries_attr that $members represent
+   *
+   *  @param string $base_dn to be searched
+   *  @param array $tested_groups is an array of group_ids in form of whatever $entries_attr is (e.g. cns, dns,...)
+
+   *  @param string $membership_attr e.g. uniquemember
+   *  @param array $user_ldap_entry
+   *  @param int $depth, current recursion depth
+   *  @param int $max_depth, max allowed recursion
+   *
+   *
+   *  @return TRUE or FALSE
+   *
+   *  @see tests/DeriveFromEntry/ldap_servers.inc for fuller notes and test example
+   */
+
+  public function groupsByEntryIsMember($members, $entries_attr, $base_dn, &$tested_groups, $membership_attr, $matching_user_value, $depth, $max_depth) {
+    // query for all members that are groups
+    $filter = "(&(objectClass=". $this->groupObjectClass . ")(|\n  ($entries_attr=" . join(")\n    ($entries_attr=", $members) . ")\n  ))";
+    $entries = $this->search($base_dn, $filter, array('dn', $entries_attr, $membership_attr));
+   //debug('groupsByEntryIsMember,derive_from_entry_attr='.$membership_attr); debug($filter); debug($base_dn);
+    if (isset($entries['count'])) {
+      unset($entries['count']);
+    };
+    if ($entries !== FALSE) {
+      foreach ($entries as $i => $entry) {
+        $group_id = ($entries_attr == 'dn') ? (string)$entry['dn'] : (string)$entry[$entries_attr][0];
+       // debug("entry,$membership_attr=$derive_from_entry_attr");debug($entry); debug(isset($entry[$derive_from_entry_attr]));
+        if (!in_array($group_id, $tested_groups)) {
+          $tested_groups[] = $group_id;
+          $child_members = (isset($entry[$membership_attr])) ? $entry[$membership_attr] : array('count' => 0);
+         // debug('child_members'); debug($child_members);
+          unset($child_members['count']);
+
+          if (count($child_members) == 0) {
+            return FALSE;
+          }
+          elseif (in_array($matching_user_value, array_values($child_members))) {
+            return TRUE; // user is direct member of child group
+          }
+          elseif ($depth < $max_depth) { // $derive_from_entry_attr, $user_ldap_attr, $user_ldap_entry
+            $result = $this->groupsByEntryIsMember($child_members, $entries_attr, $base_dn, $tested_groups, $membership_attr, $matching_user_value, $depth + 1, $max_depth);
+            return $result;
+          }
+        }
+      }
+    }
+    return FALSE;
   }
 
   public function deriveEmailFromEntry($ldap_entry) {

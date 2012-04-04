@@ -34,6 +34,13 @@ define('LDAP_SERVERS_BIND_METHOD_ANON', 3);
 define('LDAP_SERVERS_BIND_METHOD_ANON_USER', 4);
 define('LDAP_SERVERS_BIND_METHOD_DEFAULT', 1);
 
+define('LDAP_SERVERS_DERIVE_GROUP_FROM_DN', 1);
+define('LDAP_SERVERS_DERIVE_GROUP_FROM_ATTRIBUTE', 2);
+define('LDAP_SERVERS_DERIVE_GROUP_FROM_ENTRY', 4);
+
+
+define('LDAP_SERVER_GROUPS_RECURSE_DEPTH', 20);
+
 define('LDAP_FAIL', -1);
 
 define('LDAP_SUCCESS', 0x00);
@@ -391,6 +398,10 @@ function ldap_servers_encrypt_types($category = 'all') {
 function ldap_servers_decrypt($encrypted, $encryption = NULL) {
   require_once('ldap_servers.encryption.inc');
   return _ldap_servers_decrypt($encrypted, $encryption);
+}
+
+function ldap_servers_php_supports_pagination() {
+  return (boolean)(function_exists('ldap_control_paged_result_response') && function_exists('ldap_control_paged_result'));
 }
 
 

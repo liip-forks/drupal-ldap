@@ -17,8 +17,15 @@ abstract class LdapTypeAbstract {
   public $encrypted = 0;
   public $user_attr = 'cn';
   public $mail_attr = 'mail';
-  public $supportsNestedGroups = FALSE;
 
+  public $groupObjectClassDefault = NULL;
+
+  public $groupDerivationModelDefault = NULL;
+  public $groupDeriveFromAttributeNameDefault = NULL;
+  public $groupDeriveFromAttrDnAttrDefault = NULL;
+
+  public $groupDeriveFromEntryAttrDefault = NULL;
+  public $groupDeriveFromEntryUserIdDefault = NULL;
  /**
    * Constructor Method
    *

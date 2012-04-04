@@ -19,13 +19,33 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
   $consumer = ldap_authorization_get_consumer_object($consumer_type);
   $consumer_tokens = ldap_authorization_tokens($consumer);
 
-  if (isset($_SESSION['ldap_authorization_test_result'])) {
+  if (isset($_SESSION['ldap_authorization_test_query']['result'])) {
     $form['result'] = array(
       '#type' => 'item',
-      '#markup' => $_SESSION['ldap_authorization_test_result'],
+      '#markup' => $_SESSION['ldap_authorization_test_query']['result'],
       );
 
-    unset($_SESSION['ldap_authorization_test_result']);
+    $form['pre-filtered'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Prefiltered and Final Mappings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['pre-filtered']['overview'] = array(
+     '#type' => 'item',
+     '#markup' => t('Below are the "raw authorizations" and which strategy they are derived from.  If enabled, the mapping filter is applied to these.'),
+    );
+
+    if (isset($_SESSION['ldap_authorization_test_query']['maps'])) {
+      $i = 0;
+      foreach ($_SESSION['ldap_authorization_test_query']['maps'] as $map => $data) {
+        $i++;
+        $form['pre-filtered']['map' . $i] = array(
+         '#type' => 'item',
+         '#markup' => is_scalar($data) ?  "<h2>$map (without filter)</h2>" . $data : theme('item_list', array('items' => $data, 'type' => 'ul', 'title' => "$map (without filter)")),
+        );
+      }
+    }
   }
 
 
@@ -46,7 +66,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
     $form['usernames'] = array(
       '#type' => 'textarea',
       '#title' => t('Drupal usernames to test !consumer_shortName authorizations results for.  One per line.', $consumer_tokens),
-      '#default_value' => @$_SESSION['ldap_authorization_test_form']['usernames'] ,
+      '#default_value' => @$_SESSION['ldap_authorization_test_query']['usernames'] ,
       '#cols' => 50,
       '#rows' => 6,
       '#description' => t('', $consumer_tokens),
@@ -62,7 +82,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
       '#type' => 'submit',
       '#value' => 'test',
     );
-
+    unset($_SESSION['ldap_authorization_test_query']);
   return $form;
 }
 
@@ -92,8 +112,8 @@ function ldap_authorization_test_form_submit($form, &$form_state) {
   $results = array();
   $users_listed = $array = preg_split('/[\n\r]+/', $form_state['values']['usernames']);
   $random_users = array();
-  $_SESSION['ldap_authorization_test_form']['random_users'] = $form_state['values']['random_users'];
-  $_SESSION['ldap_authorization_test_form']['usernames'] = $form_state['values']['usernames'];
+  $_SESSION['ldap_authorization_test_query']['random_users'] = $form_state['values']['random_users'];
+  $_SESSION['ldap_authorization_test_query']['usernames'] = $form_state['values']['usernames'];
   if ($form_state['values']['random_users']) {  // add 10 random usernames to test
     // not using user_load_multiple because need randomness outside of query
     $select = db_select('users', 'u');
@@ -132,7 +152,7 @@ function ldap_authorization_test_form_submit($form, &$form_state) {
   }
 
   $table =  theme('ldap_authorization_test_results', array('results' => $results, 'consumer' => $consumer, 'notifications' => $notifications));
-  $_SESSION['ldap_authorization_test_result'] = $table;
+  $_SESSION['ldap_authorization_test_query']['result'] = $table;
   $form_state['redirect'] = LDAP_SERVERS_MENU_BASE_PATH . '/authorization/test/' . $consumer->consumerType;
 
 }

@@ -7,6 +7,10 @@
  */
 
 
+
+/**
+ * see ldap_query_get_servers()
+ */
 function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
   require_once('LdapQueryAdmin.class.php');
   static $queries;
@@ -39,7 +43,9 @@ function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
   }
 }
 
-
+/**
+ * see ldap_query_get_servers()
+ */
 function _ldap_query_get_simpletest_queries($qid, $type, $flatten, $reset = TRUE) {
   require_once('tests/LdapQueryTest.class.php');
 

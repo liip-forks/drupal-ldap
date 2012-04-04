@@ -177,15 +177,16 @@ function ldap_authorization_theme() {
  * @return consumer object
  */
 function ldap_authorization_get_consumer_object($consumer_type) {
-    $consumer = @ldap_authorization_get_consumers($consumer_type, TRUE, TRUE);
-    if (is_array($consumer)) {
-      $path = drupal_get_path('module', $consumer['consumer_module']) . '/' . $consumer['consumer_class_file'];
-      require_once(drupal_get_path('module', $consumer['consumer_module']) . '/' . $consumer['consumer_class_file']);
-      $class = $consumer['consumer_class_name'];
-      $consumer_obj = new $class($consumer_type);
-      $consumer_obj->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
-      return $consumer_obj;
-    }
+
+  $consumer = ldap_authorization_get_consumers($consumer_type, TRUE, TRUE);
+
+  if ($consumer) {
+    require_once(drupal_get_path('module', $consumer['consumer_module']) . '/' . $consumer['consumer_class_file']);
+    $class = $consumer['consumer_class_name'];
+    $consumer_obj = new $class($consumer_type);
+    $consumer_obj->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
+    return $consumer_obj;
+  }
   else {
     return FALSE;
   }
@@ -196,7 +197,7 @@ function ldap_authorization_get_consumer_object($consumer_type) {
  * @param boolean $reset signifies clear static variable
  * @param boolean $flatten signies return individual consumer not keyed on consumer type
  *
- * @return array (1) if $faltten is true, consumer configuration array
+ * @return array (1) if $flatten is true, consumer configuration array
  *   otherwise (2) associative array of consumer configurations keyed on consumer type such as "drupal_role"
  */
 function ldap_authorization_get_consumers($consumer_type = NULL, $reset = FALSE, $flatten = FALSE) {
@@ -204,18 +205,30 @@ function ldap_authorization_get_consumers($consumer_type = NULL, $reset = FALSE,
   if ($reset || !is_array($consumers)) {
     $consumers = module_invoke_all('ldap_authorization_consumer');
   }
-  if ($flatten && $consumer_type) {
-    return $consumers[$consumer_type];
-  }
-  else {
-
+  if (!$consumer_type) {
     return $consumers;
   }
+  elseif ($flatten) {
+    return isset($consumers[$consumer_type]) ? $consumers[$consumer_type] : FALSE;
+  }
+  else {
+    return isset($consumers[$consumer_type]) ? array($consumer_type => $consumers[$consumer_type]) : array();
+  }
+
 }
 
 /**
  * @rationale: need not be called from hook_user, so this function separated out
  * so it can be called from a batch synchronization process for example
+ *
+ * @param drupal user object $user
+ * @param string $op indicateing operation such as query, set, test_query, etc.
+ * @param string $consumer_type e.g. drupal_role, or og_groups
+ * @param string $context
+ *
+ * @return array of form:
+ * $authorizations[<consumer_type>][<authorization_id>]
+ *
  */
 function ldap_authorizations_user_authorizations(&$user, $op = 'query', $consumer_type = NULL, $context = NULL) {
   require_once('ldap_authorization.inc');
@@ -244,14 +257,14 @@ function ldap_authorization_help($path, $arg) {
   }
 }
 
-/** provide tokens for better watchdog and drupal_set_message arguments **/
+/** just tokens for better watchdog and drupal_set_message arguments **/
 
 function ldap_authorization_tokens($consumer) {
   $tokens = array();
 
   if (is_object($consumer)) {
     foreach (array('%', '!', '@') as $symbol) {
-      foreach (array('name', 'namePlural', 'shortName', 'shortNamePlural', 'description', 'consumerModule', 'consumerType', 'mappingDirections') as $property) {
+      foreach (array('name', 'namePlural', 'shortName', 'shortNamePlural', 'consumerModule', 'consumerType', 'mappingDirections', 'testLink', 'editLink') as $property) {
         $tokens[$symbol . 'consumer_' . $property] = $consumer->$property;
       }
       if (is_object($consumer->consumerConf)) {

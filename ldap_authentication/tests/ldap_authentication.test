@@ -121,7 +121,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
     $user1 = user_load(1);
     $password = $this->randomString(20);
-    require_once('includes/password.inc');
+    require_once(DRUPAL_ROOT . '/includes/password.inc');
     $account = array(
       'name' => $user1->name,
       'pass' => user_hash_password(trim($password)),
@@ -231,7 +231,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
     $user1 = user_load(1);
     $password = $this->randomString(20);
-    require_once('includes/password.inc');
+    require_once(DRUPAL_ROOT . '/includes/password.inc');
     $account = array(
       'name' => $user1->name,
       'pass' => user_hash_password(trim($password)),
@@ -344,7 +344,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
     $user1 = user_load(1);
     $password = $this->randomString(20);
-    require_once('includes/password.inc');
+    require_once(DRUPAL_ROOT . '/includes/password.inc');
     $account = array(
       'name' => $user1->name,
       'pass' => user_hash_password(trim($password)),
@@ -379,14 +379,14 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
     * LDAP_authen.WL.allow.match -- desirect_result: authenticate success
     */
 
-    $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu');
+    $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu');
     $this->assertText(t('Member for'), 'User able to authenticate because in white list (allowOnlyIfTextInDn).', $testid);
 
    /**
     *  LDAP_authen.WL.allow.miss -- desirect_result: authenticate fail
     */
 
-    $this->attemptLogon('cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu');
+    $this->attemptLogon('cn=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu');
     $this->assertText(t('Sorry, unrecognized username or password'), 'User unable to authenticate because not in white list (allowOnlyIfTextInDn).', $testid);
 
 
@@ -410,14 +410,14 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
     * LDAP_authen.WL.exclude.match -- desirect_result: authenticate fail
     */
 
-    $this->attemptLogon('cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu');
+    $this->attemptLogon('cn=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu');
     $this->assertText(t('Sorry, unrecognized username or password'), 'User unable to authenticate in exclude list (excludeIfTextInDn).', $testid);
 
    /**
     *  LDAP_authen.WL.exclude.miss-- desirect_result: authenticate success
     */
 
-    $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu');
+    $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu');
     $this->assertText(t('Member for'), 'Able to authenticate because not in exclude list (allowOnlyIfTextInDn).', $testid);
 
     /**
@@ -449,7 +449,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
     * LDAP_authen.WL.php.php disabled -- desired result: authenticate fail with warning the authentication disabled
     */
     module_disable(array('php'));
-    $this->attemptLogon('cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu');
+    $this->attemptLogon('cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu');
     $this->assertText(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG, 'With php disabled and php code in whitelist, refuse authentication. (allowTestPhp).', $testid);
     module_enable(array('php'));
 
@@ -457,14 +457,14 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
    /**
     * LDAP_authen.WL.php.true -- desired result: authenticate success
     */
-    $this->attemptLogon('cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu');
+    $this->attemptLogon('cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu');
     $this->assertText(t('Member for'), 'Able to authenticate because php returned true (allowTestPhp).', $testid);
 
    /**
     *  LDAP_authen.WL.php.false-- desired result: authenticate fail
     */
 
-    $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu');
+    $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu');
     $this->assertText(t('User disallowed'), 'User unable to authenticate  because php returned false (allowTestPhp).', $testid);
 
 
@@ -516,11 +516,11 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
      */
 
 
-    $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu');
+    $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu');
     $this->assertText(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG, t('Authentication prohibited when excludeIfNoAuthorizations = true and LDAP Authorization disabled. LDAP_authen.WL1.excludeIfNoAuthorizations.failsafe'), $testid);
 
     module_enable(array('ldap_authorization_drupal_role'), TRUE);
-    $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu');
+    $this->attemptLogon('cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu');
     $this->assertText(t('Member for'), 'User able to authenticate because of excludeIfNoAuthorizations setting.', $testid);
 
     /**
@@ -528,7 +528,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
      * test for excludeIfNoAuthorizations set to true and No consumer granted authorizations
      */
 
-    $this->attemptLogon('cn=unkool,ou=lost,dc=ad,dc=myuniveristy,dc=edu');
+    $this->attemptLogon('cn=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu');
     $this->assertText(t('Sorry, unrecognized username or password'), 'User unable to authenticate because of excludeIfNoAuthorizations setting.', $testid);
 
     $authenticationConf = new LdapAuthenticationConfAdmin();

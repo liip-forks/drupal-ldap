@@ -113,9 +113,10 @@ class LdapQuery {
     $results = array();
 
     $count = 0;
+    // for debugging paginations, set: $ldap_server->searchPageStart = NULL, 0, 1, ... ; $ldap_server->searchPageEnd = NULL, 0, 1, ...;
     foreach ($this->baseDn as $base_dn) {
       $result = $ldap_server->search($base_dn, $this->filter, $this->attributes, 0, $this->sizelimit, $this->timelimit, $this->deref, $this->scope);
-      if ($result !== FALSE) {
+      if ($result !== FALSE && $result['count'] > 0) {
         $count = $count + $result['count'];
         $results = array_merge($results, $result);
       }
@@ -325,7 +326,7 @@ class LdapQuery {
           'field_group' => 'query',
           '#type' => 'textarea',
           '#title' => t('Filter'),
-          '#description' => t('LDAP query filter such as <code>(objectClass=group)</code> or <code>(&(objectCategory=user)(homePhone=*))
+          '#description' => t('LDAP query filter such as <code>(objectClass=group)</code> or <code>(&(objectClass=user)(homePhone=*))
 </code>'),
           '#cols' => 50,
           '#rows' => 1,
@@ -344,7 +345,7 @@ class LdapQuery {
           'field_group' => 'query',
           '#type' => 'textarea',
           '#title' => t('Attributes to return.'),
-          '#description' => t('Enter as comma separated list. DN is automatically returned. Leave empty to return all attributes. e.g. <code>objectclass,objectcategory,name,cn,samaccountname</code>'),
+          '#description' => t('Enter as comma separated list. DN is automatically returned. Leave empty to return all attributes. e.g. <code>objectclass,name,cn,samaccountname</code>'),
           '#cols' => 50,
           '#rows' => 6,
         ),
@@ -412,7 +413,7 @@ class LdapQuery {
           '#required' => 1,
           '#options' => array(
             LDAP_DEREF_NEVER => t('(default) aliases are never dereferenced.'),
-            LDAP_DEREF_SEARCHING=> t('aliases should be dereferenced during the search but not when locating the base object of the search.'),
+            LDAP_DEREF_SEARCHING => t('aliases should be dereferenced during the search but not when locating the base object of the search.'),
             LDAP_DEREF_FINDING => t('aliases should be dereferenced when locating the base object but not during the search.'),
             LDAP_DEREF_ALWAYS => t('aliases should be dereferenced always.'),
           ),

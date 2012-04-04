@@ -64,7 +64,8 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
   $authorizations = array();
   $notifications = array();
   $watchdog_tokens = array('%username' => $user->name);
-  $consumers = ldap_authorization_get_consumers($consumer_type);
+  $consumers = ldap_authorization_get_consumers($consumer_type, FALSE, FALSE);
+
   $servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);
 
   /**
@@ -175,7 +176,14 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
      *   -  a mapping configuration ($consumer_conf)
      */
 
-    ldap_authorization_maps_alter_invoke($user, $user_ldap_entry, $ldap_server, $consumer->consumerConf, $proposed_ldap_authorizations, 'query');
+    if ($detailed_watchdog_log || $debug) {
+      $_proposed_ldap_authorizations_pre_hook_maps_alter = is_array($proposed_ldap_authorizations) ? $proposed_ldap_authorizations : array();
+      $watchdog_tokens['%proposed_authorizations_pre_hook'] = join(', ', $_proposed_ldap_authorizations_pre_hook_maps_alter);
+      watchdog('ldap_authorization', '%username : initial proposed authorization brefore mapps_alter_invoke %consumer_type: %proposed_authorizations_pre_hook.',
+        $watchdog_tokens, WATCHDOG_DEBUG);
+    }
+
+    ldap_authorization_maps_alter_invoke($user, $user_ldap_entry, $ldap_server, $consumer->consumerConf, $proposed_ldap_authorizations, $op);
 
     if ($detailed_watchdog_log || $debug) {
       $_proposed_ldap_authorizations = is_array($proposed_ldap_authorizations) ? $proposed_ldap_authorizations : array();
@@ -204,12 +212,23 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $map_from = $mapping_filter[0];
         $map_to = $mapping_filter[1];
         if (isset($proposed_ldap_authorizations[$map_from]) || isset($proposed_ldap_authorizations[strtolower($map_from)])) {
-          $filtered_ldap_authorizations[] = $map_to;
+          $filtered_ldap_authorizations[] = drupal_strtolower($map_to);
         }
       }
     }
     else {
+      array_walk($proposed_ldap_authorizations,'drupal_strtolower');
       $filtered_ldap_authorizations = array_keys($proposed_ldap_authorizations);
+      if (is_array($consumer->consumerConf->mappings) && is_array($filtered_ldap_authorizations)) {
+        foreach ($consumer->consumerConf->mappings as $mapping_filter) {
+          $map_from = $mapping_filter[0];
+          $map_to = $mapping_filter[1];
+          $map_from_key = array_search($map_from, $filtered_ldap_authorizations);
+          if ($map_from_key !== FALSE) {
+            $filtered_ldap_authorizations[] = $map_to;
+          }
+        }
+      }
     }
     $filtered_ldap_authorizations = array_unique($filtered_ldap_authorizations);
     $watchdog_tokens['%filtered_ldap_authorizations'] = join(', ', $filtered_ldap_authorizations);
@@ -222,18 +241,19 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $watchdog_tokens));
     }
 
-    //debug('mapping filter in 211 of ldap_authorizationinc'); debug($consumer->consumerConf->mappings);
-    //debug('normalizedMappings'); debug($consumer->consumerConf->normalizedMappings);
-
     /**
      * 3. third, grant any proposed authorizations not already granted
      */
+
+    if ($op == 'test_query') {
+      $_SESSION['ldap_authorization_test_query']['tokens'] = $watchdog_tokens;
+    }
     if ($op == 'set') {
       _ldap_authorizations_user_authorizations_set($user, $consumer, $filtered_ldap_authorizations, $user_ldap_entry, $watchdog_tokens);
     }
 
     $authorizations[$consumer_type] = $filtered_ldap_authorizations;
-  } //  end foreach $consumer type
+  } //  end foreach $consumers
   return array($authorizations, $notifications);
 
 }
@@ -254,8 +274,6 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
    * A.  Determine what authorizations have been granted in the past by ldap authorization
    */
 
-
-  // @todo.  use ldap_user->ldap_authorizations field
   if (isset($user->data['ldap_authorizations'][$consumer->consumerType]) && is_array($user->data['ldap_authorizations'][$consumer->consumerType])) {
     $user_auth_data = $user->data['ldap_authorizations'][$consumer->consumerType];
     $initial_existing_ldap_authorizations = array_keys($user_auth_data);
@@ -264,11 +282,12 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
     $user_auth_data = array();
     $initial_existing_ldap_authorizations = array();
   }
-
+  $watchdog_tokens['%initial'] = join(', ', $initial_existing_ldap_authorizations);
 
 
 
   $grants = $filtered_ldap_authorizations;
+  $watchdog_tokens['%filtered_ldap_authorizations'] = join(', ', $filtered_ldap_authorizations);
    /**
    * B. if regrantLdapProvisioned is false, $grants array should only be new authorizations
    */
@@ -303,16 +322,18 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
    /**
    * D.  Only grant authorization consumer ids that exist
    */
+
+
+  $watchdog_tokens['%consumer_containers_existing'] = (count($consumer_containers_existing)) ? join(', ', $consumer_containers_existing) :  t('none');
+  $watchdog_tokens['%grants_pre_intersect'] = (count($grants)) ? join(', ', $grants) :  t('none');
   $grants = array_intersect($consumer_containers_existing, $grants);
+  $watchdog_tokens['%grants_post_intersect'] = (count($grants)) ? join(', ', $grants) :  t('none');
 
   /**
    * E. Do grants
    */
 
   $consumer->authorizationGrant($user, $user_auth_data, $grants, $ldap_entry, FALSE);
-  $watchdog_tokens['%grants'] = (count($grants)) ? join(', ', $grants) :  t('none');
-
-
 
   /**
    *  3.F take away any authorizations not in proposed authorization,
@@ -329,23 +350,19 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
 
   if ($detailed_watchdog_log) {
     watchdog('ldap_authorization', '%username : user_authorizations_set results for %consumer_type:
-      <hr/>authorization ids to add: %creates
-      <hr/>revokes: %revokes
-      <hr/>grants: %grants
-      <hr/>consumer containers initially existing: %consumer_containers_initial
-      <hr/>consumer containers needed to create: %consumer_containers_needed
-      <hr/>consumer containers existing after create call: %consumer_containers_final
+      <hr/>1. Initial existing authorizations:  %initial
+      <hr/>1. Filtered Authorizations: %filtered_ldap_authorizations
+      <hr/>2. After filtering off previously granted authorizations: %grants1
+      <hr/>3. All available existing authorization ids: %consumer_containers_initial
+      <hr/>4. authorization ids that need to be created: %consumer_containers_needed
+      <hr/>5. consumer containers existing after create call (or non-call if og): %consumer_containers_final
+      <hr/>6a. consumer_containers_existing: %consumer_containers_existing
+      <hr/>6b. grants_pre_intersect: %grants_pre_intersect
+      <hr/>6c. grants_post_intersect: %grants_post_intersec
+      <hr/>7. revokes passed to authorizationRevoke(): %revokes
       ', $watchdog_tokens, WATCHDOG_DEBUG);
   }
-  /** debug(t('%username : user_authorizations_set results for %consumer_type:
-      <hr/>authorization ids to add: %creates
-      <hr/>revokes: %revokes
-      <hr/>grants: %grants
-      <hr/>consumer containers initially existing: %consumer_containers_initial
-      <hr/>consumer containers needed to create: %consumer_containers_needed
-      <hr/>consumer containers existing after create call: %consumer_containers_final
-      ',$watchdog_tokens));
-**/
+
   /**
    *  3.G  save user object and user data
    */
@@ -373,41 +390,46 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
       }
     }
   }
+  if ($op == 'test_query') {
+    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 1. Derive from DN'] = ($consumer_conf->deriveFromDn) ? $derive_from_dn_authorizations : t('disabled');
+  }
 
   // Strategy 2: groups in user attributes
   $derive_from_attr_authorizations = array();
   if ($consumer_conf->deriveFromAttr) {
     foreach ($consumer_conf->deriveFromAttrAttr as $derive_from_attribute_name) {
-      foreach ($user_ldap_entry['attr'] as $user_attr_name => $user_attr_values) {
-        if (strcasecmp($derive_from_attribute_name, $user_attr_name) != 0) {
-          continue;
+      $authorizations = $ldap_server->deriveFromAttrGroups($derive_from_attribute_name, $user_ldap_entry, $consumer_conf->deriveFromAttrNested);
+      foreach ($authorizations as $id => $authorization) {
+        if ($consumer_conf->deriveFromAttrUseFirstAttr) {
+          $attr_parts = ldap_explode_dn($authorization, 0);
+          $first_part = explode('=', $attr_parts[0]);
+          $derive_from_attr_authorizations[] = drupal_strtolower(str_replace('\\2C', ',', trim($first_part[1])));
         }
-        // patch 1050944
-        for ($i = 0; $i < $user_attr_values['count']; $i++) {
-          $attr_lcase = drupal_strtolower($user_attr_values[$i]);
-
-          if ($consumer_conf->deriveFromAttrUseFirstAttr) {
-            $attr_parts = ldap_explode_dn($attr_lcase, 0);
-            $first_part = explode('=', $attr_parts[0]);
-            $attr_lcase = str_replace('\\2C', ',', trim($first_part[1])); // for matching should not expect escaped commas
-          }
-          $derive_from_attr_authorizations[$attr_lcase] = (string)$attr_lcase;
+        else {
+          $derive_from_attr_authorizations[] = drupal_strtolower($authorization);
         }
       }
     }
   }
-
+  if (count($derive_from_attr_authorizations)) {
+   // array_walk($derive_from_attr_authorizations, 'drupal_strtolower');
+    $derive_from_attr_authorizations = array_unique($derive_from_attr_authorizations);
+    $derive_from_attr_authorizations = array_combine($derive_from_attr_authorizations, $derive_from_attr_authorizations);
+  }
+  if ($op == 'test_query') {
+    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 2. Groups in User Attributes'] = ($consumer_conf->deriveFromAttr) ? $derive_from_attr_authorizations : t('disabled');
+  }
 
 /**
  *
  *  Strategy 3: groups as entries.
  *
  *  given:
- *  - user dn = cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu
- *  - deriveFromEntryEntries = array(ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu)
- *  - deriveFromEntryAttr = 'member'
+ *  - user dn = cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu
+ *  - deriveFromEntryEntries = array(cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu)
+ *  - deriveFromEntryMembershipAttr = 'member'
  *
- * search on member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu within basedn ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu
+ * search on member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu within basedn cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu
  *
  * returned entries dn or cn should be used to derive authorization mappings
  *
@@ -415,24 +437,56 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
   $derive_from_entry_authorizations = array();
   if ($consumer_conf->deriveFromEntry) {
-    foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
-      $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'] . ')';
-      $entries = $ldap_server->search($branch, $filter, array('cn'));
-      if ($entries === FALSE || empty($entries) || $entries['count'] == 0) {
-        $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user->name . ')';
+    if ($consumer_conf->deriveFromEntryAttrMatchingUserAttrUndefined) {
+      // this condition will be removed in the 7.x-2.x branch,  its here to avoid breaking 7.x-1.x sites
+      // that use this somewhat flawed approach successfully.  see: http://drupal.org/node/1412076
+      foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
+        $filter = '(' . $consumer_conf->deriveFromEntryMembershipAttr . '=' . $user_ldap_entry['dn'] . ')';
         $entries = $ldap_server->search($branch, $filter, array('cn'));
-      }
-      if ($entries !== FALSE) {
-        foreach ($entries as $entry) {
-          if (isset($entry['cn'])) {
-            $derive_from_entry_authorizations[$entry['cn'][0]] = $entry['cn'][0];
-          }
-          elseif (isset($entry['dn'])) {
-            $derive_from_entry_authorizations[$entry['dn']] = (string)$entry['dn'];
+        if ($entries === FALSE || empty($entries) || $entries['count'] == 0) {
+          $filter = '(' . $consumer_conf->deriveFromEntryMembershipAttr . '=' . $user->name . ')';
+          $entries = $ldap_server->search($branch, $filter, array('cn'));
+        }
+        if ($entries !== FALSE) {
+          foreach ($entries as $entry) {
+            if (isset($entry['cn'])) {
+              $derive_from_entry_authorizations[$entry['cn'][0]] = $entry['cn'][0];
+            }
+            elseif (isset($entry['dn'])) {
+              $derive_from_entry_authorizations[$entry['dn']] = (string)$entry['dn'];
+            }
           }
         }
       }
     }
+    elseif (isset($user_ldap_entry[$consumer_conf->deriveFromEntryAttrMatchingUserAttr])) {
+      // $derive_from_entries_entries, $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry, $nested = FALSE
+      $derive_from_entry_authorizations = $ldap_server->deriveFromEntryGroups(
+        $consumer_conf->deriveFromEntryEntries,
+        $consumer_conf->deriveFromEntryEntriesAttr,
+        $consumer_conf->deriveFromEntryMembershipAttr,
+        $consumer_conf->deriveFromEntryAttrMatchingUserAttr,
+        $user_ldap_entry,
+        $consumer_conf->deriveFromEntryNested
+      );
+      if (count($derive_from_entry_authorizations)) {
+        foreach ($derive_from_entry_authorizations as $i => $authorization) {
+          if ($consumer_conf->deriveFromEntryUseFirstAttr) {
+            $attr_parts = ldap_explode_dn($authorization, 0);
+            $first_part = explode('=', $attr_parts[0]);
+            $derive_from_entry_authorizations[$i] = drupal_strtolower(str_replace('\\2C', ',', trim($first_part[1])));
+          }
+          else {
+            $derive_from_entry_authorizations[$i] = drupal_strtolower($authorization);
+          }
+        }
+        $derive_from_entry_authorizations = array_unique($derive_from_entry_authorizations);
+        $derive_from_entry_authorizations = array_combine($derive_from_entry_authorizations, $derive_from_entry_authorizations);
+      }
+    }
+  }
+  if ($op == 'test_query') {
+    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 3. groups  as entries'] = ($consumer_conf->deriveFromEntry) ? $derive_from_entry_authorizations  : t('disabled');
   }
 
   $values = array_merge(array_values($derive_from_dn_authorizations), array_values($derive_from_attr_authorizations), array_values($derive_from_entry_authorizations));

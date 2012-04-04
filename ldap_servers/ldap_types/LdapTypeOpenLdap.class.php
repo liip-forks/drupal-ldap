@@ -19,12 +19,12 @@ class LdapTypeOpenLdap extends LdapTypeAbstract {
   public $encrypted = 0;
   public $user_attr = 'cn';
   public $mail_attr = 'mail';
-  public $supportsNestGroups = FALSE;
 
-  public function getNestedGroupMemberships($user_ldap_entry, $nested = FALSE) {
-    if (!$this->supportsNestedGroups) {
-      return FALSE;
-    }
-  }
+  public $groupObjectClassDefault = NULL;
+
+  public $groupDerivationModelDefault = LDAP_SERVERS_DERIVE_GROUP_FROM_ENTRY;
+
+  public $groupDeriveFromEntryAttrDefault = 'members';
+  public $groupDeriveFromEntryUserIdDefault = 'dn';
 
 }

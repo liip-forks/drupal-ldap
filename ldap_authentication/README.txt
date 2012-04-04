@@ -16,10 +16,10 @@ Two variables are available:
 $_ldap_user_entry is something like:
 
 array(
-    'dn' => 'cn=jkool,ou=guest accounts,dc=ad,dc=myuniveristy,dc=edu',
+    'dn' => 'cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu',
     'mail' => array( 0 => 'jkool@guests.myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jkool', 'count' => 1),
-    'memberOf' => array( 0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu', 'count' => 1),
+    'memberOf' => array( 0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'count' => 1),
   );
 
 

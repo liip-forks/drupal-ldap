@@ -163,3 +163,67 @@ function ldap_servers_update_7101() {
   return t('Updated LDAP Server to include "allow_conflicting_drupal_accts" and "unique_persistent_attr" fields.');
 }
 
+
+/**
+ * add bind_method field to ldap_servers table
+ */
+function ldap_servers_update_7102() {
+
+  if (!db_field_exists('ldap_servers', 'bind_method')) {
+    db_add_field('ldap_servers', 'bind_method', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+    $msg = t('"bind_method" field added to ldap_servers table');
+  }
+
+  return ($msg) ? $msg :  t('No database changes made.');
+}
+
+/**
+ * add group_object_category field to ldap_servers table
+ */
+function ldap_servers_update_7103() {
+
+  if (!db_field_exists('ldap_servers', 'group_object_category')) {
+    db_add_field('ldap_servers', 'group_object_category', array(
+      'type' => 'varchar',
+      'length' => 64,
+      'not null' => FALSE,
+    ));
+    $msg = t('"group_object_category" field added to ldap_servers table');
+  }
+
+  return ($msg) ? $msg :  t('No database changes made.');
+}
+
+
+/**
+ * add pagination fields to ldap_servers table
+ */
+function ldap_servers_update_7104() {
+
+  if (!db_field_exists('ldap_servers', 'search_pagination')) {
+    db_add_field('ldap_servers', 'search_pagination', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => FALSE,
+      'default' => 0,
+    ));
+    $msg = t('"search_pagination" field added to ldap_servers table');
+  }
+
+  if (!db_field_exists('ldap_servers', 'search_page_size')) {
+    db_add_field('ldap_servers', 'search_page_size', array(
+      'type' => 'int',
+      'size' => 'medium',
+      'not null' => FALSE,
+      'default' => 1000,
+    ));
+    $msg .= '<br/>' . t('"search_page_size" field added to ldap_servers table');
+  }
+
+  return ($msg) ? $msg :  t('No database changes made.');
+}

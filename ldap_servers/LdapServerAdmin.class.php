@@ -70,6 +70,10 @@ class LdapServerAdmin extends LdapServer {
     $this->allow_conflicting_drupal_accts = trim($values['allow_conflicting_drupal_accts']);
     $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
     $this->testingDrupalUsername = trim($values['testing_drupal_username']);
+    $this->groupObjectClass = trim($values['group_object_category']);
+
+    $this->searchPagination = ($values['search_pagination']) ? 1 : 0;
+    $this->searchPageSize = trim($values['search_page_size']);
 
   }
 
@@ -204,6 +208,34 @@ EOF;
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
+
+  $form['groups'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('LDAP Groups'),
+    '#description' => t('How are groups defined on your LDAP server?  This varies slightly from one LDAP implementation to another
+      such as Active Directory, Novell, OpenLDAP, etc.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => !module_exists('ldap_authorization'),
+  );
+
+  $supports = (ldap_servers_php_supports_pagination()) ? t('support pagination!') : t('NOT support pagination.');
+  $form['pagination'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('LDAP Pagination'),
+    '#description' => t('In PHP 5.4, pagination is supported in ldap queries.
+      A patch to earlier versions of PHP also supports this.')
+      . ' <strong>' . t('This PHP installation appears to ') . $supports . '</strong> '
+      . '<p>' . t('The advantage to pagination support is that if an ldap server is setup to return only
+      1000 entries at a time,
+      you can use page through 1000 records at a time;
+      without pagination you would never see more than the first 1000 entries.
+      Pagination is most useful when large queries for batch creating or
+      synching accounts are used.  If you are not using this server for such
+      tasks, its recommended to leave pagination disabled.') . '</p>',
+    '#collapsible' => TRUE,
+    '#collapsed' => !ldap_servers_php_supports_pagination(),
+  );
+
 
   $field_to_prop_maps = $this->field_to_properties_map();
   foreach ($this->fields() as $field_id => $field) {
@@ -668,8 +700,12 @@ public function drupalFormSubmit($op, $values) {
           '#type' => 'textarea',
           '#cols' => 50,
           '#rows' => 6,
-          '#title' => t('Base DNs for LDAP user entries'),
-          '#description' => t('What DNs have user accounts relavant to this configuration? e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>Enter one per line in case if you need more than one.'),
+          '#title' => t('Base DNs for LDAP users, groups, and other entries this server configuration.'),
+          '#description' => t('What DNs have entries relavant to this configuration?
+            e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>
+            Keep in mind that every additional basedn likely doubles the number of queries.  Place the
+            more heavily used one first and consider using one higher base DN rather than 2 or more lower base DNs.
+            Enter one per line in case if you need more than one.'),
         ),
         'schema' => array(
           'type' => 'text',
@@ -818,6 +854,63 @@ public function drupalFormSubmit($op, $values) {
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
+        ),
+      ),
+
+
+     'group_object_category' =>  array(
+        'form' => array(
+          'fieldset' => 'groups',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('Name of Group Object Class.'),
+          '#description' => t('This is used in ldap modules that use groups such as LDAP Authorization.'),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 64,
+          'not null' => FALSE,
+        ),
+      ),
+
+      'search_pagination' => array(
+        'form' => array(
+          'fieldset' => 'pagination',
+          '#type' => 'checkbox',
+          '#title' => t('Use LDAP Pagination.'),
+          '#disabled' => !ldap_servers_php_supports_pagination(),
+        ),
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => FALSE,
+          'default' => 0,
+        ),
+      ),
+
+     'search_page_size' =>  array(
+        'form' => array(
+          'fieldset' => 'pagination',
+          '#type' => 'textfield',
+          '#size' => 10,
+          '#disabled' => !ldap_servers_php_supports_pagination(),
+          '#title' => t('Pagination size limit.'),
+          '#description' => t('This should be equal to or smaller than the max
+            number of entries returned at a time by your ldap server.
+            1000 is a good guess when unsure. Other modules such as LDAP Query
+            or LDAP Feeds will be allowed to set a smaller page size, but not
+            a larger one.'),
+          '#states' => array(
+            'visible' => array(   // action to take.
+              ':input[name="search_pagination"]' => array('checked' => TRUE),
+            ),
+      ),
+        ),
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'medium',
+          'not null' => FALSE,
+          'default' => 1000,
         ),
       ),
 

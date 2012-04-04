@@ -15,7 +15,7 @@
 
 function ldap_authorizations_admin_index() {
 
-  $consumers = ldap_authorization_get_consumers(NULL, TRUE);
+  $consumers = ldap_authorization_get_consumers(NULL, TRUE, FALSE);
   if (!is_array($consumers) || count($consumers) == 0) {
     drupal_set_message(t('No authorization consumer modules are enabled.  Enable
     LDAP Authorization Drupal Roles, OG LDAP, or another LDAP Authorization consuming module'), 'warning');
@@ -111,7 +111,7 @@ function ldap_authorization_admin_form_submit($form, &$form_state) {
   $consumer_conf->drupalFormSubmit($op, $values);  // add form data to object and save or create
 
   if ($consumer_conf->hasError == FALSE) {
-    drupal_set_message(t('LDAP Authorization %name !verb', array('!verb' => $op_past_tense, '%name' => $values['description'])), 'status');
+    drupal_set_message(t('LDAP Authorization %name !verb', array('!verb' => $op_past_tense, '%name' => $consumer->name)), 'status');
     drupal_goto(LDAP_SERVERS_MENU_BASE_PATH . '/authorization');
   }
 
@@ -148,7 +148,7 @@ function _ldap_authorization_admin_parse_form($form, &$form_state) {
       $op_past_tense = 'Updated';
       $new = FALSE;
     break;
-  
+
     case 'delete':
       $op_past_tense = 'Deleted';
       $new = FALSE;

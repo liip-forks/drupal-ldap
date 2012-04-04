@@ -105,6 +105,11 @@ function theme_ldap_query_results($variables) {
   extract($variables);  // $ldap_query, $results, $show_query
 
   $query = theme('ldap_query', array('ldap_query' => $ldap_query));
+  $results_text = t('LDAP Query Results: count=%count', array('%count' => $results['count']));
+
+  if (!$results['count']) {
+    return $query . '<br/>' . $results_text;
+  }
 
   $table = array(
     'header' =>  array('DN'),
@@ -112,12 +117,12 @@ function theme_ldap_query_results($variables) {
     'colgroups' => array(),
     'sticky' => FALSE,
     'empty' => '',
-    'caption' => t('LDAP Query Results: count=%count', array('%count' => $results['count'])),
+    'caption' => $results_text,
   );
   unset($results['count']);
 
   $attributes_display = array();
-  if ($results[0]) { // searching on all attributes
+  if (isset($results[0]) && $results[0]) { // searching on all attributes
     foreach ($results[0] as $k => $v) {
       if (is_numeric($k)) {
         $attributes_display[] = $v;
@@ -150,6 +155,6 @@ function theme_ldap_query_results($variables) {
     unset($entry['count']);
     $table['rows'][] = $row;
   }
-  return theme_table($table);
+  return $query . '<br/>' . theme_table($table);
 
 }
