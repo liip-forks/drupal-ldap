@@ -6,6 +6,8 @@ define('LDAP_SCOPE_BASE', 1);
 define('LDAP_SCOPE_ONELEVEL', 2);
 define('LDAP_SCOPE_SUBTREE', 3);
 
+define('LDAP_TEST_QUERY_CONTEXT', 999);
+
 define('LDAP_SERVERS_PROJECT_TAG', 'ldap');
 define('LDAP_SERVERS_MENU_BASE_PATH', 'admin/config/people/ldap');
 define('LDAP_SERVERS_INDEX_BASE_PATH', 'admin/config/people/ldap/servers');
@@ -246,7 +248,6 @@ function ldap_servers_theme() {
    * implements hook_ldap_attributes_needed_alter()
    */
   function ldap_servers_ldap_attributes_needed_alter(&$attributes, $op, $ldap_server) {
-
     $attributes[] = 'dn';
     if ($ldap_server) { // puid attributes are server specific
       if (is_scalar($ldap_server)) {
@@ -257,12 +258,16 @@ function ldap_servers_theme() {
 
       case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
       case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
-          // username attribute, email attribute,
-          // tokens used in such
+        $attributes[] = $ldap_server->user_attr;
+        $attributes[] = $ldap_server->mail_attr;
+        $attributes[] = $ldap_server->unique_persistent_attr;
+        ldap_servers_extract_attributes_from_token($attributes,  $ldap_server->user_attr);
+        ldap_servers_extract_attributes_from_token($attributes,  $ldap_server->mail_template);
         break;
 
-        case LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
-          ldap_servers_extract_attributes_from_token($attributes,  $ldap_server->user_dn_expression);
+      case LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
+        $attributes[] = $ldap_server->user_attr;
+        ldap_servers_extract_attributes_from_token($attributes,  $ldap_server->user_dn_expression);
         break;
 
       }

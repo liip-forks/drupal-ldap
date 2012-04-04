@@ -85,7 +85,7 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
         'username' => $_SESSION['ldap_server_test_data']['username'],
       ));
     if (function_exists('dpm')) {
-      dpm("ldap full result for " . $_SESSION['ldap_server_test_data']['username']);
+      dpm("ldap full result array for: " . $_SESSION['ldap_server_test_data']['username']);
       dpm($_SESSION['ldap_server_test_data']['LDAP Entry']['attr']);
     }
 
@@ -142,9 +142,10 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   // $ldap_server = NULL;
   list($has_errors, $more_results) = ldap_servers_test_binding_credentials($ldap_server, $bindpw);
   $results = array_merge($results, $more_results);
-  if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+  if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
     $results = array_merge($results, $more_results);
+
     if (!$has_errors) {
       $mapping[] = "dn = " . $ldap_user['dn'];
       foreach ($ldap_user['attr'] as $key => $value) {
@@ -215,7 +216,7 @@ function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw) {
 
 function ldap_servers_test_user_mapping($drupal_username, &$ldap_server) {
 
-  $ldap_user = $ldap_server->user_lookup($drupal_username);
+  $ldap_user = $ldap_server->user_lookup($drupal_username, LDAP_TEST_QUERY_CONTEXT);
 
   $errors = FALSE;
   if (! $ldap_user ) {

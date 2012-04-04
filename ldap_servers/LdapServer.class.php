@@ -58,7 +58,7 @@ class LdapServer {
     else {
       return FALSE;
     }
-
+  }
   public $paginationEnabled = FALSE; // (boolean)(function_exists('ldap_control_paged_result_response') && function_exists('ldap_control_paged_result'));
 
   public $searchPagination = FALSE;
@@ -543,17 +543,20 @@ class LdapServer {
    * @return
    *   An array with users LDAP data or NULL if not found.
    */
-  function user_lookup($drupal_user_name, $op = 'user_update') {
+  function user_lookup($drupal_user_name, $op = LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER) {
    // dpm("user_lookup, $drupal_user_name=$drupal_user_name, op=$op");
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
     $ldap_username = $this->drupalToLdapNameTransform($drupal_user_name, $watchdog_tokens);
-
     if (!$ldap_username) {
       return FALSE;
     }
+    if ($op == LDAP_TEST_QUERY_CONTEXT) {
+      $attributes = array();
+    }
+    else {
+      $attributes = ldap_servers_attributes_needed($op, $this);
+    }
 
-    $attributes = ldap_servers_attributes_needed($op, $this);
-   // dpm('user_lookup attributes'); dpm($attributes);
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
