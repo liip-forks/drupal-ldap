@@ -137,6 +137,9 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   function build_condition() {
     $operator = array('AND' => '&', 'OR' => '|');
     $main_group = '';
+    if (!isset($this->where)) {
+      $this->where = array(); // Initialize where clause if not set
+    }
     foreach ($this->where as $group => $info) {
       if (!empty($info['conditions'])) {
         $sub_group = '';
@@ -253,7 +256,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     foreach ($entries as $key => &$entry) {
         foreach ($view->field as $field) {
           $alias = $field_alias[$field->field_alias];
-          if (array_key_exists($alias, $entry)) {
+          if (is_array($entry) && array_key_exists($alias, $entry)) {
             if (is_array($entry[$alias])) {
               switch ($field->options['multivalue']) {
                 case 'v-all':
