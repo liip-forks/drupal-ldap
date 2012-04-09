@@ -1,4 +1,28 @@
 
+Permanent Unique Identifier Tasks:
+- make sure puid fields are stored in user fields
+- write code to check and resolve conflict with puid
+-- ldap_user_puid_to_user($puid)
+-- ldap_user_user_to_puid($user)
+
+- events to be addressed:
+-- any ldap_user insert or update
+-- any user logon
+
+- should be in grid of when to update attributes as an attribut (PUID).
+
+- PUID unit tests
+-- add puid in configuration
+-- test that puid is present when user is created
+-- change puid in fake ldap server
+-- update user and make sure new puid is set
+-- change username in fake ldap server, but keep puid same
+-- when user authenticates, make sure old account is converted to new username with old uid.
+
+
+
+
+
 move data into ldap_user module structure
 - X add ldapUser object as property in ldap authentication object/class
 - X in update code, move loginConflictResolve and acctCreation values from authentication conf to provision conf
@@ -13,9 +37,9 @@ move data into ldap_user module structure
 - add update to execute previous script
 
 
-- make sure puid fields are stored in user fields
-- write code to check and resolve conflict with puid
+
 - bring ldap_provision code into module
+- bring ldap_profile code into module
 - allow rules for each field [sych on intitail provision, synch on logon, synch on periodic update, push to ldap entry]
 - implement drupal user -> ldap entry synching
 

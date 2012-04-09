@@ -59,6 +59,27 @@ class LdapServer {
       return FALSE;
     }
   }
+
+  /**
+   * @param scalar $puid is permanent unique id value and
+   */
+
+  public function drupalUserFromPuid($puid) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'user')
+    ->fieldCondition('ldap_user_puid_sid', 'value', $this->sid, '=')
+    ->fieldCondition('ldap_user_puid', 'value', $puid, '=')
+    ->fieldCondition('ldap_user_puid_property', 'value', $this->unique_persistent_attr, '=')
+    ->addMetaData('account', user_load(1)); // run the query as user 1
+
+    $result = $query->execute();
+    if (isset($result['user'])) {
+      $user = entity_load('user', array_keys($result['user']));
+    }
+    
+  }
+
+
   public $paginationEnabled = FALSE; // (boolean)(function_exists('ldap_control_paged_result_response') && function_exists('ldap_control_paged_result'));
 
   public $searchPagination = FALSE;

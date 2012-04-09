@@ -356,9 +356,14 @@ function ldap_servers_fields() {
   return _ldap_servers_fields();
 }
 
-function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL) {
+/**
+ * @todo needs caching element.  several modules could potentially call this in the same
+ * page request.
+ */
+
+function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $synch_context = NULL) {
   require_once('ldap_servers.inc');
-  return _ldap_servers_get_user_ldap_data($drupal_user, $sid);
+  return _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context);
 }
 
 

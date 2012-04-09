@@ -28,8 +28,13 @@ define('LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER', 1);
 define('LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER', 2);
 define('LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER', 3);
 define('LDAP_USER_SYNCH_CONTEXT_CRON', 4);
+define('LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER', 5);
+define('LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER', 6);
 
-require_once('ldap_user.functions.inc');
+
+define('LDAP_USER_TEST_FORM_PATH', 'admin/config/people/ldap/user/test');
+
+define('LDAP_USER_WS_USER_PATH', 'ldap/user/ws');
 
 
 /**
@@ -47,6 +52,24 @@ function ldap_user_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 2,
     'file' => 'ldap_user.admin.inc',
+  );
+
+  $items[LDAP_USER_TEST_FORM_PATH] = array(
+    'title' => 'Test LDAP User Functionality for a given user.',
+    'description' => '',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_user_test_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'ldap_user.test_form.inc',
+  );
+
+  $ws_arg_start = count(explode('/', LDAP_USER_WS_USER_PATH));
+  $items[LDAP_USER_WS_USER_PATH] = array(
+    'title' => 'Webservice Path',
+    'page callback' => 'ldap_user_ws',
+    'page arguments' => array($ws_arg_start, $ws_arg_start + 1, $ws_arg_start + 2),
+    'access arguments' => array('view content'),
+    'file' => 'ldap_user.ws.inc',
   );
 
   return $items;
@@ -79,7 +102,7 @@ function ldap_user_conf($type = 'admin', $reset = FALSE) {
 /**
  * implements hook_ldap_attributes_needed_alter()
  */
-function ldap_user_ldap_attributes_needed_alter(&$attributes, $op, $ldap_server) {
+function ldap_user_ldap_attributes_needed_alter(&$attributes, $sych_context, $ldap_server) {
   //dpm('ldap_user_ldap_attributes_needed_alter,op='. $op);
   $ldap_user_conf = ldap_user_conf();
   $attributes[] = 'dn';
@@ -88,7 +111,7 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $op, $ldap_server)
     if (is_scalar($ldap_server)) {
       $ldap_server = ldap_servers_get_servers($ldap_server, 'enabled', TRUE);
     }
-    switch ($op) {
+    switch ($sych_context) {
 
       case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
       case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
@@ -176,68 +199,53 @@ function ldap_user_help($path, $arg) {
 }
 
 
+/**
+ * api function for user syching outside of user hooks
+ */
+
+function ldap_user_synch($username, $synch_context, $ldap_user = NULL) {
+  $ldap_user_conf = ldap_user_conf();
+  $account = user_load_by_name($username);
+  $user_edit = array();
+  $ldap_user_conf->synchDrupalAccount($account, $user_edit, $synch_context, $ldap_user, FALSE);
+}
 
 /**
- * Implements hook_user_presave().
+ * api function for user provisioning outside of user hooks
  */
-function ldap_user_user_presave(&$edit, $account, $category) {
-  //dpm('hook_user_presave edit'); dpm($edit); dpm('account'); dpm($account); dpm('category'); dpm($category);
+function ldap_user_provision($ldap_user, $user_edit = array()) {
+  $sid = $ldap_user['sid'];
   $ldap_user_conf = ldap_user_conf();
-  $save_context = ($account->is_new) ? LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER: LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER;
-  if ($ldap_user_conf->provisionMethods[LDAP_USER_PROV_ON_ALL_USER_CREATION]) {
-    ldap_user_add_ldap_data_for_user_save($edit, $account, $save_context);
-  }
-  // not likely to be useful.  hook_user_insert and hook_user_update have clearer contexts for provisioning
+  $account = array();
+  $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, $ldap_user, TRUE);
 }
+
 
 /**
  * Implements hook_user_login().
  */
 function ldap_user_user_login(&$edit, $account) {
-
-
+  $ldap_user_conf = ldap_user_conf();
+  $user_edit = array();
+ // $ldap_user_conf->synchDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, FALSE);
 }
 
 /**
  * Implements hook_user_insert().
  *
  */
-function ldap_user_user_insert(&$edit, $account, $category) {
-
-}
-
-/**
- * get ldap data related to account being inserted
- *   and store in user $edit variable which are passed
- *   by reference
- *
- * @param array $edit, same as in hook_user_insert
- * @param array $account, same as in hook_user_insert
- *
- */
-function ldap_user_add_ldap_data_for_user_save(&$edit, &$account, $op = LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER) {
-  //dpm('ldap_user_add_ldap_data_for_user_save');
+function ldap_user_user_insert(&$user_edit, $account, $category) {
   $ldap_user_conf = ldap_user_conf();
- // dpm($ldap_user_conf);
-  $user_ldap_entry = $ldap_user_conf->getLdapUserEntry($edit['name'], $op);
-  //dpm('ldap_entry:'. $edit['name']); dpm($user_ldap_entry);
-  $ldap_server = ldap_servers_get_servers($user_ldap_entry['sid'], 'enabled', TRUE);
- // dpm('ldap_server'); dpm($ldap_server);
-  $ldap_user_conf->entryToUserEdit($user_ldap_entry, $ldap_server, $edit, $account, $op);
+ // $ldap_user_conf->synchDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, FALSE);
 }
 
 
 /**
  * Implements hook_user_update().
  */
-function ldap_user_user_update($account, $account, $category) {
-    //if the following fields are not provided, see if they
-  // should be derived automatically ON UPDATE and then derive and populate them
- // $edit['ldap_user_puid']['und'][0]['value'] = 'x';
- // $edit['ldap_user_puid_sid']['und'][0]['value'] = 'x';
- // $edit['ldap_user_puid_property']['und'][0]['value'] = 'x';
- // $edit['ldap_user_current_dn']['und'][0]['value'] = 'x';
-
+function ldap_user_user_update(&$user_edit, $account, $category) {
+  $ldap_user_conf = ldap_user_conf();
+ // $ldap_user_conf->synchDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, NULL, FALSE);
 }
 
 
@@ -245,8 +253,9 @@ function ldap_user_user_update($account, $account, $category) {
  * Implements hook_user_delete().
  */
 function ldap_user_user_delete($account) {
-
-
+  $ldap_user_conf = ldap_user_conf();
+  $user_edit = array();
+  //$ldap_user_conf->synchDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER, NULL, FALSE);
 }
 
 
@@ -336,5 +345,23 @@ function ldap_user_permission() {
   );
 
   return $permissions;
+}
+
+
+/**
+ * Form API validate callback for the ldap_user form
+ */
+function ldap_user_edit_form_validate(&$form, &$form_state) {
+
+}
+
+
+/**
+ * Form API submit callback for the ldap_user form.
+ *
+ * @todo remove hard-coded link
+ */
+function ldap_user_edit_form_submit(&$form, &$form_state) {
+
 }
 

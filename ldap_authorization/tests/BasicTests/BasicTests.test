@@ -8,7 +8,7 @@
 
 require_once(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapAuthorizationTestCase.class.php');
 
-class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
+class LdapAuthorizationBasicTests extends LdapAuthorizationTestCase {
   public static function getInfo() {
     return array(
       'group' => 'LDAP Authorization',

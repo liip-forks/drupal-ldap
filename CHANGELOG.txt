@@ -1,3 +1,4 @@
+Added Configuration and initial code for synch REST webservice for push ldap user create, synch, cancel, etc.
 Merged 7.x-1.0-dev and 7.x-2.0-dev
 Added ldap_user_puid, ldap_user_puid_property, ldap_user_puid_sid, and ldap_user_current_dn fields and attached to user object
 Added ldap_user module with focus of user provisioning and updateing.  Will have functionality of ldap provision, ldap profile, ldap synch, etc.

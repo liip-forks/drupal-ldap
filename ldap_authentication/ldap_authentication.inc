@@ -178,6 +178,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   }
 
   $account = user_load_by_name($name);
+
   if (is_object($account)) {
     if ($account->uid == 1) {
       if ($detailed_watchdog_log) {
@@ -393,6 +394,26 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   }
 
   /**
+   * case 0: account doesn't exist with $name used to logon,
+   *  but puid exists in another user; that is username has changed
+   *
+   */
+
+  $user_edit = array(); // array of attributes that are changing for existing users
+  if (!$account_exists) {
+    $ldap_server = $auth_conf->servers[$ldap_user['sid']];
+    $puid = $ldap_server->derivePuidFromLdapEntry($ldap_user);
+    if ($puid) {
+      $account = $ldap_server->drupalUserFromPuid($puid);
+      if ($account) {
+        $account_exists = TRUE;
+        $user_edit['name'] = $name;
+      }
+    }
+  }
+
+
+  /**
    * case 1: previously drupal authenticated user authenticated successfully on ldap
    *
    */
@@ -423,7 +444,10 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.functions.inc');
     $ldap_user['name'] = $name;
     $ldap_user['ldap_user_provisioned_sid'] = $sid;
-    $account = ldap_user_provision_drupal_account($ldap_user);  // ($drupal_user_fields, $ldap_user_fields, $sid)
+
+    $account = array();
+    $user_edit = array();
+    $account = $auth_conf->ldapUser->provisionDrupalAccount($account, $user_edit, $ldap_user, array(), LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, TRUE);  // ($drupal_user_fields, $ldap_user_fields, $sid)
     if ($account === FALSE) {
       // need to throw error that account was not created
     }
@@ -447,18 +471,39 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       }
     }
 
+
+    /**
+     * @todo.  mail, name, and all other attributes should be synched in this case.  need to
+     * generalise this instead of dealing with mail and name individually.
+     *
+     *  $account = ldap_user_synch_drupal_account($ldap_user);
+     */
+
     if ($account->mail != $ldap_user['mail'] && (
           $auth_conf->emailUpdate == LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY ||
           $auth_conf->emailUpdate == LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE
           ))  {
-      $edit = array('mail' => $ldap_user['mail']);
-      if (!$updated_account = user_save($account, $edit)) {
-        $watchdog_tokens = array('%username' => $account->name, '%old' => $account->mail, '%new' => $ldap_user['mail']);
-        watchdog('ldap_authentication', 'User e-mail for %username update from %old to %new failed because of system problems.', $watchdog_tokens,  WATCHDOG_ERROR);
+      $user_edit['mail'] = $ldap_user['mail'];
+    }
+
+    if (count($user_edit)) {
+      $changed = '';
+      foreach ($user_edit as $k => $v) {
+        $changed .= "$k changed to $v, ";
+        $watchdog_tokens["%$k"] = $v;
+      }
+      $watchdog_tokens = array('%username' => $account->name, '%$changed' => $changed);
+      if (!$updated_account = user_save($account, $user_edit)) {
+        watchdog('ldap_authentication', 'Failed to make changes to user %username updated %changed.', $watchdog_tokens,  WATCHDOG_ERROR);
       }
       elseif ($auth_conf->emailUpdate == LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY ) {
-          $message_tokens = array('@mail' => $ldap_user['mail']);
-          drupal_set_message(t('Your e-mail has been updated to match your LDAP account (@mail).', $message_tokens), 'status');
+        if (isset($user_edit['mail'])) {
+          drupal_set_message(t('Your e-mail has been updated to match your current account (%mail).', $message_tokens), 'status');
+        }
+        if (isset($user_edit['name'])) {
+          $watchdog_tokens['%new_username'] = $user_edit['name'];
+          drupal_set_message(t('Your old account username %username has been updated to %new_username.', $message_tokens), 'status');
+        }
       }
     }
   }

@@ -1,0 +1,32 @@
+
+# this is not an ldif file at all, but a summary of users, groups, and ous that should be imitated in the
+# specific ldaps
+
+
+
+Organization Unit Tree
+
+ou=lost
+ou=accounts
+ou=it
+
+
+Groups
+
+people contains students,staff
+staff contains it, unkool
+it contains developers, sysadmins, joeprojectmanager
+students contains jdoe
+sysadmins contains joeprogrammer, joesysadmin
+developers contains joeprogrammer
+
+
+
+Users
+
+unkool in ou=lost
+jdoe in ou=campus accounts
+joesysadmin in ou=it
+joeprojectmanager in out it
+joeprogrammer in out it
+service-account in root

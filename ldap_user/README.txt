@@ -2,7 +2,7 @@
 
 LDAP User Module
 
-The core functionality of this module is provisioning and storage of an ldap identified user.
+The core functionality of this module is provisioning and storage of an ldap identified Drupal user based on ldap attributes.  In Drupal 6 this functionality was in ldap_synch, ldap_provision, ldap_profile, etc. This has been moved to one module centered on the Drupal User - LDAP User Entry data. 
 
 -----------------
 hooks relating ldap_user entities and drupal user entities

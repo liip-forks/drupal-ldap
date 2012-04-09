@@ -179,6 +179,119 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#description' => t($this->acctCreationDescription),
     );
 
+    $form['ws'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('REST Webservice for Provisioning and Synching.'),
+      '#collapsible' => TRUE,
+      '#collapsed' => !$this->wsEnabled,
+      '#description' => t('Once configured, this webservice can be used to trigger creation, synching, deletion, etc of an LDAP associated Drupal account.'),
+    );
+
+    $form['ws']['wsEnabled'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable REST Webservice'),
+      '#required' => FALSE,
+      '#default_value' => $this->wsEnabled,
+    );
+
+    $form['ws']['wsSid'] = array(
+      '#type' => 'radios',
+      '#title' => t('Servers Providing Provisioning Data'),
+      '#required' => FALSE,
+      '#default_value' => $this->sids,
+      '#options' => $this->provisionServersOptions,
+      '#description' => $this->provisionServersDescription,
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="wsEnabled"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    $form['ws']['wsActions'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Actions Allowed via REST webservice'),
+      '#required' => FALSE,
+      '#default_value' => $this->wsActions,
+      '#options' => $this->wsActionsOptions,
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="wsEnabled"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+/**
+    $form['ws']['wsUserId'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Name of LDAP Attribute passed to identify user. e.g. DN, CN, etc.'),
+      '#required' => FALSE,
+      '#default_value' => $this->wsUserId,
+      '#description' => t('This will be used to find user in LDAP so must be unique.'),
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="wsEnabled"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+**/
+    $form['ws']['wsUserIps'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Allowed IP Addresses to request webservice.'),
+      '#required' => FALSE,
+      '#default_value' => join("\n", $this->wsUserIps),
+      '#description' => t('One Per Line. The current server address is LOCAL_ADDR and the client ip requesting this page is REMOTE_ADDR .', $_SERVER),
+      '#cols' => 20,
+      '#rows' => 2,
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="wsEnabled"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    $form['ws']['wsKey'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Key for webservice'),
+      '#required' => FALSE,
+      '#default_value' => $this->wsKey,
+      '#description' => t('Any random string of characters.  Once submitted REST URLs will be generated below.'),
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="wsEnabled"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    if ($this->wsEnabled) {
+      if (!$this->wsKey) {
+        $urls = t('URLs are not available until a key is create a key and urls will be generated');
+      }
+      elseif (count($this->wsActionsOptions) == 0) {
+        $urls = t('URLs are not available until at least one action is enabled.');
+      }
+      else {
+        $key = $this->wsKey; // ldap_servers_encrypt($this->wsKey, LDAP_SERVERS_ENC_TYPE_BLOWFISH);
+        $urls = array();
+        foreach ($this->wsActionsOptions as $action => $description) {
+          $urls[] = "$action url: " . join('/', array(LDAP_USER_WS_USER_PATH, $action, '[drupal username]', urlencode($key)));
+        }
+        $urls = theme('item_list', array('items' => $urls, 'title' => 'REST URLs', 'type' => 'ul', 'attributes' => array()))
+         . '<p>' . t('Where %token is replaced by actual users LDAP %attribute', array('%token' => '[drupal username]', '%attribute' => 'drupal username')) .
+         '</p>';
+
+        ;
+      }
+    }
+    $form['ws']['wsURLs'] = array(
+      '#type' => 'markup',
+      '#markup' => '<h2>' . t('Webservice URLs') . '</h2>' . $urls,
+      '#states' => array(
+        'visible' => array(   // action to take.
+          ':input[name="wsEnabled"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
     $form['server_mapping_preamble'] = array(
       '#type' => 'markup',
       '#markup' => t('
@@ -252,6 +365,15 @@ mappings need to be setup for each server.
     $this->provisionMethods = $values['provisionMethods'];
     $this->userConflictResolve  = ($values['loginConflictResolve']) ? (int)$values['loginConflictResolve'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;
+    $this->wsKey  = ($values['wsKey']) ? $values['wsKey'] : NULL;
+   // $this->wsUserId  = ($values['wsUserId']) ? $values['wsUserId'] : NULL;
+    $this->wsUserIps  = ($values['wsUserIps']) ? explode("\n", $values['wsUserIps']) : array();
+    foreach ($this->wsUserIps as $i => $ip) {
+      $this->wsUserIps[$i] = trim($ip);
+    }
+   // array_walk($this->wsUserIps, 'trim');
+    $this->wsEnabled  = ($values['wsEnabled']) ? (int)$values['wsEnabled'] : 0;
+    $this->wsActions = ($values['wsActions']) ? $values['wsActions'] : array();
     $this->synchMapping = $this->synchMappingsFromForm($values);
     // $this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['property_mail'][sid] => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER),
 
