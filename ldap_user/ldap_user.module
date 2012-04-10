@@ -99,6 +99,42 @@ function ldap_user_conf($type = 'admin', $reset = FALSE) {
   return ($type == 'admin') ? $ldap_user_conf_admin : $ldap_user_conf;
 }
 
+function ldap_user_all_contexts() {
+
+  return array(
+    LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER,
+    LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER,
+    LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER,
+    LDAP_USER_SYNCH_CONTEXT_CRON,
+    LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER,
+    LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER,
+    LDAP_TEST_QUERY_CONTEXT,
+  );
+
+
+}
+
+/**
+ * implements hook_ldap_user_synch_mapping_alter()
+ */
+
+function ldap_user_ldap_user_synch_mapping_alter(&$synch_mapping) {
+  dpm('ldap_user_ldap_user_synch_mapping_alter');
+  $all_contexts = ldap_user_all_contexts();
+
+  /** @todo: when ui is finished, these values should come from config data,
+  but some fields aren't configurable.  **/
+  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] = array(
+    'property.mail' => $all_contexts,
+    'property.name' => $all_contexts,
+    'field.ldap_user_puid' => $all_contexts,
+    'field.ldap_user_puid_property' => $all_contexts,
+    'field.ldap_user_puid_sid' => $all_contexts,
+    'field.ldap_user_current_dn' => $all_contexts,
+    );
+
+}
+
 /**
  * implements hook_ldap_attributes_needed_alter()
  */
@@ -216,7 +252,7 @@ function ldap_user_synch($username, $synch_context, $ldap_user = NULL) {
 function ldap_user_provision($ldap_user, $user_edit = array()) {
   $sid = $ldap_user['sid'];
   $ldap_user_conf = ldap_user_conf();
-  $account = array();
+  $account = NULL;
   $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, $ldap_user, TRUE);
 }
 
@@ -364,4 +400,3 @@ function ldap_user_edit_form_validate(&$form, &$form_state) {
 function ldap_user_edit_form_submit(&$form, &$form_state) {
 
 }
-

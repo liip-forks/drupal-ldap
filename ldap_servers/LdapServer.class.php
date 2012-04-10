@@ -47,18 +47,7 @@ class LdapServer {
   public $queriableWithoutUserCredentials = FALSE; // can this server be queried without user credentials provided?
   public $userAttributeNeededCache = array(); // array of attributes needed keyed on $op such as 'user_update'
 
-  public function derivePuidFromLdapEntry($user_ldap_entry) {
-    if ($this->unique_persistent_attr
-        && isset($user_ldap_entry['attr'][$this->unique_persistent_attr])
-        && is_scalar($user_ldap_entry['attr'][$this->unique_persistent_attr])
-        ) {
-      //@todo this should go through whatever standard detokenizing function ldap_server module has
-      return $user_ldap_entry['attr'][$this->unique_persistent_attr];
-    }
-    else {
-      return FALSE;
-    }
-  }
+
 
   /**
    * @param scalar $puid is permanent unique id value and
@@ -76,7 +65,7 @@ class LdapServer {
     if (isset($result['user'])) {
       $user = entity_load('user', array_keys($result['user']));
     }
-    
+
   }
 
 
@@ -565,7 +554,7 @@ class LdapServer {
    *   An array with users LDAP data or NULL if not found.
    */
   function user_lookup($drupal_user_name, $op = LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER) {
-   // dpm("user_lookup, $drupal_user_name=$drupal_user_name, op=$op");
+   // dpm("user_lookup, drupal_user_name=$drupal_user_name, op=$op");
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
     $ldap_username = $this->drupalToLdapNameTransform($drupal_user_name, $watchdog_tokens);
     if (!$ldap_username) {
@@ -581,6 +570,7 @@ class LdapServer {
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
+   //   dpm("$filter, $basedn"); dpm($attributes);
       $result = $this->search($basedn, $filter, $attributes);  // ,
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
@@ -591,6 +581,7 @@ class LdapServer {
         continue;
       }
       $match = $result[0];
+//      dpm("match");dpm($match);
       // These lines serve to fix the attribute name in case a
       // naughty server (i.e.: MS Active Directory) is messing the
       // characters' case.
@@ -607,7 +598,7 @@ class LdapServer {
         if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
           $result = array(
             'dn' =>  $match['dn'],
-            'mail' => $this->deriveEmailFromEntry($match),
+            'mail' => $this->deriveEmailFromLdapEntry($match),
             'attr' => $match,
             'sid' => $this->sid,
             );
@@ -630,7 +621,7 @@ class LdapServer {
         if (drupal_strtolower(trim($value)) == drupal_strtolower($ldap_username)) {
           $result = array(
             'dn' =>  $match['dn'],
-            'mail' => $this->deriveEmailFromEntry($match),
+            'mail' => $this->deriveEmailFromLdapEntry($match),
             'attr' => $match,
             'sid' => $this->sid,
           );
@@ -846,7 +837,19 @@ class LdapServer {
     return FALSE;
   }
 
-  public function deriveEmailFromEntry($ldap_entry) {
+
+  public function deriveUsernameFromLdapEntry($ldap_entry) {
+    if ($this->user_attr) { // not using template
+      return @$ldap_entry[$this->user_attr][0];
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+
+
+  public function deriveEmailFromLdapEntry($ldap_entry) {
     if ($this->mail_attr) { // not using template
       return @$ldap_entry[$this->mail_attr][0];
     }
@@ -858,6 +861,22 @@ class LdapServer {
       return FALSE;
     }
   }
+
+  public function derivePuidFromLdapEntry($user_ldap_entry) {
+    // dpm('derivePuidFromLdapEntry'); dpm($this->unique_persistent_attr); dpm($user_ldap_entry);
+    if ($this->unique_persistent_attr
+        && isset($user_ldap_entry[$this->unique_persistent_attr][0])
+        && is_scalar($user_ldap_entry[$this->unique_persistent_attr][0])
+        ) {
+
+      //@todo this should go through whatever standard detokenizing function ldap_server module has
+      return $user_ldap_entry[$this->unique_persistent_attr][0];
+    }
+    else {
+      return FALSE;
+    }
+  }
+
 
 
   /**

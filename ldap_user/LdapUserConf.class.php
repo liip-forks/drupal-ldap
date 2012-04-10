@@ -76,7 +76,7 @@ class LdapUserConf {
   function load() {
 
     if ($saved = variable_get("ldap_user_conf", FALSE)) {
-      dpm('saved'); dpm($saved);
+     // dpm('saved'); dpm($saved);
       $this->inDatabase = TRUE;
       foreach ($this->saveable as $property) {
         if (isset($saved[$property])) {
@@ -93,7 +93,7 @@ class LdapUserConf {
     else {
       $this->inDatabase = FALSE;
     }
-dpm($this->wsKey);
+
     // determine account creation configuration
     $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
     if ($this->acctCreation == LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT || $user_register == USER_REGISTER_VISITORS) {
@@ -125,6 +125,7 @@ dpm($this->wsKey);
    */
 
   public function isSynched($field, $synch_context, $direction) {
+   // dpm($this->synchMapping);
     return (isset($this->synchMapping[$direction][$field]) && in_array($synch_context, $this->synchMapping[$direction][$field]));
   }
 
@@ -132,26 +133,31 @@ dpm($this->wsKey);
   /**
     derive mapping array from ldap user configuration and other configurations.
     if this becomes a resource hungry function should be moved to ldap_user functions
-    and stored with static variable
+    and stored with static variable. should be cached also.
+
+    this should be cached and modules implementing ldap_user_synch_mapping_alter
+    should know when to invalidate cache.
 
   **/
 
-  function setSynchMapping() {
-    // @todo.  these are hard coded in, but need to be based on ldap user, ldap authentication, etc conf.
-   /** $all = array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
-    $this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] = array(
-      'property_mail' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER),
-      'property_name' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER),
-      'field_ldap_user_puid' => $all,
-      'field_ldap_user_puid_property' => $all,
-      'field_ldap_user_puid_sid' => $all,
-      'field_ldap_user_current_dn' => $all,
-      );
-  **/
-   // $this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY] = array();
+  function setSynchMapping($reset = FALSE) {
 
-    drupal_alter('ldap_user_synch_mapping', $this->synchMapping);
+    $synch_mapping_cache = cache_get('ldap_user_synch_mapping');
+    if (!$reset && $synch_mapping_cache->data) {
+      $this->synchMapping = $synch_mapping_cache->data;
+    }
+    else {
+      $this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY] = array();
+      $this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] = array();
+      drupal_alter('ldap_user_synch_mapping', $this->synchMapping);
+      cache_set('ldap_user_synch_mapping', $this->synchMapping);
+
+    }
+   // dpm('this->synchMapping');dpm($this->synchMapping);
+
   }
+
+
 
 
   /**
@@ -179,13 +185,37 @@ dpm($this->wsKey);
       $ldap_user = ldap_servers_get_user_ldap_data($account['name'], NULL, $synch_context);
     }
     $ldap_server = ldap_servers_get_servers($ldap_user['sid'], NULL, TRUE);
-    $this->entryToUserEdit($ldap_entry, $ldap_server, $user_edit, $synch_context);
+    $this->entryToUserEdit($ldap_entry, $ldap_server, $user_edit, $synch_context, 'update');
 
     if ($save) {
       return user_save($account, $user_edit);
     }
     else {
       return TRUE;
+    }
+  }
+
+
+  /**
+   * given a drupal account, delete user account
+   *
+   * @param array $account drupal account array with minimum of name
+   * @param int synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
+   * @param array $ldap_user as user's ldap entry.  passed to avoid requerying ldap in cases where already present
+   *
+   * @return TRUE or FALSE.  FALSE indicates failed or action not enabled in ldap user configuration
+   */
+  public function deleteDrupalAccount($username, $synch_context) {
+    dpm("deleteDrupalAccount=$username");
+    // @todo check if deletion allowed/enabled in context
+    $user = user_load_by_name($username);
+   // dpm($user);
+    if (is_object($user)) {
+      user_delete($user->uid);
+      return TRUE;
+    }
+    else {
+      return FALSE;
     }
   }
 
@@ -204,43 +234,43 @@ dpm($this->wsKey);
    *
    */
 
-  public function provisionDrupalAccount($account = array(), &$user_edit, $synch_context, $ldap_user = NULL, $save = TRUE) {
+  public function provisionDrupalAccount($account = FALSE, &$user_edit, $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, $ldap_user = NULL, $save = TRUE) {
 
     /**
      * @todo
      * -- add check in for mail, puid, username, and existing drupal user conflicts
      */
 
+    if (!$account) {
+      $account = new stdClass();
+    }
+    $account->is_new = TRUE;
 
-    if (!$ldap_user && !isset($account['name'])) {
+    if (!$ldap_user && !isset($user_edit['name'])) {
        return FALSE;
     }
     if (!$ldap_user) {
-      $ldap_user = ldap_servers_get_user_ldap_data($account['name'], NULL, $synch_context);
+      $ldap_user = ldap_servers_get_user_ldap_data($user_edit['name'], NULL, $synch_context);
+    }
+    if (!isset($user_edit['name']) && isset($account->name)) {
+      $user_edit['name'] = $account->name;
     }
 
-    $ldap_server = ldap_servers_get_servers($ldap_user['sid'], NULL, TRUE);
-    $this->entryToUserEdit($ldap_entry, $ldap_server, $edit, $synch_context);
+    $ldap_server = ldap_servers_get_servers($ldap_user['sid'], 'enabled', TRUE);
 
 
-    $user_edit['pass'] = user_password(20);
-    $user_edit['init'] = $edit['mail'];
-    $user_edit['status'] = 1;
+   // dpm('ldap server'); dpm($ldap_user['sid']);  dpm($ldap_server);
+    $this->entryToUserEdit($ldap_user, $ldap_server, $user_edit, $synch_context, 'create');
+  //  dpm("edit after this->entryToUserEdit"); dpm($user_edit); dpm('<hr/>'); dpm($ldap_user);
 
-    // save 'init' data to know the origin of the ldap authentication provisioned account
-    $user_edit['data']['ldap_authentication']['init'] = array(
-      'sid'  => $ldap_user['sid'],
-      'dn'   => $user_edit['dn'],
-      'mail' => $user_edit['mail'],
-    );
 
     if ($save) {
-      $account = user_save( NULL, $user_edit);
+      $account = user_save(NULL, $user_edit);
       if (!$account) {
         drupal_set_message(t('User account creation failed because of system problems.'), 'error');
       }
       else {
-        user_set_authmaps($account, array('authname_ldap_authentication' => $name));
+        user_set_authmaps($account, array('authname_ldap_authentication' => $user_edit['name']));
       }
       return $account;
     }
@@ -256,21 +286,44 @@ dpm($this->wsKey);
    * @param string $op see hook_ldap_attributes_needed_alter
    */
 
-  function entryToUserEdit($ldap_entry, $ldap_server, &$edit, $synch_context) {
+  function entryToUserEdit($ldap_user, $ldap_server, &$edit, $synch_context, $op) {
     // need array of user fields and which direction and when they should be synched.
-
-    if ($this->isSynched('property.mail', $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER)) {
-      $mail = $ldap_server->deriveEmailFromEntry($ldap_entry);
+ //   dpm('entryToUserEdit');dpm($ldap_user);
+    if ($this->isSynched('property.mail', $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) && !isset($edit['mail'])) {
+      $mail = $ldap_server->deriveEmailFromLdapEntry($ldap_user['attr']);
       if ($mail) {
         $edit['mail'] = $mail;
       }
     }
+
+    if ($this->isSynched('property.name', $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) && !isset($edit['name'])) {
+      $name = $ldap_server->deriveUsernameFromLdapEntry($ldap_user['attr']);
+      if ($name) {
+        $edit['name'] = $name;
+      }
+    }
+    //     $user_edit['dn'] = $ldap_user['dn'];
+
+    if ($op == 'create') {
+      $edit['pass'] = user_password(20);
+      $edit['init'] = $edit['mail'];
+      $edit['status'] = 1;
+      // save 'init' data to know the origin of the ldap authentication provisioned account
+      $edit['data']['ldap_authentication']['init'] = array(
+        'sid'  => $ldap_user['sid'],
+        'dn'   => $ldap_user['dn'],
+        'mail' => $edit['mail'],
+      );
+    }
+
   //  dpm("this->synchMapping,op=$op,direction=" . LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER); dpm($this->synchMapping);
     /**
      * basic $user ldap fields
      */
     if ($this->isSynched('field.ldap_user_puid', $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER)) {
-      $ldap_user_puid = $ldap_server->derivePuidFromLdapEntry($ldap_entry);
+
+      $ldap_user_puid = $ldap_server->derivePuidFromLdapEntry($ldap_user['attr']);
+     // dpm("ldap_user_puid=$ldap_user_puid");
       if ($ldap_user_puid) {
         $edit['ldap_user_puid'][LANGUAGE_NONE][0]['value'] = $ldap_user_puid; //
       }
@@ -282,12 +335,13 @@ dpm($this->wsKey);
       $edit['ldap_user_puid_sid'][LANGUAGE_NONE][0]['value'] = $ldap_server->sid;
     }
     if ($this->isSynched('field.ldap_user_current_dn', $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER)) {
-      $edit['ldap_user_current_dn'][LANGUAGE_NONE][0]['value'] = $ldap_entry['dn'];
+      $edit['ldap_user_current_dn'][LANGUAGE_NONE][0]['value'] = $ldap_user['dn'];
     }
+
 
         /**
      * @todo
-     * -- loop through all mapped entries or invoke hook to get them all (or both)
+     * -- loop through all mapped entries AND invoke hook to get them all (or both)
      */
 
   //  dpm('post-entryToUserEdit edit'); dpm($edit);

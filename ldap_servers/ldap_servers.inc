@@ -8,16 +8,14 @@
 
 function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context = NULL) {
   $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
-  // print $sid; die;
+  // dpm("_ldap_servers_get_user_ldap_data, drupal_username=$drupal_username");
   $servers = ldap_servers_get_servers($sid, 'enabled');
   foreach ($servers as $sid => $ldap_server)  {
    // dpm($sid); dpm($drupal_username);
-    if ($ldap_user = $ldap_server->user_lookup($drupal_username, $synch_context)) {
-      return $ldap_user;
-    }
-    else {
-      return FALSE;
-    }
+    $ldap_user = $ldap_server->user_lookup($drupal_username, $synch_context);
+  //  dpm($ldap_user);
+    return $ldap_user;;
+
   }
 }
 

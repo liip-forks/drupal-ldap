@@ -542,7 +542,7 @@ private function addServerMappingFields($ldap_server, &$form) {
       $form[$id] = array(
         '#id' => $id,
         '#type' => 'textfield',
-        '#default_value' => $mapping['ldap_source'],
+        '#default_value' => isset($mapping['ldap_source']) ? $mapping['ldap_source'] : '',
         '#size' => 20,
         '#maxlength' => 255,
         '#row' => $row,
@@ -567,7 +567,7 @@ private function addServerMappingFields($ldap_server, &$form) {
         $form[$id] = array(
           '#id' => $id ,
           '#type' => 'checkbox',
-          '#default_value' => (int)(in_array($synch_method, $mapping['contexts'])),
+          '#default_value' => isset($mapping['contexts']) ? (int)(in_array($synch_method, $mapping['contexts'])) : '',
           '#options' => array(1,0),
           '#row' => $row,
           '#col' => $col,
@@ -579,7 +579,7 @@ private function addServerMappingFields($ldap_server, &$form) {
       $form[$id] = array(
         '#id' => $id,
         '#type' => 'textfield',
-        '#default_value' => $mapping['notes'],
+        '#default_value' => isset($mapping['notes']) ? $mapping['notes'] : '',
         '#size' => 40,
         '#maxlength' => 255,
         '#row' => $row,

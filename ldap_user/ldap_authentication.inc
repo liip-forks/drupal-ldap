@@ -442,11 +442,11 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
      *       for external authentication modules
      */
     require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.functions.inc');
-    $ldap_user['name'] = $name;
-    $ldap_user['ldap_user_provisioned_sid'] = $sid;
 
-    $account = array();
-    $user_edit = array();
+    $ldap_user['sid'] = $sid;
+
+    $account = NULL;
+    $user_edit = array('name' => $name);
     $account = $auth_conf->ldapUser->provisionDrupalAccount($account, $user_edit, $ldap_user, array(), LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, TRUE);  // ($drupal_user_fields, $ldap_user_fields, $sid)
     if ($account === FALSE) {
       // need to throw error that account was not created
