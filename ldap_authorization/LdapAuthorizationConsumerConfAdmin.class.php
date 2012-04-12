@@ -646,7 +646,7 @@ Raw authorization ids look like:
 
   protected function populateFromDrupalForm($op, $values) {
 
-    $this->inDatabase = (drupal_strtolower($op) == 'edit');
+    $this->inDatabase = (drupal_strtolower($op) == 'edit' || drupal_strtolower($op) == 'save');
     $values['mappings'] = $this->pipeListToArray($values['mappings']);
     $values['derive_from_attr_attr'] = $this->linesToArray($values['derive_from_attr_attr']);
     $values['derive_from_entry_entries'] = $this->linesToArray($values['derive_from_entry_entries']);

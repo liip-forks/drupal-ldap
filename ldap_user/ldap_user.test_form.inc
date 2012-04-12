@@ -22,6 +22,10 @@
 
 function ldap_user_test_form($form, &$form_state, $op = NULL) {
 
+  require_once(drupal_get_path('module', 'ldap_servers') . '/tests/LdapTestFunctions.class.php');
+  $test_functions = new LdapTestFunctions();
+  $ldap_data = $test_functions->getLdifData('activedirectory.ldif');
+  dpm($ldap_data);
   //$ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
   $action = arg(count(explode('/',LDAP_USER_TEST_FORM_PATH)) + 1);
   $username = arg(count(explode('/',LDAP_USER_TEST_FORM_PATH)));

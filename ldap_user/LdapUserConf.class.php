@@ -143,7 +143,7 @@ class LdapUserConf {
   function setSynchMapping($reset = FALSE) {
 
     $synch_mapping_cache = cache_get('ldap_user_synch_mapping');
-    if (!$reset && $synch_mapping_cache->data) {
+    if (!$reset && $synch_mapping_cache) {
       $this->synchMapping = $synch_mapping_cache->data;
     }
     else {
@@ -172,7 +172,7 @@ class LdapUserConf {
    * @return result of user_save() function is $save is true, otherwise return TRUE
    *   $user_edit data returned by reference
    */
-  public function synchDrupalAccount($account, &$user_edit, $synch_context, $ldap_user = NULL, $save = FALSE) {
+  public function synchToDrupalAccount($account, &$user_edit, $synch_context, $ldap_user = NULL, $save = FALSE) {
     if (
         (!$ldap_user  && !isset($account['name'])) ||
         (!$account && $save) ||

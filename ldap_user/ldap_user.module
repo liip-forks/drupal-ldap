@@ -83,7 +83,7 @@ function ldap_user_theme() {
   );
 }
 
-function ldap_user_conf($type = 'admin', $reset = FALSE) {
+function ldap_user_conf($type = NULL, $reset = FALSE) {
   static $ldap_user_conf;
   static $ldap_user_conf_admin;
 
@@ -243,7 +243,7 @@ function ldap_user_synch($username, $synch_context, $ldap_user = NULL) {
   $ldap_user_conf = ldap_user_conf();
   $account = user_load_by_name($username);
   $user_edit = array();
-  $ldap_user_conf->synchDrupalAccount($account, $user_edit, $synch_context, $ldap_user, FALSE);
+  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $synch_context, $ldap_user, FALSE);
 }
 
 /**
@@ -263,7 +263,7 @@ function ldap_user_provision($ldap_user, $user_edit = array()) {
 function ldap_user_user_login(&$edit, $account) {
   $ldap_user_conf = ldap_user_conf();
   $user_edit = array();
- // $ldap_user_conf->synchDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, FALSE);
+ // $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, FALSE);
 }
 
 /**
@@ -272,7 +272,7 @@ function ldap_user_user_login(&$edit, $account) {
  */
 function ldap_user_user_insert(&$user_edit, $account, $category) {
   $ldap_user_conf = ldap_user_conf();
- // $ldap_user_conf->synchDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, FALSE);
+ // $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, FALSE);
 }
 
 
@@ -281,7 +281,7 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
  */
 function ldap_user_user_update(&$user_edit, $account, $category) {
   $ldap_user_conf = ldap_user_conf();
- // $ldap_user_conf->synchDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, NULL, FALSE);
+ // $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, NULL, FALSE);
 }
 
 
@@ -291,7 +291,7 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
 function ldap_user_user_delete($account) {
   $ldap_user_conf = ldap_user_conf();
   $user_edit = array();
-  //$ldap_user_conf->synchDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER, NULL, FALSE);
+  //$ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER, NULL, FALSE);
 }
 
 

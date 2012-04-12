@@ -11,7 +11,7 @@ require_once(drupal_get_path('module', 'ldap_user') . '/tests/LdapUserTestCase.c
 class LdapUserBasicTests extends LdapUserTestCase {
   public static function getInfo() {
     return array(
-      'name' => 'LDAP User Tests: Basic Tests',
+      'name' => 'LDAP User Tests: Basic Function Tests',
       'description' => 'Test ldap user.  Basic functionality tests.',
       'group' => 'LDAP User'
     );
@@ -21,7 +21,9 @@ class LdapUserBasicTests extends LdapUserTestCase {
    * just make sure install succeeds.
    */
   function testSimpleStuff() {
+
     $this->ldapTestId = $this->module_name . ': setup success';
+
     // just to give warning if setup doesn't succeed.  may want to take these out at some point.
     $setup_success = (
         module_exists('ldap_user') &&
@@ -31,10 +33,10 @@ class LdapUserBasicTests extends LdapUserTestCase {
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->ldapTestId);
 
 
-    $this->ldapTestId = $this->module_name . ': test for api functions';
+    $this->ldapTestId = $this->module_name . ': test for functions';
     // no need for prep for this.
     $api_functions = array(
-      'ldap_user_provision_drupal_account' => array(4, 1),
+      'ldap_user_conf' => array(2, 0),
     );
 
     foreach ($api_functions as $api_function_name => $param_count) {
@@ -50,15 +52,44 @@ class LdapUserBasicTests extends LdapUserTestCase {
     $this->assertTrue(drupal_cron_run(), t('Cron can run with ldap user enabled.'), $this->ldapTestId);
 
 
-    /**
-    * authorizations are tested in ldap_authorization.Derivations.test
-    *
-    * this is geared toward testing logon functionality
-    */
+    $this->prepTestData('activedirectory.conf.inc', 'activedirectory.ldif');
 
-    $this->ldapTestId = 'UserAttachedFields';
-    // assert that all user entity attached fields are attached
 
+    $this->ldapTestId = $this->module_name . ': construct ldap_user_conf object';
+    $ldap_conf = ldap_user_conf();
+    $this->assertTrue(is_object($ldap_conf), t('ldap_conf class instanticated'), $this->ldapTestId);
+
+
+    // test basic ldap user functions
+    $synch_context = LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER;
+
+  //  $account = NULL;
+ //   $user_edit = array('name' => 'jkool');
+ //   $user = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
+ //   debug('user afterprovisionDrupalAccount'); debug($user);
+    // test account exists with correct username, mail, fname, puid, puidfield, dn
+
+    // change some user mock ldap data first, (mail and fname) then synch
+  //  $account = NULL;
+ //   $user_edit = array('name' => 'jkool');
+  //  $ldap_conf->synchToDrupalAccount($account, $user_edit, $synch_context, NULL, TRUE);
+     // test account exists with correct username, mail, fname, puid, puidfield, dn
+
+
+  //  $ldap_conf->deleteDrupalAccount('jkool');
+    // test account is deleted.
+
+
+
+
+
+
+//LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER', 1);
+//LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER', 2);
+//LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER', 3);
+//LDAP_USER_SYNCH_CONTEXT_CRON', 4);
+//LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER', 5);
+//'LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER', 6);
 
 }
 
@@ -67,9 +98,9 @@ class LdapUserBasicTests extends LdapUserTestCase {
  */
 function testUserProvision() {
 
-  $this->ldapTestId = 'UserProvision';
-  $this->serversData = 'ldapauthor1.ldap_server.test_data.inc';
-  $this->prepTestData();
+ // $this->ldapTestId = 'UserProvision';
+ // $this->serversData = 'activedirectory.ldif';
+ // $this->prepTestData();
 
 
   // create user with user_save with no ldap data specified and make sure its derived
