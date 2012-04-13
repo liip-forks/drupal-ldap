@@ -1,3 +1,4 @@
+Issue #1532084 by lucuhb.  Remove ldap_profile's dependeny on ldap_authentication
 Issue #1468990 by superhenne.  Duplicate entry in db after updating configuration
 Issue #1512562 by jasondranedesigns and patch by figureone.  Issue still may not be resolved because binary files need to be addressed.
 Issue #1272190 by jrm402.  Fix ability to apply mapping to authorization without filtering.

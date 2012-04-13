@@ -40,7 +40,7 @@ class LdapProfileConfAdmin extends LdapProfileConf {
   public function drupalForm($accounts = array()) {
     $auth_conf = ldap_authentication_get_valid_conf();
 
-    if (count($this->auth_conf->servers) == 0) {
+    if (count($this->servers) == 0) {
       $message = ldap_servers_no_enabled_servers_msg('configure LDAP Profiles');
       $form['intro'] = array(
         '#type' => 'item',
@@ -94,7 +94,7 @@ class LdapProfileConfAdmin extends LdapProfileConf {
         '#description' => 'This must be altered in the ldap server configuration page',
     );
 
-    if (count($this->auth_conf->servers)) {
+    if (count($this->servers)) {
 
       $form['tokens'] = array(
         '#type' => 'fieldset',
@@ -108,7 +108,7 @@ class LdapProfileConfAdmin extends LdapProfileConf {
       );
 
       require_once(drupal_get_path('module','ldap_servers') . '/ldap_servers.functions.inc');
-      foreach ($this->auth_conf->servers as $sid => $server) {
+      foreach ($this->servers as $sid => $server) {
         if ($markup = ldap_servers_show_sample_user_tokens($sid)) {
            $form['tokens'][$sid] = array(
             '#type' => 'item',
