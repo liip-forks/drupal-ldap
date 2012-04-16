@@ -88,11 +88,11 @@ function ldap_user_conf($type = NULL, $reset = FALSE) {
   static $ldap_user_conf_admin;
 
   if ($type == 'admin' && ($reset || !is_object($ldap_user_conf_admin))) {
-    require_once('ldapUserConfAdmin.class.php');
+    ldap_server_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
     $ldap_user_conf_admin = new LdapUserConfAdmin();
   }
   elseif ($type != 'admin' && ($reset || !is_object($ldap_user_conf))) {
-    require_once('ldapUserConf.class.php');
+      ldap_server_module_load_include('php', 'ldap_user', 'LdapUserConf.class');
     $ldap_user_conf = new LdapUserConf();
   }
 
@@ -191,7 +191,7 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
 
 
   // fields
-  $user_fields = field_info_instances('user','user');
+  $user_fields = field_info_instances('user', 'user');
   //dpm('user_fields'); dpm($user_fields);
   foreach ($user_fields as $field_name => $field_instance) {
     if (!isset($available_user_targets["field_$field_name"])) {

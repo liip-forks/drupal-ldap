@@ -22,13 +22,13 @@
 
 function ldap_user_test_form($form, &$form_state, $op = NULL) {
 
-  require_once(drupal_get_path('module', 'ldap_servers') . '/tests/LdapTestFunctions.class.php');
+  ldap_server_module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
   $test_functions = new LdapTestFunctions();
   $ldap_data = $test_functions->getLdifData('activedirectory.ldif');
   dpm($ldap_data);
   //$ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
-  $action = arg(count(explode('/',LDAP_USER_TEST_FORM_PATH)) + 1);
-  $username = arg(count(explode('/',LDAP_USER_TEST_FORM_PATH)));
+  $action = arg(count(explode('/', LDAP_USER_TEST_FORM_PATH)) + 1);
+  $username = arg(count(explode('/', LDAP_USER_TEST_FORM_PATH)));
 
   $form['#prefix'] = t('<h1>Test LDAP User Configuration</h1>');
 
@@ -108,6 +108,6 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
 function ldap_user_test_form_submit($form, &$form_state) {
   $name = $form_state['values']['testing_drupal_username'];
   $action = $form_state['values']['action'];
-  $form_state['redirect'] = ($name) ? LDAP_USER_TEST_FORM_PATH  . "/" . $name . '/'. $action :  LDAP_USER_TEST_FORM_PATH;
+  $form_state['redirect'] = ($name) ? LDAP_USER_TEST_FORM_PATH . "/" . $name . '/' . $action :  LDAP_USER_TEST_FORM_PATH;
 
 }

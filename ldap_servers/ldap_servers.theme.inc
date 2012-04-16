@@ -72,7 +72,7 @@ function theme_ldap_servers_list($variables) {
 function theme_ldap_servers_server($variables) {
   extract($variables);  // $ldap_server, $actions, $type (see above)
 
-  require_once('LdapServer.class.php');
+  ldap_server_module_load_include('php', 'ldap_servers', 'LdapServer.class');
   $properties = array();
   foreach (LdapServer::field_to_properties_map() as $field_name => $property_name) {
     $properties[] = "$field_name = " . print_r($ldap_server->$property_name, TRUE);

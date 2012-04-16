@@ -56,7 +56,7 @@ function ldap_query_list($qid = NULL, $actions = FALSE) {
  */
 
 function ldap_query_admin_form($form, &$form_state, $op = NULL, $qid = NULL) {
-  require_once('LdapQueryAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_query', 'LdapQueryAdmin.class');
   $server = new LdapQueryAdmin($qid);
   $form = $server->drupalForm($op);
   return $form;
@@ -67,7 +67,7 @@ function ldap_query_admin_form($form, &$form_state, $op = NULL, $qid = NULL) {
  */
 function ldap_query_admin_form_validate($form, &$form_state) {
   $op = drupal_strtolower($form_state['clicked_button']['#value']);
-  require_once('LdapQueryAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_query', 'LdapQueryAdmin.class');
   $server = new LdapQueryAdmin($form_state['values']['qid']);
 
   $errors = $server->drupalFormValidate($op, $form_state['values']);
@@ -90,7 +90,7 @@ function ldap_query_admin_form_submit($form, &$form_state) {
   $button = drupal_strtolower($form_state['clicked_button']['#value']);
   $op = ($button == 'add') ? 'add' : 'edit';
   $verb = ($op == 'edit') ? 'edited' : $op . 'ed';
-  require_once('LdapQueryAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_query', 'LdapQueryAdmin.class');
   $query = new LdapQueryAdmin($form_state['values']['qid']);
   $query->drupalFormSubmit($op, $form_state['values']);  // add form data to object and save or create
 
@@ -160,7 +160,7 @@ function ldap_query_admin_delete($form, &$form_state, $op = NULL, $qid = NULL) {
 function ldap_query_admin_delete_submit($form, &$form_state) {
   $values = $form_state['values'];
   $qid = $values['qid'];
-  require_once('LdapQueryAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_query', 'LdapQueryAdmin.class');
   $ldap_query = new LdapQueryAdmin($qid);
   if ($values['confirm'] && $qid) {
     if ($result = $ldap_query->delete($qid)) {

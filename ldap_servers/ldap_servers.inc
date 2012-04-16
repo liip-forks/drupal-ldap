@@ -8,14 +8,27 @@
 
 function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context = NULL) {
   $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
-  // dpm("_ldap_servers_get_user_ldap_data, drupal_username=$drupal_username");
-  $servers = ldap_servers_get_servers($sid, 'enabled');
+   //debug("_ldap_servers_get_user_ldap_data, drupal_username=$drupal_username"); debug($sid);
+  if (is_array($sid)) {
+    $servers = array();
+    foreach ($sid as $i => $_sid) {
+      $server = ldap_servers_get_servers($_sid, 'enabled', TRUE, TRUE);
+     // debug("sid=$_sid"); debug($server);
+      if (is_object($server)) {
+        $servers[$_sid] = $server;
+      }
+    }
+  }
+  else {
+    $servers = ldap_servers_get_servers($sid, 'enabled');
+  }
+ // debug("servers"); debug($servers);
   foreach ($servers as $sid => $ldap_server)  {
-   // dpm($sid); dpm($drupal_username);
-    $ldap_user = $ldap_server->user_lookup($drupal_username, $synch_context);
-  //  dpm($ldap_user);
-    return $ldap_user;;
-
+    if ($ldap_user = $ldap_server->user_lookup($drupal_username, $synch_context)) {
+   //   debug("$ldap_user $sid"); debug($ldap_user);
+      $ldap_user['sid'] = $sid;
+      return $ldap_user;
+    }
   }
 }
 
@@ -23,7 +36,8 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context = N
  * see ldap_servers_get_servers()
  */
 function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
-  require_once('LdapServerAdmin.class.php');
+
+  ldap_server_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
   static $servers;
 
   if ($reset) {
@@ -58,23 +72,20 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
  * see ldap_servers_get_servers()
  */
 function _ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset = TRUE) {
-  require_once('tests/LdapServerTest.class.php');
-
+ // debug("_ldap_servers_get_simpletest_servers sid=$sid, type=$type, flatten=$flatten reset=$reset");
+  ldap_server_module_load_include('php', 'ldap_test', 'LdapServerTest.class');
   $servers['all'] = LdapServerTest::getLdapServerObjects('all');
-
   foreach ($servers['all'] as $_sid => $ldap_server) {
     if ($ldap_server->status == 1) {
       $servers['enabled'][$_sid] = $ldap_server;
     }
   }
-
-
+  //debug($servers);
   if ($sid) {
     if (!isset($servers[$type][$sid])) {
       return FALSE;
     }
     return ($flatten) ? $servers[$type][$sid] : array($sid => $servers[$type][$sid]);
-
   }
 
   if (isset($servers[$type])) {

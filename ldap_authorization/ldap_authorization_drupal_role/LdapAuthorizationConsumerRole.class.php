@@ -9,7 +9,10 @@
  * such as drupal_role, og_group, etc.
  *
  */
-require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizationConsumerAbstract.class.php');
+
+module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerAbstract.class');
+
+
 class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstract {
 
   public $consumerType = 'drupal_role';

@@ -7,8 +7,7 @@
  *
  */
 
-
-require_once('LdapServer.class.php');
+module_load_include('php', 'ldap_servers', 'LdapServer.class');
 
 class LdapServerAdmin extends LdapServer {
 

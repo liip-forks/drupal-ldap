@@ -1,7 +1,7 @@
 <?php
 // $Id: ldap_servers.test_form.inc,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
-require_once('ldap_servers.functions.inc');
+module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
 
 /**
  * @file
@@ -87,6 +87,7 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
     if (function_exists('dpm')) {
       dpm("ldap full result array for: " . $_SESSION['ldap_server_test_data']['username']);
       dpm($_SESSION['ldap_server_test_data']['LDAP Entry']['attr']);
+     // dpm(bin2hex($_SESSION['ldap_server_test_data']['LDAP Entry']['attr']['objectsid'][0]));
     }
 
     unset($_SESSION['ldap_server_test_data']);
@@ -167,7 +168,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   }
 
   if (!$has_errors && @$values['testing_drupal_username']) {
-    require_once('ldap_servers.functions.inc');
+    ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
     $results = array_merge($results, $more_results);
     $tokens = ($ldap_user && isset($ldap_user['attr'])) ? ldap_server_tokenize_entry($ldap_user['attr'], 'all') : array();
@@ -225,7 +226,7 @@ function ldap_servers_test_user_mapping($drupal_username, &$ldap_server) {
         '%username' => $drupal_username,
         '%user_attr' => $ldap_server->user_attr )
       )
-    . ' ' . t('Error Message: ') . $ldap_server->errorMsg('ldap');
+    . ' ' . t('Error Message:') . ' ' . $ldap_server->errorMsg('ldap');
     $errors = TRUE;
   }
   else {

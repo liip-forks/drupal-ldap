@@ -33,12 +33,12 @@ function ldap_user_install() {
   db_query("UPDATE {system} SET weight = -1 WHERE name = 'ldap_user'");
 
   // save ldap user configuration with default values
-  require_once('LdapUserConfAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
 
   // set user conf to default values and extract values moved from ldap_authentication to ldap_user module
   $user_conf = new LdapUserConfAdmin();
   if ($ldap_authentication_conf = variable_get("ldap_authentication_conf", FALSE)) {
-    $user_conf->loginConflictResolve = $ldap_authentication_conf['loginConflictResolve'];
+    $user_conf->userConflictResolve = $ldap_authentication_conf['loginConflictResolve'];
     $user_conf->acctCreation = $ldap_authentication_conf['acctCreation'];
     unset($ldap_authentication_conf['loginConflictResolve']);
     unset($ldap_authentication_conf['acctCreation']);
@@ -78,6 +78,7 @@ function ldap_user_schema() {
 
 
 }
+
 
 // see http://api.drupal.org/api/drupal/modules%21field%21field.module/group/field/7
 

@@ -1,11 +1,17 @@
 <?php
 
+/**
+ * @file
+ * functions related to REST webservices for LDAP User module
+ *
+ */
+
 function ldap_user_ws($action, $drupal_user_name, $key) {
 
   $action = check_plain($action);
   $key = urldecode($key);
   $drupal_user_name = check_plain($drupal_user_name);
-  require_once('ldapUserConf.class.php');
+  ldap_server_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
   $ldap_user_conf = new LdapUserConf();
 
   if (!$ldap_user_conf->wsEnabled) {

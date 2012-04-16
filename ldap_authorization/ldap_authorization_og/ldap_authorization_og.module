@@ -61,7 +61,7 @@ function ldap_authorization_og_entity_id_to_gid($entity_id) {
   $gid = db_select('og', 'og')
         ->fields('og', array('gid'))
         ->condition('og.etid', $entity_id, '=')
-        ->range(0,1)
+        ->range(0, 1)
         ->execute()
         ->fetchField();
   return ($gid && is_scalar($gid)) ? $gid : FALSE;
@@ -149,8 +149,3 @@ function ldap_authorization_og_form_ldap_authorization_admin_form_alter(&$form, 
     $form['filter_and_mappings']['use_filter']['#type'] = 'hidden';
   }
 }
-
-
-
-
-

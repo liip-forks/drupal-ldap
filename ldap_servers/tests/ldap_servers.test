@@ -15,8 +15,8 @@
  *  ldap_errno, ldap_err2str
  *
  */
+module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
 
-require_once('LdapTestFunctions.class.php');
 class LdapServersTestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(

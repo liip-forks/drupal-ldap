@@ -7,7 +7,7 @@
  * It is extended by LdapAuthenticationConfAdmin for configuration and other admin functions
  */
 
-require_once(drupal_get_path('module', 'ldap_user') . '/LdapUserConf.class.php');
+module_load_include('php', 'ldap_user', 'LdapUserConf.class');
 
 class LdapAuthenticationConf {
 

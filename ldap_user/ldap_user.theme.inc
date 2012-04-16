@@ -33,8 +33,8 @@ function theme_ldap_user_conf_form($variables) {
   );
   $second_header = array();
   $second_header = array(
-		array('data' => t('LDAP attribute or tokens (see http://drupal.org/node/1245736)'), 'header' => TRUE),
-		array('data' => t('Available user fields, properties, and profile2 fields'), 'header' => TRUE));
+    array('data' => t('LDAP attribute or tokens (see http://drupal.org/node/1245736)'), 'header' => TRUE),
+    array('data' => t('Available user fields, properties, and profile2 fields'), 'header' => TRUE));
   foreach ($ldap_user_conf_admin->synchTypes as $col_id => $col_name) {
     $second_header[] = array('data' => $col_name, 'header' => TRUE);
   }
@@ -44,7 +44,7 @@ function theme_ldap_user_conf_form($variables) {
     $ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
     $table['header'] = $header;
      array_unshift($table['rows'], $second_header);
-    $output .= '<h2>' . t('%ldap_server LDAP Server Mappings', array('%ldap_server' => $ldap_server->name)) . '</h2>' .  theme('table', $table);
+    $output .= '<h2>' . t('%ldap_server LDAP Server Mappings', array('%ldap_server' => $ldap_server->name)) . '</h2>' . theme('table', $table);
   }
 
   $output .= $submit;

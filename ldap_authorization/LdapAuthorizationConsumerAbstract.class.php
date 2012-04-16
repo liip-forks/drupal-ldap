@@ -90,8 +90,7 @@ class LdapAuthorizationConsumerAbstract {
     $this->mappingDirections = $params['consumer_mapping_directions'];
     $this->testLink = l(t('test') . ' ' . $this->name, LDAP_SERVERS_MENU_BASE_PATH . '/authorization/test/' . $this->consumerType);
     $this->editLink = l(t('edit') . ' ' . $this->name, LDAP_SERVERS_MENU_BASE_PATH . '/authorization/edit/' . $this->consumerType);
-
-    require_once('LdapAuthorizationConsumerConfAdmin.class.php');
+    ldap_server_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
     $this->consumerConf = new LdapAuthorizationConsumerConf($this);
   }
 

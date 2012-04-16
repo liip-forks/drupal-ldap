@@ -143,8 +143,8 @@ function ldap_authorization_schema() {
     ),
   );
 
-  require_once('LdapAuthorizationConsumerConfAdmin.class.php');
-
+  ldap_server_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
+  
   $fields = LdapAuthorizationConsumerConfAdmin::fields();
   foreach ($fields as $name => $props) {
     if (isset($props['schema'])) {

@@ -6,7 +6,8 @@
  * This classextends by LdapUserConf for configuration and other admin functions
  */
 
-require_once('LdapUserConf.class.php');
+module_load_include('php', 'ldap_user', 'LdapUserConf.class');
+
 class LdapUserConfAdmin extends LdapUserConf {
 
   protected function setTranslatableProperties() {
@@ -161,7 +162,7 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#description' => $this->provisionMethodsDescription
     );
 
-    $form['basic']['loginConflictResolve'] = array(
+    $form['basic']['userConflictResolve'] = array(
       '#type' => 'radios',
       '#title' => t('Existing Drupal User Account Conflict'),
       '#required' => 1,
@@ -194,19 +195,6 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#default_value' => $this->wsEnabled,
     );
 
-    $form['ws']['wsSid'] = array(
-      '#type' => 'radios',
-      '#title' => t('Servers Providing Provisioning Data'),
-      '#required' => FALSE,
-      '#default_value' => $this->sids,
-      '#options' => $this->provisionServersOptions,
-      '#description' => $this->provisionServersDescription,
-      '#states' => array(
-        'visible' => array(   // action to take.
-          ':input[name="wsEnabled"]' => array('checked' => TRUE),
-        ),
-      ),
-    );
 
     $form['ws']['wsActions'] = array(
       '#type' => 'checkboxes',
@@ -272,8 +260,12 @@ class LdapUserConfAdmin extends LdapUserConf {
       else {
         $key = $this->wsKey; // ldap_servers_encrypt($this->wsKey, LDAP_SERVERS_ENC_TYPE_BLOWFISH);
         $urls = array();
+
+        $enabled_actions = array_filter(array_values($this->wsActions));
         foreach ($this->wsActionsOptions as $action => $description) {
-          $urls[] = "$action url: " . join('/', array(LDAP_USER_WS_USER_PATH, $action, '[drupal username]', urlencode($key)));
+        //  dpm($action); dpm($enabled_actions); dpm(in_array($action, $enabled_actions));
+          $disabled = (in_array($action, $enabled_actions)) ? t('ENABLED') :  t('DISABLED');
+          $urls[] = $disabled .": $action url: " . join('/', array(LDAP_USER_WS_USER_PATH, $action, '[drupal username]', urlencode($key)));
         }
         $urls = theme('item_list', array('items' => $urls, 'title' => 'REST URLs', 'type' => 'ul', 'attributes' => array()))
          . '<p>' . t('Where %token is replaced by actual users LDAP %attribute', array('%token' => '[drupal username]', '%attribute' => 'drupal username')) .
@@ -314,7 +306,7 @@ mappings need to be setup for each server.
       '#type' => 'submit',
       '#value' => 'Save',
     );
-
+//  print "<pre>"; print_r($form);
   return $form;
 }
 
@@ -324,7 +316,7 @@ mappings need to be setup for each server.
  * validate form, not object
  */
   public function drupalFormValidate($values)  {
-
+    dpm('validate'); dpm($values);
     $this->populateFromDrupalForm($values);
 
     $errors = $this->validate();
@@ -360,10 +352,10 @@ mappings need to be setup for each server.
   }
 
   protected function populateFromDrupalForm($values) {
-   // dpm('populateFromDrupalForm'); dpm($values);
+    dpm('populateFromDrupalForm'); dpm($values);
     $this->sids = $values['provisionServers'];
     $this->provisionMethods = $values['provisionMethods'];
-    $this->userConflictResolve  = ($values['loginConflictResolve']) ? (int)$values['loginConflictResolve'] : NULL;
+    $this->userConflictResolve  = ($values['userConflictResolve']) ? (int)$values['userConflictResolve'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;
     $this->wsKey  = ($values['wsKey']) ? $values['wsKey'] : NULL;
    // $this->wsUserId  = ($values['wsUserId']) ? $values['wsUserId'] : NULL;
@@ -371,7 +363,7 @@ mappings need to be setup for each server.
     foreach ($this->wsUserIps as $i => $ip) {
       $this->wsUserIps[$i] = trim($ip);
     }
-   // array_walk($this->wsUserIps, 'trim');
+
     $this->wsEnabled  = ($values['wsEnabled']) ? (int)$values['wsEnabled'] : 0;
     $this->wsActions = ($values['wsActions']) ? $values['wsActions'] : array();
     $this->synchMapping = $this->synchMappingsFromForm($values);

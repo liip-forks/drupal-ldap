@@ -572,6 +572,7 @@ class LdapServer {
       $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
    //   dpm("$filter, $basedn"); dpm($attributes);
       $result = $this->search($basedn, $filter, $attributes);  // ,
+     // debug('ldapserver user_lookup result'); debug($result);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.
@@ -854,7 +855,7 @@ class LdapServer {
       return @$ldap_entry[$this->mail_attr][0];
     }
     elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
-      require_once('ldap_servers.functions.inc');
+      ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
       return ldap_server_token_replace($ldap_entry, $this->mail_template);
     }
     else {

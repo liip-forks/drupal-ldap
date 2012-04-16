@@ -5,8 +5,8 @@
  * @file
  * This classextends by LdapAuthenticationConf for configuration and other admin functions
  */
+module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConf.class');
 
-require_once('LdapAuthenticationConf.class.php');
 class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
   protected function setTranslatableProperties() {

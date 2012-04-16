@@ -217,7 +217,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       }
     }
     else {
-      array_walk($proposed_ldap_authorizations,'drupal_strtolower');
+      array_walk($proposed_ldap_authorizations, 'drupal_strtolower');
       $filtered_ldap_authorizations = array_keys($proposed_ldap_authorizations);
       if (is_array($consumer->consumerConf->mappings) && is_array($filtered_ldap_authorizations)) {
         foreach ($consumer->consumerConf->mappings as $mapping_filter) {

@@ -76,7 +76,7 @@ function ldap_authentication_menu() {
  *
  */
 function ldap_authentication_menu_alter(&$items) {
-  require_once('ldap_authentication.inc');
+  ldap_server_module_load_include('inc', 'ldap_authentication', 'ldap_authentication');
   $items['user/password']['access callback'] = 'ldap_authentication_show_reset_pwd';
   $auth_conf = ldap_authentication_get_valid_conf();
   if (@$auth_conf->ldapUserHelpLinkUrl) {
@@ -216,8 +216,8 @@ function ldap_authentication_get_valid_conf() {
   if (is_object($auth_conf)) {
     return $auth_conf;
   }
-  module_load_include('module', 'ldap_servers');
-  require_once('LdapAuthenticationConf.class.php');
+  ldap_server_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConf.class');
+
   $auth_conf = new LdapAuthenticationConf();
   return ($auth_conf->inDatabase) ? $auth_conf : FALSE;
 
@@ -312,7 +312,7 @@ function ldap_authentication_form_user_register_alter(&$form, $form_state) {
  * Implements hook_form_FORM_ID_alter(). for user_profile_form
  */
 function ldap_authentication_form_user_profile_form_alter(&$form, $form_state) {
-  require_once('ldap_authentication.inc');
+  ldap_server_module_load_include('inc', 'ldap_authentication', 'ldap_authentication');
   _ldap_authentication_form_user_profile_form_alter($form, $form_state, 'user_login');
 
 }
@@ -322,7 +322,7 @@ function ldap_authentication_form_user_profile_form_alter(&$form, $form_state) {
  * Implements hook_form_FORM_ID_alter(). for user_login
  */
 function ldap_authentication_form_user_login_alter(&$form, &$form_state) {
-  require_once('ldap_authentication.inc');
+  ldap_server_module_load_include('inc', 'ldap_authentication', 'ldap_authentication');
   _ldap_authentication_login_form_alter($form, $form_state, 'user_login');
 
 }
@@ -331,7 +331,7 @@ function ldap_authentication_form_user_login_alter(&$form, &$form_state) {
  * Implements hook_form_FORM_ID_alter(). for user_login_block
  */
 function ldap_authentication_form_user_login_block_alter(&$form, &$form_state) {
-  require_once('ldap_authentication.inc');
+  ldap_server_module_load_include('inc', 'ldap_authentication', 'ldap_authentication');
   _ldap_authentication_login_form_alter($form, $form_state, 'user_login_block');
 
 }
@@ -340,7 +340,7 @@ function ldap_authentication_form_user_login_block_alter(&$form, &$form_state) {
  * validate function for user logon forms.
  */
 function ldap_authentication_user_login_authenticate_validate($form, &$form_state) {
-  require_once('ldap_authentication.inc');
+  ldap_server_module_load_include('inc', 'ldap_authentication', 'ldap_authentication');
   return _ldap_authentication_user_login_authenticate_validate($form_state);
 }
 
@@ -348,7 +348,7 @@ function ldap_authentication_user_login_authenticate_validate($form, &$form_stat
  * submit function for user logon forms
  */
 function ldap_authentication_login_form_submit(&$form, $form_state) {
-  require_once('ldap_authentication.inc');
+  ldap_server_module_load_include('inc', 'ldap_authentication', 'ldap_authentication');
   _ldap_authentication_login_form_submit($form, $form_state);
 
 }

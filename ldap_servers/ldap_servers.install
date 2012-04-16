@@ -15,7 +15,7 @@ function ldap_servers_install() {
   variable_set('ldap_servers_require_ssl_for_credentails', 0);
 
   if (! ($key = variable_get('ldap_servers_encrypt_key', NULL))) {
-    require_once('ldap_servers.encryption.inc');
+    ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
     $key = ldap_servers_random_salt(10);
     variable_set('ldap_servers_encrypt_key', $key);
   }
@@ -63,9 +63,8 @@ function ldap_servers_requirements($phase) {
  * Implements hook_schema().
  */
 function ldap_servers_schema() {
-  require_once('ldap_servers.module');  // to get the LDAP_SERVERS_ENC_TYPE_CLEARTEXT constants issue#1209576
-
-  require_once('LdapServerAdmin.class.php');
+  ldap_server_module_load_include('module', 'ldap_servers', 'ldap_servers'); // to get the LDAP_SERVERS_ENC_TYPE_CLEARTEXT constants issue#1209576
+  ldap_server_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
 
   $schema['ldap_servers'] = array(
     'export' => array(

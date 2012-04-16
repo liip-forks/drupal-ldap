@@ -9,7 +9,8 @@
  *
  */
 
-require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizationConsumerAbstract.class.php');
+module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerAbstract.class');
+
 class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
   public $consumerType = 'og_group';

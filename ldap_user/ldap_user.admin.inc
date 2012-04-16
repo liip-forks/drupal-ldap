@@ -17,7 +17,7 @@
  * @return array drupal form array
  */
 function ldap_user_admin_form($form, &$form_state) {
-    require_once('LdapUserConfAdmin.class.php');
+    ldap_server_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
     $ldap_user_conf = new LdapUserConfAdmin();
     $form = $ldap_user_conf->drupalForm();
    // dpm('ldap_user_admin_form'); dpm($form);
@@ -30,7 +30,7 @@ function ldap_user_admin_form($form, &$form_state) {
  */
 function ldap_user_admin_form_validate($form, &$form_state) {
 
-  require_once('LdapUserConfAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
   $conf = new LdapUserConfAdmin();
   $errors = $conf->drupalFormValidate($form_state['values']);
   foreach ($errors as $error_name => $error_text) {
@@ -46,7 +46,7 @@ function ldap_user_admin_form_validate($form, &$form_state) {
 
 function ldap_user_admin_form_submit($form, &$form_state) {
  // dpm('ldap_user_admin_form_submit'); dpm($form_state);
-  require_once('LdapUserConfAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
   $conf = new LdapUserConfAdmin();
   $conf->drupalFormSubmit($form_state['values']);  // add form data to object and save or create
 

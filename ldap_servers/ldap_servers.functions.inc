@@ -7,7 +7,13 @@
  */
 
 
-
+function ldap_server_module_load_include($type, $module, $name = NULL) {
+  $result = module_load_include($type, $module, $name);
+  if ($result === FALSE) {
+    print "Failed to load file $name.$type in module $module";
+    drupal_exit();
+  }
+}
 
 /**
   * Modify an LDAP Entry
@@ -141,7 +147,7 @@ function ldap_server_token_replace($ldap_entry, $text) {
 function ldap_servers_extract_attributes_from_token(&$attributes,  $text) {
   $tokens = ldap_server_tokens_needed_for_template($text);
   foreach ($tokens as $token) {
-    $token = str_replace(array(LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST), array('',''), $token);
+    $token = str_replace(array(LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST), array('', ''), $token);
     $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token);
     $attributes[] = $parts[0];
   }
@@ -367,8 +373,8 @@ function ldap_servers_show_sample_user_tokens($sid) {
             $char = substr($string, $i, 1);
             if (ord($char) < 32) {
                 $hex = dechex(ord($char));
-                if (strlen($hex) == 1) $hex = '0'.$hex;
-                $string = str_replace($char, '\\'.$hex, $string);
+                if (strlen($hex) == 1) $hex = '0' . $hex;
+                $string = str_replace($char, '\\' . $hex, $string);
             }
         }
         return $string;

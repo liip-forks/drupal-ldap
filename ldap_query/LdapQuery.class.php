@@ -106,7 +106,7 @@ class LdapQuery {
 //  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
 
   function query() {
-    require_once(drupal_get_path('module','ldap_servers') . '/LdapServer.class.php');
+    ldap_server_module_load_include('php', 'ldap_servers', 'LdapServer.class');
     $ldap_server = new LdapServer($this->sid);
     $ldap_server->connect();
     $ldap_server->bind();
