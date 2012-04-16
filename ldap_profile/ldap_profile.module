@@ -74,7 +74,7 @@ function ldap_profile_info($field = 0) {
  * Implements hook_user_login().
  */
 function ldap_profile_user_login(&$edit, $account) {
-  $auth_conf = ldap_authentication_get_valid_conf();
+  $servers = ldap_servers_get_servers(NULL, 'enabled');
   $server = 0;
   $changes = array();
   $authuser = user_is_logged_in();
@@ -87,8 +87,8 @@ function ldap_profile_user_login(&$edit, $account) {
     $authdata = $account->data["ldap_authentication"];
     if (array_key_exists('init', $authdata)) {
       $authinit = $authdata['init'];
-      if (isset($auth_conf->servers[$authinit['sid']])) {
-        $server = $auth_conf->servers[$authinit['sid']];
+      if (isset($servers[$authinit['sid']])) {
+        $server = $servers[$authinit['sid']];
         $ldapuser = TRUE;
         if (array_key_exists('dn', $authinit)) {
           $dn = $authinit['dn'];

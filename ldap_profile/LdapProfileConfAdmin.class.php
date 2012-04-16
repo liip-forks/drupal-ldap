@@ -38,7 +38,6 @@ class LdapProfileConfAdmin extends LdapProfileConf {
 
 
   public function drupalForm($accounts = array()) {
-    $auth_conf = ldap_authentication_get_valid_conf();
 
     if (count($this->servers) == 0) {
       $message = ldap_servers_no_enabled_servers_msg('configure LDAP Profiles');
