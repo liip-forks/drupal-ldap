@@ -66,6 +66,7 @@ class LdapServerAdmin extends LdapServer {
     $this->mail_attr = trim($values['mail_attr']);
     $this->mail_template = trim($values['mail_template']);
     $this->unique_persistent_attr = trim($values['unique_persistent_attr']);
+    $this->unique_persistent_attr_binary = trim($values['unique_persistent_attr_binary']);
     $this->allow_conflicting_drupal_accts = trim($values['allow_conflicting_drupal_accts']);
     $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
     $this->testingDrupalUsername = trim($values['testing_drupal_username']);
@@ -92,6 +93,7 @@ class LdapServerAdmin extends LdapServer {
       $entry->bindpw = NULL;
     }
     $entry->tls = (int)$entry->tls;
+    $entry->unique_persistent_attr_binary = (int)$entry->unique_persistent_attr_binary;
 
     $result = FALSE;
     if ($op == 'edit') {
@@ -797,6 +799,21 @@ public function drupalFormSubmit($op, $values) {
           'type' => 'varchar',
           'length' => 64,
           'not null' => FALSE,
+        ),
+      ),
+
+      'unique_persistent_attr_binary' => array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'checkbox',
+          '#title' => t('Does PUID hold a binary value?'),
+          '#description' => t(''),
+        ),
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => FALSE,
+          'default' => 0,
         ),
       ),
 

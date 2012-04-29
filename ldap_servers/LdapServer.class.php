@@ -39,6 +39,7 @@ class LdapServer {
   public $mail_attr;
   public $mail_template;
   public $unique_persistent_attr;
+  public $unique_persistent_attr_binary = FALSE;
   public $allow_conflicting_drupal_accts = FALSE;
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
@@ -98,6 +99,7 @@ class LdapServer {
     'mail_attr'  => 'mail_attr',
     'mail_template'  => 'mail_template',
     'unique_persistent_attr' => 'unique_persistent_attr',
+    'unique_persistent_attr_binary' => 'unique_persistent_attr_binary',
     'allow_conflicting_drupal_accts' => 'allow_conflicting_drupal_accts',
     'ldap_to_drupal_user'  => 'ldapToDrupalUserPhp',
     'testing_drupal_username'  => 'testingDrupalUsername',
@@ -141,7 +143,6 @@ class LdapServer {
       return;
     }
     $server_record = $server_record[$sid];
-
     if ($server_record) {
       $this->inDatabase = TRUE;
       $this->sid = $sid;

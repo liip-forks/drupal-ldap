@@ -302,6 +302,7 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
     'configurable_text' => t('User persistent unique id is derived based on ldap server configuration at !edit_link.', $tokens),
     'source' => $ldap_server->unique_persistent_attr,
     'notes' => 'configure at '. $server_edit_path,
+    'convert' => $ldap_server->unique_persistent_attr_binary,
     );
 
   $available_user_targets['field.ldap_user_puid_property'] =  array(
