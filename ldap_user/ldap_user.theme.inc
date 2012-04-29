@@ -27,7 +27,7 @@ function theme_ldap_user_conf_form($variables) {
   $ldap_user_conf_admin = ldap_user_conf('admin');
   $header = array(
     array('data' => t('Remove'), 'rowspan' => 2),
-    array('data' => t('LDAP Source'), 'rowspan' => 2),
+    array('data' => t('LDAP Source'), 'rowspan' => 2, 'colspan' => 2),
     array('data' => t('User Target'), 'rowspan' => 2),
     array('data' => t('When Should Data Be Synchronized?'), 'colspan' => count($ldap_user_conf_admin->synchTypes), 'rowspan' => 1),
     array('data' => t('Notes'), 'rowspan' => 2),
@@ -36,6 +36,7 @@ function theme_ldap_user_conf_form($variables) {
   $second_header = array(
     array('data' => t(''), 'header' => TRUE),
     array('data' => t('LDAP attribute or tokens (see http://drupal.org/node/1245736)'), 'header' => TRUE),
+    array('data' => t('Convert From Binary'), 'header' => TRUE),
     array('data' => t('Available user fields, properties, and profile2 fields'), 'header' => TRUE));
   foreach ($ldap_user_conf_admin->synchTypes as $col_id => $col_name) {
     $second_header[] = array('data' => $col_name, 'header' => TRUE);
