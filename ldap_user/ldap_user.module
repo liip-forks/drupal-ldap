@@ -172,17 +172,17 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
 
   // user properties
   $available_user_targets['property.status'] = array(
-    'name' => 'Acount Status',
+    'name' => 'Property: Acount Status',
     'configurable' => 1,
     'configurable_text' => '1=enabled, 0=blocked.',
   );
   $available_user_targets['property.timezone'] = array(
-    'name' => 'User Timezone',
+    'name' => 'Property: User Timezone',
     'configurable' => 1,
     'configurable_text' => NULL,
   );
   $available_user_targets['property.signature'] = array(
-    'name' => 'User Signature',
+    'name' => 'Property: User Signature',
     'configurable' => 1,
     'configurable_text' => NULL,
   );
@@ -194,7 +194,7 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
   foreach ($user_fields as $field_name => $field_instance) {
     if (!isset($available_user_targets["field.$field_name"])) {
       $available_user_targets['field.' . $field_name] = array(
-        'name' => $field_instance['label'],
+        'name' => t('Field: '). $field_instance['label'],
         'configurable' => 1,
         'configurable_text' => NULL,
       );

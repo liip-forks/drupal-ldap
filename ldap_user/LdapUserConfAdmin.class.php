@@ -391,16 +391,18 @@ mappings need to be setup for each server.
 /**
  * input names in form:
 
-sm__configurable__N
-sm__ldap_source__N
-sm__user_target__N
-sm__notes__N
-sm__1__N
-sm__2__N
-sm__3__N
-sm__4__N
+    sm__configurable__N
+    sm__remove__N
+    sm__ldap_source__N
+    sm__convert__N
+    sm__user_target__N
+    sm__notes__N
+    sm__1__N
+    sm__2__N
+    sm__3__N
+    sm__4__N
 
-storage
+where additiond data is in $form['#storage']['synch_mapping_fields'][N]
 
     $form['#storage']['synch_mapping_fields'][N] = array(
       'sid' => $sid,
@@ -408,18 +410,16 @@ storage
     );
 
 **/
-  //  dpm('synch mapping from form, values'); dpm($values);
+
     $mappings = array();
     foreach ($values as $field => $value) {
-     // dpm('field='. $field);
+
       $parts = explode('__', $field);
-     // dpm($parts);
       // since synch mapping fields are in n-tuples, process entire n-tuple at once
       if (count($parts) != 3 || $parts[0] !== 'sm' || $parts[1] != 'configurable') {
         continue;
-       // dpm("skip   $field");
       }
-     // dpm('dont skip='. $field);
+
       list($discard, $column_name, $i) = $parts;
       $action = $storage['synch_mapping_fields'][$i]['action'];
       $sid = $storage['synch_mapping_fields'][$i]['sid'];
@@ -434,8 +434,6 @@ storage
         continue;
       }
 
-     // dpm($row_mappings);
-     // dpm("configurable=$configurable,configurable_input_id=$configurable_input_id,ldap_source=$ldap_source,user_target=$user_target");
       if ($row_mappings['configurable'] && $row_mappings['ldap_source'] && $row_mappings['user_target']) {
         $mappings[$direction][$row_mappings['user_target']] = array(
           'sid' => $sid,
@@ -451,7 +449,6 @@ storage
         }
       }
     }
-   // dpm('synch mapping from form, end'); dpm($mappings);
     return $mappings;
   }
 
@@ -472,99 +469,33 @@ storage
 
 private function addServerMappingFields($ldap_server, &$form) {
 
-  $synch_cols = count($this->synchTypes);
-
-  $sid = $ldap_server->sid;
- // dpm('addServerMappingFields'); dpm("sid=$sid");
-
-  // target options
   $available_user_targets = array();
-
   drupal_alter('ldap_user_targets_list', $available_user_targets, $ldap_server);
- // dpm('available_user_targets4'); dpm($available_user_targets);
   $target_options = array('0' => 'Select Target');
   foreach ($available_user_targets as $target_id => $mapping) {
     if (!isset($mapping['configurable']) || $mapping['configurable']) {
       $target_options[$target_id] = substr($mapping['name'], 0, 25);
     }
   }
- // dpm('available_user_targets5'); dpm($available_user_targets);
-  $row = 0;
 
-  // loop through each existing mapping and add to form
- //  dpm($available_user_targets);
+  $this->synchFormRow = 0;
 
-/**
   foreach ($available_user_targets as $user_target => $mapping) {
     if (!$mapping['configurable']) {
-      $id =  join('__', array('sm', $ldap_server->sid, 'update', 'configurable', $user_target));
-      $form[$id] = array(
-        '#id' => $id,
-        '#type' => 'hidden',
-        '#default_value' => 0,
-      );
-
-      $id = join('__', array('sm', $ldap_server->sid, 'update', 'ldap_source', $user_target));
-      $form[$id] = array(
-        '#id' => $id,
-        '#type' => 'item',
-        '#markup' => isset($mapping['source']) ? $mapping['source'] : '?',
-        '#row' => $row,
-        '#col' => 0,
-        );
-
-
-      $id =  join('__', array('sm', $ldap_server->sid, 'update', 'user_target', $user_target));
-      $form[$id] = array(
-        '#id' => $id,
-        '#type' => 'item',
-        '#markup' => isset($mapping['name']) ? $mapping['name'] : '?',
-        '#row' => $row,
-        '#col' => 1,
-        );
-
-      $id =  join('__', array('sm', $ldap_server->sid, 'update', 'notes' , $user_target));
-      $form[$id] = array(
-        '#id' => $id,
-        '#type' => 'item',
-        '#markup' => isset($mapping['configurable_text']) ? $mapping['configurable_text'] : '?',
-        '#row' => $row,
-        '#col' => 2,
-        );
-      /**
-      $col = 2;
-      foreach ($this->synchTypes as $synch_method => $synch_method_name) {
-        $col++;
-        $id = join('__', array('sm', $ldap_server->sid, 'update', $synch_method, $user_target));
-        $form[$id] = array(
-          '#id' => $id ,
-          '#type' => 'checkbox',
-          '#default_value' => isset($mapping['contexts']) ? (int)(in_array($synch_method, $mapping['contexts'])) : '',
-          '#row' => $row,
-          '#col' => $col,
-          '#disabled' => $this->synchMethodNotViable($ldap_server, $synch_method, $mapping),
-          );
-      }
-
-
-
-      $row ++;
+      $this->addSynchFormRow($form, 'nonconfigurable', $mapping, $target_options, $user_target, $ldap_server);
     }
   }
 
-  **/
+
   /**
    * configured mappings
    */
 
-  $synch_mapping_fields = array();
-  $this->synchFormRow = 0;
   if (isset($this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER])) {
     foreach ($this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] as $user_target => $mapping) {
       if (isset($available_user_targets[$user_target]['configurable']) && !$available_user_targets[$user_target]['configurable']) {
         continue;
       }
-      $row++;
       $this->addSynchFormRow($form, 'update', $mapping, $target_options, $user_target, $ldap_server);
     }
   }
@@ -590,7 +521,7 @@ private function addServerMappingFields($ldap_server, &$form) {
     $form[$id ] = array(
       '#id' => $id,
       '#type' => 'hidden',
-      '#default_value' => 1,
+      '#default_value' => ($action != 'nonconfigurable'),
     );
 
 
@@ -599,32 +530,51 @@ private function addServerMappingFields($ldap_server, &$form) {
       '#id' => $id, '#row' => $row, '#col' => 0,
       '#type' => 'checkbox',
       '#default_value' => NULL,
-      '#disabled' => ($action == 'add'),
+      '#disabled' => ($action == 'add' || $action == 'nonconfigurable'),
       );
 
     $id = 'sm__ldap_source__'. $row;
-    $form[$id ] = array(
-      '#id' => $id, '#row' => $row, '#col' => 1,
-      '#type' => 'textfield',
-      '#default_value' => isset($mapping['ldap_source']) ? $mapping['ldap_source'] : '',
-      '#size' => 20,
-      '#maxlength' => 255,
+    if ($action == 'nonconfigurable') {
+      $form[$id] = array(
+        '#id' => $id, '#row' => $row, '#col' => 1,
+        '#type' => 'item',
+        '#markup' => isset($mapping['source']) ? $mapping['source'] : '?',
       );
+    }
+    else {
+      $form[$id] = array(
+        '#id' => $id, '#row' => $row, '#col' => 1,
+        '#type' => 'textfield',
+        '#default_value' => isset($mapping['ldap_source']) ? $mapping['ldap_source'] : '',
+        '#size' => 20,
+        '#maxlength' => 255,
+        );
+    }
 
     $id = 'sm__convert__' . $row;
     $form[$id] = array(
       '#id' => $id, '#row' => $row, '#col' => 2,
       '#type' => 'checkbox',
       '#default_value' =>  isset($mapping['convert']) ? $mapping['convert'] : '',
+      '#disabled' => ($action == 'nonconfigurable'),
       );
 
     $id = 'sm__user_target__'. $row;
-    $form[$id] = array(
-      '#id' => $id, '#row' => $row, '#col' => 3,
-      '#type' => 'select',
-      '#default_value' => $user_target,
-      '#options' => $target_options,
+    if ($action == 'nonconfigurable') {
+      $form[$id] = array(
+        '#id' => $id, '#row' => $row, '#col' => 3,
+        '#type' => 'item',
+        '#markup' => isset($mapping['name']) ? $mapping['name'] : '?',
       );
+    }
+    else {
+      $form[$id] = array(
+        '#id' => $id, '#row' => $row, '#col' => 3,
+        '#type' => 'select',
+        '#default_value' => $user_target,
+        '#options' => $target_options,
+        );
+    }
 
 
     $col = 3;
@@ -637,7 +587,7 @@ private function addServerMappingFields($ldap_server, &$form) {
         '#default_value' => isset($mapping['contexts']) ? (int)(in_array($synch_method, $mapping['contexts'])) : '',
         '#row' => $row,
         '#col' => $col,
-        '#disabled' => $this->synchMethodNotViable($ldap_server, $synch_method, $mapping)
+        '#disabled' => ($this->synchMethodNotViable($ldap_server, $synch_method, $mapping) || ($action == 'nonconfigurable')),
         );
     }
 
@@ -649,6 +599,7 @@ private function addServerMappingFields($ldap_server, &$form) {
       '#default_value' => isset($mapping['notes']) ? $mapping['notes'] : '',
       '#size' => 40,
       '#maxlength' => 255,
+      '#disabled' => ($action == 'nonconfigurable'),
       );
 
     $this->synchFormRow = $this->synchFormRow + 1;

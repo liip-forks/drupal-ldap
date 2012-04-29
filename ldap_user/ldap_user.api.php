@@ -32,25 +32,25 @@
 function hook_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server) {
 
   $available_user_targets['property.name'] = array(
-    'name' => 'Username',
+    'name' => 'Property: Username',
     'configurable' => 0,
     'configurable_text' => 'Username is derived based on ldap server configuration.',
   );
 
   $available_user_targets['property.mail'] = array(
-    'name' => 'Email',
+    'name' => 'Property: Email',
     'configurable' => 0,
     'configurable_text' => 'Email is derived based on ldap server configuration.',
   );
 
   $available_user_targets['property.timezone'] = array(
-    'name' => 'User Timezone',
+    'name' => 'Property: User Timezone',
     'configurable' => 1,
     'configurable_text' => NULL,
   );
 
   $available_user_targets['field.field_user_lname'] = array(
-    'name' => 'Last Name',
+    'name' => 'Feild: Last Name',
     'configurable' => 1,
     'configurable_text' => NULL,
   );
@@ -74,7 +74,7 @@ function hook_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_serv
  * before syching of ldap to drupal user fields
  */
 function hook_ldap_user_synch_mapping_alter(&$synch_mapping) {
-  
+
 
 
 }
