@@ -359,7 +359,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
       <hr/>5. consumer containers existing after create call (or non-call if og): %consumer_containers_final
       <hr/>6a. consumer_containers_existing: %consumer_containers_existing
       <hr/>6b. grants_pre_intersect: %grants_pre_intersect
-      <hr/>6c. grants_post_intersect: %grants_post_intersec
+      <hr/>6c. grants_post_intersect: %grants_post_intersect
       <hr/>7. revokes passed to authorizationRevoke(): %revokes
       ', $watchdog_tokens, WATCHDOG_DEBUG);
   }
