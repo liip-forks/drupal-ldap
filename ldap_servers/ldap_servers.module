@@ -287,35 +287,42 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
     '!sid' => $ldap_server->sid,
   );
 
-  $available_user_targets['field_ldap_user_puid_sid'] =  array(
+  $available_user_targets['field.ldap_user_puid_sid'] =  array(
     'name' => t('Server Configuration (sid) providing PUID'),
     'configurable' => 0,
     'configurable_text' => t('Not configurable.'),
     'source' => t('set to "!sid"', $tokens),
     );
 
-  $available_user_targets['field_ldap_user_puid'] =  array(
+  $available_user_targets['field.ldap_user_puid'] =  array(
     'name' => t('PUID (permanenty unique identifier)'),
     'configurable' => 0,
     'configurable_text' => t('User persistent unique id is derived based on ldap server configuration at !edit_link.', $tokens),
     'source' => $ldap_server->unique_persistent_attr,
     );
 
-  $available_user_targets['field_ldap_user_current_dn'] =  array(
+  $available_user_targets['field.ldap_user_puid_property'] =  array(
+    'name' => t('Attribute holding PUID (permanenty unique identifier)'),
+    'configurable' => 0,
+    'configurable_text' => t('User persistent unique id is derived based on ldap server configuration at !edit_link.', $tokens),
+    'source' => NULL,
+    );
+
+  $available_user_targets['field.ldap_user_current_dn'] =  array(
     'name' => t('Most recent DN'),
     'configurable' => 0,
     'configurable_text' => t('Configured in LDAP Servers configuration.'),
     'source' => 'dn',
     );
 
-  $available_user_targets['property_name'] = array(
+  $available_user_targets['property.name'] = array(
     'name' => 'Username',
     'source' => $ldap_server->user_attr,
     'configurable' => 0,
     'configurable_text' => t('Username is derived based on ldap server configuration at !edit_link.', $tokens),
     );
 
-  $available_user_targets['property_mail'] = array(
+  $available_user_targets['property.mail'] = array(
     'name' => 'Email',
     'source' => ($ldap_server->mail_template) ? $ldap_server->mail_template : $ldap_server->mail_attr,
     'configurable' => 0,

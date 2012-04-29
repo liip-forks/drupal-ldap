@@ -70,7 +70,7 @@ class LdapUserConf {
       LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER => t('On User Logon'),
       LDAP_USER_SYNCH_CONTEXT_CRON => t('Via Cron Batch'),
     );
-    $this->setSynchMapping();
+    $this->setSynchMapping(TRUE);
 
     $this->detailedWatchdog = variable_get('ldap_help_watchdog_detail', 0);
 
@@ -79,7 +79,7 @@ class LdapUserConf {
   function load() {
 
     if ($saved = variable_get("ldap_user_conf", FALSE)) {
-     // debug('ldapuserconf load saved:'); debug($saved);
+    //  dpm('ldapuserconf load saved:');       dpm($saved);
      // dpm('saved'); dpm($saved);
       $this->inDatabase = TRUE;
       foreach ($this->saveable as $property) {
@@ -153,18 +153,12 @@ class LdapUserConf {
       $this->synchMapping = $synch_mapping_cache->data;
     }
     else {
-      $this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY] = array();
-      $this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] = array();
       drupal_alter('ldap_user_synch_mapping', $this->synchMapping);
       cache_set('ldap_user_synch_mapping', $this->synchMapping);
-
     }
    // dpm('this->synchMapping');dpm($this->synchMapping);
 
   }
-
-
-
 
   /**
    * given a drupal account, query ldap and get all user fields and create user account

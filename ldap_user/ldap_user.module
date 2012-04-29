@@ -119,19 +119,18 @@ function ldap_user_all_contexts() {
  */
 
 function ldap_user_ldap_user_synch_mapping_alter(&$synch_mapping) {
-  dpm('ldap_user_ldap_user_synch_mapping_alter');
+  // dpm('ldap_user_ldap_user_synch_mapping_alter');
   $all_contexts = ldap_user_all_contexts();
 
-  /** @todo: when ui is finished, these values should come from config data,
-  but some fields aren't configurable.  **/
-  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] = array(
-    'property.mail' => $all_contexts,
-    'property.name' => $all_contexts,
-    'field.ldap_user_puid' => $all_contexts,
-    'field.ldap_user_puid_property' => $all_contexts,
-    'field.ldap_user_puid_sid' => $all_contexts,
-    'field.ldap_user_current_dn' => $all_contexts,
-    );
+
+  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['property.mail'] = $all_contexts;
+  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['property.name'] = $all_contexts;
+  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['field.ldap_user_puid'] = $all_contexts;
+  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['field.ldap_user_puid_property'] = $all_contexts;
+  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['field.ldap_user_puid_sid'] = $all_contexts;
+  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['field.ldap_user_current_dn'] = $all_contexts;
+
+  //@todo need to load ldap_user configured, configurable data from wherever it is stored. variable or location of stored data.  this is not LdapUserConf until this drupal_alter is finished
 
 }
 
@@ -140,7 +139,6 @@ function ldap_user_ldap_user_synch_mapping_alter(&$synch_mapping) {
  */
 function ldap_user_ldap_attributes_needed_alter(&$attributes, $sych_context, $ldap_server) {
   //dpm('ldap_user_ldap_attributes_needed_alter,op='. $op);
-  $ldap_user_conf = ldap_user_conf();
   $attributes[] = 'dn';
 
   if ($ldap_server) { // puid attributes are server specific
@@ -167,35 +165,35 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $sych_context, $ld
  */
 
 function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server) {
-
+  //dpm('ldap_user_ldap_user_targets_list_alter0'); dpm($available_user_targets);
   $tokens = array(
     '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
   );
 
   // user properties
-  $available_user_targets['property_status'] = array(
+  $available_user_targets['property.status'] = array(
     'name' => 'Acount Status',
     'configurable' => 1,
     'configurable_text' => '1=enabled, 0=blocked.',
   );
-  $available_user_targets['property_timezone'] = array(
+  $available_user_targets['property.timezone'] = array(
     'name' => 'User Timezone',
     'configurable' => 1,
     'configurable_text' => NULL,
   );
-  $available_user_targets['property_signature'] = array(
+  $available_user_targets['property.signature'] = array(
     'name' => 'User Signature',
     'configurable' => 1,
     'configurable_text' => NULL,
   );
 
-
+//dpm('ldap_user_ldap_user_targets_list_alter1'); dpm($available_user_targets);
   // fields
   $user_fields = field_info_instances('user', 'user');
   //dpm('user_fields'); dpm($user_fields);
   foreach ($user_fields as $field_name => $field_instance) {
-    if (!isset($available_user_targets["field_$field_name"])) {
-      $available_user_targets['field_' . $field_name] = array(
+    if (!isset($available_user_targets["field.$field_name"])) {
+      $available_user_targets['field.' . $field_name] = array(
         'name' => $field_instance['label'],
         'configurable' => 1,
         'configurable_text' => NULL,
@@ -203,7 +201,12 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
     }
   }
 
+ // $available_user_targets['field.ldap_user_current_dn']['configurable'] = 0;
+//  $available_user_targets['field.ldap_user_puid']['configurable'] = 0;
+ // $available_user_targets['field.ldap_user_puid_sid']['configurable'] = 0;
+ // $available_user_targets['field.ldap_user_puid_property']['configurable'] = 0;
 
+ // dpm('ldap_user_ldap_user_targets_list_alter3'); dpm($available_user_targets);
   // profile2 fields
 
   // $user->data array.  will need to be added manually.  perhaps better not to implement this at all?

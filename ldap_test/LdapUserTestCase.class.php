@@ -53,11 +53,11 @@ class LdapUserTestCase extends DrupalWebTestCase {
   }
 
   function prepTestData($sids,
-      $ldap_user_conf_id = 'default',
-      $ldap_authentication_conf_id = 'default',
-      $ldap_authorization_conf_id = 'default',
-      $ldap_feeds_conf_id = 'default',
-      $ldap_query_conf_id = 'default'
+      $ldap_user_conf_id = NULL,
+      $ldap_authentication_conf_id = NULL,
+      $ldap_authorization_conf_id = NULL,
+      $ldap_feeds_conf_id = NULL,
+      $ldap_query_conf_id = NULL
     ) {
 
     $this->testFunctions->configureLdapServers($sids);

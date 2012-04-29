@@ -22,9 +22,9 @@ class LdapUserBasicTests extends LdapUserTestCase {
   /**
    * make sure user interface works
    */
-  function xx_testUI() {
+  function testUI() {
 
-    $this->ldapTestId = $this->module_name . ': setup success';
+    $this->ldapTestId = $this->module_name . ': user interface tests';
 
     // just to give warning if setup doesn't succeed.  may want to take these out at some point.
     $setup_success = (
@@ -34,22 +34,30 @@ class LdapUserBasicTests extends LdapUserTestCase {
       );
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->ldapTestId);
 
+    $sids = array('activedirectory');
+    $this->prepTestData($sids, 'default', 'default');
+
+
+    $this->privileged_user = $this->drupalCreateUser(array(
+      'administer site configuration',
+      ));
+    $this->drupalLogin($this->privileged_user);
+
+    $ldap_user_conf = ldap_user_conf();
+    debug('ldap_user_conf before form submission'); debug($ldap_user_conf);
+
 
     $this->drupalGet('admin/config/people/ldap/user');
 
     // Populate the field settings with new settings.
-    $string = 'updated dummy test string';
     $edit = array(
-      'provisionMethods[1]' => 1,
-      'provisionMethods[2]' => 2,
-      'provisionMethods[3]' => 3,
+      'provisionServers[]' => array('activedirectory' => 1),
+      'provisionMethods[]' => array(1, 2, 3),
       'userConflictResolve' => 2,
-      'acctCreation' => 4,
+      'acctCreation[]' => array(4),
       'wsEnabled'  => 1,
-      'wsActions[create]' => 1,
-      'wsActions[synch]' => 1,
-      'wsActions[disable]' => 1,
-      'wsActions[delete]' => 1,
+      'wsActions[]' => array('create', 'synch', 'disable', 'delete'),
+      'wsUserIps' => '1.2.3.4',
       'wsKey' => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
       'activedirectory__1__0' => 1,
       'activedirectory__2__0' => 1,
@@ -57,10 +65,78 @@ class LdapUserBasicTests extends LdapUserTestCase {
       'activedirectory__4__0' => 1,
       'activedirectory__notes__0' => 'notes',
     );
-    $this->drupalPost(NULL, $edit, t('Save'));
 
+    $edit = array(
+      'wsKey'  => "sdfsdfdsfsdf",
+      'wsUserIps' => 'a.b.c.d',
+    );
+
+
+    $this->drupalPost('admin/config/people/ldap/user', $edit, t('Save'));
+/**
+    $ldap_user_conf = ldap_user_conf();
+    debug('ldap_user_conf after form submission'); debug($ldap_user_conf);
+    $tests = array(
+      'sids' => array(
+        'property' => 'sids',
+        'expected_value' => array('provisionServers'),
+        'form_mapping' => array('provisionServers[]' => array('activedirectory')),
+      ),
+      'provision_methods' => array(
+        'property' => 'provisionMethods',
+        'expected_value' => array(1, 2, 3),
+        'form_mapping' => array('provisionMethods[]' =>  array(1, 2, 3)),
+      ),
+      'userConflictResolve' => array(
+        'property' => 'userConflictResolve',
+        'expected_value' => 2,
+        'form_mapping' => array('userConflictResolve' => 2),
+      ),
+
+      'acctCreation' => array(
+        'property' => 'acctCreation',
+        'expected_value' => 4,
+        'form_mapping' => array('acctCreation[]' => array(4)),
+      ),
+      'wsEnabled' => array(
+        'property' => 'wsEnabled',
+        'expected_value' => array(1),
+        'form_mapping' => array('wsEnabled' => 1),
+      ),
+      'wsActions' => array(
+        'property' => 'wsActions',
+        'expected_value' =>  array('create', 'synch', 'disable', 'delete'),
+        'form_mapping' => array('wsActions[]' => array('create', 'synch', 'disable', 'delete')),
+      ),
+      'wsUserIps' => array(
+        'property' => 'wsUserIps',
+        'expected_value' =>  '1.2.3.4',
+        'form_mapping' => array('wsUserIps' => '1.2.3.4'),
+      ),
+      'wsKey' => array(
+        'property' => 'wsKey',
+        'expected_value' => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
+        'form_mapping' => array('wsKey' => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf'),
+      ),
+      'synchMapping' => array(
+        'property' => 'synchMapping',
+        'expected_value' => array(),
+      ),
+    );
+
+    foreach ($tests as $test_id => $test) {
+      $value = $ldap_user_conf->{$test['property']};
+      if (is_array($test['expected_value'])) {
+        $diff = array_diff($test['expected_value'], $value);
+        $this->assertTrue(count($diff) == 0, "ldap_user_conf $test_id successful", $this->ldapTestId);
+      }
+      else {
+        $this->assertTrue($value == $test['expected_value'], "ldap_user_conf $test_id successful", $this->ldapTestId);
+      }
+    }
+
+**/
     // load on user conf class and test values!
-
 
     // test form with non default values for all fields
 
@@ -70,7 +146,7 @@ class LdapUserBasicTests extends LdapUserTestCase {
   /**
    * make sure install succeeds and ldap user functions/methods work
    */
-  function testFunctionsAndInstall() {
+  function xx_testFunctionsAndInstall() {
 
     $this->ldapTestId = $this->module_name . ': setup success';
 

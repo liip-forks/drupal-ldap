@@ -15,9 +15,6 @@ objectclass: organizationalunit
 
 
 dn: CN=fflinstone,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
-objectClass:top
-objectClass:person
-objectClass:organizationalPerson
 sn: Flintstone
 l: bedrock
 title: Mr.
@@ -43,9 +40,6 @@ pixotechcomregistryuniqueid: e2eb4d760f81e80df1524cff71f720a0
 
 
 dn: CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
-objectClass:top
-objectClass:person
-objectClass:organizationalPerson
 sn: Keats
 l: London
 title: Mr.
@@ -71,9 +65,6 @@ pixotechcomregistryuniqueid: e2eb4d760f81e80df1524cff71f720a0
 
 
 dn: CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
-objectClass:top
-objectClass:person
-objectClass:organizationalPerson
 sn: Keats
 l: London
 title: Mr.
@@ -99,9 +90,6 @@ pixotechcomregistryuniqueid: e2eb4d760f81e89df1524cff71f720a0
 
 
 dn: CN=pshelly,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
-objectClass:top
-objectClass:person
-objectClass:organizationalPerson
 sn: Shelly
 l: London
 title: Mr.
@@ -127,9 +115,6 @@ pixotechcomregistryuniqueid: e2eb4d760f81e87df1524cff71f720a0
 
 
 dn: CN=hwapole,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
-objectClass:top
-objectClass:person
-objectClass:organizationalPerson
 sn: Walpole
 l: London
 title: Sir
@@ -155,9 +140,6 @@ pixotechcomregistryuniqueid: e2eb4d760f81e83df1524cff71f760a0
 
 
 dn: CN=wwordsworth,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
-objectClass:top
-objectClass:person
-objectClass:organizationalPerson
 sn: Wordsworth
 l: Hawks Head
 title: Sir

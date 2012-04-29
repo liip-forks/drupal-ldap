@@ -55,7 +55,7 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
       }
     }
   }
-
+  //debug('_ldap_servers_get_servers, servers'); debug($servers);
   if ($sid) {
     if (!isset($servers[$type][$sid])) {
       return FALSE;
