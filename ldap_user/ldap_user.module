@@ -8,7 +8,6 @@
 
 define('LDAP_USER_DRUPAL_HELP_URL', 'http://drupal.org/node/997082');
 
-
 define('LDAP_USER_PROV_ON_LOGON', 1);
 define('LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE', 2);
 define('LDAP_USER_PROV_ON_ALL_USER_CREATION', 3);
@@ -23,6 +22,7 @@ define('LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT', 4);
 
 define('LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER', 1);
 define('LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY', 2);
+define('LDAP_USER_SYNCH_DIRECTION_NONE', 3);
 
 define('LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER', 1);
 define('LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER', 2);
@@ -75,6 +75,9 @@ function ldap_user_menu() {
   return $items;
 }
 
+/**
+ * Implements hook_theme().
+ */
 function ldap_user_theme() {
   return array('ldap_user_conf_form' => array(
     'render element' => 'form',
@@ -83,6 +86,14 @@ function ldap_user_theme() {
   );
 }
 
+/**
+ * get ldapUserConf or ldapUserConfAdmin object
+ *
+ * @param enum $type is 'admin' for ldapUserConfAdmin object or NULL for ldapUserConf object
+ * @param boolean $resect clear static cache of object.
+ *
+ * @return object ldapUserConf or ldapUserConfAdmin object
+ */
 function ldap_user_conf($type = NULL, $reset = FALSE) {
   static $ldap_user_conf;
   static $ldap_user_conf_admin;
@@ -99,38 +110,11 @@ function ldap_user_conf($type = NULL, $reset = FALSE) {
   return ($type == 'admin') ? $ldap_user_conf_admin : $ldap_user_conf;
 }
 
-function ldap_user_all_contexts() {
-
-  return array(
-    LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER,
-    LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER,
-    LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER,
-    LDAP_USER_SYNCH_CONTEXT_CRON,
-    LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER,
-    LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER,
-    LDAP_TEST_QUERY_CONTEXT,
-  );
-
-
-}
-
 /**
  * implements hook_ldap_user_synch_mapping_alter()
  */
 
 function ldap_user_ldap_user_synch_mapping_alter(&$synch_mapping) {
-  // dpm('ldap_user_ldap_user_synch_mapping_alter');
-  $all_contexts = ldap_user_all_contexts();
-
-
-  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['property.mail'] = $all_contexts;
-  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['property.name'] = $all_contexts;
-  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['field.ldap_user_puid'] = $all_contexts;
-  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['field.ldap_user_puid_property'] = $all_contexts;
-  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['field.ldap_user_puid_sid'] = $all_contexts;
-  $synch_mapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['field.ldap_user_current_dn'] = $all_contexts;
-
-  //@todo need to load ldap_user configured, configurable data from wherever it is stored. variable or location of stored data.  this is not LdapUserConf until this drupal_alter is finished
 
 }
 
@@ -138,9 +122,9 @@ function ldap_user_ldap_user_synch_mapping_alter(&$synch_mapping) {
  * implements hook_ldap_attributes_needed_alter()
  */
 function ldap_user_ldap_attributes_needed_alter(&$attributes, $sych_context, $ldap_server) {
-  //dpm('ldap_user_ldap_attributes_needed_alter,op='. $op);
-  $attributes[] = 'dn';
 
+  //@todo need to load all ldap_user attributes used in synch mapping and add to list based on synch context.
+  $attributes[] = 'dn';
   if ($ldap_server) { // puid attributes are server specific
     if (is_scalar($ldap_server)) {
       $ldap_server = ldap_servers_get_servers($ldap_server, 'enabled', TRUE);
@@ -170,7 +154,7 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
     '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
   );
 
-  // user properties
+  // 1. Drupal user properties
   $available_user_targets['property.status'] = array(
     'name' => 'Property: Acount Status',
     'configurable' => 1,
@@ -187,10 +171,9 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
     'configurable_text' => NULL,
   );
 
-//dpm('ldap_user_ldap_user_targets_list_alter1'); dpm($available_user_targets);
-  // fields
+
+  // 2. Drupal user fields
   $user_fields = field_info_instances('user', 'user');
-  //dpm('user_fields'); dpm($user_fields);
   foreach ($user_fields as $field_name => $field_instance) {
     if (!isset($available_user_targets["field.$field_name"])) {
       $available_user_targets['field.' . $field_name] = array(
@@ -201,15 +184,11 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
     }
   }
 
- // $available_user_targets['field.ldap_user_current_dn']['configurable'] = 0;
-//  $available_user_targets['field.ldap_user_puid']['configurable'] = 0;
- // $available_user_targets['field.ldap_user_puid_sid']['configurable'] = 0;
- // $available_user_targets['field.ldap_user_puid_property']['configurable'] = 0;
+  // 3. profile2 fields
 
- // dpm('ldap_user_ldap_user_targets_list_alter3'); dpm($available_user_targets);
-  // profile2 fields
 
-  // $user->data array.  will need to be added manually.  perhaps better not to implement this at all?
+
+  // 4. $user->data array.   will need to be added manually.  perhaps better not to implement this at all?
 
 
 }
@@ -221,10 +200,10 @@ function ldap_user_help($path, $arg) {
 
   $ldap_user_help = t('LDAP user configuration determines how and when
     Drupal accounts are created based on LDAP data and which user fields
-    are derived from LDAP. See !helplink.',
-          array(
-            '!helplink' => l(LDAP_USER_DRUPAL_HELP_URL, LDAP_USER_DRUPAL_HELP_URL),
-          ));
+    are derived and synched to and from LDAP. See !helplink.',
+    array(
+      '!helplink' => l(LDAP_USER_DRUPAL_HELP_URL, LDAP_USER_DRUPAL_HELP_URL),
+    ));
 
   switch ($path) {
     case 'admin/config/people/ldap/user':
@@ -239,7 +218,7 @@ function ldap_user_help($path, $arg) {
 
 
 /**
- * api function for user syching outside of user hooks
+ * api function for synching
  */
 
 function ldap_user_synch($username, $synch_context, $ldap_user = NULL) {
@@ -250,7 +229,7 @@ function ldap_user_synch($username, $synch_context, $ldap_user = NULL) {
 }
 
 /**
- * api function for user provisioning outside of user hooks
+ * api function for ldap associated user provisioning
  */
 function ldap_user_provision($ldap_user, $user_edit = array()) {
   $sid = $ldap_user['sid'];
@@ -266,7 +245,7 @@ function ldap_user_provision($ldap_user, $user_edit = array()) {
 function ldap_user_user_login(&$edit, $account) {
   $ldap_user_conf = ldap_user_conf();
   $user_edit = array();
- // $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, FALSE);
+  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, FALSE);
 }
 
 /**
@@ -275,7 +254,7 @@ function ldap_user_user_login(&$edit, $account) {
  */
 function ldap_user_user_insert(&$user_edit, $account, $category) {
   $ldap_user_conf = ldap_user_conf();
- // $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, FALSE);
+  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, FALSE);
 }
 
 
@@ -284,7 +263,7 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
  */
 function ldap_user_user_update(&$user_edit, $account, $category) {
   $ldap_user_conf = ldap_user_conf();
- // $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, NULL, FALSE);
+  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, NULL, FALSE);
 }
 
 
@@ -294,7 +273,7 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
 function ldap_user_user_delete($account) {
   $ldap_user_conf = ldap_user_conf();
   $user_edit = array();
-  //$ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER, NULL, FALSE);
+  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER, NULL, FALSE);
 }
 
 
@@ -327,6 +306,7 @@ function ldap_user_dn_default($entity_type, $entity, $field, $instance, $langcod
 
 /**
  * Implements hook_field_widget_info().
+ * to provide field type for LDAP fields
  */
 function ldap_user_field_widget_info() {
   return array(
@@ -387,19 +367,22 @@ function ldap_user_permission() {
 }
 
 
-/**
- * Form API validate callback for the ldap_user form
+/** this function may be headed nowhere
+ * these constants may just need to replaced by
+ * an enum list of such as 'insert', 'update', 'authenticate'
+ * to give more flexibility and better code readability.
  */
-function ldap_user_edit_form_validate(&$form, &$form_state) {
+function ldap_user_all_contexts() {
 
-}
+  return array(
+    LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER,
+    LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER,
+    LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER,
+    LDAP_USER_SYNCH_CONTEXT_CRON,
+    LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER,
+    LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER,
+    LDAP_TEST_QUERY_CONTEXT,
+  );
 
-
-/**
- * Form API submit callback for the ldap_user form.
- *
- * @todo remove hard-coded link
- */
-function ldap_user_edit_form_submit(&$form, &$form_state) {
 
 }

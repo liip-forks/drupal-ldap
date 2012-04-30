@@ -1,18 +1,15 @@
 <?php
-// $Id: LdapUserConf.class.php,v 1.4.2.2 2011/02/08 20:05:41 johnbarclay Exp $
 
 /**
  * @file
- * This class represents an ldap_user module's configuration
+ * This class represents a ldap_user module's configuration
  * It is extended by LdapUserConfAdmin for configuration and other admin functions
  */
 
 class LdapUserConf {
 
-  // no need for LdapUserConf id as only one instance will exist per drupal install
-
-  public $sids = array();  // server configuration ids being used for ldap user provisioning
-  public $servers = array(); // ldap server objects enabled for provisioning
+  public $sids = array();  // server configuration ids being used by ldap user
+  public $servers = array(); // ldap server objects enabled for ldap user
   public $provisionMethods = array(LDAP_USER_PROV_ON_LOGON, LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE);
   public $userConflictResolve = LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
   public $acctCreation = LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT;
@@ -23,9 +20,7 @@ class LdapUserConf {
   public $wsKey = NULL;
   public $wsEnabled = 0;
   public $wsUserIps = array();
- // public $wsUserId = NULL;
   public $wsActions = array();
-  // $this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['property_mail'][sid] => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER),
 
   public $synchTypes = NULL; // array of synch types (keys) and user friendly names (values)
 
@@ -53,14 +48,16 @@ class LdapUserConf {
     'wsEnabled',
     'wsUserIps',
     'wsActions',
-  ); // 'wsUserId',
+  );
 
 
-
-  /** are any ldap servers that are enabled associated with ldap user **/
+  /**
+   * @return boolean if any ldap servers are available for ldap user
+   */
   public function enabled_servers() {
     return !(count(array_filter(array_values($this->sids))) == 0);
   }
+
   function __construct() {
     $this->load();
 
@@ -79,22 +76,17 @@ class LdapUserConf {
   function load() {
 
     if ($saved = variable_get("ldap_user_conf", FALSE)) {
-    //  dpm('ldapuserconf load saved:');       dpm($saved);
-     // dpm('saved'); dpm($saved);
       $this->inDatabase = TRUE;
       foreach ($this->saveable as $property) {
         if (isset($saved[$property])) {
           $this->{$property} = $saved[$property];
         }
       }
-    //  debug('LdapUserConf->load(). initial sids'); debug($this->sids);
       foreach ($this->sids as $sid => $is_enabled) {
         if ($is_enabled) {
           $this->servers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
         }
       }
-     // debug('LdapUserConf->load(). filtered this->servers'); debug($this->servers);
-
     }
     else {
       $this->inDatabase = FALSE;
@@ -131,8 +123,11 @@ class LdapUserConf {
    */
 
   public function isSynched($field, $synch_context, $direction) {
-   // dpm($this->synchMapping);
-    return (isset($this->synchMapping[$direction][$field]) && in_array($synch_context, $this->synchMapping[$direction][$field]));
+    return (
+      isset($this->synchMapping[$field]) &&
+      in_array($synch_context, $this->synchMapping[$field]) &&
+      $this->synchMapping[$field]['direction'] == $direction
+    );
   }
 
 
@@ -147,7 +142,6 @@ class LdapUserConf {
   **/
 
   function setSynchMapping($reset = FALSE) {
-
     $synch_mapping_cache = cache_get('ldap_user_synch_mapping');
     if (!$reset && $synch_mapping_cache) {
       $this->synchMapping = $synch_mapping_cache->data;
@@ -156,8 +150,6 @@ class LdapUserConf {
       drupal_alter('ldap_user_synch_mapping', $this->synchMapping);
       cache_set('ldap_user_synch_mapping', $this->synchMapping);
     }
-   // dpm('this->synchMapping');dpm($this->synchMapping);
-
   }
 
   /**
@@ -200,7 +192,6 @@ class LdapUserConf {
   //  debug('synchToDrupalAccount, ldap user'); debug($ldap_user);
     $ldap_server = ldap_servers_get_servers($ldap_user['sid'], 'enabled', TRUE);
    // debug('ldap server'); debug($ldap_server);
-    //@todo next line commented out for debugging process.
     $this->entryToUserEdit($ldap_user, $ldap_server, $user_edit, $synch_context, 'update');
     // debug('synchToDrupalAccount, user_edit'); debug($user_edit);
     if ($save) {
@@ -215,14 +206,12 @@ class LdapUserConf {
   /**
    * given a drupal account, delete user account
    *
-   * @param array $account drupal account array with minimum of name
+   * @param string $username drupal account name
    * @param int synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
-   * @param array $ldap_user as user's ldap entry.  passed to avoid requerying ldap in cases where already present
    *
    * @return TRUE or FALSE.  FALSE indicates failed or action not enabled in ldap user configuration
    */
   public function deleteDrupalAccount($username, $synch_context) {
-    // dpm("deleteDrupalAccount=$username");
     // @todo check if deletion allowed/enabled in context
     $user = user_load_by_name($username);
    // dpm($user);
@@ -241,7 +230,7 @@ class LdapUserConf {
    *
    * @param array $account drupal account array with minimum of name
    * @param array $user_edit drupal edit array in form user_save($account, $user_edit) would take.
-   * @param int synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
+   * @param int $synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
    * @param array $ldap_user as user's ldap entry.  passed to avoid requerying ldap in cases where already present
    * @param boolean $save indicating if drupal user should be saved.  generally depends on where function is called from and if the
    *
@@ -293,11 +282,9 @@ class LdapUserConf {
       $watchdog_tokens['%username'] = $user_edit['name'];
     }
 
-
     $ldap_server = ldap_servers_get_servers($ldap_user['sid'], 'enabled', TRUE);
 
   //  debug('provisionDrupalAccount ldap_user'); debug($ldap_user);  debug($ldap_server);debug($user_edit);
-     //@todo next line commented out for debugging process.
     $this->entryToUserEdit($ldap_user, $ldap_server, $user_edit, $synch_context, 'create');
   //  debug("edit after this->entryToUserEdit"); debug($user_edit);
 
@@ -340,7 +327,6 @@ class LdapUserConf {
         $edit['name'] = $name;
       }
     }
-    //     $user_edit['dn'] = $ldap_user['dn'];
 
     if ($op == 'create') {
       $edit['pass'] = user_password(20);

@@ -340,8 +340,6 @@ EOF;
       }
     }
 
-
-
     if ($this->status == 0) { // check that no modules use this server
       $warnings = module_invoke_all('ldap_server_in_use', $this->sid, $this->name);
       if (count($warnings)) {

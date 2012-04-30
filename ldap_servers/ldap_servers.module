@@ -294,6 +294,7 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
     'configurable_text' => t('Not configurable.'),
     'source' => t('set to "!sid"', $tokens),
     'notes' => 'not configurable',
+    'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     );
 
   $available_user_targets['field.ldap_user_puid'] =  array(
@@ -303,6 +304,7 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
     'source' => $ldap_server->unique_persistent_attr,
     'notes' => 'configure at '. $server_edit_path,
     'convert' => $ldap_server->unique_persistent_attr_binary,
+    'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     );
 
   $available_user_targets['field.ldap_user_puid_property'] =  array(
@@ -311,6 +313,7 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
     'configurable_text' => t('User persistent unique id is derived based on ldap server configuration at !edit_link.', $tokens),
     'source' => t('set to') . ' "' . $ldap_server->unique_persistent_attr . '"',
     'notes' => 'configure at '. $server_edit_path,
+    'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     );
 
   $available_user_targets['field.ldap_user_current_dn'] =  array(
@@ -319,6 +322,7 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
     'configurable_text' => t('Configured in LDAP Servers configuration.'),
     'source' => 'dn',
     'notes' => 'not configurable',
+    'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     );
 
   $available_user_targets['property.name'] = array(
@@ -327,6 +331,7 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
     'configurable' => 0,
     'configurable_text' => t('Username is derived based on ldap server configuration at !edit_link.', $tokens),
     'notes' => 'configure at '. $server_edit_path,
+    'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     );
 
   $available_user_targets['property.mail'] = array(
@@ -335,6 +340,7 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
     'configurable' => 0,
     'configurable_text' => t('Email is derived based on ldap server configuration at !edit_link.', $tokens),
     'notes' => 'configure at '. $server_edit_path,
+    'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     );
 
 }

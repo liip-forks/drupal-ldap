@@ -31,9 +31,8 @@ class LdapUserConfAdmin extends LdapUserConf {
         Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
     );
 
-
     /**
-    *  Drupal Account Provisioning and Syncing
+    *  Drupal Account Provisioning and Synching
     */
     $values['userConflictResolveDescription'] = t('What should be done if a local Drupal or other external
       user account already exists with the same login name.');
@@ -42,7 +41,6 @@ class LdapUserConfAdmin extends LdapUserConf {
       LDAP_USER_CONFLICT_RESOLVE => t('Associate Drupal account with the LDAP entry.  This option
       is useful for creating accounts and assigning roles before an LDAP user authenticates.'),
       );
-
 
     $values['acctCreationOptions'] = array(
       LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR => t('Account creation settings at
@@ -96,9 +94,6 @@ class LdapUserConfAdmin extends LdapUserConf {
     foreach ($this->saveable as $property) {
       $save[$property] = $this->{$property};
     }
-   // dpm('save synchMapping'); dpm($save['synchMapping']);
-
-   // $save['synchMapping'] = array();  // for debugging to clear it out.
     variable_set('ldap_user_conf', $save);
   }
 
@@ -114,14 +109,13 @@ class LdapUserConfAdmin extends LdapUserConf {
   public function __construct() {
     parent::__construct();
     $this->setTranslatableProperties();
+
     if ($servers = ldap_servers_get_servers(NULL, 'enabled')) {
       foreach ($servers as $sid => $ldap_server) {
         $enabled = ($ldap_server->status) ? 'Enabled' : 'Disabled';
         $this->provisionServersOptions[$sid] = $ldap_server->name . ' (' . $ldap_server->address . ') Status: ' . $enabled;
       }
     }
-
-  //  dpm('initial constructed ldapUserConfAdmin'); dpm($this);
   }
 
   public function drupalForm() {
@@ -268,7 +262,6 @@ class LdapUserConfAdmin extends LdapUserConf {
 
         $enabled_actions = array_filter(array_values($this->wsActions));
         foreach ($this->wsActionsOptions as $action => $description) {
-        //  dpm($action); dpm($enabled_actions); dpm(in_array($action, $enabled_actions));
           $disabled = (in_array($action, $enabled_actions)) ? t('ENABLED') :  t('DISABLED');
           $urls[] = $disabled .": $action url: " . join('/', array(LDAP_USER_WS_USER_PATH, $action, '[drupal username]', urlencode($key)));
         }
@@ -326,12 +319,9 @@ mappings need to be setup for each server.
 /**
  * validate form, not object
  */
-  public function drupalFormValidate($values)  {
-    //dpm('validate'); dpm($values);
-    $this->populateFromDrupalForm($values);
-
+  public function drupalFormValidate($values, $storage)  {
+    $this->populateFromDrupalForm($values, $storage);
     $errors = $this->validate();
-
     return $errors;
   }
 
@@ -341,14 +331,14 @@ mappings need to be setup for each server.
   public function validate() {
     $errors = array();
 
-    if (isset($this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER])) {
+    if (isset($this->synchMapping)) {
       $enabled_servers = ldap_servers_get_servers(NULL, 'enabled');
       $available_user_targets = array();
       foreach ($enabled_servers as $sid => $ldap_server) {
         $available_user_targets[$sid] = array();
         drupal_alter('ldap_user_targets_list', $available_user_targets[$sid], $ldap_server);
       }
-      foreach ($this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] as $user_target => $conf) {
+      foreach ($this->synchMapping as $user_target => $conf) {
 
        // dpm('user_target'. $user_target); dpm($conf);
         // neither of these should come up without altered form, but could check for:
@@ -379,38 +369,35 @@ mappings need to be setup for each server.
     $this->wsActions = ($values['wsActions']) ? $values['wsActions'] : array();
     $this->synchMapping = $this->synchMappingsFromForm($values, $storage);
   //  dpm('populateFromDrupalForm this->synchMapping'); dpm($this->synchMapping);
-    // $this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER]['property_mail'][sid] => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER),
-
-    //  $this->synchMapping = array();  // development just for clearing out old data.
-   //
 
   }
 
-  private function synchMappingsFromForm($values, $storage) {
+
 
 /**
- * input names in form:
+ * $values input names in form:
 
     sm__configurable__N
     sm__remove__N
     sm__ldap_source__N
     sm__convert__N
+    sm__direction__N
     sm__user_target__N
     sm__notes__N
     sm__1__N
     sm__2__N
     sm__3__N
     sm__4__N
+    ...where N is the row in the configuration form
 
-where additiond data is in $form['#storage']['synch_mapping_fields'][N]
+   where additiond data is in $form['#storage']['synch_mapping_fields'][N]
 
     $form['#storage']['synch_mapping_fields'][N] = array(
       'sid' => $sid,
       'action' => 'add',
     );
-
 **/
-
+  private function synchMappingsFromForm($values, $storage) {
     $mappings = array();
     foreach ($values as $field => $value) {
 
@@ -424,9 +411,8 @@ where additiond data is in $form['#storage']['synch_mapping_fields'][N]
       $action = $storage['synch_mapping_fields'][$i]['action'];
       $sid = $storage['synch_mapping_fields'][$i]['sid'];
 
-      $direction = LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER;
       $row_mappings = array();
-      foreach (array('remove', 'configurable', 'convert', 'ldap_source', 'user_target', 'notes') as $column_name) {
+      foreach (array('remove', 'configurable', 'convert', 'direction','ldap_source', 'user_target', 'notes') as $column_name) {
         $input_name = join('__', array('sm',$column_name, $i));
         $row_mappings[$column_name] = isset($values[$input_name]) ? $values[$input_name] : NULL;
       }
@@ -435,16 +421,17 @@ where additiond data is in $form['#storage']['synch_mapping_fields'][N]
       }
 
       if ($row_mappings['configurable'] && $row_mappings['ldap_source'] && $row_mappings['user_target']) {
-        $mappings[$direction][$row_mappings['user_target']] = array(
+        $mappings[$row_mappings['user_target']] = array(
           'sid' => $sid,
           'ldap_source' => $row_mappings['ldap_source'],
           'convert' => $row_mappings['convert'],
+          'direction' => $row_mappings['direction'],
           'notes' => $row_mappings['notes'],
           );
         foreach ($this->synchTypes as $synch_context => $synch_context_name) {
           $input_name = join('__', array('sm', $synch_context, $i));
           if (isset($values[$input_name]) && $values[$input_name]) {
-            $mappings[$direction][$row_mappings['user_target']]['contexts'][] = $synch_context;
+            $mappings[$row_mappings['user_target']]['contexts'][] = $synch_context;
           }
         }
       }
@@ -466,49 +453,64 @@ where additiond data is in $form['#storage']['synch_mapping_fields'][N]
 
   }
 
-
-private function addServerMappingFields($ldap_server, &$form) {
-
-  $available_user_targets = array();
-  drupal_alter('ldap_user_targets_list', $available_user_targets, $ldap_server);
-  $target_options = array('0' => 'Select Target');
-  foreach ($available_user_targets as $target_id => $mapping) {
-    if (!isset($mapping['configurable']) || $mapping['configurable']) {
-      $target_options[$target_id] = substr($mapping['name'], 0, 25);
-    }
-  }
-
-  $this->synchFormRow = 0;
-
-  foreach ($available_user_targets as $user_target => $mapping) {
-    if (!$mapping['configurable']) {
-      $this->addSynchFormRow($form, 'nonconfigurable', $mapping, $target_options, $user_target, $ldap_server);
-    }
-  }
-
-
   /**
-   * configured mappings
+   * add mapping form section to mapping form array
+   *
+   * @param object $ldap_server
+   * @param drupal form array $form
+   *
+   * @return by reference to $form
    */
 
-  if (isset($this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER])) {
-    foreach ($this->synchMapping[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] as $user_target => $mapping) {
-      if (isset($available_user_targets[$user_target]['configurable']) && !$available_user_targets[$user_target]['configurable']) {
-        continue;
+  private function addServerMappingFields($ldap_server, &$form) {
+
+    $available_user_targets = array();
+    drupal_alter('ldap_user_targets_list', $available_user_targets, $ldap_server);
+    $target_options = array('0' => 'Select Target');
+    foreach ($available_user_targets as $target_id => $mapping) {
+      if (!isset($mapping['configurable']) || $mapping['configurable']) {
+        $target_options[$target_id] = substr($mapping['name'], 0, 25);
       }
-      $this->addSynchFormRow($form, 'update', $mapping, $target_options, $user_target, $ldap_server);
     }
+
+    $this->synchFormRow = 0;
+
+    // 1. non configurable mapping rows
+    foreach ($available_user_targets as $user_target => $mapping) {
+      if (!$mapping['configurable']) {
+        $this->addSynchFormRow($form, 'nonconfigurable', $mapping, $target_options, $user_target, $ldap_server);
+      }
+    }
+
+    // 2. existing configurable mappings rows
+    if (isset($this->synchMapping)) {
+      foreach ($this->synchMapping as $user_target => $mapping) {
+        if (isset($available_user_targets[$user_target]['configurable']) && $available_user_targets[$user_target]['configurable']) {
+          $this->addSynchFormRow($form, 'update', $mapping, $target_options, $user_target, $ldap_server);
+        }
+      }
+    }
+
+
+    // 3. leave 4 rows for adding more mappings
+    for ($i=0; $i<4; $i++) {
+      $this->addSynchFormRow($form, 'add', NULL, $target_options, NULL, $ldap_server, NULL);
+    }
+
   }
 
   /**
-   * leave 4 rows for adding more mappings
+   * add mapping form row
+   *
+   * @param drupal form array $form
+   * @param string $action is 'add', 'update', or 'nonconfigurable'
+   * @param array $mapping is current setting for updates or nonconfigurable items
+   * @param array $target_options of drupal user target options
+   * @param string $user_target is current drupal user field/property for updates or nonconfigurable items
+   * @param object $ldap_server
+   *
+   * @return by reference to $form
    */
-  for ($i=0; $i<4; $i++) {
-    $this->addSynchFormRow($form, 'add', NULL, $target_options, NULL, $ldap_server);
-  }
-
-}
-
   private function addSynchFormRow(&$form, $action, $mapping, $target_options, $user_target, $ldap_server) {
 
     $row = $this->synchFormRow;
@@ -524,14 +526,13 @@ private function addServerMappingFields($ldap_server, &$form) {
       '#default_value' => ($action != 'nonconfigurable'),
     );
 
-
     $id = 'sm__remove__' . $row;
     $form[$id] = array(
       '#id' => $id, '#row' => $row, '#col' => 0,
       '#type' => 'checkbox',
       '#default_value' => NULL,
       '#disabled' => ($action == 'add' || $action == 'nonconfigurable'),
-      );
+    );
 
     $id = 'sm__ldap_source__'. $row;
     if ($action == 'nonconfigurable') {
@@ -548,7 +549,7 @@ private function addServerMappingFields($ldap_server, &$form) {
         '#default_value' => isset($mapping['ldap_source']) ? $mapping['ldap_source'] : '',
         '#size' => 20,
         '#maxlength' => 255,
-        );
+      );
     }
 
     $id = 'sm__convert__' . $row;
@@ -557,27 +558,53 @@ private function addServerMappingFields($ldap_server, &$form) {
       '#type' => 'checkbox',
       '#default_value' =>  isset($mapping['convert']) ? $mapping['convert'] : '',
       '#disabled' => ($action == 'nonconfigurable'),
-      );
+    );
 
-    $id = 'sm__user_target__'. $row;
+    $direction_options = array(
+       0 => '-- select --',
+       LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER => 'to Drupal user',
+       LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY => 'to LDAP entry',
+       LDAP_USER_SYNCH_DIRECTION_NONE => 'no synch',
+     );
+    $css_class =
+
+    $direction_id = isset($mapping['direction']) ? $mapping['direction'] : 0;
+    $css_class = 'ldap-user-synch-dir-' . $direction_id;
+    $id = 'sm__direction__'. $row;
     if ($action == 'nonconfigurable') {
       $form[$id] = array(
         '#id' => $id, '#row' => $row, '#col' => 3,
         '#type' => 'item',
-        '#markup' => isset($mapping['name']) ? $mapping['name'] : '?',
+        '#markup' => '<span class="'. $css_class . '">' . $direction_options[$direction_id] . '</span>',
       );
     }
     else {
       $form[$id] = array(
         '#id' => $id, '#row' => $row, '#col' => 3,
         '#type' => 'select',
-        '#default_value' => $user_target,
-        '#options' => $target_options,
-        );
+        '#default_value' => $direction_id,
+        '#options' => $direction_options,
+      );
     }
 
+    $id = 'sm__user_target__'. $row;
+    if ($action == 'nonconfigurable') {
+      $form[$id] = array(
+        '#id' => $id, '#row' => $row, '#col' => 4,
+        '#type' => 'item',
+        '#markup' => isset($mapping['name']) ? $mapping['name'] : '?',
+      );
+    }
+    else {
+      $form[$id] = array(
+        '#id' => $id, '#row' => $row, '#col' => 4,
+        '#type' => 'select',
+        '#default_value' => $user_target,
+        '#options' => $target_options,
+      );
+    }
 
-    $col = 3;
+    $col = 4;
     foreach ($this->synchTypes as $synch_method => $synch_method_name) {
       $col++;
       $id = join('__', array('sm', $synch_method, $row));
@@ -588,7 +615,7 @@ private function addServerMappingFields($ldap_server, &$form) {
         '#row' => $row,
         '#col' => $col,
         '#disabled' => ($this->synchMethodNotViable($ldap_server, $synch_method, $mapping) || ($action == 'nonconfigurable')),
-        );
+      );
     }
 
     $col++;
@@ -600,13 +627,22 @@ private function addServerMappingFields($ldap_server, &$form) {
       '#size' => 40,
       '#maxlength' => 255,
       '#disabled' => ($action == 'nonconfigurable'),
-      );
+    );
 
     $this->synchFormRow = $this->synchFormRow + 1;
   }
+
+  /**
+   * is a particular synch method viable for a given mapping
+   *
+   * @param object $ldap_server
+   * @param int $synch_method LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER,...
+   * @param array $mapping is array of mapping configuration.
+   *
+   * @return boolean
+   */
+
   private function synchMethodNotViable($ldap_server, $synch_method, $mapping = NULL) {
-   // dpm(array('synchMethodNotViable',$synch_method, $mapping));
-  //  dpm($ldap_server);
     if ($mapping) {
       $viable = ((!isset($mapping['configurable']) || $mapping['configurable']) && ($ldap_server->queriableWithoutUserCredentials ||
          $synch_method == LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER));
