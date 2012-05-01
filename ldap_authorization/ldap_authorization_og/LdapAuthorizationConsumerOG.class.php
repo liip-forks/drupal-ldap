@@ -65,7 +65,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 			$targets = explode(',', $mapping[1]);
 			if (count($targets) != 2) {
 				return FALSE;
-			}			
+			}
 
 			$group_target_and_value =  explode('=', $targets[0]);
 			if (count($group_target_and_value) != 2) {
@@ -297,7 +297,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 		if ($this->detailedWatchdogLog) {
 			watchdog('ldap_authorization_og',
 						 'LdapAuthorizationConsumerOG.grantSingleAuthorization()
-                calling og_role_grant(%gid, $uid, %rid)',
+                calling og_role_grant(%gid, %uid, %rid)',
               $watchdog_tokens,
 							WATCHDOG_DEBUG);
 		}
