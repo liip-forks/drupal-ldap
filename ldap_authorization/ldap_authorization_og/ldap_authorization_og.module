@@ -28,9 +28,9 @@ function ldap_authorization_og_ldap_authorization_consumer() {
       <code>[raw authorization id]|[og group match field]=[og group match id],[og role match field]=[og role match id]</code>
       <br/>such as:<br/>
       <code>
-      Campus Accounts|group-name=knitters,role-name=administrator member
-      ou=Underlings,dc=myorg,dc=mytld,dc=edu|gid=7,rid=28
-      ou=IT,dc=myorg,dc=mytld,dc=edu|node.field_state_id=IL,role-name=administrator member
+      Campus Accounts|group-name=knitters,role-name=administrator member<br/>
+      ou=Underlings,dc=myorg,dc=mytld,dc=edu|gid=7,rid=28<br/>
+      ou=IT,dc=myorg,dc=mytld,dc=edu|node.field_state_id=IL,role-name=administrator member<br/>
       </code>',
   );
 
@@ -148,6 +148,3 @@ function ldap_authorization_og_form_ldap_authorization_admin_form_alter(&$form, 
     $form['filter_and_mappings']['use_filter']['#type'] = 'hidden';
   }
 }
-
-
-

@@ -250,28 +250,30 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
         $sort_fields[drupal_strtolower($orderby['field'])]['direction'] = $orderby['direction'];
         $sort_fields[drupal_strtolower($orderby['field'])]['data']      = array();
       }
-
     }
 
     foreach ($entries as $key => &$entry) {
-        foreach ($view->field as $field) {
-          $alias = $field_alias[$field->field_alias];
-          if (is_array($entry) && array_key_exists($alias, $entry)) {
-            if (is_array($entry[$alias])) {
-              switch ($field->options['multivalue']) {
-                case 'v-all':
-                  // remove 'count' index
-                  array_shift($entry[$alias]);
-                  $entry[$alias] = implode($field->options['value_separator'], $entry[$alias]);
-                  break;
-                case 'v-count':
-                  $entry[$alias] = $entry[$alias]['count'];
-                  break;
-                case 'v-index':
-                  $index = $field->options['index_value'] >= 0 ? intval($field->options['index_value']) : $entry[$alias]['count'] + $field->options['index_value'];
-                  $entry[$alias] = array_key_exists($index, $entry[$alias]) ? $entry[$alias][$index] :
-                                                                              $entry[$alias][0];
-                  break;
+      if (isset($entry['jpegphoto'])) {
+        $entry['jpegphoto'][0] = "<img src='data:image/jpeg;base64,".base64_encode($entry['jpegphoto'][0])."' alt='photo' />";
+      }
+      foreach ($view->field as $field) {
+        $alias = $field_alias[$field->field_alias];
+        if (is_array($entry) && array_key_exists($alias, $entry)) {
+          if (is_array($entry[$alias])) {
+            switch ($field->options['multivalue']) {
+              case 'v-all':
+                // remove 'count' index
+                array_shift($entry[$alias]);
+                $entry[$alias] = implode($field->options['value_separator'], $entry[$alias]);
+                break;
+              case 'v-count':
+                $entry[$alias] = $entry[$alias]['count'];
+                break;
+              case 'v-index':
+                $index = $field->options['index_value'] >= 0 ? intval($field->options['index_value']) : $entry[$alias]['count'] + $field->options['index_value'];
+                $entry[$alias] = array_key_exists($index, $entry[$alias]) ? $entry[$alias][$index] :
+                                                                            $entry[$alias][0];
+                break;
             }
           }
           // order criteria

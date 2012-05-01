@@ -20,6 +20,9 @@ function ldap_create_drupal_account($name, $mail, $dn, $sid, $edit = array()) {
   $edit['mail'] = $mail;
   $edit['init'] = $mail;
   $edit['status'] = 1;
+  if (!isset($edit['signature'])) {
+    $edit['signature'] = '';
+  }
 
   // save 'init' data to know the origin of the ldap authentication provisioned account
   $edit['data']['ldap_authentication']['init'] = array(

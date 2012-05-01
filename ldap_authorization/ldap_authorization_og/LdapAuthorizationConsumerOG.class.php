@@ -63,8 +63,22 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 			$rid = NULL;
 
 			$targets = explode(',', $mapping[1]);
-			list($group_target, $group_target_value) = explode('=', $targets[0]);
-			list($role_target, $role_target_value) = explode('=', $targets[1]);
+			if (count($targets) != 2) {
+				return FALSE;
+			}			
+
+			$group_target_and_value =  explode('=', $targets[0]);
+			if (count($group_target_and_value) != 2) {
+				return FALSE;
+			}
+			list($group_target, $group_target_value) = $group_target_and_value;
+
+			$role_target_and_value = explode('=', $targets[1]);
+			if (count($role_target_and_value) != 2) {
+				return FALSE;
+			}
+			list($role_target, $role_target_value) = $role_target_and_value;
+
 			if ($group_target == 'gid') {
 				$gid = $group_target_value;
 			}
@@ -75,7 +89,11 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 				}
 			}
 			else {
-        list($entity_type, $field) = explode('.', $group_target);
+				$entity_type_and_field = explode('.', $group_target);
+				if (count($entity_type_and_field) != 2) {
+					return FALSE;
+			  }
+        list($entity_type, $field) = $entity_type_and_field;
 
 				$query = new EntityFieldQuery();
 				$query->entityCondition('entity_type', $entity_type)
@@ -232,6 +250,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     list($gid, $rid) = @explode('-', $authorization_id);
 		$watchdog_tokens['%gid'] = $gid;
 		$watchdog_tokens['%rid'] = $rid;
+		$watchdog_tokens['%uid'] = $user->uid;
 		$available_consumer_ids = $this->availableConsumerIDs(TRUE);
 
 		// CASE 1: Bad Parameters
@@ -275,7 +294,13 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 		}
 
 		// CASE 5:  grant role
-
+		if ($this->detailedWatchdogLog) {
+			watchdog('ldap_authorization_og',
+						 'LdapAuthorizationConsumerOG.grantSingleAuthorization()
+                calling og_role_grant(%gid, $uid, %rid)',
+              $watchdog_tokens,
+							WATCHDOG_DEBUG);
+		}
 		og_role_grant($gid, $user->uid, $rid);
 
 		// modify group_audience field for user
@@ -360,13 +385,18 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
 		if (!$pass) {
 			$message_text = '<code>"' . t('!map_to', $tokens) . '"</code> ' . t('does not map to any existing organic groups and roles. ');
+
       if ($has_form_values) {
         $create_consumers = (isset($form_values['synchronization_actions']['create_consumers']) && $form_values['synchronization_actions']['create_consumers']);
       }
       else {
         $create_consumers = $this->consumerConf->create_consumers;
       }
-			if ($create_consumers && $this->allowConsumerObjectCreation) {
+		  if ($normalized === FALSE) {
+				$message_type = 'error';
+				$message_text .= t('Can not normalize mappings.  Please check the syntax in Mapping of LDAP to OG Group', $tokens);
+		  }
+			elseif ($create_consumers && $this->allowConsumerObjectCreation) {
 				$message_type = 'warning';
 				$message_text .= t('It will be created when needed.  If "!map_to" is not intentional, please fix it', $tokens);
 			}
