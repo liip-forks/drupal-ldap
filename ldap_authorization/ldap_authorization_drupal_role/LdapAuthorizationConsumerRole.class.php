@@ -35,8 +35,14 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
   }
 
   public function refreshConsumerIDs() {
-    $this->drupalRolesByName = array_flip(user_roles());
-    $this->_availableConsumerIDs = array_values(user_roles(TRUE));
+    $this->drupalRolesByName = array();
+    foreach (array_flip(user_roles()) as $role_name => $rid) {
+      $this->drupalRolesByName[drupal_strtolower($role_name)] = $rid;
+    }
+    $this->_availableConsumerIDs = array(); // array_values(user_roles(TRUE));
+    foreach (array_values(user_roles(TRUE)) as $role_name) {
+      $this->_availableConsumerIDs[] = drupal_strtolower($role_name);
+    }
   }
 
   public function availableConsumerIDs($reset = FALSE) {

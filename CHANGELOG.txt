@@ -1,3 +1,4 @@
+Issue #1548102 by MJCO.  Mixed case Drupal role names failed.
 Issue #1477540. Added more debug code to ldap authorization og and addl error checking.
 Issue #1535538 by snickl.  fix testing username property
 Issue #1532084 by lucuhb.  Remove ldap_profile's dependeny on ldap_authentication
