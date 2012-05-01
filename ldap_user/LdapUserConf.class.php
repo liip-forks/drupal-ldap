@@ -332,6 +332,9 @@ class LdapUserConf {
       $edit['pass'] = user_password(20);
       $edit['init'] = $edit['mail'];
       $edit['status'] = 1;
+      if (!isset($edit['signature'])) {
+        $edit['signature'] = '';
+      }
       // save 'init' data to know the origin of the ldap authentication provisioned account
       $edit['data']['ldap_authentication']['init'] = array(
         'sid'  => $ldap_user['sid'],
