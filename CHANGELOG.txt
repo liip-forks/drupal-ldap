@@ -1,3 +1,4 @@
+Issue #1535994 by cgmonroe.  Fix for static caching of ldap_attributes_needed
 Issue #1548102 by MJCO.  Mixed case Drupal role names failed.
 Issue #1546968 by MJCO.  Fix for empty signature bug/problem.
 Added Configuration and initial code for synch REST webservice for push ldap user create, synch, cancel, etc.

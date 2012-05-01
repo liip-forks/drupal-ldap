@@ -114,15 +114,16 @@ function ldap_badattr($attr, $attr_name) {
  */
 function ldap_servers_attributes_needed($op, $sid = NULL) {
   static $attributes;
+  $static_cache_id = join('__', func_get_arg());
   if (!is_array($attributes)) {
     $attributes = array();
   }
-  if (!isset($attributes[$op])) {
-    drupal_alter('ldap_attributes_needed', $attributes[$op], $op, $sid);
+  if (!isset($attributes[$static_cache_id])) {
+    drupal_alter('ldap_attributes_needed', $attributes[$static_cache_id], $op, $sid);
     // attributes array needs to have no gaps of ldap_search(), ldap_read(), ldap_list() so apply array_values()
-    $attributes[$op] = array_values(array_unique($attributes[$op]));
+    $attributes[$static_cache_id] = array_values(array_unique($attributes[$static_cache_id]));
   }
-  return $attributes[$op];
+  return $attributes[$static_cache_id];
 }
 
 /**
