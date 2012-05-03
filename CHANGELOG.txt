@@ -1,3 +1,4 @@
+Issue #1559088 by NimbyDagda.  LDAP SSO "noisily" checks the remote users headers for mod_auth_kerb.
 Issue #1548102 by MJCO.  Mixed case Drupal role names failed.
 Issue #1477540. Added more debug code to ldap authorization og and addl error checking.
 Issue #1535538 by snickl.  fix testing username property
