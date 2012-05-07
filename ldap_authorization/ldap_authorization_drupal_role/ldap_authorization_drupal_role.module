@@ -36,8 +36,19 @@ ou=IT,dc=myorg,dc=mytld,dc=edu|administrator
 }
 
 /**
- * implements hook_form_alter()
+ * implements hook_ldap_user_targets_list_alter().
+ *
  */
-function ldap_authorization_drupal_role_form_ldap_authorization_admin_form_alter(&$form, $form_state) {
+
+function ldap_authorization_drupal_role_ldap_user_targets_list_alter(&$available_user_targets) {
+
+  $available_user_targets['property.role'] = array(
+    'name' => 'Property: Drupal Roles',
+    'configurable' => 0,
+    'notes' => t('configure at:') . 'admin/config/people/ldap/authorization',
+    'enabled' => TRUE,
+    'config_module' => 'ldap_authorization_drupal_role',
+    'synch_module' => 'ldap_authorization_drupal_role',
+  );
 
 }

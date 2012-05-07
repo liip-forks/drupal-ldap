@@ -10,8 +10,9 @@
  * turns array of variables to a form embedded in one table for each ldap server
  */
 function theme_ldap_user_conf_form($variables) {
-
+ // dsm('theme_ldap_user_conf_form variables'); dsm($variables);
   $form = $variables['form'];
+
   $tables = array();
   foreach ($form as $key => $element) {
     $parts = explode('__', $key);
@@ -23,6 +24,7 @@ function theme_ldap_user_conf_form($variables) {
       $tables[$sid]['rows'][$row][$col] = array('data' => drupal_render($form[$key]), 'class' => array('module'),  'colspan' => 1);
     }
   }
+ // dsm('tables');  dsm($tables);
   $submit = drupal_render($form['submit']);
   $output = drupal_render_children($form);
 

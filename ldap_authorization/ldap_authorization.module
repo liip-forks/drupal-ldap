@@ -6,14 +6,14 @@
  * ldap authorization module
  */
 
-define('LDAP_AUTHORIZATION_PROJECT_TAG', 'ldap_authorization');
-define('LDAP_AUTHORIZATION_USER_LDAP_NOT_FOUND', 101);
-define('LDAP_AUTHORIZATION_USER_NOT_LDAP_AUTHENTICATED', 102);
-define('LDAP_AUTHORIZATION_MAP_NOT_CONF_FOR_LOGON', 103);
-define('LDAP_AUTHORIZATION_NOT_APPLY_USER_1', 104);
-define('LDAP_AUTHORIZATION_SERVER_CONFIG_NOT_FOUND', 105);
+define('AUTHORIZATION_', 'ldap_authorization');
+define('AUTHORIZATION_USER_LDAP_NOT_FOUND', 101);
+define('AUTHORIZATION_USER_NOT_LDAP_AUTHENTICATED', 102);
+define('AUTHORIZATION_MAP_NOT_CONF_FOR_LOGON', 103);
+define('AUTHORIZATION_NOT_APPLY_USER_1', 104);
+define('AUTHORIZATION_SERVER_CONFIG_NOT_FOUND', 105);
 
-define('LDAP_AUTHORIZATION_NO_LDAP_SERVERS', 'ldap_authorization_no_ldap_servers');
+define('AUTHORIZATION_NO_LDAP_SERVERS', 'ldap_authorization_no_ldap_servers');
 
 /**
  * Implements hook_menu().
@@ -117,21 +117,7 @@ function ldap_authorization_ldap_server_in_use($sid, $server_name) {
   return $use_warnings;
 }
 
-/**
- * implements hook_ldap_user_targets_list_alter().
- *
- */
 
-function ldap_authorization_ldap_user_targets_list_alter(&$available_user_targets) {
-
-  $available_user_targets['property.role'] = array(
-    'name' => 'Property: Drupal Roles',
-    'configurable' => 0,
-    'configurable_text' => t('Drupal roles are configured via LDAP Authorization module.'),
-    'notes' => t('configure at:') . 'admin/config/people/ldap/authorization',
-  );
-
-}
 
 /**
  * Implements hook_ldap_authorization_maps_alter().

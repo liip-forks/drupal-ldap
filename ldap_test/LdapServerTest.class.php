@@ -141,10 +141,8 @@ class LdapServerTest extends LdapServer {
       $lcase_attribute[] = drupal_strtolower($attribute_name);
     }
     $attributes = $lcase_attribute;
-   // debug('attributes post strtolower'); debug($attributes);
 
     $filter = trim(str_replace(array("\n", "  "),array('',''), $filter)); // for test matching simplicity remove line breaks and tab spacing
-    //debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");
 
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
@@ -157,7 +155,6 @@ class LdapServerTest extends LdapServer {
 
     // return prepolulated search results in test data array if present
     if (isset($this->searchResults[$filter][$base_dn])) {
-    //  debug('search-results'); debug($this->searchResults[$filter][$base_dn]);
       return $this->searchResults[$filter][$base_dn];
     }
 
@@ -172,17 +169,14 @@ class LdapServerTest extends LdapServer {
   //  debug('this->entries'); debug($this->entries);
     foreach ($this->entries as $dn => $entry) {
       $dn_lcase = drupal_strtolower($dn);
-     // debug("testing $dn entry"); debug($entry);
       // if not in basedn, skip
       // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       // should be leftmost string in:
       // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       $pos = strpos($dn_lcase, $base_dn);
-     // debug("pos = $pos");
       if ($pos === FALSE || strcasecmp($base_dn, substr($dn_lcase, 0, $pos + 1)) == FALSE) {
         continue; // not in basedn
       }
-    //  debug("ldapservertest.class user data: filter attribute, $filter_attribute, filter value $filter_value");
       // if doesn't filter attribute has no data, continue
       $attr_value_to_compare = FALSE;
       foreach ($entry as $attr_name => $attr_value) {
@@ -196,7 +190,7 @@ class LdapServerTest extends LdapServer {
       }
 
       // match!
-//      debug("match"); debug($attr_value); debug($attributes);
+   //   debug("match"); debug($attr_value); debug($attributes);
       $entry['dn'] = $dn;
       if ($attributes) {
         $selected_data = array();
@@ -211,7 +205,6 @@ class LdapServerTest extends LdapServer {
     }
 
     $results['count'] = count($results);
-  //  debug('search final results'); debug($results);
     return $results;
   }
 

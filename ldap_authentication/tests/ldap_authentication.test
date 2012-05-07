@@ -6,8 +6,7 @@
  * ldap_authentication simpletests
  *
  */
-
-module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
+require_once('LdapTestFunctions0.class.php');
 
 class LdapAuthenticationTestCase extends DrupalWebTestCase {
   public static function getInfo() {
@@ -24,7 +23,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
   public $sid;
 
   function setUp() {
-    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role', 'ldap_test')); // don't need any real servers, configured, just ldap_servers code base
+    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role')); // don't need any real servers, configured, just ldap_servers code base
     variable_set('ldap_simpletest', 1);
     variable_set('ldap_help_watchdog_detail', 0);
   }
@@ -45,13 +44,13 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
    *
    */
   function prepTestData($sid, $testid) {
-    $this->testFunctions = new LdapTestFunctions();
+    $this->testFunctions = new LdapTestFunctions0();
 
     include(drupal_get_path('module', 'ldap_authentication') . '/tests/LdapServerTestData.' . $sid . '.inc');
-    $this->testFunctions->configureLdapServers($test_data['servers']);
+    $this->testFunctions->prepTestServers($test_data['servers']);
     $this->testData = $test_data;
     $authentication_conf = (is_array($testid)) ? $testid : $test_data['ldap_authentication'][$testid];
-    $this->testFunctions->configureLdapAuthentication($authentication_conf);
+    $this->testFunctions->configureAuthentication($authentication_conf);
 
 
 
@@ -327,7 +326,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
 
   function testAuthenticationWhitelistTests() {
-    ldap_server_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
+    require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
 
     $sid = 'ldapauthen1';
     $this->sid = $sid;

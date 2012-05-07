@@ -1,4 +1,4 @@
-
+need to change basedn in server definition to say base dn for users and group queries; or create a separate one.
 - create fields in $user for all data previously in $user->data
 - add to installs and uninstalls
 - add test to make sure fields are added on install
@@ -18,4 +18,3 @@ resolve uninstall, disable issues created by field dependencies, locked fields
 -- uninstalling ldap_user or ldap_authorization will
 
 -- OR PERHAPS admin checkbox for deleting and running cron for ldap_user and ldap_authorization disable and unistall, with custom message
-

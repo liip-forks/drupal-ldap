@@ -25,7 +25,6 @@ class LdapTestFunctions  {
     $this->data['ldap_user'] = ldap_test_ldap_user_data();
     $this->data['ldap_authorization'] = ldap_test_ldap_authorization_data();
     $this->data['ldap_authentication'] = ldap_test_ldap_authentication_data();
-   // debug('LdapTestFunctions this data after construct'); debug($this->data);
   }
 
 
@@ -97,7 +96,6 @@ class LdapTestFunctions  {
     foreach ($sids as $i => $sid) {
       $current_sids[$sid] = $sid;
       $this->data['ldap_servers'][$sid]['entries'] = $this->getLdifData($sid . '.ldif');
-     // debug("sid=$sid entried"); debug($this->data['ldap_servers'][$sid]['entries']);
       variable_set('ldap_test_server__' . $sid, $this->data['ldap_servers'][$sid]);
     }
 
@@ -139,7 +137,6 @@ class LdapTestFunctions  {
 
     $ldapUserConfAdmin = new LdapUserConfAdmin();
     $options = $this->data['ldap_user'][$ldap_user_test_conf_id];
-   // debug('configureLdapUser, options from conf file'); debug($options);
     if (!isset($options['sids'])) { // if sids for provisioning have not been set, enable all available sids
       foreach ($sids as $i => $sid) {
         $options['sids'][$sid] = TRUE;
@@ -150,7 +147,6 @@ class LdapTestFunctions  {
         $ldapUserConfAdmin->{$prop_name} = $options[$prop_name];
       }
     }
-  //  debug('configureLdapUser, before save'); debug($ldapUserConfAdmin);
     $ldapUserConfAdmin->save();
   }
 

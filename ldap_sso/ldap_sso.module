@@ -102,14 +102,20 @@ function ldap_sso_user_login_sso() {
         break;
 
       case 'mod_auth_kerb' :
-        if(preg_match('/^([A-Za-z0-9_\-\.]+)@([A-Za-z0-9_\-.]+)$/',
-          ($_SERVER['REMOTE_USER'] ? $_SERVER['REMOTE_USER'] : $_SERVER['REDIRECT_REMOTE_USER']),
-          $matches)){
+        $remote_user = FALSE;
+        if (isset($_SERVER['REMOTE_USER'])) {
+          $remote_user = $_SERVER['REMOTE_USER'];
+        }
+        elseif (isset($_SERVER['REDIRECT_REMOTE_USER'])) {
+          $remote_user = $_SERVER['REDIRECT_REMOTE_USER'];
+        }
+
+        if ($remote_user && preg_match('/^([A-Za-z0-9_\-\.]+)@([A-Za-z0-9_\-.]+)$/',
+          $remote_user,
+          $matches)) {
           $remote_user = $matches[1];
           $realm = $matches[2]; // This can be used later if realms is ever supported properly
         }
-        else
-          $remote_user = FALSE;
         break;
       }
 

@@ -110,13 +110,6 @@ function ldap_user_conf($type = NULL, $reset = FALSE) {
   return ($type == 'admin') ? $ldap_user_conf_admin : $ldap_user_conf;
 }
 
-/**
- * implements hook_ldap_user_synch_mapping_alter()
- */
-
-function ldap_user_ldap_user_synch_mapping_alter(&$synch_mapping) {
-
-}
 
 /**
  * implements hook_ldap_attributes_needed_alter()
@@ -124,13 +117,15 @@ function ldap_user_ldap_user_synch_mapping_alter(&$synch_mapping) {
 function ldap_user_ldap_attributes_needed_alter(&$attributes, $sych_context, $ldap_server) {
 
   //@todo need to load all ldap_user attributes used in synch mapping and add to list based on synch context.
+ // dpm("ldap_user_ldap_attributes_needed_alter"); dpm($attributes); dpm($ldap_server); dpm($sych_context);
   $attributes[] = 'dn';
   if ($ldap_server) { // puid attributes are server specific
     if (is_scalar($ldap_server)) {
       $ldap_server = ldap_servers_get_servers($ldap_server, 'enabled', TRUE);
     }
-    switch ($sych_context) {
 
+//    dpm("ldap_server"); dpm($ldap_server);
+    switch ($sych_context) {
       case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
       case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
         $attributes[] = $ldap_server->user_attr;
@@ -141,47 +136,69 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $sych_context, $ld
 
     }
   }
-
 }
 
-/**
- * implements hook_ldap_user_targets_list_alter().
- */
 
+/**
+ * implements hook_ldap_user_targets_list_alter()
+ *
+ * !note.  should not set values configured; just list possible values  those are set in ldapUserConf class.
+ */
 function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server) {
+
   //dpm('ldap_user_ldap_user_targets_list_alter0'); dpm($available_user_targets);
   $tokens = array(
     '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
   );
 
+
   // 1. Drupal user properties
-  $available_user_targets['property.status'] = array(
+  // 1.a make sure empty array are present so array + function works
+  foreach (array('property.status','property.timezone','property.signature') as $i => $property_id) {
+    if (!isset($available_user_targets[$property_id]) || !is_array($available_user_targets[$property_id])) {
+      $available_user_targets[$property_id] = array();
+    }
+  }
+  //@todo make these merges so they don't override saved values such as 'enabled'
+  $available_user_targets['property.status'] = $available_user_targets['property.status'] + array(
     'name' => 'Property: Acount Status',
     'configurable' => 1,
-    'configurable_text' => '1=enabled, 0=blocked.',
-  );
-  $available_user_targets['property.timezone'] = array(
-    'name' => 'Property: User Timezone',
-    'configurable' => 1,
-    'configurable_text' => NULL,
-  );
-  $available_user_targets['property.signature'] = array(
-    'name' => 'Property: User Signature',
-    'configurable' => 1,
-    'configurable_text' => NULL,
+    'notes' => '1=enabled, 0=blocked.',
+    'enabled' => FALSE,
+    'config_module' => 'ldap_user',
+    'synch_module' => 'ldap_user',
   );
 
+  $available_user_targets['property.timezone'] = $available_user_targets['property.timezone'] + array(
+    'name' => 'Property: User Timezone',
+    'configurable' => 1,
+    'enabled' => FALSE,
+    'config_module' => 'ldap_user',
+    'synch_module' => 'ldap_user',
+  );
+
+  $available_user_targets['property.signature'] = $available_user_targets['property.signature'] + array(
+    'name' => 'Property: User Signature',
+    'configurable' => 1,
+    'enabled' => FALSE,
+    'config_module' => 'ldap_user',
+    'synch_module' => 'ldap_user',
+  );
 
   // 2. Drupal user fields
   $user_fields = field_info_instances('user', 'user');
   foreach ($user_fields as $field_name => $field_instance) {
-    if (!isset($available_user_targets["field.$field_name"])) {
-      $available_user_targets['field.' . $field_name] = array(
-        'name' => t('Field: '). $field_instance['label'],
-        'configurable' => 1,
-        'configurable_text' => NULL,
-      );
+    $field_id = "field.$field_name";
+    if (!isset($available_user_targets[$field_id]) || !is_array($available_user_targets[$field_id])) {
+      $available_user_targets[$field_id] = array();
     }
+    $available_user_targets[$field_id] = $available_user_targets[$field_id] + array(
+      'name' => t('Field: '). $field_instance['label'],
+      'configurable' => 1,
+      'enabled' => FALSE,
+      'config_module' => 'ldap_user',
+      'synch_module' => 'ldap_user',
+    );
   }
 
   // 3. profile2 fields

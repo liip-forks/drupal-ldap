@@ -18,11 +18,230 @@ class LdapUserBasicTests extends LdapUserTestCase {
     );
   }
 
+/**
+ * test variations on drupal user account creation/provisioning and updating
+ */
+function testUserProvision() {
+
+ // $this->ldapTestId = 'UserProvision';
+ // $this->serversData = 'activedirectory.ldif';
+ // $this->prepTestData();
+
+
+  // create user with user_save with no ldap data specified and make sure its derived
+
+  // create user with user_save with all ldap data specified and make sure it overrides defaults
+
+  // test for provisioning of confict in puid and correct errors thrown
+
+  // test for provisioning with conflict username
+
+  // test for provisioning with conflict in ldap, but not drupal users or puid
+
+
+}
+
+
+
+  /**
+   * make sure install succeeds and ldap user functions/methods work
+   */
+  function testFunctionsAndInstall() {
+
+    $this->ldapTestId = $this->module_name . ': setup success';
+
+    // just to give warning if setup doesn't succeed.  may want to take these out at some point.
+    $setup_success = (
+        module_exists('ldap_user') &&
+        module_exists('ldap_servers') &&
+        (variable_get('ldap_simpletest', 0) == 1)
+      );
+    $this->assertTrue($setup_success, ' ldap_user setup successful', $this->ldapTestId);
+
+
+    $this->ldapTestId = $this->module_name . ': test for functions';
+    // no need for prep for this.
+    $api_functions = array(
+      'ldap_user_conf' => array(2, 0),
+    );
+
+    foreach ($api_functions as $api_function_name => $param_count) {
+      $reflector = new ReflectionFunction($api_function_name);
+      $this->assertTrue(
+        function_exists($api_function_name) &&
+        $param_count[1] == $reflector->getNumberOfRequiredParameters() &&
+        $param_count[0] == $reflector->getNumberOfParameters()
+        , ' api function ' . $api_function_name . ' parameters and required parameters count unchanged.', $this->ldapTestId);
+    }
+
+    $this->ldapTestId = $this->module_name . ': cron test';
+    $this->assertTrue(drupal_cron_run(), t('Cron can run with ldap user enabled.'), $this->ldapTestId);
+
+    $sids = array('activedirectory');
+    $this->prepTestData($sids, 'default', 'default');
+
+
+    $this->ldapTestId = $this->module_name . ': construct ldap_user_conf object';
+    $ldap_user_conf = ldap_user_conf('admin', TRUE);
+    $this->assertTrue(is_object($ldap_user_conf), t('ldap_conf class instanticated'), $this->ldapTestId);
+
+
+    // test basic ldap user functions
+    $synch_context = LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER;
+
+    $account = NULL;
+    $user_edit = array('name' => 'jkeats');
+    $this->ldapTestId = $this->module_name . ': provisionDrupalAccount function test';
+
+    $jkeats = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
+  //  debug('jkeats user afterprovisionDrupalAccount'); debug($jkeats);
+
+    $jkeats = user_load_by_name('jkeats');
+
+    $properties_set = (
+      $jkeats->name == 'jkeats' &&
+      $jkeats->mail == 'boygen@hotmail.com' &&
+      $jkeats->init == 'boygen@hotmail.com' &&
+      $jkeats->status == 1
+    );
+    $this->assertTrue($properties_set, t('user name, mail, init, and status correctly populated for jkeats'), $this->ldapTestId);
+
+    $fields_set = (
+      isset($jkeats->ldap_user_puid['und'][0]['value']) &&
+      $jkeats->ldap_user_puid['und'][0]['value'] == 'e2eb4d760f81e89df1524cff71f720a0' &&
+      isset($jkeats->ldap_user_puid_property['und'][0]['value']) &&
+      $jkeats->ldap_user_puid_property['und'][0]['value'] == 'pixotechcomregistryuniqueid' &&
+      isset($jkeats->ldap_user_puid_sid['und'][0]['value']) &&
+      $jkeats->ldap_user_puid_sid['und'][0]['value'] == 'activedirectory' &&
+      isset($jkeats->ldap_user_current_dn['und'][0]['value']) &&
+      $jkeats->ldap_user_current_dn['und'][0]['value'] == 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com'
+    );
+    $this->assertTrue($fields_set, t('user ldap_user_puid, ldap_user_puid_property, ldap_user_puid_sid, and  ldap_user_current_dn correctly populated for jkeats'), $this->ldapTestId);
+
+
+    $data_diff = array_diff(
+      $jkeats->data['ldap_authentication'],
+      array (
+      'init' =>
+        array (
+          'sid' => 'activedirectory',
+          'dn' => NULL,
+          'mail' => 'boygen@hotmail.com',
+        ),
+      )
+     );
+    $this->assertTrue(count($data_diff) == 0, t('user->data array correctly populated for jkeats'), $this->ldapTestId);
+    // test account exists with correct username, mail, fname, puid, puidfield, dn
+
+    // change some user mock ldap data first, (mail and fname) then synch
+    $account = user_load_by_name('jkeats');
+    $user_edit = NULL;
+    $this->testFunctions->setFakeServerUserAttribute('activedirectory', 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com', 'mail', 'boygen@yahoo.com', 0);
+    $user = $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, NULL, TRUE);
+
+    $jkeats = user_load_by_name('jkeats');
+    $this->assertTrue($jkeats->mail == 'boygen@yahoo.com', t('synchToDrupalAccount worked for property (mail) for jkeats'), $this->ldapTestId);
+
+
+     // test account exists with correct username, mail, fname, puid, puidfield, dn
+  //  debug('jkeats after user synchToDrupalAccount'); debug($jkeats);
+
+
+    // delete and recreate test account to make sure account is in correct state
+    $ldap_user_conf->deleteDrupalAccount('jkeats', LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER);
+    $account = NULL;
+    $user_edit = array('name' => 'jkeats');
+    $jkeats = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
+
+    /**
+     * test that $ldap_user_conf->synchToDrupalAccount() works for various contexts.
+     * make sure changing when a given field/property is flagged for a particular context, everything works
+     * should test one property and one field as well as username, puid, and mail
+     */
+
+    $test =  array(
+      'user' => 'jkeats',
+      'field' => 'field.lname',
+      'field_values' => array('johnny', 'jonathon'),
+      'field_mapping' => array(
+        'sid' => 'activediretory',
+        'ldap_source' => 'givenname',
+        'convert' => 0,
+        'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+        'notes' => 'notes',
+        'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER),
+        'name' => 'Field: Last Name',
+        'configurable' => 1,
+        'enabled' => TRUE,
+        'config_module' => 'ldap_user',
+        'synch_module' => 'ldap_user',
+      ),
+
+      'property' => 'property.mail',
+      'property_values' => array('jkeats@hotmail.com', 'jkeats@yahoo.com'),
+      'property_mapping' => array(
+        'sid' => 'activediretory',
+        'ldap_source' => 'mail',
+        'convert' => 0,
+        'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+        'notes' => 'notes',
+        'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER),
+        'name' => 'Property: Mail',
+        'configurable' => 0,
+        'enabled' => TRUE,
+        'config_module' => 'ldap_servers',
+        'synch_module' => 'ldap_user',
+      ),
+    );
+
+    $test_contexts = array(
+      LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER,
+      LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER,
+      LDAP_USER_SYNCH_CONTEXT_CRON,
+      LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER,
+      LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER,
+    );
+
+    $sid = $sids[0];
+    foreach ($test_contexts  as $i => $context) {
+      foreach (array(1, 0) as $flagged_for_synch) {
+        // create user
+        // change fake ldap values for field and property
+        debug("test context: $context, flagged for synch:" . (int)$flagged_for_synch);
+        $ldap_user_conf->synchMapping[$sid][$test['property']] = $test['property_mapping'];
+        $ldap_user_conf->synchMapping[$sid][$test['field']] = $test['field_mapping'];
+        $ldap_user_conf->save();
+
+        $jkeats = user_load_by_name('jkeats');
+        debug('intial load'); debug($jkeats);
+
+        $user_edit = array();
+        $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $context, NULL, TRUE);
+
+        // TEST #1: check that field and property were altered correctly given context
+        $jkeats = user_load_by_name('jkeats');
+        debug('after user edit'); debug($jkeats);
+
+        // disable synching for property and field in given context
+        $ldap_user_conf->synchMapping[$sid][$test['property']]['contexts'] = array();
+        $ldap_user_conf->synchMapping[$sid][$test['field']]['contexts'] = array();
+        $ldap_user_conf->save();
+
+        // change fake ldap values for field and property
+        // execute $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $context, NULL, FALSE);
+        // TEST #2: check that field and property were not altered
+
+      }
+    }
+
+}
+
+
 
   /**
    * make sure user interface works
    */
-  function testUI() {
+  function x_testUI() {
 
     $this->ldapTestId = $this->module_name . ': user interface tests';
 
@@ -143,147 +362,5 @@ class LdapUserBasicTests extends LdapUserTestCase {
 
   }
 
-  /**
-   * make sure install succeeds and ldap user functions/methods work
-   */
-  function xx_testFunctionsAndInstall() {
-
-    $this->ldapTestId = $this->module_name . ': setup success';
-
-    // just to give warning if setup doesn't succeed.  may want to take these out at some point.
-    $setup_success = (
-        module_exists('ldap_user') &&
-        module_exists('ldap_servers') &&
-        (variable_get('ldap_simpletest', 0) == 1)
-      );
-    $this->assertTrue($setup_success, ' ldap_user setup successful', $this->ldapTestId);
-
-
-    $this->ldapTestId = $this->module_name . ': test for functions';
-    // no need for prep for this.
-    $api_functions = array(
-      'ldap_user_conf' => array(2, 0),
-    );
-
-    foreach ($api_functions as $api_function_name => $param_count) {
-      $reflector = new ReflectionFunction($api_function_name);
-      $this->assertTrue(
-        function_exists($api_function_name) &&
-        $param_count[1] == $reflector->getNumberOfRequiredParameters() &&
-        $param_count[0] == $reflector->getNumberOfParameters()
-        , ' api function ' . $api_function_name . ' parameters and required parameters count unchanged.', $this->ldapTestId);
-    }
-
-    $this->ldapTestId = $this->module_name . ': cron test';
-    $this->assertTrue(drupal_cron_run(), t('Cron can run with ldap user enabled.'), $this->ldapTestId);
-
-    $sids = array('activedirectory');
-    $this->prepTestData($sids, 'default', 'default');
-
-
-    $this->ldapTestId = $this->module_name . ': construct ldap_user_conf object';
-    $ldap_user_conf = ldap_user_conf();
-    $this->assertTrue(is_object($ldap_user_conf), t('ldap_conf class instanticated'), $this->ldapTestId);
-
-
-    // test basic ldap user functions
-    $synch_context = LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER;
-
-    $account = NULL;
-    $user_edit = array('name' => 'jkeats');
-    $this->ldapTestId = $this->module_name . ': provisionDrupalAccount function test';
-
-    $jkeats = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
-   // debug('jkeats user afterprovisionDrupalAccount'); debug($jkeats);
-
-    $jkeats = user_load_by_name('jkeats');
-
-    $properties_set = (
-      $jkeats->name == 'jkeats' &&
-      $jkeats->mail == 'boygen@hotmail.com' &&
-      $jkeats->init == 'boygen@hotmail.com' &&
-      $jkeats->status == 1
-    );
-    $this->assertTrue($properties_set, t('user name, mail, init, and status correctly populated for jkeats'), $this->ldapTestId);
-
-    $fields_set = (
-      isset($jkeats->ldap_user_puid['und'][0]['value']) &&
-      $jkeats->ldap_user_puid['und'][0]['value'] == 'e2eb4d760f81e89df1524cff71f720a0' &&
-      isset($jkeats->ldap_user_puid_property['und'][0]['value']) &&
-      $jkeats->ldap_user_puid_property['und'][0]['value'] == 'pixotechcomregistryuniqueid' &&
-      isset($jkeats->ldap_user_puid_sid['und'][0]['value']) &&
-      $jkeats->ldap_user_puid_sid['und'][0]['value'] == 'activedirectory' &&
-      isset($jkeats->ldap_user_current_dn['und'][0]['value']) &&
-      $jkeats->ldap_user_current_dn['und'][0]['value'] == 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com'
-    );
-    $this->assertTrue($fields_set, t('user ldap_user_puid, ldap_user_puid_property, ldap_user_puid_sid, and  ldap_user_current_dn correctly populated for jkeats'), $this->ldapTestId);
-
-
-    $data_diff = array_diff(
-      $jkeats->data['ldap_authentication'],
-      array (
-      'init' =>
-        array (
-          'sid' => 'activedirectory',
-          'dn' => NULL,
-          'mail' => 'boygen@hotmail.com',
-        ),
-      )
-     );
-    $this->assertTrue(count($data_diff) == 0, t('user->data array correctly populated for jkeats'), $this->ldapTestId);
-    // test account exists with correct username, mail, fname, puid, puidfield, dn
-
-    // change some user mock ldap data first, (mail and fname) then synch
-    $account = user_load_by_name('jkeats');
-    $user_edit = NULL;
-    $this->testFunctions->setFakeServerUserAttribute('activedirectory', 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com', 'mail', 'boygen@yahoo.com', 0);
-    $user = $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, NULL, TRUE);
-
-    $jkeats = user_load_by_name('jkeats');
-    $this->assertTrue($jkeats->mail == 'boygen@yahoo.com', t('synchToDrupalAccount worked for property (mail) for jkeats'), $this->ldapTestId);
-
-
-     // test account exists with correct username, mail, fname, puid, puidfield, dn
-  //  debug('jkeats after user synchToDrupalAccount'); debug($jkeats);
-
-    $ldap_user_conf->deleteDrupalAccount('jkeats', LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER);
-    // test account is deleted.
-
-
-
-
-
-
-//LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER', 1);
-//LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER', 2);
-//LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER', 3);
-//LDAP_USER_SYNCH_CONTEXT_CRON', 4);
-//LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER', 5);
-//'LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER', 6);
-
-}
-
-/**
- * test variations on drupal user account creation/provisioning and updating
- */
-function testUserProvision() {
-
- // $this->ldapTestId = 'UserProvision';
- // $this->serversData = 'activedirectory.ldif';
- // $this->prepTestData();
-
-
-  // create user with user_save with no ldap data specified and make sure its derived
-
-  // create user with user_save with all ldap data specified and make sure it overrides defaults
-
-  // test for provisioning of confict in puid and correct errors thrown
-
-  // test for provisioning with conflict username
-
-  // test for provisioning with conflict in ldap, but not drupal users or puid
-
-
-}
 
 }

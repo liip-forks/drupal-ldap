@@ -25,7 +25,7 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
   ldap_server_module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
   $test_functions = new LdapTestFunctions();
   $ldap_data = $test_functions->getLdifData('activedirectory.ldif');
-  dpm($ldap_data);
+ // dpm($ldap_data);
   //$ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
   $action = arg(count(explode('/', LDAP_USER_TEST_FORM_PATH)) + 1);
   $username = arg(count(explode('/', LDAP_USER_TEST_FORM_PATH)));
@@ -73,7 +73,7 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
     else {
       $user_entity = NULL;
     }
-    dpm("calling ldap_servers_get_user_ldap_data username=$username");
+  //  dpm("calling ldap_servers_get_user_ldap_data username=$username");
 
     $user_ldap_entry = ldap_servers_get_user_ldap_data($username, NULL, LDAP_TEST_QUERY_CONTEXT);
 

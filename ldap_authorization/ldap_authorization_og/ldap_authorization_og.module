@@ -79,7 +79,6 @@ function ldap_authorization_og_entity_id_to_gid($entity_id) {
 function ldap_authorization_og_get_group($value, $value_type = 'group_name', $return = 'object') {
 
   $groups = og_load_multiple(og_get_all_group());
-  //debug("ldap_authorization_og_get_group: value_type=$value_type, return=$return "); debug($groups);
   $group = NULL;
   $node = NULL;
 
@@ -97,7 +96,6 @@ function ldap_authorization_og_get_group($value, $value_type = 'group_name', $re
       }
     }
   }
- // debug("ldap_authorization_og_get_group:"); debug($group);
 
   if ($return == 'object' && is_object($group) && is_object($node)) {
     return array($group, $node);

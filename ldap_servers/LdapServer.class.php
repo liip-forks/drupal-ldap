@@ -442,20 +442,6 @@ class LdapServer {
           WATCHDOG_ERROR);
       }
 
-    /**
-     * wtf is this page_token?
-      dpm("estimated_entries=$estimated_entries");
-      dpm("page_token isset"); dpm(isset($page_token));
-      dpm("page_token len"); dpm(strlen($page_token));
-      dpm("page_token gettype"); dpm(gettype($page_token));
-      dpm("page_token is null"); dpm((int)($page_token === NULL));
-      dpm("page_token is == '' "); dpm((int)($page_token == ''));
-      dpm("page_token str_split"); dpm(str_split($page_token));
-      dpm("page_token bin2hex"); dpm(bin2hex($page_token));
-      dpm("page_token convert_uudecode"); dpm(convert_uudecode($page_token));
-      dpm("page_token bindec"); dpm(bindec($page_token));
-   **/
-
       if (isset($ldap_query_params['sizelimit']) && $ldap_query_params['sizelimit'] && $aggregated_entries_count >= $ldap_query_params['sizelimit']) {
         $discarded_entries = array_splice($aggregated_entries, $ldap_query_params['sizelimit']);
         break;
@@ -470,7 +456,6 @@ class LdapServer {
     } while ($skipped_page || $has_page_results);
 
     $aggregated_entries['count'] = count($aggregated_entries);
-  //  dpm('aggregated_entries'); dpm($aggregated_entries);
     return $aggregated_entries;
   }
 
@@ -565,15 +550,13 @@ class LdapServer {
       $attributes = array();
     }
     else {
-      $attributes = ldap_servers_attributes_needed($op, $this);
+      $attributes = ldap_servers_attributes_needed($op, $this->sid);
     }
 
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
-   //   dpm("$filter, $basedn"); dpm($attributes);
-      $result = $this->search($basedn, $filter, $attributes);  // ,
-     // debug('ldapserver user_lookup result'); debug($result);
+      $result = $this->search($basedn, $filter, $attributes);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.
@@ -583,7 +566,6 @@ class LdapServer {
         continue;
       }
       $match = $result[0];
-//      dpm("match");dpm($match);
       // These lines serve to fix the attribute name in case a
       // naughty server (i.e.: MS Active Directory) is messing the
       // characters' case.
@@ -768,9 +750,7 @@ class LdapServer {
                 $authorizations[] = $group_id;
               }
               else {  // $derive_from_entry_attr, $user_ldap_attr, $user_ldap_entry $entries, $entries_attr,
-                //debug('top level check child groups:'); debug($members);
                 $is_member_via_child_groups = $this->groupsByEntryIsMember($members, $entries_attr, $base_dn,  $tested_groups, $membership_attr, $matching_user_value, 0, 10);
-                //debug("is member via child groups: $is_member_via_child_groups, dn=$dn"); debug($members);
                 if ($is_member_via_child_groups) {
                    $authorizations[] = $group_id;
                 }
@@ -816,11 +796,9 @@ class LdapServer {
     if ($entries !== FALSE) {
       foreach ($entries as $i => $entry) {
         $group_id = ($entries_attr == 'dn') ? (string)$entry['dn'] : (string)$entry[$entries_attr][0];
-       // debug("entry,$membership_attr=$derive_from_entry_attr");debug($entry); debug(isset($entry[$derive_from_entry_attr]));
         if (!in_array($group_id, $tested_groups)) {
           $tested_groups[] = $group_id;
           $child_members = (isset($entry[$membership_attr])) ? $entry[$membership_attr] : array('count' => 0);
-         // debug('child_members'); debug($child_members);
           unset($child_members['count']);
 
           if (count($child_members) == 0) {

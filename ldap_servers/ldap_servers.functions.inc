@@ -110,11 +110,14 @@ function ldap_badattr($attr, $attr_name) {
  * get array of required attributes for an ldap query
  *
  * @param string $op is operation being performed, user_update, user_insert, etc.
- * @param string $sid server id being used
+ * @param mixed $ldap_server server id or ldap server object being used
  */
-function ldap_servers_attributes_needed($op, $sid = NULL) {
+function ldap_servers_attributes_needed($op, $ldap_server = NULL) {
+ // debug("call of ldap_servers_attributes_needed, op=$op,ldap_server="); debug($ldap_server);
+ // dpm("call of ldap_servers_attributes_needed, op=$op,ldap_server="); dpm($ldap_server);
   static $attributes;
-  $static_cache_id = join('__', func_get_arg());
+  $sid = is_object($ldap_server) ? $ldap_server->sid : $ldap_server;
+  $static_cache_id = ($sid) ? $op . '__' . $sid : $op;
   if (!is_array($attributes)) {
     $attributes = array();
   }

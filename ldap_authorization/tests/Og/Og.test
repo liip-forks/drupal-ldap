@@ -4,8 +4,8 @@
  * @file simpletest for Ldap Authorization OG Module
  */
 
-module_load_include('php', 'ldap_test', 'LdapAuthorizationTestCase.class');
-module_load_include('php', 'ldap_authorization_og', 'LdapAuthorizationConsumerOG.class');
+require_once(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapAuthorizationTestCase.class.php');
+require_once(drupal_get_path('module', 'ldap_authorization_og') . '/LdapAuthorizationConsumerOG.class.php');
 
 class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
   public static function getInfo() {

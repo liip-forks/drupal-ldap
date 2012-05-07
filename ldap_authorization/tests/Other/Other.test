@@ -6,7 +6,7 @@
  * see getInfo() for test summary
  */
 
-module_load_include('php', 'ldap_test', 'LdapAuthorizationTestCase.class');
+require_once(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapAuthorizationTestCase.class.php');
 
 class LdapAuthorizationOtherAuthenticationTests  extends LdapAuthorizationTestCase {
   public static function getInfo() {

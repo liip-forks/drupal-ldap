@@ -5,3 +5,15 @@
  * Module for the LDAP module testing
  *
  */
+
+function ldap_test_menu() {
+
+  $items['ldap_test/dev/provision'] = array(
+    'title' => 'Test of LDAP Provision Using Fake LDAP Servers and Data',
+    'page callback' => 'ldap_test_dev_provision',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'ldap_test.dev.inc',
+  );
+
+  return $items;
+}

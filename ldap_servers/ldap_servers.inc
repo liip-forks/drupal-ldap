@@ -8,12 +8,11 @@
 
 function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context = NULL) {
   $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
-   //debug("_ldap_servers_get_user_ldap_data, drupal_username=$drupal_username"); debug($sid);
+  //debug("_ldap_servers_get_user_ldap_data, drupal_username=$drupal_username"); debug($sid);
   if (is_array($sid)) {
     $servers = array();
     foreach ($sid as $i => $_sid) {
       $server = ldap_servers_get_servers($_sid, 'enabled', TRUE, TRUE);
-     // debug("sid=$_sid"); debug($server);
       if (is_object($server)) {
         $servers[$_sid] = $server;
       }
@@ -22,10 +21,8 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context = N
   else {
     $servers = ldap_servers_get_servers($sid, 'enabled');
   }
- // debug("servers"); debug($servers);
   foreach ($servers as $sid => $ldap_server)  {
     if ($ldap_user = $ldap_server->user_lookup($drupal_username, $synch_context)) {
-   //   debug("$ldap_user $sid"); debug($ldap_user);
       $ldap_user['sid'] = $sid;
       return $ldap_user;
     }
@@ -36,10 +33,10 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context = N
  * see ldap_servers_get_servers()
  */
 function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
-
+ // dpm('_ldap_servers_get_servers params'); dpm(array($sid, $type, $flatten, $reset));
   ldap_server_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
   static $servers;
-
+  $type = ($type) ? $type : 'all';
   if ($reset) {
     $servers = array();
   }
@@ -55,7 +52,7 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
       }
     }
   }
-  //debug('_ldap_servers_get_servers, servers'); debug($servers);
+ // debug('_ldap_servers_get_servers, servers'); debug($servers);
   if ($sid) {
     if (!isset($servers[$type][$sid])) {
       return FALSE;

@@ -44,6 +44,19 @@ class LdapUserTestCase extends DrupalWebTestCase {
     parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role', 'ldap_test'));
     variable_set('ldap_simpletest', 1);
     variable_set('ldap_help_watchdog_detail', 0);
+    // create field_lname, field_binary_test user fields
+
+
+
+  foreach ($this->ldap_user_test_entity_fields() as $field_id => $field_conf) {
+    $field_info = field_info_field($field_id);
+    if (!$field_info) {
+      field_create_field($field_conf['field']);
+      field_create_instance($field_conf['instance']);
+    }
+  }
+
+
   }
 
   function tearDown() {
@@ -67,6 +80,55 @@ class LdapUserTestCase extends DrupalWebTestCase {
     if ($ldap_authentication_conf_id) {
       $this->testFunctions->configureLdapAuthentication($ldap_authentication_conf_id, $sids);
     }
+  }
+
+
+
+  function ldap_user_test_entity_fields() {
+
+    $fields = array();
+
+    $field_name = 'field_lname';
+    $fields[$field_name]['field'] = array(
+      'field_name' => $field_name,
+      'type' => 'text',
+      'entity_types' => array('user'),
+      'cadinality' => 1,
+      'translatable' => 0,
+      );
+
+    $fields[$field_name]['instance'] = array(
+      'field_name' => $field_name,
+      'entity_type' => 'user',
+      'bundle' => 'user',
+      'label' => 'Last Name',
+      'description' => '',
+      'required' => 0,
+      'settings' => array(
+        'text_processing' => 0,
+      ),
+      'widget' => array(
+        'type' => 'text_textfield',
+        'weight' => 0,
+      ),
+    );
+
+    $field_name = 'field_fname';
+    $fields[$field_name]['field'] = $fields['field_lname']['field'];
+    $fields[$field_name]['field']['field_name'] = $field_name;
+    $fields[$field_name]['instance'] = $fields['field_lname']['instance'];
+    $fields[$field_name]['instance']['field_name'] =  $field_name;
+    $fields[$field_name]['instance']['label'] =  'First Name';
+
+    $field_name = 'field_binary_test';
+    $fields[$field_name]['field'] = $fields['field_lname']['field'];
+    $fields[$field_name]['field']['field_name'] = $field_name;
+    $fields[$field_name]['instance'] = $fields['field_lname']['instance'];
+    $fields[$field_name]['instance']['field_name'] =  $field_name;
+    $fields[$field_name]['instance']['label'] =  'Binary test Field';
+
+    return $fields;
+
   }
 
 }
