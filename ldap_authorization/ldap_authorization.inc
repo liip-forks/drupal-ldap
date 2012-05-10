@@ -221,8 +221,8 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       $filtered_ldap_authorizations = array_keys($proposed_ldap_authorizations);
       if (is_array($consumer->consumerConf->mappings) && is_array($filtered_ldap_authorizations)) {
         foreach ($consumer->consumerConf->mappings as $mapping_filter) {
-          $map_from = $mapping_filter[0];
-          $map_to = $mapping_filter[1];
+          $map_from = drupal_strtolower($mapping_filter[0]);
+          $map_to = drupal_strtolower($mapping_filter[1]);
           $map_from_key = array_search($map_from, $filtered_ldap_authorizations);
           if ($map_from_key !== FALSE) {
             $filtered_ldap_authorizations[] = $map_to;
