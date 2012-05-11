@@ -53,7 +53,7 @@ function ldap_query_schema() {
       ),
     ),
   );
-
+  module_load_include('inc', 'ldap_servers','ldap_servers.functions');
   ldap_server_module_load_include('php', 'ldap_query', 'LdapQuery.class');
   $fields = LdapQuery::fields();
   foreach ($fields as $field_id => $field) {

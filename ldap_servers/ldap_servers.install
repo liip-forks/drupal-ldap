@@ -63,6 +63,7 @@ function ldap_servers_requirements($phase) {
  * Implements hook_schema().
  */
 function ldap_servers_schema() {
+  module_load_include('inc', 'ldap_servers','ldap_servers.functions');
   ldap_server_module_load_include('module', 'ldap_servers', 'ldap_servers'); // to get the LDAP_SERVERS_ENC_TYPE_CLEARTEXT constants issue#1209576
   ldap_server_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
 
