@@ -137,6 +137,8 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   function build_condition() {
     $operator = array('AND' => '&', 'OR' => '|');
     $main_group = '';
+    if (!isset($this->where))
+      $this->where = array(); // Initialize where clause if not set
     foreach ($this->where as $group => $info) {
       if (!empty($info['conditions'])) {
         $sub_group = '';
@@ -251,24 +253,27 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     }
 
     foreach ($entries as $key => &$entry) {
-        foreach ($view->field as $field) {
-          $alias = $field_alias[$field->field_alias];
-          if (array_key_exists($alias, $entry)) {
-            if (is_array($entry[$alias])) {
-              switch ($field->options['multivalue']) {
-                case 'v-all':
-                  // remove 'count' index
-                  array_shift($entry[$alias]);
-                  $entry[$alias] = implode($field->options['value_separator'], $entry[$alias]);
-                  break;
-                case 'v-count':
-                  $entry[$alias] = $entry[$alias]['count'];
-                  break;
-                case 'v-index':
-                  $index = $field->options['index_value'] >= 0 ? intval($field->options['index_value']) : $entry[$alias]['count'] + $field->options['index_value'];
-                  $entry[$alias] = array_key_exists($index, $entry[$alias]) ? $entry[$alias][$index] :
-                                                                              $entry[$alias][0];
-                  break;
+    	if (isset($entry['jpegphoto'])) {
+        $entry['jpegphoto'][0] = "data:image/jpeg;base64,".base64_encode($entry['jpegphoto'][0]);
+      }
+      foreach ($view->field as $field) {
+        $alias = $field_alias[$field->field_alias];
+        if (is_array($entry) && array_key_exists($alias, $entry)) {
+          if (is_array($entry[$alias])) {
+            switch ($field->options['multivalue']) {
+              case 'v-all':
+                // remove 'count' index
+                array_shift($entry[$alias]);
+                $entry[$alias] = implode($field->options['value_separator'], $entry[$alias]);
+                break;
+              case 'v-count':
+                $entry[$alias] = $entry[$alias]['count'];
+                break;
+              case 'v-index':
+                $index = $field->options['index_value'] >= 0 ? intval($field->options['index_value']) : $entry[$alias]['count'] + $field->options['index_value'];
+                $entry[$alias] = array_key_exists($index, $entry[$alias]) ? $entry[$alias][$index] :
+                                                                            $entry[$alias][0];
+                break;
             }
           }
           // order criteria
@@ -294,6 +299,18 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
       }
       $params[] = &$entries;
       call_user_func_array('array_multisort', $params);
+      // Some LDAP setups output a 'count' variable first in the array, which changes the array size;
+      // temporarily remove it, sort the arrays, and then put it back.
+      if (array_key_exists('count', $entries)) {
+        $countValue = array_shift($entries); // remove the count variable
+        $params[] = &$entries;
+        call_user_func_array('array_multisort', $params);
+        array_unshift($params, $countValue);
+      }
+      else {
+        $params[] = &$entries;
+        call_user_func_array('array_multisort', $params);
+      }
     }
 
     for ($i = 0; (!isset($limit) || $i < $limit) && $offset + $i < $num_entries; $i++) {
