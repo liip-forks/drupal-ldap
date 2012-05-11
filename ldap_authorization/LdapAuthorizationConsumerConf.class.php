@@ -152,7 +152,7 @@ class LdapAuthorizationConsumerConf {
     $this->deriveFromEntryUseFirstAttr  = (bool)($consumer_conf->derive_from_entry_use_first_attr);
     $this->deriveFromEntryNested = $consumer_conf->derive_from_entry_nested;
 
-    $this->mappings = $this->pipeListToArray($consumer_conf->mappings);
+    $this->mappings = $this->pipeListToArray($consumer_conf->mappings, TRUE);
     $this->useMappingsAsFilter = (bool)(@$consumer_conf->use_filter);
 
     $this->synchToLdap = (bool)(@$consumer_conf->synch_to_ldap);
@@ -224,10 +224,13 @@ class LdapAuthorizationConsumerConf {
 
 
 
-  protected function pipeListToArray($mapping_list_txt) {
+  protected function pipeListToArray($mapping_list_txt, $make_lowercase = FALSE) {
     $result_array = array();
     $mappings = preg_split('/[\n\r]+/', $mapping_list_txt);
     foreach ($mappings as $line) {
+      if ($make_lowercase) {
+        $line = drupal_strtolower($make_lowercase);
+      }
       if (count($mapping = explode('|', trim($line))) == 2) {
         $result_array[] = array(trim($mapping[0]), trim($mapping[1]));
       }

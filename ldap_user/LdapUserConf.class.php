@@ -129,8 +129,9 @@ class LdapUserConf {
       $this->synchMapping[$ldap_server->sid][$field]['direction'] == $direction
     );
 
-   // debug("synchMapping in isSynched=$result, field=$field, synch_contect=$synch_context direction=$direction, server:");
-  //  debug($ldap_server); debug('this->synchMapping'); debug($this->synchMapping);
+    debug("synchMapping in isSynched=$result, field=$field, synch_context=$synch_context direction=$direction, server:");
+   // debug($ldap_server);
+   // debug('this->synchMapping'); debug($this->synchMapping);
 
     return $result;
   }
@@ -196,9 +197,11 @@ class LdapUserConf {
     $drupal_user = user_load_by_name($account->name);
     if (!$ldap_user) {
       $sids = array_keys($this->sids);
+      debug("call ldap_servers_get_user_ldap_data,, account:"); debug($account);
       $ldap_user = ldap_servers_get_user_ldap_data($account->name, $sids, $synch_context);
     }
     $ldap_servers = ldap_servers_get_servers(NULL, 'enabled', FALSE);
+    debug("ldap user line 203 ldapuserconf.class, synch_context=$synch_context"); debug($ldap_user);
     foreach ($ldap_servers as $sid => $ldap_server) {
       $this->entryToUserEdit($ldap_user, $ldap_server, $user_edit, $synch_context, 'update');
     }
@@ -288,6 +291,7 @@ class LdapUserConf {
     }
 
     $ldap_servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);  // $ldap_user['sid']
+    debug('ldap user line 293 ldapuserconf.class'); debug($ldap_user);
     foreach ($ldap_servers as $sid => $ldap_server) {
       $this->entryToUserEdit($ldap_user, $ldap_server, $user_edit, $synch_context, 'create');
     }
@@ -320,9 +324,12 @@ class LdapUserConf {
   function entryToUserEdit($ldap_user, $ldap_server, &$edit, $synch_context, $op) {
     // need array of user fields and which direction and when they should be synched.
    // dpm('entryToUserEdit'); dpm($ldap_server);
-  //  dpm("isSynched property.mail, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER: ".  $this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER));
+    debug("isSynched property.mail, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER: ".
+        $this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER));
     if ($this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) && !isset($edit['mail'])) {
+      debug('entryToUserEdit ldap entry'); debug($ldap_user);
       $mail = $ldap_server->deriveEmailFromLdapEntry($ldap_user['attr']);
+       debug("isSynched property.mail: $mail");
       if ($mail) {
         $edit['mail'] = $mail;
       }

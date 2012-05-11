@@ -392,7 +392,7 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
  * @return - array of server conf object keyed on sid
  *         - single server conf object (if flatten == TRUE)
  */
-function ldap_servers_get_servers($sid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
+function ldap_servers_get_servers($sid = NULL, $type = NULL, $flatten = FALSE, $reset = FALSE) {
   ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
 
   if (variable_get('ldap_simpletest', FALSE)) {

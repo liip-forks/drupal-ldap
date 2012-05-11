@@ -44,10 +44,13 @@ function ldap_authorization_drupal_role_ldap_user_targets_list_alter(&$available
 
   $available_user_targets['property.role'] = array(
     'name' => 'Property: Drupal Roles',
+    'source' => 'depends on configuration',
     'configurable' => 0,
     'notes' => t('configure at:') . 'admin/config/people/ldap/authorization',
+    'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     'enabled' => TRUE,
     'config_module' => 'ldap_authorization_drupal_role',
+    'contexts' => array(),
     'synch_module' => 'ldap_authorization_drupal_role',
   );
 

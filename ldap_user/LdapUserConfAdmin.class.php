@@ -294,10 +294,11 @@ When more than one ldap server is enabled for provisioning data (or simply more 
 mappings need to be setup for each server.
 '),
     );
-
+   // debug("this->sids"); debug($this->sids);
     foreach($this->sids as $sid => $enabled_for_ldap_user) {
       if ($enabled_for_ldap_user) {
         $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
+     //   debug("sid=$sid, server object is object = " . is_object(($ldap_server))  );
         $this->addServerMappingFields($ldap_server, $form);
       }
     }
@@ -462,6 +463,10 @@ mappings need to be setup for each server.
    */
 
   private function addServerMappingFields($ldap_server, &$form) {
+
+    if (!is_array($this->synchMapping) || count($this->synchMapping) == 0) {
+      return;
+    }
 
     $target_options = array('0' => 'Select Target');
     foreach ($this->synchMapping[$ldap_server->sid] as $target_id => $mapping) {
