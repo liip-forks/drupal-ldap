@@ -48,41 +48,38 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
     }
   }
 
+  $form['intro'] = array(
+      '#type' => 'item',
+      '#markup' => t('<h1>Test LDAP to !consumer_name Configuration</h1>
+      <p>This form will not actually grant any authorizations, its just to show
+      what authorizations would be granted with this configuration.</p>', $consumer_tokens),
+  );
 
-    $form['intro'] = array(
-        '#type' => 'item',
-        '#markup' => t('<h1>Test LDAP to !consumer_name Configuration</h1>
-        <p>This form will not actually grant any authorizations, its just to show
-        what authorizations would be granted with this configuration.</p>', $consumer_tokens),
-    );
+  $form['consumer_type'] = array(
+    '#type' => 'hidden',
+    '#default_value' => $consumer_type,
+  );
 
+  $form['usernames'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Drupal usernames to test !consumer_shortName authorizations results for.  One per line.', $consumer_tokens),
+    '#default_value' => @$_SESSION['ldap_authorization_test_query']['usernames'] ,
+    '#cols' => 50,
+    '#rows' => 6,
+    '#description' => t('', $consumer_tokens),
+  );
 
-    $form['consumer_type'] = array(
-      '#type' => 'hidden',
-      '#default_value' => $consumer_type,
-    );
+  $form['random_users'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => @$_SESSION['ldap_authorization_test_form']['random_users'],
+    '#title' => t('Use 10 random users', $consumer_tokens),
+  );
 
-
-    $form['usernames'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Drupal usernames to test !consumer_shortName authorizations results for.  One per line.', $consumer_tokens),
-      '#default_value' => @$_SESSION['ldap_authorization_test_query']['usernames'] ,
-      '#cols' => 50,
-      '#rows' => 6,
-      '#description' => t('', $consumer_tokens),
-    );
-
-    $form['random_users'] = array(
-      '#type' => 'checkbox',
-      '#default_value' => @$_SESSION['ldap_authorization_test_form']['random_users'],
-      '#title' => t('Use 10 random users', $consumer_tokens),
-    );
-
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => 'test',
-    );
-    unset($_SESSION['ldap_authorization_test_query']);
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'test',
+  );
+  unset($_SESSION['ldap_authorization_test_query']);
   return $form;
 }
 

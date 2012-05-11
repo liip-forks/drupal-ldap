@@ -46,8 +46,13 @@ function ldap_authorization_og_ldap_authorization_consumer() {
  *
  * @return string "normalized" authorization id such as 3-3
  */
-function ldap_authorization_og_authorization_id($gid, $rid, $group_entity = NULL) {
-  return $gid . '-' . $rid;
+function ldap_authorization_og_authorization_id($gid, $rid, $entity_type = NULL) {
+  return (ldap_authorization_og_og_version() == 1) ? $gid . '-' . $rid :  join(':', array($entity_type, $gid, $rid));
+}
+
+
+function ldap_authorization_og_og_version() {
+  return (function_exists('og_action_info')) ? 2 : 1;
 }
 
 /**
@@ -56,7 +61,7 @@ function ldap_authorization_og_authorization_id($gid, $rid, $group_entity = NULL
  * @param int $entity_id as id of entity associated with organic group
  * @return int og group id
  */
-function ldap_authorization_og_entity_id_to_gid($entity_id) {
+function ldap_authorization_og1_entity_id_to_gid($entity_id) {
 
   $gid = db_select('og', 'og')
         ->fields('og', array('gid'))
@@ -76,10 +81,10 @@ function ldap_authorization_og_entity_id_to_gid($entity_id) {
  * @param string $return signifying return type. e.g.  'object', 'label', 'name', 'gid'
  * @return mixed organic group object, gid, label, etc.
  */
-function ldap_authorization_og_get_group($value, $value_type = 'group_name', $return = 'object') {
+function ldap_authorization_og1_get_group($value, $value_type = 'group_name', $return = 'object') {
 
   $groups = og_load_multiple(og_get_all_group());
-  //debug("ldap_authorization_og_get_group: value_type=$value_type, return=$return "); debug($groups);
+  //debug("ldap_authorization_og1_get_group: value_type=$value_type, return=$return "); debug($groups);
   $group = NULL;
   $node = NULL;
 
@@ -112,6 +117,50 @@ function ldap_authorization_og_get_group($value, $value_type = 'group_name', $re
   }
 }
 
+
+
+/**
+ * Generic function to convert between query values and organic groups structures and attributes
+ *
+ * @param mixed $value signifies query value e.g. 'bakers', 7 etc.
+ * @param mixed $value_type signifies query type e.g. 'group_name', 'gid', etc.
+ * @param string $return signifying return type. e.g.  'object', 'label', 'name', 'gid'
+ * @return mixed organic group object, gid, label, etc.
+ */
+function ldap_authorization_og2_get_group($entity_type, $value, $value_type = 'group_name', $return = 'object') {
+  require_once(drupal_get_path('module', 'ldap_authorization_og') . '/LdapAuthorizationConsumerOG.class.php');
+  $groups = LdapAuthorizationConsumerOG::og2Groups();
+
+  $group = NULL;
+  $node = NULL;
+
+  if ($value_type == 'gid') {
+    $group = $groups[$entity_type][$value];
+  }
+  elseif ($value_type == 'group_name') {
+    foreach ($groups[$entity_type] as $gid => $group) {
+      if ($group['label'] == $value) {
+        $node = node_load($gid);;
+        break;
+      }
+    }
+  }
+
+  if ($return == 'object' && is_array($group) && is_object($node)) {
+    return array($group, $node);
+  }
+  elseif ($return == 'label' || $return == 'name' && is_object($node)) {
+    return $node->title;
+  }
+  elseif ($return == 'gid' && is_object($node)) {
+    return $node->nid;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+
 /**
  * Test if a user has a particular group role
  *
@@ -121,7 +170,7 @@ function ldap_authorization_og_get_group($value, $value_type = 'group_name', $re
  *
  * @return boolean signifying if user has group x role
  */
-function ldap_authorization_og_has_role($gid, $uid, $role_name) {
+function ldap_authorization_og1_has_role($gid, $uid, $role_name) {
   $rid = ldap_authorization_og_rid_from_role_name($role_name);
   $roles = og_get_user_roles($gid, $uid);
   return (is_array($roles) && isset($roles[$rid]));
