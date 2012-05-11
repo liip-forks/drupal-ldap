@@ -89,7 +89,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     $ldap_authenticated = (boolean)(module_exists('ldap_authentication') && ldap_authentication_ldap_authenticated($user));
   }
   $watchdog_tokens['%ldap_authenticated'] = ($ldap_authenticated) ? 'yes' : 'no';
-
+  $user_edit = array();
   foreach ($consumers as $consumer_type => $consumer) {
 
     /**
@@ -250,11 +250,19 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       $_SESSION['ldap_authorization_test_query']['tokens'] = $watchdog_tokens;
     }
     if ($op == 'set') {
-      _ldap_authorizations_user_authorizations_set($user, $consumer, $filtered_ldap_authorizations, $user_ldap_entry, $watchdog_tokens);
+      $user_edit2 = _ldap_authorizations_user_authorizations_set($user, $consumer, $filtered_ldap_authorizations, $user_ldap_entry, $watchdog_tokens);
+      $user_edit = $user_edit2 + $user_edit;
     }
 
     $authorizations[$consumer_type] = $filtered_ldap_authorizations;
   } //  end foreach $consumers
+
+  if ($op == 'set') {
+    $user = user_load($user->uid, TRUE);
+    user_save($user, $user_edit);
+  }
+
+
   return array($authorizations, $notifications);
 
 }
@@ -268,8 +276,8 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
  */
 
 function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filtered_ldap_authorizations, &$ldap_entry, $watchdog_tokens) {
-  $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
 
+  $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
 
   /**
    * A.  Determine what authorizations have been granted in the past by ldap authorization
@@ -284,9 +292,6 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
     $initial_existing_ldap_authorizations = array();
   }
   $watchdog_tokens['%initial'] = join(', ', $initial_existing_ldap_authorizations);
-
-
-
   $grants = $filtered_ldap_authorizations;
   $watchdog_tokens['%filtered_ldap_authorizations'] = join(', ', $filtered_ldap_authorizations);
    /**
@@ -368,9 +373,20 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
    *  3.G  save user object and user data
    */
 
-  $user_edit = array();
-  $user_edit['data']['ldap_authorizations'][$consumer->consumerType] = $user_auth_data;
-  $user = user_save($user, $user_edit);
+  //if ($consumer->consumerType != 'og_group') {
+    if (property_exists($user, 'og_user_group_ref') && is_array($user->og_user_group_ref) && count($user->og_user_group_ref) == 0) {
+      unset($user->og_user_group_ref);
+    }
+    if (property_exists($user, 'og_other_user_group_ref') && is_array($user->og_other_user_group_ref) && count($user->og_other_user_group_ref) == 0 ) {
+      unset($user->og_other_user_group_ref);
+    }
+    $user_edit = array();
+    $user_edit['data']['ldap_authorizations'][$consumer->consumerType] = $user_auth_data;
+   // $user = user_save($user, $user_edit);
+     return $user_edit;
+ // }
+
+
 }
 
 function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_entry, &$ldap_server, &$consumer_conf, &$authz_ids, $op) {

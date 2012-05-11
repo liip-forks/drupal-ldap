@@ -446,6 +446,8 @@ class LdapServer {
 
   function ldapQuery($scope, $params) {
 
+    $params['filter'] = str_replace("\\","\\5c", $params['filter']);
+
     switch ($scope) {
       case LDAP_SCOPE_SUBTREE:
         $result = @ldap_search($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],

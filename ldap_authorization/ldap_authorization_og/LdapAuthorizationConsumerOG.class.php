@@ -302,9 +302,9 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
   public function grantSingleAuthorization(&$user, $authorization_id, &$user_auth_data) {
 
     $result = FALSE;
-    $watchdog_tokens =  array('%authorization_id' => $authorization_id, '%username' => $user->name);
+    $watchdog_tokens =  array('%authorization_id' => $authorization_id, '%username' => $user->name, '%ogversion' => $this->ogVersion);
 		if ($this->detailedWatchdogLog) {
-			watchdog('ldap_authorization_og',
+			watchdog('ldap_auth_og',
 						 'LdapAuthorizationConsumerOG.grantSingleAuthorization()
                 beginning to grant authorization for $group_name=%group_name to user %username',
               $watchdog_tokens,
@@ -324,7 +324,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
 		// CASE 1: Bad Parameters
 		if (!$authorization_id || !$gid || !$rid || !is_object($user) || ($this->ogVersion == 2  && !$group_type)) {
-      watchdog('ldap_authorization_og', 'LdapAuthorizationConsumerOG.grantSingleAuthorization()
+      watchdog('ldap_auth_og', 'LdapAuthorizationConsumerOG.grantSingleAuthorization()
                 improper parameters.',
                 $watchdog_tokens,
                 WATCHDOG_ERROR);
@@ -346,7 +346,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
     // CASE 3: user already granted permissions via ldap grant
 		if ($ldap_granted && $granted) {
-			watchdog('ldap_authorization_og', 'LdapAuthorizationConsumerOG.grantSingleAuthorization()
+			watchdog('ldap_auth_og', 'LdapAuthorizationConsumerOG.grantSingleAuthorization()
 								<hr />not granted: gid=%gid, for username=%username,
 								<br />because user already belongs to group',
 								$watchdog_tokens, WATCHDOG_DEBUG);
@@ -364,9 +364,10 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
 		// CASE 5:  grant role
 		if ($this->detailedWatchdogLog) {
-			watchdog('ldap_authorization_og',
+			watchdog('ldap_auth_og',
 						 'LdapAuthorizationConsumerOG.grantSingleAuthorization()
-                calling og_role_grant(%group_type, %gid, %uid, %rid)',
+                calling og_role_grant(%group_type, %gid, %uid, %rid).
+								og version=%ogversion',
               $watchdog_tokens,
 							WATCHDOG_DEBUG);
 		}
@@ -387,12 +388,14 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 				'state' => OG_STATE_ACTIVE,
 				'membership type' => OG_MEMBERSHIP_TYPE_DEFAULT,
 			);
+			watchdog('ldap_auth_og', 'og_group1', $watchdog_tokens, WATCHDOG_DEBUG);
 			$user_entity = og_group($gid, $values);
+			watchdog('ldap_auth_og', 'og_role_grant1', $watchdog_tokens, WATCHDOG_DEBUG);
 			og_role_grant($gid, $user->uid, $rid);
 		}
 
 		if ($this->detailedWatchdogLog) {
-			watchdog('ldap_authorization_og', 'LdapAuthorizationConsumerOG.grantSingleAuthorization()
+			watchdog('ldap_auth_og', 'LdapAuthorizationConsumerOG.grantSingleAuthorization()
 								<hr />granted: group_type=%group_type gid=%gid, rid=%rid for username=%username',
 								$watchdog_tokens, WATCHDOG_DEBUG);
 		}
