@@ -145,7 +145,6 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     $user = user_save($user, $user_edit);
     $result = ($user && isset($user->roles[$this->drupalRolesByName[$role_name]]));
 
-
     if ($this->detailedWatchdogLog) {
       watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.grantSingleAuthorization()
         granted: rid=%rid, role_name=%role_name for username=%username, result=%result',

@@ -59,6 +59,7 @@ function ldap_authorization_help_watchdog() {  // remove after testing
 
 
 function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $context) {
+
   $debug = FALSE;
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $authorizations = array();
@@ -90,6 +91,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
   }
   $watchdog_tokens['%ldap_authenticated'] = ($ldap_authenticated) ? 'yes' : 'no';
   $user_edit = array();
+
   foreach ($consumers as $consumer_type => $consumer) {
 
     /**
@@ -199,8 +201,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $watchdog_tokens));
     }
 
-
-
     /**
      * 2.  filter is both a whitelist and a mapping of an ldap results to an authorization id.
      * goal of this step is to generate $filtered_ldap_authorizations[$consumer_type]
@@ -272,6 +272,8 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
 
+  ldap_authorization_cleanse_empty_og_fields($user);
+
   /**
    * A.  Determine what authorizations have been granted in the past by ldap authorization
    */
@@ -331,7 +333,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
   /**
    * E. Do grants
    */
-  ldap_authorization_cleanse_empty_og_fields($user);
+
   $consumer->authorizationGrant($user, $user_auth_data, $grants, $ldap_entry, FALSE);
 
   /**
@@ -342,7 +344,6 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
   if ($consumer->consumerConf->revokeLdapProvisioned) {
     $revokes = array_diff($initial_existing_ldap_authorizations, $filtered_ldap_authorizations);
     if (count($revokes)) {
-      ldap_authorization_cleanse_empty_og_fields($user);
       $consumer->authorizationRevoke($user, $user_auth_data, $revokes, $ldap_entry, FALSE);
       $watchdog_tokens['%revokes'] = join(', ', $revokes);
     }
@@ -369,7 +370,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
 
     $user_edit = array();
     $user_edit['data']['ldap_authorizations'][$consumer->consumerType] = $user_auth_data;
-    ldap_authorization_cleanse_empty_og_fields($user);
+    $user = user_load($user->uid, TRUE);
     $user = user_save($user, $user_edit);
 
 }
