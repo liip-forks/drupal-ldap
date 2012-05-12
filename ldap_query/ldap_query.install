@@ -53,8 +53,8 @@ function ldap_query_schema() {
       ),
     ),
   );
-
-  require_once('LdapQuery.class.php');
+  module_load_include('inc', 'ldap_servers','ldap_servers.functions');
+  ldap_server_module_load_include('php', 'ldap_query', 'LdapQuery.class');
   $fields = LdapQuery::fields();
   foreach ($fields as $field_id => $field) {
     if (isset($field['schema'])) {
@@ -69,7 +69,8 @@ function ldap_query_schema() {
  * Add scope field to ldap_query table.
  */
 function ldap_query_update_7100() {
-  require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.module'); // get LDAP_SCOPE_SUBTREE constant
+  module_load_include('inc', 'ldap_servers','ldap_servers.functions');
+  ldap_server_module_load_include('module', 'ldap_servers', 'ldap_servers'); // get LDAP_SCOPE_SUBTREE constant
   // make sure 'create_consumers' field is there for old 7.x-1.x-dev versions
   if (!db_field_exists('ldap_query', 'scope')) {
     db_add_field('ldap_query', 'scope', array(

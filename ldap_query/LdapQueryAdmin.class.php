@@ -8,7 +8,8 @@
  */
 
 
-require_once('LdapQuery.class.php');
+
+module_load_include('php', 'ldap_query', 'LdapQuery.class');
 
 class LdapQueryAdmin extends LdapQuery {
 

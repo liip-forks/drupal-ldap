@@ -1,6 +1,7 @@
 name = LDAP Query
 description = "LDAP Query Builder and Storage for queries used by other ldap modules such as ldap feeds, ldap provision, etc"
 package = "Lightweight Directory Access Protocol"
+dependencies[] = ldap_servers
 
 core = 7.x
 

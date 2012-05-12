@@ -116,7 +116,7 @@ function ldap_query_cache_clear() {
  *         - single server conf object (if flatten == TRUE)
  */
 function ldap_query_get_queries($qid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
-  require_once('ldap_query.inc');
+  ldap_server_module_load_include('inc', 'ldap_query', 'ldap_query');
   if (variable_get('ldap_simpletest', FALSE)) {
     return _ldap_query_get_simpletest_queries($qid, $type, $flatten, $reset);
   }
@@ -126,6 +126,6 @@ function ldap_query_get_queries($qid = NULL, $type, $flatten = FALSE, $reset = F
 }
 
 function ldap_query_fields() {
-  require_once('LdapQuery.class.php');
+  ldap_server_module_load_include('php', 'ldap_query', 'LdapQuery.class');
   return LdapQuery::fields();
 }

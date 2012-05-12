@@ -86,7 +86,12 @@ function ldap_authorization_menu() {
   return $items;
 }
 
-
+/**
+ * @return default value for field user->ldap_authorizations
+ */
+function ldap_authorization_ldap_authorizations_default($entity_type, $entity, $field, $instance, $langcode) {
+  return NULL;
+}
 /**
  * Implements hook_user_login() login operation.
  */
@@ -146,7 +151,8 @@ function ldap_authorization_ldap_server_in_use($sid, $server_name) {
  *
  */
 function ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_entry, &$ldap_server, &$consumer_conf, &$authz_ids, $op) {
-  require_once('ldap_authorization.inc');
+
+  ldap_server_module_load_include('inc', 'ldap_authorization', 'ldap_authorization');
   _ldap_authorization_ldap_authorization_maps_alter($user, $user_ldap_entry, $ldap_server, $consumer_conf, $authz_ids,  $op);
 }
 
@@ -226,7 +232,7 @@ function ldap_authorization_get_consumers($consumer_type = NULL, $reset = FALSE,
  *
  */
 function ldap_authorizations_user_authorizations(&$user, $op = 'query', $consumer_type = NULL, $context = NULL) {
-  require_once('ldap_authorization.inc');
+  ldap_server_module_load_include('inc', 'ldap_authorization', 'ldap_authorization');
   list($new_authorizations, $notifications) = _ldap_authorizations_user_authorizations($user, $op, $consumer_type, $context);
   return array($new_authorizations, $notifications);
 }
@@ -274,7 +280,7 @@ function ldap_authorization_tokens($consumer) {
 
 
 function ldap_authorization_get_consumer_admin_object($consumer_type) {
-  require_once('LdapAuthorizationConsumerConfAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
   $consumer_object = ldap_authorization_get_consumer_object($consumer_type);
   $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_object);
   return $consumer_conf_admin;

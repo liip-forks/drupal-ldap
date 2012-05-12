@@ -424,8 +424,10 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
      *       a little tweak to add user->data and mail etc as parameters would make it more useful
      *       for external authentication modules
      */
-    require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.functions.inc');
-    $account = ldap_create_drupal_account($name, $ldap_user['mail'], $ldap_user['dn'], $sid);
+ 	ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
+ 
+
+   $account = ldap_create_drupal_account($name, $ldap_user['mail'], $ldap_user['dn'], $sid);
     if ($account === FALSE) {
       // need to throw error that account was not created
     }

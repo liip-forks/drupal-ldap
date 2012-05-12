@@ -3,7 +3,7 @@
 
 /**
  * @file
- * collection of functions that don't belong in server object
+ *
  */
 
 
@@ -12,7 +12,7 @@
  * see ldap_query_get_servers()
  */
 function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
-  require_once('LdapQueryAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_query', 'LdapQueryAdmin.class');
   static $queries;
 
   if ($reset) {

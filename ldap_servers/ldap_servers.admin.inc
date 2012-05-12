@@ -51,7 +51,7 @@ function ldap_servers_servers_list($sid = NULL, $actions = FALSE) {
  */
 
 function ldap_servers_admin_form($form, &$form_state, $op = NULL, $sid = NULL) {
-  require_once('LdapServerAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
   $server = new LdapServerAdmin($sid);
   $form = $server->drupalForm($op);
   return $form;
@@ -63,7 +63,7 @@ function ldap_servers_admin_form($form, &$form_state, $op = NULL, $sid = NULL) {
 function ldap_servers_admin_form_validate($form, &$form_state) {
 
   $op = drupal_strtolower($form_state['clicked_button']['#value']);
-  require_once('LdapServerAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
   $server = new LdapServerAdmin($form_state['values']['sid']);
 
   $errors = $server->drupalFormValidate($op, $form_state['values']);
@@ -86,7 +86,7 @@ function ldap_servers_admin_form_submit($form, &$form_state) {
   $button = drupal_strtolower($form_state['clicked_button']['#value']);
   $op = ($button == 'add') ? 'add' : 'edit';
   $verb = ($op == 'edit') ? 'edited' : $op . 'ed';
-  require_once('LdapServerAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
   $server = new LdapServerAdmin($form_state['values']['sid']);
   $server->drupalFormSubmit($op, $form_state['values']);  // add form data to object and save or create
 
@@ -163,7 +163,7 @@ function ldap_servers_admin_delete($form, &$form_state, $op = NULL, $sid = NULL)
 function ldap_servers_admin_delete_submit($form, &$form_state) {
   $values = $form_state['values'];
   $sid = $values['sid'];
-  require_once('LdapServerAdmin.class.php');
+  ldap_server_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
   $ldap_server = new LdapServerAdmin($sid);
   if ($values['confirm'] && $sid) {
     if ($result = $ldap_server->delete($sid)) {

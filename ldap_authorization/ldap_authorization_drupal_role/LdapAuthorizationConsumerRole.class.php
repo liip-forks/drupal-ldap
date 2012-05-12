@@ -9,7 +9,10 @@
  * such as drupal_role, og_group, etc.
  *
  */
-require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizationConsumerAbstract.class.php');
+
+module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerAbstract.class');
+
+
 class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstract {
 
   public $consumerType = 'drupal_role';
@@ -160,7 +163,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     return array_values($user->roles);
   }
 
-public function validateAuthorizationMappingTarget($map_to, $form_values = NULL, $clear_cache = FALSE) {
+  public function validateAuthorizationMappingTarget($map_to, $form_values = NULL, $clear_cache = FALSE) {
     $has_form_values = is_array($form_values);
 		$message_type = NULL;
 		$message_text = NULL;

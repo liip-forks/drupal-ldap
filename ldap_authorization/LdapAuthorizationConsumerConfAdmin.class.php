@@ -6,8 +6,8 @@
    * class to encapsulate an ldap authorization ldap entry to authorization ids mapping
    *
    */
-    require_once('LdapAuthorizationConsumerConf.class.php');
 
+module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConf.class');
   /**
    * LDAP Authorization Consumer Configration Admin Class
    */

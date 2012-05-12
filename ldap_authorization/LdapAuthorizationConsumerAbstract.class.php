@@ -90,8 +90,7 @@ class LdapAuthorizationConsumerAbstract {
     $this->mappingDirections = $params['consumer_mapping_directions'];
     $this->testLink = l(t('test') . ' ' . $this->name, LDAP_SERVERS_MENU_BASE_PATH . '/authorization/test/' . $this->consumerType);
     $this->editLink = l(t('edit') . ' ' . $this->name, LDAP_SERVERS_MENU_BASE_PATH . '/authorization/edit/' . $this->consumerType);
-
-    require_once('LdapAuthorizationConsumerConfAdmin.class.php');
+    ldap_server_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
     $this->consumerConf = new LdapAuthorizationConsumerConf($this);
 
   }
@@ -222,12 +221,14 @@ class LdapAuthorizationConsumerAbstract {
     }
     $watchdog_tokens['%username'] = $user->name;
     $watchdog_tokens['%action'] = $op;
+    $watchdog_tokens['%user_save'] = $user_save;
     $consumer_ids_log = array();
     $users_authorization_ids = $this->usersAuthorizations($user);
     $watchdog_tokens['%users_authorization_ids'] = join(', ', $users_authorization_ids);
+    if ($detailed_watchdog_log) {watchdog('ldap_authorization', "on call of grantsAndRevokes: user_auth_data=" . print_r($user_auth_data, TRUE), $watchdog_tokens, WATCHDOG_DEBUG);}
 
     foreach ($consumer_ids as $consumer_id) {
-      if ($detailed_watchdog_log) {watchdog('ldap_authorization', "consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
+      if ($detailed_watchdog_log) {watchdog('ldap_authorization', "consumer_id=$consumer_id, user_save=$user_save, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
       $log = "consumer_id=$consumer_id, op=$op,";
       $results[$consumer_id] = TRUE;
       if ($op == 'grant'  && !in_array($consumer_id, $users_authorization_ids)) {
@@ -282,14 +283,19 @@ class LdapAuthorizationConsumerAbstract {
         }
       }
       $consumer_ids_log[] = $log;
+      if ($detailed_watchdog_log) {watchdog('ldap_authorization', "user_auth_data after consumer $consumer_id" . print_r($user_auth_data, TRUE), $watchdog_tokens, WATCHDOG_DEBUG);}
+
+      $watchdog_tokens['%consumer_ids_log'] = (count($consumer_ids_log)) ? join('<hr/>', $consumer_ids_log) : t('no actions');
+      if ($user_save) {
+        $user_edit['data']['ldap_authorizations'][$this->consumerType] = $user_auth_data;
+        $user = user_load($user->uid, TRUE);
+        $user = user_save($user, $user_edit);
+        debug('grantsAndRevokes post save user'); debug($user);
+      }
+
     }
 
-    $watchdog_tokens['%consumer_ids_log'] = (count($consumer_ids_log)) ? join('<hr/>', $consumer_ids_log) : t('no actions');
-    if ($user_save) {
-      $user_edit = array();
-      $user_edit['data']['ldap_authorizations'][$this->consumerType] = $user_auth_data;
-      $user = user_save($user, $user_edit);
-    }
+
     watchdog('ldap_authorization', '%username:
       <hr/>LdapAuthorizationConsumerAbstract grantsAndRevokes() method log.  action=%action:<br/> %consumer_ids_log
       ',
@@ -333,6 +339,7 @@ class LdapAuthorizationConsumerAbstract {
   }
 
   public function hasLdapGrantedAuthorization(&$user, $authorization_id) {
+    // @todo load user and check field ldap_authorizations
     return @$user->data['ldap_authorizations'][$this->consumerType][$authorization_id];
   }
 

@@ -39,10 +39,36 @@ class LdapServer {
   public $mail_attr;
   public $mail_template;
   public $unique_persistent_attr;
+  public $unique_persistent_attr_binary = FALSE;
   public $allow_conflicting_drupal_accts = FALSE;
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
   public $detailed_watchdog_log;
+  public $editPath;
+  public $queriableWithoutUserCredentials = FALSE; // can this server be queried without user credentials provided?
+  public $userAttributeNeededCache = array(); // array of attributes needed keyed on $op such as 'user_update'
+
+
+
+  /**
+   * @param scalar $puid is permanent unique id value and
+   */
+
+  public function drupalUserFromPuid($puid) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'user')
+    ->fieldCondition('ldap_user_puid_sid', 'value', $this->sid, '=')
+    ->fieldCondition('ldap_user_puid', 'value', $puid, '=')
+    ->fieldCondition('ldap_user_puid_property', 'value', $this->unique_persistent_attr, '=')
+    ->addMetaData('account', user_load(1)); // run the query as user 1
+
+    $result = $query->execute();
+    if (isset($result['user'])) {
+      $user = entity_load('user', array_keys($result['user']));
+    }
+
+  }
+
 
   public $paginationEnabled = FALSE; // (boolean)(function_exists('ldap_control_paged_result_response') && function_exists('ldap_control_paged_result'));
 
@@ -140,7 +166,13 @@ class LdapServer {
       $this->bindpw = $server_record->bindpw;
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
-    $this->paginationEnabled = (boolean)(ldap_servers_php_supports_pagination() && $this->searchPagination);
+	$this->paginationEnabled = (boolean)(ldap_servers_php_supports_pagination() && $this->searchPagination);
+
+    $this->queriableWithoutUserCredentials = (boolean)(
+      $this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
+      $this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
+    );
+    $this->editPath = 'admin/config/people/ldap/servers/edit/' . $this->sid;
   }
 
   /**
@@ -412,20 +444,6 @@ class LdapServer {
           WATCHDOG_ERROR);
       }
 
-    /**
-     * wtf is this page_token?
-      dpm("estimated_entries=$estimated_entries");
-      dpm("page_token isset"); dpm(isset($page_token));
-      dpm("page_token len"); dpm(strlen($page_token));
-      dpm("page_token gettype"); dpm(gettype($page_token));
-      dpm("page_token is null"); dpm((int)($page_token === NULL));
-      dpm("page_token is == '' "); dpm((int)($page_token == ''));
-      dpm("page_token str_split"); dpm(str_split($page_token));
-      dpm("page_token bin2hex"); dpm(bin2hex($page_token));
-      dpm("page_token convert_uudecode"); dpm(convert_uudecode($page_token));
-      dpm("page_token bindec"); dpm(bindec($page_token));
-   **/
-
       if (isset($ldap_query_params['sizelimit']) && $ldap_query_params['sizelimit'] && $aggregated_entries_count >= $ldap_query_params['sizelimit']) {
         $discarded_entries = array_splice($aggregated_entries, $ldap_query_params['sizelimit']);
         break;
@@ -440,7 +458,6 @@ class LdapServer {
     } while ($skipped_page || $has_page_results);
 
     $aggregated_entries['count'] = count($aggregated_entries);
-  //  dpm('aggregated_entries'); dpm($aggregated_entries);
     return $aggregated_entries;
   }
 
@@ -726,9 +743,7 @@ class LdapServer {
                 $authorizations[] = $group_id;
               }
               else {  // $derive_from_entry_attr, $user_ldap_attr, $user_ldap_entry $entries, $entries_attr,
-                //debug('top level check child groups:'); debug($members);
                 $is_member_via_child_groups = $this->groupsByEntryIsMember($members, $entries_attr, $base_dn,  $tested_groups, $membership_attr, $matching_user_value, 0, 10);
-                //debug("is member via child groups: $is_member_via_child_groups, dn=$dn"); debug($members);
                 if ($is_member_via_child_groups) {
                    $authorizations[] = $group_id;
                 }
@@ -774,11 +789,9 @@ class LdapServer {
     if ($entries !== FALSE) {
       foreach ($entries as $i => $entry) {
         $group_id = ($entries_attr == 'dn') ? (string)$entry['dn'] : (string)$entry[$entries_attr][0];
-       // debug("entry,$membership_attr=$derive_from_entry_attr");debug($entry); debug(isset($entry[$derive_from_entry_attr]));
         if (!in_array($group_id, $tested_groups)) {
           $tested_groups[] = $group_id;
           $child_members = (isset($entry[$membership_attr])) ? $entry[$membership_attr] : array('count' => 0);
-         // debug('child_members'); debug($child_members);
           unset($child_members['count']);
 
           if (count($child_members) == 0) {
@@ -802,7 +815,7 @@ class LdapServer {
       return @$ldap_entry[$this->mail_attr][0];
     }
     elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
-      require_once('ldap_servers.functions.inc');
+      ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
       return ldap_server_token_replace($ldap_entry, $this->mail_template);
     }
     else {

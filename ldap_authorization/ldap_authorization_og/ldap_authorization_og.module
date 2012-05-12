@@ -129,8 +129,9 @@ function ldap_authorization_og1_get_group($value, $value_type = 'group_name', $r
  */
 function ldap_authorization_og2_get_group($entity_type, $value, $value_type = 'group_name', $return = 'object') {
   require_once(drupal_get_path('module', 'ldap_authorization_og') . '/LdapAuthorizationConsumerOG.class.php');
-  $groups = LdapAuthorizationConsumerOG::og2Groups();
 
+  list($groups, $availableConsumerIDs) = LdapAuthorizationConsumerOG::og2Groups();
+ // debug('groups');debug($groups);
   $group = NULL;
   $node = NULL;
 
@@ -139,7 +140,7 @@ function ldap_authorization_og2_get_group($entity_type, $value, $value_type = 'g
   }
   elseif ($value_type == 'group_name') {
     foreach ($groups[$entity_type] as $gid => $group) {
-      if ($group['label'] == $value) {
+      if ($group['name'] == $value) {
         $node = node_load($gid);;
         break;
       }
@@ -176,6 +177,11 @@ function ldap_authorization_og1_has_role($gid, $uid, $role_name) {
   return (is_array($roles) && isset($roles[$rid]));
 }
 
+function ldap_authorization_og2_has_role($gid, $uid, $role_name) {
+  $rid = ldap_authorization_og2_rid_from_role_name('node', $gid, $role_name);
+  $roles = og_get_user_roles('node', $gid, $uid);
+  return (is_array($roles) && isset($roles[$rid]));
+}
 /**
  * Derive og role id from role name
  *
@@ -184,6 +190,19 @@ function ldap_authorization_og1_has_role($gid, $uid, $role_name) {
  */
 function ldap_authorization_og_rid_from_role_name($role_name) {
   $roles = og_roles(0);
+  $rids = array_flip($roles);
+  return isset($rids[$role_name]) ? $rids[$role_name] : FALSE;
+}
+
+/**
+ * Derive og role id from role name
+ *
+ * @param string $role_name as og role name
+ * @return int og role id
+ */
+function ldap_authorization_og2_rid_from_role_name($entity_type, $gid, $role_name) {
+  list($groups, $availableConsumerIDs) = LdapAuthorizationConsumerOG::og2Groups();
+  $roles = $groups[$entity_type][$gid]['roles'];
   $rids = array_flip($roles);
   return isset($rids[$role_name]) ? $rids[$role_name] : FALSE;
 }

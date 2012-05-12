@@ -6,7 +6,7 @@
  *
  */
 
-require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_types/LdapTypeAbstract.class.php');
+module_load_include('php', 'ldap_servers', 'ldap_types/LdapTypeAbstract.class');
 
 class LdapTypeDefault extends LdapTypeAbstract {
 

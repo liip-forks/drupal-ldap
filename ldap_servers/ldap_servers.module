@@ -6,6 +6,8 @@ define('LDAP_SCOPE_BASE', 1);
 define('LDAP_SCOPE_ONELEVEL', 2);
 define('LDAP_SCOPE_SUBTREE', 3);
 
+define('LDAP_TEST_QUERY_CONTEXT', 999);
+
 define('LDAP_SERVERS_PROJECT_TAG', 'ldap');
 define('LDAP_SERVERS_MENU_BASE_PATH', 'admin/config/people/ldap');
 define('LDAP_SERVERS_INDEX_BASE_PATH', 'admin/config/people/ldap/servers');
@@ -120,6 +122,13 @@ define('LDAP_CLIENT_LOOP', 0x60);
 define('LDAP_REFERRAL_LIMIT_EXCEEDED', 0x61);
 
 require_once('ldap_servers.functions.inc');
+
+/**
+ * Advertise the current ldap api version
+ */
+function ldap_api_version() {
+  return '1.0';
+}
 
 function ldap_servers_menu() {
   $menu_offset = 4;
@@ -252,8 +261,9 @@ function ldap_servers_theme() {
  * @return - array of server conf object keyed on sid
  *         - single server conf object (if flatten == TRUE)
  */
-function ldap_servers_get_servers($sid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
-  require_once('ldap_servers.inc');
+function ldap_servers_get_servers($sid = NULL, $type = NULL, $flatten = FALSE, $reset = FALSE) {
+  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
+
   if (variable_get('ldap_simpletest', FALSE)) {
     return _ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset);
   }
@@ -268,12 +278,12 @@ function ldap_servers_cache_clear() {
 }
 
 function ldap_servers_fields() {
-  require_once('ldap_servers.inc');
+  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
   return _ldap_servers_fields();
 }
 
 function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL) {
-  require_once('ldap_servers.inc');
+ ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
   return _ldap_servers_get_user_ldap_data($drupal_user, $sid);
 }
 
@@ -298,7 +308,7 @@ function ldap_servers_disable_http_check(&$form) {
 }
 
 function ldap_servers_ldap_extension_summary($op = 'data') {
-  require_once('ldap_servers.status.inc');
+  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.status');
   return _ldap_servers_ldap_extension_summary($op);
 }
 
@@ -307,17 +317,17 @@ function ldap_servers_ldap_extension_loaded() {
 }
 
 function ldap_servers_encrypt($text, $encryption = NULL) {
-  require_once('ldap_servers.encryption.inc');
+  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
   return _ldap_servers_encrypt($text, $encryption);
 }
 
 function ldap_servers_encrypt_types($category = 'all') {
-  require_once('ldap_servers.encryption.inc');
+  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
   return _ldap_servers_encrypt_types($category);
 }
 
 function ldap_servers_decrypt($encrypted, $encryption = NULL) {
-  require_once('ldap_servers.encryption.inc');
+  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
   return _ldap_servers_decrypt($encrypted, $encryption);
 }
 

@@ -260,8 +260,9 @@ function ldap_help_get_ldap_servers() {
   if (!module_exists('ldap_servers')) {
     return FALSE;
   }
-  require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.settings.inc');
-  require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.inc');
+
+  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.settings');
+  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.admin');
 
   $conf_form = ldap_servers_settings();
 
@@ -276,8 +277,8 @@ function ldap_help_get_ldap_servers() {
   $field_to_properties = LdapServer::field_to_properties_map();
   $props = array_values($field_to_properties); // array('sid', 'name', 'status', 'ldap_type', 'port', 'tls', 'user_attr', 'mail_attr', 'user_dn_expression', 'ldap_to_drupal_user');
   foreach ($servers_objects as $sid => $server_object) {
-    $serverAdmin = new LdapServerAdmin($sid);
-    $form = $serverAdmin->drupalForm('update');
+    $server_admin = new LdapServerAdmin($sid);
+    $form = $server_admin->drupalForm('update');
 
     foreach ($props as $property) {
       $value = print_r($server_object->{$property}, TRUE);
@@ -316,9 +317,10 @@ function ldap_help_get_ldap_servers() {
 }
 
 function ldap_help_get_ldap_authentication() {
-    require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
-    $auth_conf = new LdapAuthenticationConfAdmin();
-    $conf_form = $auth_conf->drupalForm();
+
+  ldap_server_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
+  $auth_conf = new LdapAuthenticationConfAdmin();
+  $conf_form = $auth_conf->drupalForm();
 
   $items['logon']['authenticationMode'] = 'string';
   $items['logon']['authenticationServers'] = 'checkbox';
@@ -342,9 +344,10 @@ function ldap_help_get_ldap_authentication() {
 
 function ldap_help_get_ldap_authorization() {
   $status = array();
-  require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizationConsumerConfAdmin.class.php');
-  require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.settings.inc');
-  require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.inc');
+  ldap_server_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
+  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.settings');
+  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.admin');
+
   $servers = ldap_servers_get_servers(NULL, 'enabled');
   $consumers = ldap_authorization_get_consumers();
 

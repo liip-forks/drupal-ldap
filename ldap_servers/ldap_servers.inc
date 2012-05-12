@@ -24,9 +24,10 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid) {
  * see ldap_servers_get_servers()
  */
 function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
-  require_once('LdapServerAdmin.class.php');
+ // dpm('_ldap_servers_get_servers params'); dpm(array($sid, $type, $flatten, $reset));
+  ldap_server_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
   static $servers;
-
+  $type = ($type) ? $type : 'all';
   if ($reset) {
     $servers = array();
   }
@@ -58,9 +59,12 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
 /**
  * see ldap_servers_get_servers()
  */
-function _ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset = TRUE) {
-  require_once('tests/LdapServerTest.class.php');
-
+function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $reset = TRUE) {
+  if (!$type) {
+    $type = 'all';
+  }
+  debug("_ldap_servers_get_simpletest_servers sid=$sid, type=$type, flatten=$flatten reset=$reset");
+  ldap_server_module_load_include('php', 'ldap_test', 'LdapServerTest.class');
   $servers['all'] = LdapServerTest::getLdapServerObjects('all');
 
   foreach ($servers['all'] as $_sid => $ldap_server) {
