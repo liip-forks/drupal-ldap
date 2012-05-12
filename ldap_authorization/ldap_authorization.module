@@ -17,6 +17,19 @@ define('LDAP_AUTHORIZATION_NO_LDAP_SERVERS', 'ldap_authorization_no_ldap_servers
 
 
 /**
+ * this is a workaround for og 7.x-2.x bug I believe
+ */
+
+function ldap_authorization_cleanse_empty_og_fields(&$user) {
+  if (property_exists($user, 'og_user_group_ref') && is_array($user->og_user_group_ref) && count($user->og_user_group_ref) == 0) {
+    unset($user->og_user_group_ref);
+  }
+  if (property_exists($user, 'og_other_user_group_ref') && is_array($user->og_other_user_group_ref) && count($user->og_other_user_group_ref) == 0 ) {
+    unset($user->og_other_user_group_ref);
+  }
+}
+
+/**
  * Implements hook_menu().
  */
 function ldap_authorization_menu() {

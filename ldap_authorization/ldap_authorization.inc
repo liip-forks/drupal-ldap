@@ -250,18 +250,11 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       $_SESSION['ldap_authorization_test_query']['tokens'] = $watchdog_tokens;
     }
     if ($op == 'set') {
-      $user_edit2 = _ldap_authorizations_user_authorizations_set($user, $consumer, $filtered_ldap_authorizations, $user_ldap_entry, $watchdog_tokens);
-      $user_edit = $user_edit2 + $user_edit;
+      _ldap_authorizations_user_authorizations_set($user, $consumer, $filtered_ldap_authorizations, $user_ldap_entry, $watchdog_tokens);
     }
 
     $authorizations[$consumer_type] = $filtered_ldap_authorizations;
   } //  end foreach $consumers
-
-  if ($op == 'set') {
-    $user = user_load($user->uid, TRUE);
-    user_save($user, $user_edit);
-  }
-
 
   return array($authorizations, $notifications);
 
@@ -338,7 +331,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
   /**
    * E. Do grants
    */
-
+  ldap_authorization_cleanse_empty_og_fields($user);
   $consumer->authorizationGrant($user, $user_auth_data, $grants, $ldap_entry, FALSE);
 
   /**
@@ -349,6 +342,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
   if ($consumer->consumerConf->revokeLdapProvisioned) {
     $revokes = array_diff($initial_existing_ldap_authorizations, $filtered_ldap_authorizations);
     if (count($revokes)) {
+      ldap_authorization_cleanse_empty_og_fields($user);
       $consumer->authorizationRevoke($user, $user_auth_data, $revokes, $ldap_entry, FALSE);
       $watchdog_tokens['%revokes'] = join(', ', $revokes);
     }
@@ -373,19 +367,10 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
    *  3.G  save user object and user data
    */
 
-  //if ($consumer->consumerType != 'og_group') {
-    if (property_exists($user, 'og_user_group_ref') && is_array($user->og_user_group_ref) && count($user->og_user_group_ref) == 0) {
-      unset($user->og_user_group_ref);
-    }
-    if (property_exists($user, 'og_other_user_group_ref') && is_array($user->og_other_user_group_ref) && count($user->og_other_user_group_ref) == 0 ) {
-      unset($user->og_other_user_group_ref);
-    }
     $user_edit = array();
     $user_edit['data']['ldap_authorizations'][$consumer->consumerType] = $user_auth_data;
-   // $user = user_save($user, $user_edit);
-     return $user_edit;
- // }
-
+    ldap_authorization_cleanse_empty_og_fields($user);
+    $user = user_save($user, $user_edit);
 
 }
 

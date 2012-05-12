@@ -138,6 +138,10 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     }
 
     $user_edit = array('roles' => $user->roles + array($this->drupalRolesByName[$role_name] => $role_name));
+    if ($this->detailedWatchdogLog) {
+      watchdog('ldap_authorization', 'grantSingleAuthorization in drupal rold' . print_r($user, TRUE), array(), WATCHDOG_DEBUG);
+    }
+
     $user = user_save($user, $user_edit);
     $result = ($user && isset($user->roles[$this->drupalRolesByName[$role_name]]));
 
