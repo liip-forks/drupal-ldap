@@ -1,3 +1,9 @@
+A number of small fixes, including:
+-- changing of LdapAuthorizationConsumerConfAdmin->save() method to only save explicitly listed properties
+-- LdapAuthorizationConsumerConfAdmin->save() method to force 0 or 1 for status.
+-- call in ldap_authorization.inc to ldap_authorization_get_consumers() to flush cache.
+-- function ldap_authorizations_user_authorizations() changed to support multiple consumer types
+-- removal of test cases for case sensitivity and escaping.  These need to be tested on acutal ldap installs.
 Issue #1559088 by NimbyDagda.  LDAP SSO "noisily" checks the remote users headers for mod_auth_kerb.
 Issue #1548102 by MJCO.  Mixed case Drupal role names failed.
 Issue #1477540. Added more debug code to ldap authorization og and addl error checking.

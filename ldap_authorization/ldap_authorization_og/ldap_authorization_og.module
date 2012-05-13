@@ -84,7 +84,6 @@ function ldap_authorization_og1_entity_id_to_gid($entity_id) {
 function ldap_authorization_og1_get_group($value, $value_type = 'group_name', $return = 'object') {
 
   $groups = og_load_multiple(og_get_all_group());
-  //debug("ldap_authorization_og1_get_group: value_type=$value_type, return=$return "); debug($groups);
   $group = NULL;
   $node = NULL;
 
@@ -131,7 +130,6 @@ function ldap_authorization_og2_get_group($entity_type, $value, $value_type = 'g
   require_once(drupal_get_path('module', 'ldap_authorization_og') . '/LdapAuthorizationConsumerOG.class.php');
 
   list($groups, $availableConsumerIDs) = LdapAuthorizationConsumerOG::og2Groups();
- // debug('groups');debug($groups);
   $group = NULL;
   $node = NULL;
 

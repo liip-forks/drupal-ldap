@@ -233,7 +233,20 @@ function ldap_authorization_get_consumers($consumer_type = NULL, $reset = FALSE,
  */
 function ldap_authorizations_user_authorizations(&$user, $op = 'query', $consumer_type = NULL, $context = NULL) {
   ldap_server_module_load_include('inc', 'ldap_authorization', 'ldap_authorization');
-  list($new_authorizations, $notifications) = _ldap_authorizations_user_authorizations($user, $op, $consumer_type, $context);
+  if ($consumer_type != NULL) {
+    list($new_authorizations, $notifications) = _ldap_authorizations_user_authorizations($user, $op, $consumer_type, $context);
+  }
+  else {
+    $consumers = ldap_authorization_get_consumers();
+    $new_authorizations = array();
+    $notifications = array();
+    foreach ($consumers as $consumer_type => $consumer) {
+      list($new_authorizations_i, $notifications_i) = _ldap_authorizations_user_authorizations($user, $op, $consumer_type, $context);
+      $new_authorizations = $new_authorizations + $new_authorizations_i;
+      $notifications = $notifications + $notifications_i;
+    }
+
+  }
   return array($new_authorizations, $notifications);
 }
 

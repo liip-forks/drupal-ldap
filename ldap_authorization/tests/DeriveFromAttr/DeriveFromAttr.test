@@ -34,7 +34,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
 
     $user = $this->drupalCreateUser(array());
     $unkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'unkool', 'mail' =>  'unkool@nowhere.myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($unkool, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($unkool, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $this->assertTrue(count($new_authorizations) == 0, 'user account unkool tested for granting no drupal roles ', $this->ldapTestId . '.nomatch');
 
 
@@ -46,7 +46,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
 
     $user = $this->drupalCreateUser(array());
     $jkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query', $this->consumerType);  // just see if the correct ones are derived.
 
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('sysadmins', $new_authorizations['drupal_role']));
     $this->assertTrue($correct_roles, 'user account jkool tested for granting drupal_role "sysadmins"', $this->ldapTestId . '.onematch');
@@ -62,7 +62,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
 
     $user = $this->drupalCreateUser(array());
     $wilmaf = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'wilmaf', 'mail' =>  'wilmaf@guests.myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($wilmaf, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($wilmaf, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('sysadmins', $new_authorizations['drupal_role']));
     $this->assertTrue($correct_roles, 'user account wilma tested for granting drupal_role "sysadmins"', $this->ldapTestId . '.escaped');
     user_delete($user->uid);
@@ -79,7 +79,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
 
     $user = $this->drupalCreateUser(array());
     $verykool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'verykool', 'mail' =>  'verykool@myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) &&
       in_array('netadmins', $new_authorizations[$this->consumerType]) &&
       in_array('sysadmins', $new_authorizations[$this->consumerType])
@@ -99,7 +99,11 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
     $consumer_conf_admin->save();
     $user = $this->drupalCreateUser(array());
     $verykool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'verykool', 'mail' =>  'verykool@guests.myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query');  // just see if the correct ones are derived.
+    debug('verykool test'); debug($verykool);
+
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query', $this->consumerType);  // just see if the correct ones are derived.
+
+    debug('netadmins2 test'); debug(array($new_authorizations, $notifications));
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('netadmins2', $new_authorizations['drupal_role']));
     if (!$correct_roles) {
       debug('new authorizations'); debug($new_authorizations);
@@ -124,7 +128,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
     $consumer_conf_admin->save();
     $user = $this->drupalCreateUser(array());
     $wilmaf = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'wilmaf', 'mail' =>  'wilmaf@guests.myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($wilmaf, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($wilmaf, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('comma freaks', $new_authorizations['drupal_role']));
     $this->assertTrue($correct_roles, 'user account wilmaf tested for granting drupal_role "comma freaks"', $this->ldapTestId . '.deriveFromAttrUseFirstAttr.escaped');
     $consumer_conf_admin->deriveFromAttrUseFirstAttr = 0;
@@ -143,7 +147,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
     $consumer_conf_admin->save();
     $user = $this->drupalCreateUser(array());
     $barneyr = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'barneyr', 'mail' =>  'barneyr@guests.myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($barneyr, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($barneyr, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('comma freaks', $new_authorizations['drupal_role']));
     $this->assertTrue($correct_roles, 'user account barneyr tested for granting drupal_role "comma freaks"', $this->ldapTestId . '.deriveFromAttrUseFirstAttr.quoted');
     $consumer_conf_admin->deriveFromAttrUseFirstAttr = 0;
@@ -160,7 +164,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
     $this->testFunctions->setFakeServerProperty('ldapauthor1', 'ldapToDrupalUserPhp', $php);
     $user = $this->drupalCreateUser(array());
     $verykool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'verykool@gmail.com', 'mail' =>  'verykool@gmail.com'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query', $this->consumerType);  // just see if the correct ones are derived.
     // correct roles imply username correctly transformed to authmap
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('netadmins', $new_authorizations['drupal_role']) && in_array('sysadmins', $new_authorizations['drupal_role']));
     $this->assertTrue($correct_roles, 'php transform drupal username verykool@gmail.com to ldap username attribute verykool"', $this->ldapTestId . '.ldapToDrupalUserPhp');
@@ -189,7 +193,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
 
     $user = $this->drupalCreateUser(array());
     $unkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'unkool', 'mail' =>  'unkool@nowhere.myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($unkool, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($unkool, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $this->assertTrue((!isset($new_authorizations[$this->consumerType]) || count($new_authorizations[$this->consumerType]) == 0), 'user account unkool tested for granting no drupal roles ', $this->ldapTestId . '.nomatch');
 
 
@@ -200,7 +204,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
 
     $user = $this->drupalCreateUser(array());
     $justin = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'justin', 'mail' =>  'justin@myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($justin, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($justin, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $this->assertTrue(count($new_authorizations[$this->consumerType]) == 1, 'user account justin tested for granting 1 drupal roles ', $this->ldapTestId . '.no_parent_groups');
     $correct_roles = (bool)(
       isset($new_authorizations[$this->consumerType])
@@ -214,7 +218,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
      */
     $user = $this->drupalCreateUser(array());
     $newkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'newkool', 'mail' =>  'newkool@myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($newkool, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($newkool, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $this->assertTrue(count($new_authorizations[$this->consumerType]) == 4, 'user account newkool tested for granting 4 drupal roles ', $this->ldapTestId . '.nomatch');
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType])
       && in_array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', $new_authorizations[$this->consumerType])
@@ -230,7 +234,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
      */
     $user = $this->drupalCreateUser(array());
     $joeprogrammer = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'joeprogrammer', 'mail' =>  'joeprogrammer@myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($joeprogrammer, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($joeprogrammer, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $this->assertTrue(count($new_authorizations[$this->consumerType]) == 4, 'user account joeprogrammer tested for granting 4 drupal roles ', $this->ldapTestId . '.nomatch');
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType])
       && in_array('cn=developers,ou=it,dc=ad,dc=myuniversity,dc=edu', $new_authorizations[$this->consumerType])
@@ -247,7 +251,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
      */
     $user = $this->drupalCreateUser(array());
     $memento = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'memento', 'mail' =>  'memento@myuniversity.edu'), TRUE, $user);
-    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($memento, 'query');  // just see if the correct ones are derived.
+    list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($memento, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $this->assertTrue(count($new_authorizations[$this->consumerType]) == 2, 'user account memento tested for granting 2 roles ', $this->ldapTestId . '.recursion');
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType])
       && in_array('cn=lessrecursive,dc=ad,dc=myuniversity,dc=edu', $new_authorizations[$this->consumerType])

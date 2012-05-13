@@ -290,7 +290,6 @@ class LdapAuthorizationConsumerAbstract {
         $user_edit['data']['ldap_authorizations'][$this->consumerType] = $user_auth_data;
         $user = user_load($user->uid, TRUE);
         $user = user_save($user, $user_edit);
-        debug('grantsAndRevokes post save user'); debug($user);
       }
 
     }

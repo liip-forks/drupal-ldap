@@ -147,23 +147,28 @@ class LdapServerTest extends LdapServer {
 
     // return prepolulated search results in test data array if present
     if (isset($this->searchResults[$filter][$base_dn])) {
-     // debug('search-results'); debug($this->searchResults[$filter][$base_dn]);
       return $this->searchResults[$filter][$base_dn];
     }
     $base_dn = drupal_strtolower($base_dn);
-    $filter = trim($filter,"()");
+    $filter = strtolower(trim($filter,"()"));
 
     list($filter_attribute, $filter_value) = explode('=', $filter);
+    $filter_value = str_replace('\\5c','\\', $filter_value );
+    $filter_value = str_replace('\\5c','\\', $filter_value );
     // need to perform feaux ldap search here with data in
     $results = array();
-   // debug($this->testUsers);
     foreach ($this->testUsers as $dn => $user_data) {
+      $user_data_lcase = array();
+      foreach ($user_data['attr'] as $attr => $values) {
+        $user_data_lcase['attr'][strtolower($attr)] = $values;
+      }
 
+      $dn = strtolower($dn);
       // if not in basedn, skip
       // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       // should be leftmost string in:
       // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
-      $pos = strpos($dn, $base_dn);
+      $pos = stripos($dn, $base_dn);
       if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) == FALSE) {
         continue; // not in basedn
       }
@@ -171,28 +176,29 @@ class LdapServerTest extends LdapServer {
       }
 
       // if doesn't filter attribute has no data, continue
-      if (!isset($user_data['attr'][$filter_attribute])) {
-        continue;
-      }
+      // this is wrong because it is case sensitive
+    //  if (!isset($user_data['attr'][$filter_attribute])) {
+     //   continue;
+    //  }
 
       // if doesn't match filter, continue
-      $contained_values = $user_data['attr'][$filter_attribute];
+      $contained_values = $user_data_lcase['attr'][$filter_attribute];
       unset($contained_values['count']);
       if (!in_array($filter_value, array_values($contained_values))) {
         continue;
       }
 
       // loop through all attributes, if any don't match continue
-      $user_data['attr']['dn'] = $dn;
+      $user_data_lcase['attr']['dn'] = $dn;
       if ($attributes) {
         $selected_user_data = array();
         foreach ($attributes as $key => $value) {
-          $selected_user_data[$key] = (isset($user_data['attr'][$key])) ? $user_data['attr'][$key] : NULL;
+          $selected_user_data[$key] = (isset($user_data_lcase['attr'][$key])) ? $user_data_lcase['attr'][$key] : NULL;
         }
         $results[] = $selected_user_data;
       }
       else {
-        $results[] = $user_data['attr'];
+        $results[] = $user_data_lcase['attr'];
       }
     }
 

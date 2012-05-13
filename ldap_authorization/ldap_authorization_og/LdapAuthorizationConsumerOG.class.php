@@ -35,7 +35,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
   function __construct($consumer_type = NULL) {
 
     $this->ogVersion = ldap_authorization_og_og_version();
-	//	debug('this ogVersion='. $this->ogVersion);
     $params = ldap_authorization_og_ldap_authorization_consumer();
 		if ($this->ogVersion == 1) {
 			$this->ogRoles = og_roles(0);

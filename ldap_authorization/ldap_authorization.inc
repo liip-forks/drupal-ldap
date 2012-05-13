@@ -65,7 +65,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
   $authorizations = array();
   $notifications = array();
   $watchdog_tokens = array('%username' => $user->name);
-  $consumers = ldap_authorization_get_consumers($consumer_type, FALSE, FALSE);
+  $consumers = ldap_authorization_get_consumers($consumer_type, TRUE, FALSE);
 
   $servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);
 
