@@ -129,7 +129,7 @@ class LdapAuthorizationConsumerConf {
 
     $this->sid = $consumer_conf->sid;
     $this->consumerType = $consumer_conf->consumer_type;
-    $this->status = (bool)$consumer_conf->status;
+    $this->status = ($consumer_conf->status) ? 1 : 0;
     $this->onlyApplyToLdapAuthenticated  = (bool)(@$consumer_conf->only_ldap_authenticated);
 
     $this->deriveFromDn  = (bool)(@$consumer_conf->derive_from_dn);
