@@ -77,6 +77,9 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       watchdog('ldap_authorization', '%username : ldap_authorization not applied to user 1', $watchdog_tokens, WATCHDOG_DEBUG);
     }
     $notifications['all'] = LDAP_AUTHORIZATION_NOT_APPLY_USER_1;
+    foreach ($consumers as $consumer_type => $consumer) {
+      $authorizations[$consumer_type] = array();
+    }
     return array($authorizations, $notifications);
   }
 
@@ -92,7 +95,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
   $watchdog_tokens['%ldap_authenticated'] = ($ldap_authenticated) ? 'yes' : 'no';
 
   foreach ($consumers as $consumer_type => $consumer) {
-
+    $authorizations[$consumer_type] = array();
     /**
     * each consumer type has only one consumer conf and each consumer conf has only one ldap server id (sid)
     * so there is a one-to-one-to-one relationship between:
@@ -414,7 +417,8 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
         if ($consumer_conf->deriveFromAttrUseFirstAttr) {
           $attr_parts = ldap_explode_dn($authorization, 0);
           $first_part = explode('=', $attr_parts[0]);
-          $derive_from_attr_authorizations[] = drupal_strtolower(str_replace('\\2C', ',', trim($first_part[1])));
+         // $derive_from_attr_authorizations[] = drupal_strtolower(ldap_pear_unescape_filter_value(trim($first_part[1])));
+          $derive_from_attr_authorizations[] = drupal_strtolower(trim($first_part[1]));
         }
         else {
           $derive_from_attr_authorizations[] = drupal_strtolower($authorization);

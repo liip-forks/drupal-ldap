@@ -651,8 +651,7 @@ class LdapServer {
     // call recursively provided max depth not excluded and $groups_by_level[$level + 1] > 0
 
     // this needs to be configurable also and default per ldap implementation
-  //  $group_values = ldap_pear_escape_filter_value();
-    $group_values =  ldap_server_massage($groups_by_level[$derive_from_attribute_name][$level], 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP);
+    $group_values = ldap_server_massage($groups_by_level[$derive_from_attribute_name][$level], 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP);
     $filter = "(&\n  (objectClass=" . $this->groupObjectClass . ")\n  (" . $derive_from_attribute_name . "=*)\n  (|\n    (distinguishedname=" . join(")\n    (distinguishedname=", $group_values) . ")\n  )\n)";
     $level++;
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time

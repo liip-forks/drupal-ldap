@@ -1,3 +1,4 @@
+added ldap_pear_unescape_filter_value() function
 A number of small fixes, including:
 -- changing of LdapAuthorizationConsumerConfAdmin->save() method to only save explicitly listed properties
 -- LdapAuthorizationConsumerConfAdmin->save() method to force 0 or 1 for status.
