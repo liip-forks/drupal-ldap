@@ -377,8 +377,8 @@ function ldap_servers_show_sample_user_tokens($sid) {
             $char = substr($string, $i, 1);
             if (ord($char) < 32) {
                 $hex = dechex(ord($char));
-                if (strlen($hex) == 1) $hex = '0' . $hex;
-                $string = str_replace($char, '\\' . $hex, $string);
+                if (strlen($hex) == 1) $hex = '0'.$hex;
+                $string = str_replace($char, '\\'.$hex, $string);
             }
         }
         return $string;

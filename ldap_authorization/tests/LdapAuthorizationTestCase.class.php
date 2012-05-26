@@ -6,7 +6,7 @@
  * simpletests for ldap authorization
  *
  */
-require_once(drupal_get_path('module', 'ldap_authentication') . '/tests/LdapTestFunctions0.class.php');
+require_once(drupal_get_path('module', 'ldap_servers') . '/tests/LdapTestFunctions.class.php');
 require_once(drupal_get_path('module', 'ldap_authorization') . '/LdapAuthorizationConsumerConfAdmin.class.php');
 
 
@@ -33,7 +33,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
   public $consumerType = 'drupal_role'; // current, or only, consumer type being tested
 
   function setUp() {
-    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role', 'ldap_authorization_og'));
+    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role', 'ldap_authorization_og', 'og_example'));
     variable_set('ldap_simpletest', 1);
     variable_set('ldap_help_watchdog_detail', 0);
   }

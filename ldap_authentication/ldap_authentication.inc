@@ -441,8 +441,8 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
      *       a little tweak to add user->data and mail etc as parameters would make it more useful
      *       for external authentication modules
      */
-
     ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
+
     $ldap_user['sid'] = $sid;
 
     $account = NULL;

@@ -22,6 +22,11 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
   function setUp() {
     parent::setUp('og_ui');
 
+    if (ldap_authorization_og_og_version() != 1) {
+      debug('LdapAuthorizationOg2Tests must be run with OG 7.x-1.x');
+      return;
+    }
+
     $this->groups = array();
     require('ldap_authorization.inc');
 
@@ -58,6 +63,10 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
    * just make sure install succeeds and
    */
   function testBasicFunctionsAndApi() {
+    if (ldap_authorization_og_og_version() != 1) {
+      debug('LdapAuthorizationOg2Tests must be run with OG 7.x-1.x');
+      return;
+    }
     $this->ldapTestId = $this->module_name . ': setup success';
     // just to give warning if setup doesn't succeed.  may want to take these out at some point.
     $setup_success = (
@@ -82,9 +91,9 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
     $web_user = $this->drupalCreateUser();
     $this->ldapTestId = $this->module_name . ': og functions';
 
-    list($og_knitters, $og_knitters_node) = ldap_authorization_og_get_group('knitters', 'group_name','object');
-    list($og_bakers, $og_bakers_node) = ldap_authorization_og_get_group('bakers', 'group_name','object');
-    list($og_butchers, $og_butchers_node) = ldap_authorization_og_get_group('butchers', 'group_name','object');
+    list($og_knitters, $og_knitters_node) = ldap_authorization_og1_get_group('knitters', 'group_name','object');
+    list($og_bakers, $og_bakers_node) = ldap_authorization_og1_get_group('bakers', 'group_name','object');
+    list($og_butchers, $og_butchers_node) = ldap_authorization_og1_get_group('butchers', 'group_name','object');
     $anonymous_rid = ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE );
     $member_rid = ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE );
     $admin_rid = ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
@@ -96,18 +105,18 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
 
     /**
      * basic granting tests to make sure og_role_grant, ldap_authorization_og_rid_from_role_name,
-     *   and ldap_authorization_og_get_group functions work
+     *   and ldap_authorization_og1_get_group functions work
      */
 
     $ids = array($web_user->uid);
     $user_entity = entity_load('user', $ids);
     $this->assertTrue(og_is_member($og_knitters->gid, 'user', $user_entity),
        'User is member of Group og_knitters without LDAP (based on og_is_member() function)', $this->ldapTestId);
-    $this->assertTrue(ldap_authorization_og_has_role($og_knitters->gid, $web_user->uid, OG_AUTHENTICATED_ROLE ),
-      'User is member of Group og_knitters without LDAP (based on ldap_authorization_og_has_role() function)', $this->ldapTestId);
-    $this->assertTrue(ldap_authorization_og_has_role($og_bakers->gid, $web_user->uid, OG_AUTHENTICATED_ROLE ),
+    $this->assertTrue(ldap_authorization_og1_has_role($og_knitters->gid, $web_user->uid, OG_AUTHENTICATED_ROLE ),
+      'User is member of Group og_knitters without LDAP (based on ldap_authorization_og1_has_role() function)', $this->ldapTestId);
+    $this->assertTrue(ldap_authorization_og1_has_role($og_bakers->gid, $web_user->uid, OG_AUTHENTICATED_ROLE ),
       'User is member of Group og_bakers without LDAP (based on dap_authorization_og_has_role() function)', $this->ldapTestId);
-    $this->assertTrue(ldap_authorization_og_has_role($og_bakers->gid, $web_user->uid, OG_ADMINISTRATOR_ROLE),
+    $this->assertTrue(ldap_authorization_og1_has_role($og_bakers->gid, $web_user->uid, OG_ADMINISTRATOR_ROLE),
       'User is administrator member of Group og_bakers without LDAP (based on dap_authorization_og_has_role() function)', $this->ldapTestId);
     //
 
@@ -188,25 +197,25 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
     $normalized_authorization_id = ldap_authorization_og_authorization_id(3, 2);
     $this->assertTrue($normalized_authorization_id == '3-2', ' ldap_authorizations og ldap_authorization_og_authorization_id() function works', $this->ldapTestId);
 
-    $gid = ldap_authorization_og_entity_id_to_gid(4345);
-    $this->assertTrue($gid === FALSE, ' ldap_authorizations og ldap_authorization_og_entity_id_to_gid() returns false for bogus data', $this->ldapTestId);
+    $gid = ldap_authorization_og1_entity_id_to_gid(4345);
+    $this->assertTrue($gid === FALSE, ' ldap_authorizations og ldap_authorization_og1_entity_id_to_gid() returns false for bogus data', $this->ldapTestId);
 
 
     // create entity and get gid
-    $gid = ldap_authorization_og_entity_id_to_gid($og_knitters->etid);
-    $this->assertTrue($og_knitters->gid == $gid, 'ldap_authorization_og_entity_id_to_gid() function works', $this->ldapTestId);
+    $gid = ldap_authorization_og1_entity_id_to_gid($og_knitters->etid);
+    $this->assertTrue($og_knitters->gid == $gid, 'ldap_authorization_og1_entity_id_to_gid() function works', $this->ldapTestId);
 
-    $bakers_gid = ldap_authorization_og_get_group($og_bakers->gid, 'gid', 'gid');
-    $this->assertTrue($bakers_gid == $og_bakers->gid, 'ldap_authorization_og_get_group() function gid return works with query type gid', $this->ldapTestId);
+    $bakers_gid = ldap_authorization_og1_get_group($og_bakers->gid, 'gid', 'gid');
+    $this->assertTrue($bakers_gid == $og_bakers->gid, 'ldap_authorization_og1_get_group() function gid return works with query type gid', $this->ldapTestId);
 
-    $bakers_label = ldap_authorization_og_get_group($og_bakers->gid, 'gid', 'label');
-    $this->assertTrue($bakers_label == 'bakers', 'ldap_authorization_og_get_group() function label return works with query type gid', $this->ldapTestId);
+    $bakers_label = ldap_authorization_og1_get_group($og_bakers->gid, 'gid', 'label');
+    $this->assertTrue($bakers_label == 'bakers', 'ldap_authorization_og1_get_group() function label return works with query type gid', $this->ldapTestId);
 
-    $test = ldap_authorization_og_has_role($og_bakers->gid, $web_user->uid, OG_ADMINISTRATOR_ROLE);
-    $this->assertTrue($test, 'ldap_authorization_og_has_role() function works', $this->ldapTestId);
+    $test = ldap_authorization_og1_has_role($og_bakers->gid, $web_user->uid, OG_ADMINISTRATOR_ROLE);
+    $this->assertTrue($test, 'ldap_authorization_og1_has_role() function works', $this->ldapTestId);
 
-    $test = ldap_authorization_og_has_role($og_knitters->gid, $web_user->uid, OG_ADMINISTRATOR_ROLE);
-    $this->assertTrue($test === FALSE, 'ldap_authorization_og_has_role() function fails with FALSE', $this->ldapTestId);
+    $test = ldap_authorization_og1_has_role($og_knitters->gid, $web_user->uid, OG_ADMINISTRATOR_ROLE);
+    $this->assertTrue($test === FALSE, 'ldap_authorization_og1_has_role() function fails with FALSE', $this->ldapTestId);
 
     $test = ldap_authorization_og_rid_from_role_name('sdfsdfsdfsdf');
     $this->assertTrue($test === FALSE, 'ldap_authorization_og_rid_from_role_name() function fails with FALSE', $this->ldapTestId);
@@ -218,7 +227,10 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
       * functional tests should not need to done for all ldap consumer types.
       */
   function testAuthorizationsWithoutLogon() {
-
+    if (ldap_authorization_og_og_version() != 1) {
+      debug('LdapAuthorizationOg2Tests must be run with OG 7.x-1.x');
+      return;
+    }
     $this->ldapTestId = $this->module_name . ': og authorizations on logon';
     // just to give warning if setup doesn't succeed.  may want to take these out at some point.
     $setup_success = (
@@ -244,9 +256,9 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
     $this->assertTrue(is_object($og_auth),
      'Successfully instantiated LdapAuthorizationConsumerOG', $this->ldapTestId);
 
-    list($og_knitters, $og_knitters_node) = ldap_authorization_og_get_group('knitters', 'group_name','object');
-    list($og_bakers, $og_bakers_node) = ldap_authorization_og_get_group('bakers', 'group_name','object');
-    list($og_butchers, $og_butchers_node) = ldap_authorization_og_get_group('butchers', 'group_name','object');
+    list($og_knitters, $og_knitters_node) = ldap_authorization_og1_get_group('knitters', 'group_name','object');
+    list($og_bakers, $og_bakers_node) = ldap_authorization_og1_get_group('bakers', 'group_name','object');
+    list($og_butchers, $og_butchers_node) = ldap_authorization_og1_get_group('butchers', 'group_name','object');
     $anonymous_rid = ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE);
     $member_rid = ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE);
     $admin_rid = ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
@@ -307,7 +319,10 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
     * IV. Test authorizations granted on logon
     */
   function testAuthorizationsOnLogon() {
-
+    if (ldap_authorization_og_og_version() != 1) {
+      debug('LdapAuthorizationOg2Tests must be run with OG 7.x-1.x');
+      return;
+    }
     $this->ldapTestId = $this->module_name . ': og authorizations on logon';
     // just to give warning if setup doesn't succeed.  may want to take these out at some point.
     $setup_success = (
@@ -333,9 +348,9 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
     $this->assertTrue(is_object($og_auth),
      'Successfully instantiated LdapAuthorizationConsumerOG', $this->ldapTestId);
 
-    list($og_knitters, $og_knitters_node) = ldap_authorization_og_get_group('knitters', 'group_name','object');
-    list($og_bakers, $og_bakers_node) = ldap_authorization_og_get_group('bakers', 'group_name','object');
-    list($og_butchers, $og_butchers_node) = ldap_authorization_og_get_group('butchers', 'group_name','object');
+    list($og_knitters, $og_knitters_node) = ldap_authorization_og1_get_group('knitters', 'group_name','object');
+    list($og_bakers, $og_bakers_node) = ldap_authorization_og1_get_group('bakers', 'group_name','object');
+    list($og_butchers, $og_butchers_node) = ldap_authorization_og1_get_group('butchers', 'group_name','object');
     $anonymous_rid = ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE);
     $member_rid = ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE);
     $admin_rid = ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);

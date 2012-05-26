@@ -93,12 +93,13 @@ function ldap_sso_user_login_sso() {
   if ($enabled == TRUE) {
     switch ($implementation) {
       case 'mod_auth_sspi' :
-        if (isset($_SERVER['REMOTE_USER']))
+        $remote_user = FALSE;
+        if (isset($_SERVER['REMOTE_USER'])) {
           $remote_user = $_SERVER['REMOTE_USER'];
-        elseif (isset($_SERVER['REDIRECT_REMOTE_USER']))
+        }
+        elseif (isset($_SERVER['REDIRECT_REMOTE_USER'])) {
           $remote_user = $_SERVER['REDIRECT_REMOTE_USER'];
-        else
-          $remote_user = FALSE;
+        }
         break;
 
       case 'mod_auth_kerb' :

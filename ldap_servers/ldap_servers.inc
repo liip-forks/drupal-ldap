@@ -52,7 +52,7 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
       }
     }
   }
- // debug('_ldap_servers_get_servers, servers'); debug($servers);
+
   if ($sid) {
     if (!isset($servers[$type][$sid])) {
       return FALSE;
@@ -75,13 +75,14 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
   debug("_ldap_servers_get_simpletest_servers sid=$sid, type=$type, flatten=$flatten reset=$reset");
   ldap_server_module_load_include('php', 'ldap_test', 'LdapServerTest.class');
   $servers['all'] = LdapServerTest::getLdapServerObjects('all');
-  debug('servers all'); debug(array_keys($servers['all']));
+
   foreach ($servers['all'] as $_sid => $ldap_server) {
     if ($ldap_server->status == 1) {
       $servers['enabled'][$_sid] = $ldap_server;
     }
   }
-  //debug($servers);
+
+
   if ($sid) {
     if (!isset($servers[$type][$sid])) {
       return FALSE;

@@ -64,7 +64,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
   $authorizations = array();
   $notifications = array();
   $watchdog_tokens = array('%username' => $user->name);
-  $consumers = ldap_authorization_get_consumers($consumer_type, FALSE, FALSE);
+  $consumers = ldap_authorization_get_consumers($consumer_type, TRUE, FALSE);
 
   $servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);
 
@@ -217,7 +217,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       }
     }
     else {
-      array_walk($proposed_ldap_authorizations, 'drupal_strtolower');
+      array_walk($proposed_ldap_authorizations,'drupal_strtolower');
       $filtered_ldap_authorizations = array_keys($proposed_ldap_authorizations);
       if (is_array($consumer->consumerConf->mappings) && is_array($filtered_ldap_authorizations)) {
         foreach ($consumer->consumerConf->mappings as $mapping_filter) {
@@ -269,6 +269,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
 function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filtered_ldap_authorizations, &$ldap_entry, $watchdog_tokens) {
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
 
+  ldap_authorization_cleanse_empty_og_fields($user);
 
   /**
    * A.  Determine what authorizations have been granted in the past by ldap authorization
@@ -348,6 +349,22 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
     }
   }
 
+  $watchdog_tokens['%user_data'] = print_r($user_auth_data, TRUE);
+
+
+  /**
+   *  3.G  save user object and user data
+   */
+
+  $user = user_load($user->uid, TRUE);
+  $user->data['ldap_authorizations'][$consumer->consumerType] = $user_auth_data; // not a merge here.
+  $user_edit['data'] = $user->data;
+  $user = user_save($user, $user_edit);
+  $user = user_load($user->uid, TRUE);
+
+  $watchdog_tokens['%user_obj_data_ldap_authorizations'] = print_r($user->data, TRUE);
+
+
   if ($detailed_watchdog_log) {
     watchdog('ldap_authorization', '%username : user_authorizations_set results for %consumer_type:
       <hr/>1. Initial existing authorizations:  %initial
@@ -360,16 +377,11 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
       <hr/>6b. grants_pre_intersect: %grants_pre_intersect
       <hr/>6c. grants_post_intersect: %grants_post_intersect
       <hr/>7. revokes passed to authorizationRevoke(): %revokes
+      <hr/>8. user auth data after save for %consumer_type: %user_data
+      <hr/>9. user->data[ldap_authorizations] after save: <pre>%user_obj_data_ldap_authorizations</pre>
       ', $watchdog_tokens, WATCHDOG_DEBUG);
   }
 
-  /**
-   *  3.G  save user object and user data
-   */
-
-  $user_edit = array();
-  $user_edit['data']['ldap_authorizations'][$consumer->consumerType] = $user_auth_data;
-  $user = user_save($user, $user_edit);
 }
 
 function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_entry, &$ldap_server, &$consumer_conf, &$authz_ids, $op) {

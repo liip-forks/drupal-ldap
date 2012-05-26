@@ -6,14 +6,28 @@
  * ldap authorization module
  */
 
-define('AUTHORIZATION_', 'ldap_authorization');
-define('AUTHORIZATION_USER_LDAP_NOT_FOUND', 101);
-define('AUTHORIZATION_USER_NOT_LDAP_AUTHENTICATED', 102);
-define('AUTHORIZATION_MAP_NOT_CONF_FOR_LOGON', 103);
-define('AUTHORIZATION_NOT_APPLY_USER_1', 104);
-define('AUTHORIZATION_SERVER_CONFIG_NOT_FOUND', 105);
+define('LDAP_AUTHORIZATION_PROJECT_TAG', 'ldap_authorization');
+define('LDAP_AUTHORIZATION_USER_LDAP_NOT_FOUND', 101);
+define('LDAP_AUTHORIZATION_USER_NOT_LDAP_AUTHENTICATED', 102);
+define('LDAP_AUTHORIZATION_MAP_NOT_CONF_FOR_LOGON', 103);
+define('LDAP_AUTHORIZATION_NOT_APPLY_USER_1', 104);
+define('LDAP_AUTHORIZATION_SERVER_CONFIG_NOT_FOUND', 105);
 
-define('AUTHORIZATION_NO_LDAP_SERVERS', 'ldap_authorization_no_ldap_servers');
+define('LDAP_AUTHORIZATION_NO_LDAP_SERVERS', 'ldap_authorization_no_ldap_servers');
+
+
+/**
+ * this is a workaround for og 7.x-2.x bug I believe
+ */
+
+function ldap_authorization_cleanse_empty_og_fields(&$user) {
+  if (property_exists($user, 'og_user_group_ref') && is_array($user->og_user_group_ref) && count($user->og_user_group_ref) == 0) {
+    unset($user->og_user_group_ref);
+  }
+  if (property_exists($user, 'og_other_user_group_ref') && is_array($user->og_other_user_group_ref) && count($user->og_other_user_group_ref) == 0 ) {
+    unset($user->og_other_user_group_ref);
+  }
+}
 
 /**
  * Implements hook_menu().
@@ -104,8 +118,8 @@ function ldap_authorization_maps_alter_invoke(&$user, &$user_ldap_entry, &$ldap_
 function ldap_authorization_ldap_server_in_use($sid, $server_name) {
 
   $use_warnings = array();
-  $consumers = ldap_authorization_get_consumers(); //dpm($consumers);
-  foreach (ldap_authorization_get_consumers() as $consumer_type => $consumer_conf) {
+  $consumers = ldap_authorization_get_consumers();
+  foreach(ldap_authorization_get_consumers() as $consumer_type => $consumer_conf) {
     $consumer_conf['%server_name'] = $server_name;
     $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
     if ($sid == $consumer_obj->consumerConf->sid) {
@@ -220,7 +234,20 @@ function ldap_authorization_get_consumers($consumer_type = NULL, $reset = FALSE,
  */
 function ldap_authorizations_user_authorizations(&$user, $op = 'query', $consumer_type = NULL, $context = NULL) {
   ldap_server_module_load_include('inc', 'ldap_authorization', 'ldap_authorization');
-  list($new_authorizations, $notifications) = _ldap_authorizations_user_authorizations($user, $op, $consumer_type, $context);
+  if ($consumer_type != NULL) {
+    list($new_authorizations, $notifications) = _ldap_authorizations_user_authorizations($user, $op, $consumer_type, $context);
+  }
+  else {
+    $consumers = ldap_authorization_get_consumers();
+    $new_authorizations = array();
+    $notifications = array();
+    foreach ($consumers as $consumer_type => $consumer) {
+      list($new_authorizations_i, $notifications_i) = _ldap_authorizations_user_authorizations($user, $op, $consumer_type, $context);
+      $new_authorizations = $new_authorizations + $new_authorizations_i;
+      $notifications = $notifications + $notifications_i;
+    }
+
+  }
   return array($new_authorizations, $notifications);
 }
 

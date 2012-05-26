@@ -87,7 +87,6 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
     if (function_exists('dpm')) {
       dpm("ldap full result array for: " . $_SESSION['ldap_server_test_data']['username']);
       dpm($_SESSION['ldap_server_test_data']['LDAP Entry']['attr']);
-     // dpm(bin2hex($_SESSION['ldap_server_test_data']['LDAP Entry']['attr']['objectsid'][0]));
     }
 
     unset($_SESSION['ldap_server_test_data']);
@@ -143,7 +142,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   // $ldap_server = NULL;
   list($has_errors, $more_results) = ldap_servers_test_binding_credentials($ldap_server, $bindpw);
   $results = array_merge($results, $more_results);
-  if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+  if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
     $results = array_merge($results, $more_results);
 
@@ -226,7 +225,7 @@ function ldap_servers_test_user_mapping($drupal_username, &$ldap_server) {
         '%username' => $drupal_username,
         '%user_attr' => $ldap_server->user_attr )
       )
-    . ' ' . t('Error Message:') . ' ' . $ldap_server->errorMsg('ldap');
+    . ' ' . t('Error Message: ') . $ldap_server->errorMsg('ldap');
     $errors = TRUE;
   }
   else {

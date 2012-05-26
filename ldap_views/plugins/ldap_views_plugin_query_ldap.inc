@@ -137,8 +137,9 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   function build_condition() {
     $operator = array('AND' => '&', 'OR' => '|');
     $main_group = '';
-    if (!isset($this->where))
+    if (!isset($this->where)) {
       $this->where = array(); // Initialize where clause if not set
+    }
     foreach ($this->where as $group => $info) {
       if (!empty($info['conditions'])) {
         $sub_group = '';
@@ -253,8 +254,8 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     }
 
     foreach ($entries as $key => &$entry) {
-    	if (isset($entry['jpegphoto'])) {
-        $entry['jpegphoto'][0] = "data:image/jpeg;base64,".base64_encode($entry['jpegphoto'][0]);
+      if (isset($entry['jpegphoto'])) {
+        $entry['jpegphoto'][0] = "<img src='data:image/jpeg;base64,".base64_encode($entry['jpegphoto'][0])."' alt='photo' />";
       }
       foreach ($view->field as $field) {
         $alias = $field_alias[$field->field_alias];

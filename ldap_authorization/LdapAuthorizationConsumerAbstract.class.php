@@ -281,14 +281,18 @@ class LdapAuthorizationConsumerAbstract {
         }
       }
       $consumer_ids_log[] = $log;
+      if ($detailed_watchdog_log) {watchdog('ldap_authorization', "user_auth_data after consumer $consumer_id" . print_r($user_auth_data, TRUE), $watchdog_tokens, WATCHDOG_DEBUG);}
+
+      $watchdog_tokens['%consumer_ids_log'] = (count($consumer_ids_log)) ? join('<hr/>', $consumer_ids_log) : t('no actions');
+      if ($user_save) {
+        $user_edit['data']['ldap_authorizations'][$this->consumerType] = $user_auth_data;
+        $user = user_load($user->uid, TRUE);
+        $user = user_save($user, $user_edit);
+      }
+
     }
 
-    $watchdog_tokens['%consumer_ids_log'] = (count($consumer_ids_log)) ? join('<hr/>', $consumer_ids_log) : t('no actions');
-    if ($user_save) {
-      $user_edit = array();
-      $user_edit['data']['ldap_authorizations'][$this->consumerType] = $user_auth_data;
-      $user = user_save($user, $user_edit);
-    }
+
     watchdog('ldap_authorization', '%username:
       <hr/>LdapAuthorizationConsumerAbstract grantsAndRevokes() method log.  action=%action:<br/> %consumer_ids_log
       ',

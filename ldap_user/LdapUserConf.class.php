@@ -324,12 +324,12 @@ class LdapUserConf {
   function entryToUserEdit($ldap_user, $ldap_server, &$edit, $synch_context, $op) {
     // need array of user fields and which direction and when they should be synched.
    // dpm('entryToUserEdit'); dpm($ldap_server);
-    debug("isSynched property.mail, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER: ".
-        $this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER));
+  //  debug("isSynched property.mail, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER: ".
+    //    $this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER));
     if ($this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) && !isset($edit['mail'])) {
-      debug('entryToUserEdit ldap entry'); debug($ldap_user);
+    //  debug('entryToUserEdit ldap entry'); debug($ldap_user);
       $mail = $ldap_server->deriveEmailFromLdapEntry($ldap_user['attr']);
-       debug("isSynched property.mail: $mail");
+    //   debug("isSynched property.mail: $mail");
       if ($mail) {
         $edit['mail'] = $mail;
       }

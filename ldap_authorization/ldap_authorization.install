@@ -218,7 +218,7 @@ function ldap_authorization_update_7102() {
 }
 
 /**
- * change derive_from_attr_attr and derive_from_entry fields to text instead of varchar 255
+ * change derive_from_attr_attr and derive_from_entry fields to text instead of varchar 2555
  */
 function ldap_authorization_update_7103() {
 
@@ -247,7 +247,7 @@ function ldap_authorization_update_7104() {
 }
 
 /**
- * enable required ldap_user module and add fields to it.
+ * add derive_from_entry_user_ldap_attr field to allow user specification of dn or other identifier.
  */
 function ldap_authorization_update_7105() {
 

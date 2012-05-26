@@ -17,11 +17,11 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
   public function save() {
 
     $op = $this->inDatabase ? 'edit' : 'insert';
-    $values = $this;
+    $values = new stdClass; // $this;
     $values->sid = $this->sid;
     $values->consumer_type = $this->consumerType;
     $values->consumer_module = $this->consumer->consumerModule;
-    $values->status = (int)$this->status;
+    $values->status = ($this->status) ? 1 : 0;
     $values->only_ldap_authenticated = (int)$this->onlyApplyToLdapAuthenticated;
     $values->derive_from_dn = (int)$this->deriveFromDn;
     $values->derive_from_dn_attr = $this->deriveFromDnAttr;
@@ -72,7 +72,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       drupal_set_message(t('Failed to write LDAP Authorization to the database.'));
     }
 
-    // rever mappings to array and remove temporary properties from ctools export
+    // revert mappings to array and remove temporary properties from ctools export
     $this->mappings = $this->pipeListToArray($values->mappings, TRUE);
     foreach (array('consumer_type', 'consumer_module', 'only_ldap_authenticated',
       'derive_from_dn',

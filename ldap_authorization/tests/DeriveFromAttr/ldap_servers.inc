@@ -73,7 +73,7 @@ $servers['ldapauthor1']['users']['cn=Flintstone\, Wilma,ou=guest accounts,dc=ad,
     'password' => array( 0 => 'goodpwd', 'count' => 1),
     'memberOf' => array(
        0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
-       1 => 'cn=punctuated\,comma\,freaks,ou=it,dc=ad,dc=myuniversity,dc=edu',
+       1 => 'cn="punctuated,comma,freaks",ou=it,dc=ad,dc=myuniversity,dc=edu',
       'count' => 2
       ),
   );

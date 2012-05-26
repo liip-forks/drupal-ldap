@@ -130,7 +130,7 @@ class LdapAuthorizationConsumerConf {
 
     $this->sid = $consumer_conf->sid;
     $this->consumerType = $consumer_conf->consumer_type;
-    $this->status = (bool)$consumer_conf->status;
+    $this->status = ($consumer_conf->status) ? 1 : 0;
     $this->onlyApplyToLdapAuthenticated  = (bool)(@$consumer_conf->only_ldap_authenticated);
 
     $this->deriveFromDn  = (bool)(@$consumer_conf->derive_from_dn);
@@ -229,7 +229,7 @@ class LdapAuthorizationConsumerConf {
     $mappings = preg_split('/[\n\r]+/', $mapping_list_txt);
     foreach ($mappings as $line) {
       if ($make_lowercase) {
-        $line = drupal_strtolower($make_lowercase);
+        $line = drupal_strtolower($line);
       }
       if (count($mapping = explode('|', trim($line))) == 2) {
         $result_array[] = array(trim($mapping[0]), trim($mapping[1]));

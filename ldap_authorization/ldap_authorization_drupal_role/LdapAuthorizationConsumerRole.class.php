@@ -143,6 +143,10 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     }
 
     $user_edit = array('roles' => $user->roles + array($this->drupalRolesByName[$role_name] => $role_name));
+    if ($this->detailedWatchdogLog) {
+      watchdog('ldap_authorization', 'grantSingleAuthorization in drupal rold' . print_r($user, TRUE), array(), WATCHDOG_DEBUG);
+    }
+
     $user = user_save($user, $user_edit);
     $result = ($user && isset($user->roles[$this->drupalRolesByName[$role_name]]));
 
@@ -162,7 +166,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     return array_values($user->roles);
   }
 
-public function validateAuthorizationMappingTarget($map_to, $form_values = NULL, $clear_cache = FALSE) {
+  public function validateAuthorizationMappingTarget($map_to, $form_values = NULL, $clear_cache = FALSE) {
     $has_form_values = is_array($form_values);
 		$message_type = NULL;
 		$message_text = NULL;
