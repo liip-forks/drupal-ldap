@@ -20,7 +20,7 @@ class LdapAuthorizationConsumerConf {
   public $consumerModule = NULL;
   public $consumer = NULL;
   public $inDatabase = FALSE;
-
+  public $numericConsumerConfId = NULL;
 
   public $description = NULL;
   public $status = NULL;
@@ -129,6 +129,7 @@ class LdapAuthorizationConsumerConf {
 
     $this->sid = $consumer_conf->sid;
     $this->consumerType = $consumer_conf->consumer_type;
+    $this->numericConsumerConfId = $consumer_conf->numeric_consumer_conf_id;
     $this->status = ($consumer_conf->status) ? 1 : 0;
     $this->onlyApplyToLdapAuthenticated  = (bool)(@$consumer_conf->only_ldap_authenticated);
 

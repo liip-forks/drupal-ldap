@@ -48,8 +48,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values->create_consumers = (int)$this->createConsumers;
     $values->regrant_ldap_provisioned = (int)$this->regrantLdapProvisioned;
 
-
-    if (module_exists('ctools')) {
+ /**   if (module_exists('ctools')) {
       ctools_include('export');
       // Populate our object with ctool's properties
       $object = ctools_export_crud_new('ldap_authorization');
@@ -58,9 +57,14 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
           $values->$property = $value;
         }
       }
+      $values->export_type = ($this->numericConsumerConfId) ? EXPORT_IN_DATABASE : NULL;
+      dpm('values, pre crud save'); dpm($values);
       $result = ctools_export_crud_save('ldap_authorization', $values);
     }
-    elseif ($op == 'edit') {
+    else
+  **/
+
+    if ($op == 'edit') {
       $result = drupal_write_record('ldap_authorization', $values, 'consumer_type');
     }
     else { // insert
