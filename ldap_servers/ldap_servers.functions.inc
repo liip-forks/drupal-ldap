@@ -217,16 +217,16 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
        continue; // don't tokenize data that can't pass check_plain
     }
     if (!isset($parts_count[$attr_name])) {
-      $tokens[$pre . strtolower($attr_name) . $post] = $attr_value;
+      $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = $attr_value;
       $parts_count[$attr_name] = 0;
     }
-    $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . (int)$parts_count[$attr_name] . $post] = $attr_value;
+    $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . (int)$parts_count[$attr_name] . $post] = $attr_value;
 
     $parts_last_value[$attr_name] = $attr_value;
     $parts_count[$attr_name]++;
   }
   foreach ($parts_count as $attr_name => $count) {
-    $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = $parts_last_value[$attr_name];
+    $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = $parts_last_value[$attr_name];
   }
 
   // tokenize other attributes
@@ -236,18 +236,18 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
     foreach ($token_keys as $attr_name) {
       $attr_value = $ldap_entry[$attr_name];
       if (is_array($attr_value) && is_scalar($attr_value[0]) && $attr_value['count'] == 1) {
-        $tokens[$pre . strtolower($attr_name) . $post] = check_plain($attr_value[0]);
-        $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = check_plain($attr_value[0]);
-        $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = check_plain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[0]);
       }
       elseif (is_array($attr_value) && $attr_value['count'] > 1) {
-        $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[$attr_value['count']-1]);
+        $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[$attr_value['count']-1]);
         for ($i=0; $i<$attr_value['count']; $i++) {
-          $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = check_plain($attr_value[$i]);
+          $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = check_plain($attr_value[$i]);
         }
       }
       elseif (is_scalar($attr_value)) {
-        $tokens[$pre . strtolower($attr_name) . $post] = check_plain($attr_value);
+        $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($attr_value);
       }
     }
   }
@@ -271,7 +271,7 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
       else {
         $value = $ldap_entry[$token_key][0];
       }
-      $tokens[$pre . strtolower($token_key) . $post] = check_plain($value);
+      $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($value);
     }
   }
 
@@ -319,6 +319,73 @@ function ldap_servers_show_sample_user_tokens($sid) {
   }
 
   return $table;
+}
+
+
+/**
+ * function to massage (change case, escape, unescape) ldap attribute names
+ * and values.  The primary purpose of this is to articulate and ensure consistency
+ * across ldap modules.
+ *
+ * @param mixed $value to be massaged
+ * @param enum $value_type = 'attr_name' or 'attr_value'
+ * @param enum $context...see LDAP_SERVER_MASSAGE_* constants
+ *
+ */
+function ldap_server_massage($value, $value_type, $context) {
+
+
+
+   if ($value_type == 'attr_value') {
+
+    if ($context == LDAP_SERVER_MASSAGE_QUERY_LDAP  || $context == LDAP_SERVER_MASSAGE_STORE_LDAP) {
+       $value = ldap_pear_escape_filter_value($value);
+    }
+
+    switch ($context) {
+
+      case LDAP_SERVER_MASSAGE_DISPLAY:
+      case LDAP_SERVER_MASSAGE_TOKEN_REPLACE:
+
+      case LDAP_SERVER_MASSAGE_QUERY_LDAP:
+      case LDAP_SERVER_MASSAGE_QUERY_DB:
+      case LDAP_SERVER_MASSAGE_QUERY_ARRAY:
+      case LDAP_SERVER_MASSAGE_QUERY_PROPERTY:
+
+      case LDAP_SERVER_MASSAGE_STORE_LDAP:
+      case LDAP_SERVER_MASSAGE_STORE_DB:
+      case LDAP_SERVER_MASSAGE_STORE_ARRAY:
+      case LDAP_SERVER_MASSAGE_STORE_PROPERTY:
+
+      break;
+
+     }
+   }
+   elseif ($value_type == 'attr_name') { // attr_name
+     switch ($context) {
+
+      case LDAP_SERVER_MASSAGE_DISPLAY:
+      break;
+
+      case LDAP_SERVER_MASSAGE_TOKEN_REPLACE:
+        
+      case LDAP_SERVER_MASSAGE_QUERY_LDAP:
+      case LDAP_SERVER_MASSAGE_QUERY_DB:
+      case LDAP_SERVER_MASSAGE_QUERY_ARRAY:
+      case LDAP_SERVER_MASSAGE_QUERY_PROPERTY:
+
+      case LDAP_SERVER_MASSAGE_STORE_LDAP:
+      case LDAP_SERVER_MASSAGE_STORE_DB:
+      case LDAP_SERVER_MASSAGE_STORE_ARRAY:
+      case LDAP_SERVER_MASSAGE_STORE_PROPERTY:
+        $value = drupal_strtolower($value);
+      break;
+
+     }
+   }
+
+   return $value;
+
 }
 
  /**

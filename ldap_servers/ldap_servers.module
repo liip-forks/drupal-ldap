@@ -40,6 +40,18 @@ define('LDAP_SERVERS_DERIVE_GROUP_FROM_DN', 1);
 define('LDAP_SERVERS_DERIVE_GROUP_FROM_ATTRIBUTE', 2);
 define('LDAP_SERVERS_DERIVE_GROUP_FROM_ENTRY', 4);
 
+define('LDAP_SERVER_MASSAGE_DISPLAY', 1); //  ... value is being displayed in UI
+define('LDAP_SERVER_MASSAGE_TOKEN_REPLACE', 2); // ... value is about to be used to generate token (e.g. [...] to be replaced
+
+define('LDAP_SERVER_MASSAGE_QUERY_LDAP', 5); //  ...value is about to be used in ldap query
+define('LDAP_SERVER_MASSAGE_QUERY_DB', 6); //  ...value is about to be in an sql query
+define('LDAP_SERVER_MASSAGE_QUERY_ARRAY', 7); //  ...value is about to be found in array values
+define('LDAP_SERVER_MASSAGE_QUERY_PROPERTY', 8); //  ...value is about to be found in object property values
+
+define('LDAP_SERVER_MASSAGE_STORE_LDAP', 13); // ...value is about to be stored in ldap entry
+define('LDAP_SERVER_MASSAGE_STORE_DB', 14); // ...value is about to be stored in db
+define('LDAP_SERVER_MASSAGE_STORE_ARRAY', 15); // ...value is about to be stored in array
+define('LDAP_SERVER_MASSAGE_STORE_PROPERTY', 16); // ...value is about to be stored in object property
 
 define('LDAP_SERVER_GROUPS_RECURSE_DEPTH', 20);
 

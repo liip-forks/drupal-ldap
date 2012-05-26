@@ -182,11 +182,16 @@ class LdapServerTest extends LdapServer {
     //  }
 
       // if doesn't match filter, continue
+      if (isset($user_data_lcase['attr'][$filter_attribute])) {
+        continue;
+      }
+
       $contained_values = $user_data_lcase['attr'][$filter_attribute];
       unset($contained_values['count']);
       if (!in_array($filter_value, array_values($contained_values))) {
         continue;
       }
+
 
       // loop through all attributes, if any don't match continue
       $user_data_lcase['attr']['dn'] = $dn;
