@@ -447,7 +447,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
 
     $account = NULL;
     $user_edit = array('name' => $name);
-    $account = $auth_conf->ldapUser->provisionDrupalAccount($account, $user_edit, $ldap_user, array(), LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, TRUE);  // ($drupal_user_fields, $ldap_user_fields, $sid)
+    $account = $auth_conf->ldapUser->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, $ldap_user, TRUE);
     if ($account === FALSE) {
       // need to throw error that account was not created
     }
