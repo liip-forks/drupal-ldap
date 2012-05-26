@@ -368,7 +368,7 @@ function ldap_server_massage($value, $value_type, $context) {
       break;
 
       case LDAP_SERVER_MASSAGE_TOKEN_REPLACE:
-        
+
       case LDAP_SERVER_MASSAGE_QUERY_LDAP:
       case LDAP_SERVER_MASSAGE_QUERY_DB:
       case LDAP_SERVER_MASSAGE_QUERY_ARRAY:
@@ -404,6 +404,7 @@ function ldap_server_massage($value, $value_type, $context) {
     */
     function ldap_pear_escape_filter_value($values = array()) {
         // Parameter validation
+        $is_scalar = is_scalar($values);
         if (!is_array($values)) {
             $values = array($values);
         }
@@ -423,7 +424,46 @@ function ldap_server_massage($value, $value_type, $context) {
             $values[$key] = $val;
         }
 
-        return $values;
+        return ($is_scalar) ? $values[0] : $values;
+    }
+
+    /**
+    * Undoes the conversion done by {@link escape_filter_value()}.
+    *
+    * Converts any sequences of a backslash followed by two hex digits into the corresponding character.
+    *
+    * @param array $values Array of values to escape
+    *
+    * @static
+    * @return array Array $values, but unescaped
+    */
+    function ldap_pear_unescape_filter_value($values = array()) {
+        // Parameter validation
+        $is_scalar = is_scalar($values);
+        if (!is_array($values)) {
+            $values = array($values);
+        }
+
+        foreach ($values as $key => $value) {
+            // Translate hex code into ascii
+            $values[$key] = ldap_pear_hex2asc($value);
+        }
+
+        return ($is_scalar) ? $values[0] : $values;
+    }
+
+    /**
+    * Converts all Hex expressions ("\HEX") to their original ASCII characters
+    *
+    * @param string $string String to convert
+    *
+    * @static
+    * @author beni@php.net, heavily based on work from DavidSmith@byu.net
+    * @return string
+    */
+    function ldap_pear_hex2asc($string) {
+        $string = preg_replace("/\\\([0-9A-Fa-f]{2})/e", "''.chr(hexdec('\\1')).''", $string);
+        return $string;
     }
 
     /**
