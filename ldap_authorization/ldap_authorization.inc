@@ -184,7 +184,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     if ($detailed_watchdog_log || $debug) {
       $_proposed_ldap_authorizations_pre_hook_maps_alter = is_array($proposed_ldap_authorizations) ? $proposed_ldap_authorizations : array();
       $watchdog_tokens['%proposed_authorizations_pre_hook'] = join(', ', $_proposed_ldap_authorizations_pre_hook_maps_alter);
-      watchdog('ldap_authorization', '%username : initial proposed authorization brefore mapps_alter_invoke %consumer_type: %proposed_authorizations_pre_hook.',
+      watchdog('ldap_authorization', '%username : initial proposed authorization before mapps_alter_invoke %consumer_type: %proposed_authorizations_pre_hook.',
         $watchdog_tokens, WATCHDOG_DEBUG);
     }
 
@@ -474,7 +474,8 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
         }
       }
     }
-    elseif (isset($user_ldap_entry[$consumer_conf->deriveFromEntryAttrMatchingUserAttr])) {
+    elseif (isset($user_ldap_entry[$consumer_conf->deriveFromEntryAttrMatchingUserAttr]) ||
+      isset($user_ldap_entry['attr'][$consumer_conf->deriveFromEntryAttrMatchingUserAttr])) {
       // $derive_from_entries_entries, $derive_from_entry_attr, $derive_from_entry_user_ldap_attr, $user_ldap_entry, $nested = FALSE
       $derive_from_entry_authorizations = $ldap_server->deriveFromEntryGroups(
         $consumer_conf->deriveFromEntryEntries,

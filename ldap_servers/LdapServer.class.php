@@ -715,7 +715,7 @@ class LdapServer {
   public function deriveFromEntryGroups($entries, $entries_attr, $membership_attr, $user_ldap_attr, $user_ldap_entry, $nested = FALSE) {
 
     $authorizations = array();
-    $matching_user_value = ($user_ldap_attr == 'dn') ? $user_ldap_entry['dn'] : $user_ldap_entry[$user_ldap_attr][0];
+    $matching_user_value = ($user_ldap_attr == 'dn') ? $user_ldap_entry['dn'] : $user_ldap_entry['attr'][$user_ldap_attr][0];
     $filter  = "(|\n    ($entries_attr=" . join(")\n    ($entries_attr=", ldap_pear_escape_filter_value($entries)) . ")\n)";
     if (!$nested) {
       $filter =  "(&\n  $filter  \n  (" . $membership_attr . "=" .  ldap_pear_escape_filter_value($matching_user_value) . ")  \n)";
