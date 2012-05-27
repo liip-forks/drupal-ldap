@@ -279,13 +279,20 @@ class LdapServer {
   }
 
   /**
-   * Perform an LDAP search.  Must be connected and bound first.
+   * Perform an LDAP search.
+   * @param string $basedn
+   *   The search base. If NULL, we use $this->basedn. should not be esacaped
    *
-   *  @param params same as ldap_search() params except $link_identifier is omitted.
+   * @param string $filter
+   *   The search filter. such as sAMAccountName=jbarclay.  attribute values (e.g. jbarclay) should be esacaped before calling
+
+   * @param array $attributes
+   *   List of desired attributes. If omitted, we only return "dn".
+   *
+   * @remaining params mimick ldap_search() function params
    *
    * @return
-   *   An array of matching entries->attributes or empty array if none
-   *   or FALSE if the search is empty.
+   *   An array of matching entries->attributes, or FALSE if the search is empty.
    */
 
   function search($base_dn = NULL, $filter, $attributes = array(),
@@ -359,7 +366,7 @@ class LdapServer {
           '%errno' => $this->ldapErrorNumber());
         watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
           %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
-        RETURN FALSE;
+        return FALSE;
       }
       else {
         return FALSE;
@@ -463,8 +470,8 @@ class LdapServer {
 
   function ldapQuery($scope, $params) {
 
-    $params['filter'] = str_replace("\\","\\5c", $params['filter']);
-
+  //  $params['filter'] = str_replace("\\","\\5c", $params['filter']);
+  //  debug($params['base_dn']); debug(ldap_pear_escape_dn_value($params['base_dn']));
     switch ($scope) {
       case LDAP_SCOPE_SUBTREE:
         $result = @ldap_search($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
@@ -550,7 +557,7 @@ class LdapServer {
 
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
-      $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
+      $filter = '('. $this->user_attr . '=' . ldap_pear_escape_filter_value($ldap_username)   . ')';
       $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
@@ -651,8 +658,8 @@ class LdapServer {
     // call recursively provided max depth not excluded and $groups_by_level[$level + 1] > 0
 
     // this needs to be configurable also and default per ldap implementation
-    $group_values = ldap_server_massage($groups_by_level[$derive_from_attribute_name][$level], 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP);
-    $filter = "(&\n  (objectClass=" . $this->groupObjectClass . ")\n  (" . $derive_from_attribute_name . "=*)\n  (|\n    (distinguishedname=" . join(")\n    (distinguishedname=", $group_values) . ")\n  )\n)";
+    $group_values = $groups_by_level[$derive_from_attribute_name][$level];
+    $filter = "(&\n  (objectClass=" . ldap_pear_escape_filter_value($this->groupObjectClass) . ")\n  (" . $derive_from_attribute_name . "=*)\n  (|\n    (distinguishedname=" . join(")\n    (distinguishedname=", ldap_pear_escape_filter_value($group_values)) . ")\n  )\n)";
     $level++;
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
       $entries = $this->search($base_dn, $filter, array($derive_from_attribute_name));
@@ -709,15 +716,14 @@ class LdapServer {
 
     $authorizations = array();
     $matching_user_value = ($user_ldap_attr == 'dn') ? $user_ldap_entry['dn'] : $user_ldap_entry[$user_ldap_attr][0];
-    $filter  = "(|\n    ($entries_attr=" . join(")\n    ($entries_attr=", $entries) . ")\n)";
+    $filter  = "(|\n    ($entries_attr=" . join(")\n    ($entries_attr=", ldap_pear_escape_filter_value($entries)) . ")\n)";
     if (!$nested) {
-      $filter =  "(&\n  $filter  \n  (" . $membership_attr . "=" .  $matching_user_value . ")  \n)";
+      $filter =  "(&\n  $filter  \n  (" . $membership_attr . "=" .  ldap_pear_escape_filter_value($matching_user_value) . ")  \n)";
     }
 
     $tested_groups = array(); // array of dns already tested to avoid excess queried
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
       $entries = $this->search($base_dn, $filter, array('dn', $membership_attr, $entries_attr, $user_ldap_attr, 'objectClass'));  // query for all dns list
-     // debug("deriveFromEntryGroups, nested=$nested"); debug($filter); debug($base_dn);  debug('entries'); debug($entries);
       if ($entries !== FALSE) {
         if (!$nested) {  // if not nested all returned entries are groups that user is member of
           foreach ($entries as $entry) {
@@ -780,15 +786,15 @@ class LdapServer {
 
   public function groupsByEntryIsMember($members, $entries_attr, $base_dn, &$tested_groups, $membership_attr, $matching_user_value, $depth, $max_depth) {
     // query for all members that are groups
-    $filter = "(&(objectClass=". $this->groupObjectClass . ")(|\n  ($entries_attr=" . join(")\n    ($entries_attr=", $members) . ")\n  ))";
+    $filter = "(&(objectClass=". ldap_pear_escape_filter_value($this->groupObjectClass) . ")(|\n  ($entries_attr=" . join(")\n    ($entries_attr=", ldap_pear_escape_filter_value($members)) . ")\n  ))";
     $entries = $this->search($base_dn, $filter, array('dn', $entries_attr, $membership_attr));
-   //debug('groupsByEntryIsMember,derive_from_entry_attr='.$membership_attr); debug($filter); debug($base_dn);
+   debug('groupsByEntryIsMember,derive_from_entry_attr='.$membership_attr); debug($filter); debug($base_dn);  debug('entries'); debug($entries);
     if (isset($entries['count'])) {
       unset($entries['count']);
     };
     if ($entries !== FALSE) {
       foreach ($entries as $i => $entry) {
-        $group_id = ($entries_attr == 'dn') ? (string)$entry['dn'] : (string)$entry[$entries_attr][0];
+        $group_id = ($entries_attr == 'dn' || $entries_attr == 'distinguishedname') ? (string)$entry['dn'] : (string)$entry[$entries_attr][0];
         if (!in_array($group_id, $tested_groups)) {
           $tested_groups[] = $group_id;
           $child_members = (isset($entry[$membership_attr])) ? $entry[$membership_attr] : array('count' => 0);

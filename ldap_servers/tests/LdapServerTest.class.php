@@ -100,11 +100,11 @@ class LdapServerTest extends LdapServer {
       return LDAP_SUCCESS;
     }
 
-    watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error",
+    debug(t("LDAP bind failure for user %user. Error %errno: %error",
       array('%user' => $userdn,
             '%errno' => $ldap_errno,
             '%error' => $ldap_error,
-      ));
+      )));
 
     return $ldap_errno;
 
@@ -118,23 +118,25 @@ class LdapServerTest extends LdapServer {
   }
 
   /**
-   * Preform an LDAP search.
+   * Perform an LDAP search.
+   * @param string $basedn
+   *   The search base. If NULL, we use $this->basedn. should not be esacaped
    *
    * @param string $filter
-   *   The search filter. such as sAMAccountName=jbarclay
-   * @param string $basedn
-   *   The search base. If NULL, we use $this->basedn
+   *   The search filter. such as sAMAccountName=jbarclay.  attribute values (e.g. jbarclay) should be esacaped before calling
+
    * @param array $attributes
    *   List of desired attributes. If omitted, we only return "dn".
    *
+   * @remaining params mimick ldap_search() function params
+   *
    * @return
-   *   An array of matching entries->attributes, or FALSE if the search is
-   *   empty.
+   *   An array of matching entries->attributes, or FALSE if the search is empty.
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
 
     $filter = trim(str_replace(array("\n", "  "),array('',''), $filter)); // for test matching simplicity remove line breaks and tab spacing
-    //debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");
+   // debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");
 
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
@@ -153,10 +155,10 @@ class LdapServerTest extends LdapServer {
     $filter = strtolower(trim($filter,"()"));
 
     list($filter_attribute, $filter_value) = explode('=', $filter);
-    $filter_value = str_replace('\\5c','\\', $filter_value );
-    $filter_value = str_replace('\\5c','\\', $filter_value );
+  //  $filter_value = ldap_pear_unescape_filter_value($filter_value);
     // need to perform feaux ldap search here with data in
     $results = array();
+   // debug('test users'); debug($this->testUsers); debug("filter_attribute=$filter_attribute, filter_value=$filter_value");
     foreach ($this->testUsers as $dn => $user_data) {
       $user_data_lcase = array();
       foreach ($user_data['attr'] as $attr => $values) {
@@ -175,22 +177,22 @@ class LdapServerTest extends LdapServer {
       else {
       }
 
-      // if doesn't filter attribute has no data, continue
-      // this is wrong because it is case sensitive
-    //  if (!isset($user_data['attr'][$filter_attribute])) {
-     //   continue;
-    //  }
-
-      // if doesn't match filter, continue
-      if (isset($user_data_lcase['attr'][$filter_attribute])) {
+      // check for mixed case and lowercase attribute's existance
+      if (isset($user_data['attr'][$filter_attribute])) {
+        $contained_values = $user_data['attr'][$filter_attribute];
+      }
+      elseif (isset($user_data_lcase['attr'][ldap_server_massage($filter_attribute, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)])) {
+        $contained_values = $user_data_lcase['attr'][ldap_server_massage($filter_attribute, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)];
+      }
+      else {
         continue;
       }
-
-      $contained_values = $user_data_lcase['attr'][$filter_attribute];
+      //debug("contained_values"); debug($contained_values);
       unset($contained_values['count']);
       if (!in_array($filter_value, array_values($contained_values))) {
         continue;
       }
+
 
 
       // loop through all attributes, if any don't match continue
@@ -202,13 +204,12 @@ class LdapServerTest extends LdapServer {
         }
         $results[] = $selected_user_data;
       }
-      else {
+      elseif (isset($user_data_lcase['attr'])) {
         $results[] = $user_data_lcase['attr'];
       }
     }
-
+   // debug("results post user loop"); debug($results);
     foreach ($this->testGroups as $dn => $group_data) {
-
 
       // if not in basedn, skip
       // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
@@ -235,6 +236,8 @@ class LdapServerTest extends LdapServer {
 
       // loop through all attributes, if any don't match continue
       $group_data['attr']['dn'] = $dn;
+      $group_data['distinguishedname'] = $dn;
+
       if ($attributes) {
         $selected_group_data = array();
         foreach ($attributes as $key => $value) {
@@ -248,7 +251,8 @@ class LdapServerTest extends LdapServer {
     }
 
     $results['count'] = count($results);
-   // debug('search-results 2'); debug($results);
+    $results = ($results['count'] > 0) ? $results : FALSE;
+  //  debug('search-results 2'); debug($results);
     return $results;
   }
 
