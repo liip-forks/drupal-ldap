@@ -113,7 +113,8 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
   public function revokeSingleAuthorization(&$user, $role_name, &$user_auth_data) {
 
     $user_edit = array('roles' => array_diff($user->roles, array($this->drupalRolesByName[$role_name] => $role_name)));
-    $user = user_save($user, $user_edit);
+    $account = user_load($user->uid);
+    $user = user_save($account, $user_edit);
     $result = ($user && !isset($user->roles[$this->drupalRolesByName[$role_name]]));
 
     if ($this->detailedWatchdogLog) {
@@ -145,7 +146,8 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
       watchdog('ldap_authorization', 'grantSingleAuthorization in drupal rold' . print_r($user, TRUE), array(), WATCHDOG_DEBUG);
     }
 
-    $user = user_save($user, $user_edit);
+    $account = user_load($user->uid);
+    $user = user_save($account, $user_edit);
     $result = ($user && isset($user->roles[$this->drupalRolesByName[$role_name]]));
 
     if ($this->detailedWatchdogLog) {
