@@ -1,3 +1,4 @@
+Issue #1559388 by jzornig.  Patch to query group bundle instead of content bundle.
 added ldap_pear_unescape_filter_value() function
 A number of small fixes, including:
 -- changing of LdapAuthorizationConsumerConfAdmin->save() method to only save explicitly listed properties

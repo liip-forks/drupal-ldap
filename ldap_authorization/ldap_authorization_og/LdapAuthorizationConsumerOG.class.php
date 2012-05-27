@@ -73,7 +73,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
   public static function og2Groups() {
 		$ogs = array();
 		$availableConsumerIDs = array();
-		foreach (og_get_all_group_content_bundle() as $entity_type => $bundles) {
+		foreach (og_get_all_group_bundle() as $entity_type => $bundles) {
 			$group_entity_ids = og_get_all_group($entity_type);
 			$group_entities = entity_load($entity_type, $group_entity_ids);
 			$ogs[$entity_type] = $group_entities;
