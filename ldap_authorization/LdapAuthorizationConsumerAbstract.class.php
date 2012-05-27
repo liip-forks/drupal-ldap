@@ -211,9 +211,13 @@ class LdapAuthorizationConsumerAbstract {
    */
 
   protected function grantsAndRevokes($op, &$user, &$user_auth_data, $consumer_ids, &$ldap_entry = NULL, $user_save = TRUE) {
+
+    if (!is_array($user_auth_data)) {
+      $user_auth_data = array();
+    }
+
     $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
     $this->sortConsumerIds($op, $consumer_ids);
-
     $results = array();
     $watchdog_tokens = array();
     if (!is_array($consumer_ids)) {
@@ -231,8 +235,12 @@ class LdapAuthorizationConsumerAbstract {
       if ($detailed_watchdog_log) {watchdog('ldap_authorization', "consumer_id=$consumer_id, user_save=$user_save, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
       $log = "consumer_id=$consumer_id, op=$op,";
       $results[$consumer_id] = TRUE;
-      if ($op == 'grant'  && !in_array($consumer_id, $users_authorization_ids)) {
-        $log .='grant existing role, ';
+      if ($op == 'grant' && in_array($consumer_id, $users_authorization_ids) && !isset($user_auth_data[$consumer_id])) {
+         // authorization id already exists for user, but is not ldap provisioned.  mark as ldap provisioned, but don't regrant
+         $user_auth_data[$consumer_id] = array('date_granted' => time() );
+      }
+      elseif ($op == 'grant' && !in_array($consumer_id, $users_authorization_ids)) {
+        $log .=" grant existing consumer id ($consumer_id), ";
         if (!in_array($consumer_id, $this->availableConsumerIDs(TRUE))) {
           $log .= "consumer id not available for $op, ";
           if ($this->allowConsumerObjectCreation) {
@@ -255,17 +263,16 @@ class LdapAuthorizationConsumerAbstract {
             $results[$consumer_id] = FALSE;
           }
         }
-
         if ($results[$consumer_id]) {
           if ($detailed_watchdog_log) {watchdog('ldap_authorization', "grantSingleAuthorization : consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
           $log .= "granting existing consumer object, ";
           $results[$consumer_id] = $this->grantSingleAuthorization($user, $consumer_id, $user_auth_data); // allow consuming module to add additional data to $user_auth_data
+
           if ($results[$consumer_id]) {
             $user_auth_data[$consumer_id] = array('date_granted' => time() );
           }
           $log .= t(',result=') . (boolean)($results[$consumer_id]);
         }
-
       }
       elseif ($op == 'revoke') {
         if (isset($user_auth_data[$consumer_id])) {
@@ -286,14 +293,14 @@ class LdapAuthorizationConsumerAbstract {
       if ($detailed_watchdog_log) {watchdog('ldap_authorization', "user_auth_data after consumer $consumer_id" . print_r($user_auth_data, TRUE), $watchdog_tokens, WATCHDOG_DEBUG);}
 
       $watchdog_tokens['%consumer_ids_log'] = (count($consumer_ids_log)) ? join('<hr/>', $consumer_ids_log) : t('no actions');
-      if ($user_save) {
-        $user_edit['data']['ldap_authorizations'][$this->consumerType] = $user_auth_data;
-        $user = user_load($user->uid, TRUE);
-        $user = user_save($user, $user_edit);
-      }
-
     }
 
+    if ($user_save) {
+      $user = user_load($user->uid, TRUE);
+      $user_edit = $user->data;
+      $user_edit['data']['ldap_authorizations'][$this->consumerType] = $user_auth_data;
+      $user = user_save($user, $user_edit);
+    }
 
     watchdog('ldap_authorization', '%username:
       <hr/>LdapAuthorizationConsumerAbstract grantsAndRevokes() method log.  action=%action:<br/> %consumer_ids_log
@@ -334,7 +341,6 @@ class LdapAuthorizationConsumerAbstract {
   */
   public function createSingleAuthorization(&$user, $role_name, &$user_auth_data) {
      // method must be overridden
-
   }
 
   public function hasLdapGrantedAuthorization(&$user, $authorization_id) {

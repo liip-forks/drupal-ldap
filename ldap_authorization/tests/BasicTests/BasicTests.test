@@ -91,7 +91,7 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
 /**
  * flag (binary switches) tests clumped together
  */
-function xtestFlags() {
+function testFlags() {
 
   $this->ldapTestId = 'Flags';
   $this->serversData = 'BasicTests/ldap_servers.inc';

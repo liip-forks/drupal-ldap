@@ -300,7 +300,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
    * @return TRUE if granted or grant exists, FALSE if not grantable or failed.
    */
   public function grantSingleAuthorization(&$user, $authorization_id, &$user_auth_data) {
-
     $result = FALSE;
     $watchdog_tokens =  array('%authorization_id' => $authorization_id, '%username' => $user->name, '%ogversion' => $this->ogVersion);
 		if ($this->detailedWatchdogLog) {

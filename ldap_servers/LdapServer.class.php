@@ -477,8 +477,6 @@ class LdapServer {
 
   function ldapQuery($scope, $params) {
 
-  //  $params['filter'] = str_replace("\\","\\5c", $params['filter']);
-  //  debug($params['base_dn']); debug(ldap_pear_escape_dn_value($params['base_dn']));
     switch ($scope) {
       case LDAP_SCOPE_SUBTREE:
         $result = @ldap_search($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
@@ -749,7 +747,7 @@ class LdapServer {
             $group_id = ($entries_attr == 'dn') ? (string)$entry['dn'] : (string)$entry[$entries_attr][0];
             if (!in_array($group_id, $tested_groups) && isset($entry[$membership_attr])) {
               $members = $entry[$membership_attr];
-              //debug('members'); debug($members);
+
               unset($members['count']);
               // user may be direct member of group
               if (in_array($matching_user_value, array_values($members))) {
@@ -795,7 +793,7 @@ class LdapServer {
     // query for all members that are groups
     $filter = "(&(objectClass=". ldap_pear_escape_filter_value($this->groupObjectClass) . ")(|\n  ($entries_attr=" . join(")\n    ($entries_attr=", ldap_pear_escape_filter_value($members)) . ")\n  ))";
     $entries = $this->search($base_dn, $filter, array('dn', $entries_attr, $membership_attr));
-   debug('groupsByEntryIsMember,derive_from_entry_attr='.$membership_attr); debug($filter); debug($base_dn);  debug('entries'); debug($entries);
+    
     if (isset($entries['count'])) {
       unset($entries['count']);
     };

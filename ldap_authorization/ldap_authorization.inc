@@ -320,7 +320,6 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
     }
   }
 
-
   $watchdog_tokens['%consumer_containers_final'] = join(', ', $consumer_containers_existing);
 
    /**

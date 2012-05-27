@@ -127,6 +127,8 @@ function ldap_authorization_test_form_submit($form, &$form_state) {
     }
 
   }
+
+
   $user_names = array_unique(array_merge(array_keys($random_users), $users_listed));
   $i = 0;
   foreach ($user_names as $username) {
@@ -137,6 +139,11 @@ function ldap_authorization_test_form_submit($form, &$form_state) {
         $user->name = $username;
         $user->ldap_test = TRUE;
         $user->ldap_authenticated = TRUE;
+      }
+      else {
+        if (function_exists('dpm')) {
+          dpm("user: $username"); dpm($user);
+        }
       }
       list($results[$username], $notifications[$username]) = ldap_authorizations_user_authorizations($user, 'test_query', $consumer_type, 'logon');
       // remove authorizations from other consumer types

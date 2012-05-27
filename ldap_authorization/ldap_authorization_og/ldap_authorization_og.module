@@ -124,7 +124,7 @@ function ldap_authorization_og1_get_group($value, $value_type = 'group_name', $r
  * @param mixed $value signifies query value e.g. 'bakers', 7 etc.
  * @param mixed $value_type signifies query type e.g. 'group_name', 'gid', etc.
  * @param string $return signifying return type. e.g.  'object', 'label', 'name', 'gid'
- * @return mixed organic group object, gid, label, etc.
+ * @return mixed organic group object, label, etc.
  */
 function ldap_authorization_og2_get_group($entity_type, $value, $value_type = 'group_name', $return = 'object') {
   require_once(drupal_get_path('module', 'ldap_authorization_og') . '/LdapAuthorizationConsumerOG.class.php');
@@ -139,7 +139,7 @@ function ldap_authorization_og2_get_group($entity_type, $value, $value_type = 'g
   elseif ($value_type == 'group_name') {
     foreach ($groups[$entity_type] as $gid => $group) {
       if ($group['name'] == $value) {
-        $node = node_load($gid);;
+        $node = node_load($gid);
         break;
       }
     }
@@ -150,9 +150,6 @@ function ldap_authorization_og2_get_group($entity_type, $value, $value_type = 'g
   }
   elseif ($return == 'label' || $return == 'name' && is_object($node)) {
     return $node->title;
-  }
-  elseif ($return == 'gid' && is_object($node)) {
-    return $node->nid;
   }
   else {
     return FALSE;

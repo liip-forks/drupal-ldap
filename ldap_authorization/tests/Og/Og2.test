@@ -120,11 +120,6 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     list($og_bakers, $og_bakers_node) = ldap_authorization_og2_get_group('node','bakers', 'group_name','object');
     list($og_butchers, $og_butchers_node) = ldap_authorization_og2_get_group('node','butchers', 'group_name','object');
 
-  //  debug(array('og_knitters', $og_knitters,  $og_knitters_node));
-  //  debug(array('og_bakers',   $og_bakers,    $og_bakers_node));
-  //  debug(array('og_butchers',  $og_butchers, $og_butchers_node));
-
-// ldap_authorization_og2_rid_from_role_name($entity_type, $gid, $role_name)
     $anonymous_rid = ldap_authorization_og2_rid_from_role_name('node', $og_knitters_node->nid, OG_ANONYMOUS_ROLE);
     $member_rid =    ldap_authorization_og2_rid_from_role_name('node', $og_bakers_node->nid,   OG_AUTHENTICATED_ROLE);
     $admin_rid =     ldap_authorization_og2_rid_from_role_name('node', $og_butchers_node->nid, OG_ADMINISTRATOR_ROLE);
@@ -152,7 +147,6 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     og_role_grant('node', $og_bakers_node->nid, $web_user->uid, $admin_rid);
 
     $web_user = user_load($web_user->uid, TRUE); // need to reload because of issue with og_group and og_role_grant
-    debug($web_user);
     $ids = array($web_user->uid);
     $user_entity = entity_load('user', $ids);
     $this->assertTrue(og_is_member('node', $og_knitters_node->nid, 'user', $web_user),
@@ -172,7 +166,6 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     $this->ldapTestId = $this->module_name . ': LdapAuthorizationConsumerOG class';
 
     $og_auth = new LdapAuthorizationConsumerOG('og_group');
-   // debug('og_auth consumer object:'); debug($og_auth);
     $this->assertTrue(is_object($og_auth), 'Successfully instantiated LdapAuthorizationConsumerOG', $this->ldapTestId);
 
 
@@ -208,7 +201,6 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     );
 
     $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
-    debug('web_user_authorizations and should haves:'); debug($web_user_authorizations); debug($should_haves);
     $match = (boolean)(count(array_intersect($web_user_authorizations, $should_haves)) == count($should_haves));
     $this->assertTrue($match,
       'LdapAuthorizationConsumerOG usersAuthorizations()', $this->ldapTestId);
@@ -226,15 +218,15 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     $og_auth->authorizationGrant($web_user, $web_user->data['ldap_authorizations']['og_group'], array($butcher_member_id), NULL, TRUE);
     $web_user = user_load($web_user->uid, TRUE);
     $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
-    debug('web_user_authorizations and butchermemberid'); debug($web_user_authorizations); debug($butcher_member_id);
+
 
     $this->assertTrue(in_array($butcher_member_id, array_values($web_user_authorizations)),
       'LdapAuthorizationConsumerOG authorizationGrant()', $this->ldapTestId);
+
     $this->assertTrue($og_auth->hasLdapGrantedAuthorization($web_user, $butcher_member_id),
       'hasLdapGrantedAuthorization() method works for non LDAP provisioned og authorization', $this->ldapTestId);
 
     $web_user = user_load($web_user->uid, TRUE);
-    debug('web_user->data[ldap_authorizations][og_group]'); debug($web_user->data['ldap_authorizations']['og_group']);
     $og_auth->authorizationRevoke($web_user, $web_user->data['ldap_authorizations']['og_group'], array($butcher_member_id), NULL, TRUE);
     $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
     $this->assertFalse(in_array($butcher_member_id, $web_user_authorizations),
@@ -272,11 +264,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
 
    // $normalized_authorization_id = ldap_authorization_og_authorization_id(3, 2);
   //  $this->assertTrue($normalized_authorization_id == '3-2', ' ldap_authorizations og ldap_authorization_og_authorization_id() function works', $this->ldapTestId);
-
-    $bakers_gid = ldap_authorization_og2_get_group('node', $og_bakers_node->nid, 'gid', 'gid');
-    $this->assertTrue($bakers_gid == $og_bakers->gid, 'ldap_authorization_og2_get_group() function gid return works with query type gid', $this->ldapTestId);
-
-    $bakers_label = ldap_authorization_og2_get_group('node',$og_bakers_node->nid, 'gid', 'label');
+    $bakers_label = ldap_authorization_og2_get_group('node', 'bakers', 'group_name', 'label');
     $this->assertTrue($bakers_label == 'bakers', 'ldap_authorization_og2_get_group() function label return works with query type gid', $this->ldapTestId);
 
     $test = ldap_authorization_og2_has_role($og_bakers_node->nid, $web_user->uid, OG_ADMINISTRATOR_ROLE);
