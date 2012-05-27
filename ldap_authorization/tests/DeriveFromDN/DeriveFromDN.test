@@ -38,7 +38,8 @@ class LdapAuthorizationDeriveEntry  extends LdapAuthorizationTestCase {
     $user = $this->drupalCreateUser(array());
     $unkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'unkool', 'mail' =>  'unkool@nowhere.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($unkool, 'query');  // just see if the correct ones are derived.
-    $this->assertTrue(count($new_authorizations) == 0, 'user account unkool tested for granting no drupal roles ', $this->ldapTestId . '.nomatch');
+    debug("new_authorizations, notifications"); debug(array($new_authorizations, $notifications));
+    $this->assertTrue(count($new_authorizations[$this->consumerType]) == 0, 'user account unkool tested for granting no drupal roles ', $this->ldapTestId . '.nomatch');
 
 
 
