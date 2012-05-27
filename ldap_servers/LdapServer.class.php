@@ -246,19 +246,26 @@ class LdapServer {
    * @return
    *   Result of bind; TRUE if successful, FALSE otherwise.
    */
-  function bind($userdn = NULL, $pass = NULL) {
-    $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
-    $pass = ($pass != NULL) ? $pass : $this->bindpw;
+  function bind($userdn = NULL, $pass = NULL, $anon_bind = FALSE) {
+
     // Ensure that we have an active server connection.
     if (!$this->connection) {
       watchdog('ldap', "LDAP bind failure for user %user. Not connected to LDAP server.", array('%user' => $userdn));
       return LDAP_CONNECT_ERROR;
     }
-
-
-    if (@!ldap_bind($this->connection, $userdn, $pass)) {
-      watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", array('%user' => $userdn, '%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
-      return ldap_errno($this->connection);
+    if ($anon_bind) {
+      if (@!ldap_bind($this->connection)) {
+        watchdog('ldap', "LDAP anonymous bind error. Error %errno: %error", array('%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
+        return ldap_errno($this->connection);
+      }
+    }
+    else {
+      $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
+      $pass = ($pass != NULL) ? $pass : $this->bindpw;
+      if (@!ldap_bind($this->connection, $userdn, $pass)) {
+        watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", array('%user' => $userdn, '%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
+        return ldap_errno($this->connection);
+      }
     }
 
     return LDAP_SUCCESS;

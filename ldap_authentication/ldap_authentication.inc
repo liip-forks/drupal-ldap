@@ -235,10 +235,12 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     // #2 BIND TO SERVER
     $bind_success = FALSE;
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
-        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON ||
         $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
         ) {
       $bind_success = ($ldap_server->bind() == LDAP_SUCCESS);
+    }
+    elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+      $bind_success = ($ldap_server->bind(NULL, NULL, TRUE) == LDAP_SUCCESS);
     }
     elseif ($sso_login) {
       watchdog('ldap_authentication', 'Trying to use SSO with LDAP_SERVERS_BIND_METHOD_USER bind method.', $watchdog_tokens, WATCHDOG_ERROR);
@@ -425,7 +427,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
      *       for external authentication modules
      */
  	ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
- 
+
 
    $account = ldap_create_drupal_account($name, $ldap_user['mail'], $ldap_user['dn'], $sid);
     if ($account === FALSE) {
