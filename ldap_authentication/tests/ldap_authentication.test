@@ -73,7 +73,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
     $parts = ldap_explode_dn($dn, 0);
     $cn_parts = explode('=', $parts[0]);
     $edit = array(
-      'name' => $cn_parts[1],
+      'name' => ldap_pear_unescape_dn_value($cn_parts[1]),
       'pass' => $user['password'][0],
     );
     $user = user_load_by_name($edit['name']);

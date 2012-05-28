@@ -104,21 +104,20 @@ function testFlags() {
    * test:  LDAP_authorz.Flags.enable
    */
 
-  /** disabled because of issue setting ->status in simpletests ->save()
   $user = $this->drupalCreateUser(array());
   $jkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'), TRUE, $user);
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
   $roles1 = $new_authorizations[$this->consumerType];
 
+
   $consumer_conf_admin = ldap_authorization_get_consumer_admin_object($this->consumerType);
   $consumer_conf_admin->status = 0;
   $consumer_conf_admin->save();
+  $consumer_conf_admin = ldap_authorization_get_consumer_admin_object($this->consumerType);
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query', $this->consumerType);  // just see if the correct ones are derived.
   $roles2 = isset($new_authorizations[$this->consumerType]) ? $new_authorizations[$this->consumerType] : array();
-  debug('new_authorizations LDAP_authorz.Flags.enable'); debug($new_authorizations);
-  debug('roles1'); debug($roles1); debug('roles2'); debug($roles2);
   $this->assertTrue((count($roles1) == 1 && count($roles2) == 0), 'disable consumer configuration disallows authorizations.', $this->ldapTestId . '.enable');
-  **/
+
 
   /**
    * LDAP_authorz.Flags.onlyLdapAuthenticated (I) - create normal user and apply authorization query

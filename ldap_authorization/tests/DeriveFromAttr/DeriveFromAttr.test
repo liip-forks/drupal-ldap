@@ -35,7 +35,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
     $user = $this->drupalCreateUser(array());
     $unkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'unkool', 'mail' =>  'unkool@nowhere.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($unkool, 'query', $this->consumerType);  // just see if the correct ones are derived.
-    debug("new_authorizations, notifications"); debug(array($new_authorizations, $notifications));
+   // debug("new_authorizations, notifications"); debug(array($new_authorizations, $notifications));
     $this->assertTrue(count($new_authorizations[$this->consumerType]) == 0, 'user account unkool tested for granting no drupal roles ', $this->ldapTestId . '.nomatch');
 
 
@@ -100,11 +100,11 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
     $consumer_conf_admin->save();
     $user = $this->drupalCreateUser(array());
     $verykool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'verykool', 'mail' =>  'verykool@guests.myuniversity.edu'), TRUE, $user);
-    debug('verykool test'); debug($verykool);
+   // debug('verykool test'); debug($verykool);
 
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query', $this->consumerType);  // just see if the correct ones are derived.
 
-    debug('netadmins2 test'); debug(array($new_authorizations, $notifications));
+   // debug('netadmins2 test'); debug(array($new_authorizations, $notifications));
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('netadmins2', $new_authorizations['drupal_role']));
     if (!$correct_roles) {
       debug('new authorizations'); debug($new_authorizations);

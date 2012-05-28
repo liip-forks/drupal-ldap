@@ -105,7 +105,7 @@ $servers['ldapauthor1']['users']['cn=verykool,ou=special guests,ou=guest account
     'mail' => array( 0 => 'verykool@myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'verykool', 'count' => 1),
     'password' => array( 0 => 'goodpwd', 'count' => 1),
-    'meMBErof' => array(
+    'memberof' => array(
       0 => 'cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
       1 => 'CN=NETadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
       2 => 'cn=phone operators,ou=it,dc=ad,dc=myuniversity,dc=edu',

@@ -79,7 +79,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     }
 
     // revert mappings to array and remove temporary properties from ctools export
-    $this->mappings = $this->pipeListToArray($values->mappings, TRUE);
+    $this->mappings = $this->pipeListToArray($values->mappings, FALSE);
     foreach (array(
       'consumer_type',
       'consumer_module',
@@ -675,7 +675,7 @@ Raw authorization ids look like:
 
   protected function populateFromDrupalForm($op, $values) {
     $this->inDatabase = (drupal_strtolower($op) == 'edit' || drupal_strtolower($op) == 'save');
-    $values['mappings'] = $this->pipeListToArray($values['mappings'], TRUE);
+    $values['mappings'] = $this->pipeListToArray($values['mappings'], FALSE);
     $values['derive_from_attr_attr'] = $this->linesToArray($values['derive_from_attr_attr']);
     $values['derive_from_entry_entries'] = $this->linesToArray($values['derive_from_entry_entries']);
 

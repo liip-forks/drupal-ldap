@@ -38,7 +38,7 @@ function ldap_servers_uninstall() {
 function ldap_servers_requirements($phase) {
   $requirements = array();
   $requirements['ldap_extension_loaded']['title'] = t('LDAP Extension Loaded');
-  if (extension_loaded('ldap')) {
+  if (extension_loaded('ldap') && function_exists('ldap_search')) {
     $requirements['ldap_extension_loaded']['value'] = t('Passed');
     $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_OK;
   }

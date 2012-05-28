@@ -137,6 +137,8 @@ class LdapServerTest extends LdapServer {
 
     $filter = trim(str_replace(array("\n", "  "),array('',''), $filter)); // for test matching simplicity remove line breaks and tab spacing
    // debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");
+    $my_debug = ($base_dn == 'ou=guest accounts,dc=ad,dc=myuniversity,dc=edu' && $filter == "(sAMAccountName=wilmaf)");
+  //  if ($my_debug) {debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");}
 
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
@@ -149,6 +151,7 @@ class LdapServerTest extends LdapServer {
 
     // return prepolulated search results in test data array if present
     if (isset($this->searchResults[$filter][$base_dn])) {
+    //  if ($my_debug) {debug('set search results'); debug($this->searchResults[$filter][$base_dn]);}
       return $this->searchResults[$filter][$base_dn];
     }
     $base_dn = drupal_strtolower($base_dn);
@@ -160,6 +163,8 @@ class LdapServerTest extends LdapServer {
     $results = array();
    // debug('test users'); debug($this->testUsers); debug("filter_attribute=$filter_attribute, filter_value=$filter_value");
     foreach ($this->testUsers as $dn => $user_data) {
+      $my_debug2 = ($my_debug && $dn == 'cn=Flintstone\\, Wilma,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu');
+     // if ($my_debug2) {debug('test user ' . $dn); debug($user_data);}
       $user_data_lcase = array();
       foreach ($user_data['attr'] as $attr => $values) {
         $user_data_lcase['attr'][strtolower($attr)] = $values;
@@ -172,24 +177,30 @@ class LdapServerTest extends LdapServer {
       // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       $pos = stripos($dn, $base_dn);
       if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) == FALSE) {
+//         if ($my_debug2) {debug("dn=$dn not in base_dn=$base_dn");}
         continue; // not in basedn
       }
       else {
       }
 
       // check for mixed case and lowercase attribute's existance
+      // trying to mimic ldap implementation
       if (isset($user_data['attr'][$filter_attribute])) {
         $contained_values = $user_data['attr'][$filter_attribute];
+        // if ($my_debug2) { debug('mixed case match success');}
       }
-      elseif (isset($user_data_lcase['attr'][ldap_server_massage($filter_attribute, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)])) {
-        $contained_values = $user_data_lcase['attr'][ldap_server_massage($filter_attribute, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)];
+      elseif (isset($user_data_lcase['attr'][ldap_server_massage_text($filter_attribute, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)])) {
+        $contained_values = $user_data_lcase['attr'][ldap_server_massage_text($filter_attribute, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)];
+       //  if ($my_debug2) { debug('lower case match success');}
       }
       else {
+       // if ($my_debug2) {debug('match fail');}
         continue;
       }
       //debug("contained_values"); debug($contained_values);
       unset($contained_values['count']);
       if (!in_array($filter_value, array_values($contained_values))) {
+     //   if ($my_debug2) { debug("match to value $filter_attribute=$filter_value failed");}
         continue;
       }
 
@@ -208,9 +219,9 @@ class LdapServerTest extends LdapServer {
         $results[] = $user_data_lcase['attr'];
       }
     }
-   // debug("results post user loop"); debug($results);
+//    if ($my_debug) { debug("results post user loop"); debug($results);}
     foreach ($this->testGroups as $dn => $group_data) {
-
+      // debug("group dn $dn"); debug($group_data);
       // if not in basedn, skip
       // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       // should be leftmost string in:
@@ -248,11 +259,12 @@ class LdapServerTest extends LdapServer {
       else {
         $results[] = $group_data['attr'];
       }
+     // debug($results);
     }
 
     $results['count'] = count($results);
     $results = ($results['count'] > 0) ? $results : FALSE;
-  //  debug('search-results 2'); debug($results);
+ // if ($my_debug) {  debug('search-results 2'); debug($results);}
     return $results;
   }
 

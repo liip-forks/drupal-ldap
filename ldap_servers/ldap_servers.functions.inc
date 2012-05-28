@@ -200,12 +200,13 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
   $tokens = array();
 
   // 1. tokenize dn
-  $dn_parts = ldap_explode_dn($ldap_entry['dn'], 0);
+  $dn_parts = ldap_explode_dn($ldap_entry['dn'], 0); // escapes attribute values, need to be unescaped later.
   unset($dn_parts['count']);
   $parts_count = array();
   $parts_last_value = array();
   foreach ($dn_parts as $pair) {
     list($attr_name, $attr_value) = explode('=', $pair);
+    $attr_value = ldap_pear_unescape_dn_value($attr_value);
     try {
       $attr_value = check_plain($attr_value);
     }
@@ -217,16 +218,16 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
        continue; // don't tokenize data that can't pass check_plain
     }
     if (!isset($parts_count[$attr_name])) {
-      $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = $attr_value;
+      $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = $attr_value;
       $parts_count[$attr_name] = 0;
     }
-    $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . (int)$parts_count[$attr_name] . $post] = $attr_value;
+    $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . (int)$parts_count[$attr_name] . $post] = $attr_value;
 
     $parts_last_value[$attr_name] = $attr_value;
     $parts_count[$attr_name]++;
   }
   foreach ($parts_count as $attr_name => $count) {
-    $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = $parts_last_value[$attr_name];
+    $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = $parts_last_value[$attr_name];
   }
 
   // tokenize other attributes
@@ -236,18 +237,18 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
     foreach ($token_keys as $attr_name) {
       $attr_value = $ldap_entry[$attr_name];
       if (is_array($attr_value) && is_scalar($attr_value[0]) && $attr_value['count'] == 1) {
-        $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($attr_value[0]);
-        $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = check_plain($attr_value[0]);
-        $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = check_plain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[0]);
       }
       elseif (is_array($attr_value) && $attr_value['count'] > 1) {
-        $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[$attr_value['count']-1]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[$attr_value['count']-1]);
         for ($i=0; $i<$attr_value['count']; $i++) {
-          $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = check_plain($attr_value[$i]);
+          $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = check_plain($attr_value[$i]);
         }
       }
       elseif (is_scalar($attr_value)) {
-        $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($attr_value);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($attr_value);
       }
     }
   }
@@ -271,7 +272,7 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
       else {
         $value = $ldap_entry[$token_key][0];
       }
-      $tokens[$pre . ldap_server_massage($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($value);
+      $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($value);
     }
   }
 
@@ -328,19 +329,22 @@ function ldap_servers_show_sample_user_tokens($sid) {
  * across ldap modules.
  *
  * @param mixed $value to be massaged
- * @param enum $value_type = 'attr_name' or 'attr_value'
+ * @param enum $value_type = 'attr_name' or 'attr_value;
  * @param enum $context...see LDAP_SERVER_MASSAGE_* constants
  *
- * .e.g. ldap_server_massage($value, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_LDAP)
+ * .e.g. ldap_server_massage_text($value, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)
  */
-function ldap_server_massage($value, $value_type, $context) {
+function ldap_server_massage_text($value, $value_type, $context) {
 
-
+   $scalar = is_scalar($value);
 
    if ($value_type == 'attr_value') {
 
-    if ($context == LDAP_SERVER_MASSAGE_QUERY_LDAP  || $context == LDAP_SERVER_MASSAGE_STORE_LDAP) {
-       $value = ldap_pear_escape_filter_value($value);
+    if ($context == LDAP_SERVER_MASSAGE_QUERY_LDAP) {
+      $value = ldap_pear_escape_filter_value($value);
+    }
+    elseif ($context == LDAP_SERVER_MASSAGE_STORE_LDAP) {
+      $value = ldap_pear_escape_dn_value($value);
     }
 
     switch ($context) {
@@ -379,7 +383,14 @@ function ldap_server_massage($value, $value_type, $context) {
       case LDAP_SERVER_MASSAGE_STORE_DB:
       case LDAP_SERVER_MASSAGE_STORE_ARRAY:
       case LDAP_SERVER_MASSAGE_STORE_PROPERTY:
-        $value = drupal_strtolower($value);
+        if ($scalar) {
+          $value = drupal_strtolower($value);
+        }
+        else {
+          foreach ($value as $i => $val) {
+            $value[$i] = drupal_strtolower($val);
+          }
+        }
       break;
 
      }

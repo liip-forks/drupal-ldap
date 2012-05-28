@@ -562,7 +562,7 @@ class LdapServer {
 
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
-      $filter = '('. $this->user_attr . '=' . ldap_pear_escape_filter_value($ldap_username)   . ')';
+      $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
       $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
@@ -664,7 +664,9 @@ class LdapServer {
 
     // this needs to be configurable also and default per ldap implementation
     $group_values = $groups_by_level[$derive_from_attribute_name][$level];
-    $filter = "(&\n  (objectClass=" . ldap_pear_escape_filter_value($this->groupObjectClass) . ")\n  (" . $derive_from_attribute_name . "=*)\n  (|\n    (distinguishedname=" . join(")\n    (distinguishedname=", ldap_pear_escape_filter_value($group_values)) . ")\n  )\n)";
+    $filter = "(&\n  (objectClass=" . ldap_server_massage_text($this->groupObjectClass, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ")\n" .
+     "(" . $derive_from_attribute_name . "=*)\n" .
+     "(|\n    (distinguishedname=" . join(")\n    (distinguishedname=", ldap_server_massage_text($group_values, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)) . ")\n  )\n)";
     $level++;
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
       $entries = $this->search($base_dn, $filter, array($derive_from_attribute_name));
@@ -721,9 +723,9 @@ class LdapServer {
 
     $authorizations = array();
     $matching_user_value = ($user_ldap_attr == 'dn') ? $user_ldap_entry['dn'] : $user_ldap_entry['attr'][$user_ldap_attr][0];
-    $filter  = "(|\n    ($entries_attr=" . join(")\n    ($entries_attr=", ldap_pear_escape_filter_value($entries)) . ")\n)";
+    $filter  = "(|\n    ($entries_attr=" . join(")\n    ($entries_attr=", ldap_server_massage_text($entries, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)) . ")\n)";
     if (!$nested) {
-      $filter =  "(&\n  $filter  \n  (" . $membership_attr . "=" .  ldap_pear_escape_filter_value($matching_user_value) . ")  \n)";
+      $filter =  "(&\n  $filter  \n  (" . $membership_attr . "=" .  ldap_server_massage_text($matching_user_value, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ")  \n)";
     }
 
     $tested_groups = array(); // array of dns already tested to avoid excess queried
@@ -791,9 +793,11 @@ class LdapServer {
 
   public function groupsByEntryIsMember($members, $entries_attr, $base_dn, &$tested_groups, $membership_attr, $matching_user_value, $depth, $max_depth) {
     // query for all members that are groups
-    $filter = "(&(objectClass=". ldap_pear_escape_filter_value($this->groupObjectClass) . ")(|\n  ($entries_attr=" . join(")\n    ($entries_attr=", ldap_pear_escape_filter_value($members)) . ")\n  ))";
+    $filter = "(&(objectClass=". ldap_server_massage_text($this->groupObjectClass, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)
+    . ")(|\n  ($entries_attr="
+    . join(")\n    ($entries_attr=", ldap_server_massage_text($members, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)) . ")\n  ))";
     $entries = $this->search($base_dn, $filter, array('dn', $entries_attr, $membership_attr));
-    
+
     if (isset($entries['count'])) {
       unset($entries['count']);
     };
