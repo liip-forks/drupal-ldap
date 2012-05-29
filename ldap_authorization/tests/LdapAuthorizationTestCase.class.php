@@ -78,7 +78,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
       }
 
       // make included fake sid match feature sid
-      $this->testFunctions->prepTestConfiguration($this->testData, TRUE);
+      $this->testFunctions->prepTestConfiguration($this->testData, FALSE);
     }
     else {
       include(drupal_get_path('module', 'ldap_authorization') . '/tests/' . $this->authorizationData);
@@ -105,9 +105,5 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
       }
       $this->testFunctions->prepTestConfiguration($this->testData, FALSE);
     }
-
-
-
   }
-
 }
