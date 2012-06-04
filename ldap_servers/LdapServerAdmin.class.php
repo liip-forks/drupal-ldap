@@ -63,6 +63,7 @@ class LdapServerAdmin extends LdapServer {
     $this->user_dn_expression = trim($values['user_dn_expression']);
     $this->basedn = $this->linesToArray(trim($values['basedn']));
     $this->user_attr = trim($values['user_attr']);
+    $this->account_name_attr = trim($values['account_name_attr']);
     $this->mail_attr = trim($values['mail_attr']);
     $this->mail_template = trim($values['mail_template']);
     $this->unique_persistent_attr = trim($values['unique_persistent_attr']);
@@ -717,13 +718,29 @@ public function drupalFormSubmit($op, $values) {
           'fieldset' => 'users',
           '#type' => 'textfield',
           '#size' => 30,
-          '#title' => t('UserName attribute'),
+          '#title' => t('AuthName attribute'),
           '#description' => t('The attribute that holds the users\' login name. (eg. <code>cn</code> for eDir or <code>sAMAccountName</code> for Active Directory).'),
         ),
         'schema' => array(
           'type' => 'varchar',
           'length' => 255,
           'not null' => TRUE,
+        ),
+      ),
+
+      'account_name_attr' => array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('AccountName attribute'),
+          '#description' => t('The attribute that holds the unique account name. Defaults to the same as the AuthName attribute.'),
+        ),
+        'schema' => array(
+      	  'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+          'default' => '',
         ),
       ),
 

@@ -20,9 +20,9 @@ function ldap_server_module_load_include($type, $module, $name = NULL) {
  * as LDAP_CREATE_ACCOUNT_ALREADY_EXISTS, LDAP_CREATE_ERROR
  *
  */
-function ldap_create_drupal_account($name, $mail, $dn, $sid, $edit = array()) {
+function ldap_create_drupal_account($authname, $accountname, $mail, $dn, $sid, $edit = array()) {
 
-  $edit['name'] = $name;
+  $edit['name'] = $accountname;
   $edit['pass'] = user_password(20);
   $edit['mail'] = $mail;
   $edit['init'] = $mail;
@@ -43,7 +43,7 @@ function ldap_create_drupal_account($name, $mail, $dn, $sid, $edit = array()) {
     return FALSE;
   }
   else {
-    user_set_authmaps($account, array('authname_ldap_authentication' => $name));
+    user_set_authmaps($account, array('authname_ldap_authentication' => $authname));
   }
   return $account;
 }

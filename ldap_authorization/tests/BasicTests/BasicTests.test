@@ -132,7 +132,7 @@ function testFlags() {
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
   $roles = isset($new_authorizations['drupal_role']) ? $new_authorizations['drupal_role'] : array();
   $this->assertTrue((count($roles) == 0), ' only apply to ldap authenticated grants no roles for non ldap user.', $this->ldapTestId . '.enable');
-  user_set_authmaps($jkool, array('authname_ldap_authentication' => 1));
+  user_set_authmaps($jkool, array('authname_ldap_authentication' => 'jkool'));
 
   /**
    * LDAP_authorz.Flags.applyOnLogon  (IV.B) - execute logon and check that roles are applied
@@ -152,6 +152,7 @@ function testFlags() {
 
   // add an underserved, ldap granted drupal role
   $jkool = user_load($jkool->uid);
+
   $data = array(
     'roles' =>  array(3 => 'administrator'),
     'data' => array('ldap_authorizations' =>
@@ -166,9 +167,12 @@ function testFlags() {
   );
   $jkool = user_save($jkool, $data);
   $was_set = isset($jkool->roles[3]);
+  debug('user load jkool1, was_set='. $was_set); debug($jkool);
   // apply correct authorizations.  should remove the administrator role.
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'set', $this->consumerType, 'logon');
+  debug('authorizations'); debug(array($new_authorizations, $notifications));
   $jkool = user_load($jkool->uid);
+  debug('user load jkool'); debug($jkool);
   $this->assertTrue(($was_set && !isset($jkool->roles[3])), ' revoke ldap granted roles when no longer deserved.', $this->ldapTestId . '.revokeRoles');
 
 
@@ -203,6 +207,7 @@ function testFlags() {
   $jkool = user_load($jkool->uid);
   $guest_role_recreated = in_array('guests', array_values(user_roles()));
   $roles_by_name = array_flip(user_roles());
+  debug('roles_by_name'); debug($roles_by_name);
   $jkool_granted_guest = isset($jkool->roles[$roles_by_name['guests']]);
   $this->assertTrue(($guest_role_deleted && $guest_role_recreated && $jkool_granted_guest), ' create consumers (e.g. roles)', $this->ldapTestId . '.createRoles');
 

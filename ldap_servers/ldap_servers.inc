@@ -7,8 +7,14 @@
  */
 
 function _ldap_servers_get_user_ldap_data($drupal_user, $sid) {
-  $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
-  // print $sid; die;
+
+  if (is_object($drupal_user) && isset($drupal_user->uid) && $authname = db_query("SELECT authname FROM {authmap} WHERE uid = :uid AND module = 'ldap_authentication'", array(':uid' => $drupal_user->uid))->fetchColumn()) {
+    $drupal_username = $authname;
+  }
+  else {
+    $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
+  }
+
   $servers = ldap_servers_get_servers($sid, 'enabled');
   foreach ($servers as $sid => $ldap_server)  {
     if ($ldap_user = $ldap_server->user_lookup($drupal_username)) {

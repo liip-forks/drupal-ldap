@@ -36,6 +36,7 @@ class LdapServer {
   public $bindpw = FALSE; // Default to an anonymous bind.
   public $user_dn_expression;
   public $user_attr;
+  public $account_name_attr;
   public $mail_attr;
   public $mail_template;
   public $unique_persistent_attr;
@@ -96,6 +97,7 @@ class LdapServer {
     'binddn'  => 'binddn',
     'user_dn_expression' => 'user_dn_expression',
     'user_attr'  => 'user_attr',
+    'account_name_attr'  => 'account_name_attr',
     'mail_attr'  => 'mail_attr',
     'mail_template'  => 'mail_template',
     'unique_persistent_attr' => 'unique_persistent_attr',
