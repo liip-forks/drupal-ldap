@@ -85,8 +85,12 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
   // Add help information for entering in username/password
   $auth_conf = ldap_authentication_get_valid_conf();
   if ($auth_conf) {
-    $form['name']['#description'] = t($auth_conf->loginUIUsernameTxt);
-    $form['pass']['#description'] = t($auth_conf->loginUIPasswordTxt);
+    if (isset($auth_conf->loginUIUsernameTxt)) {
+      $form['name']['#description'] = t($auth_conf->loginUIUsernameTxt);
+    }
+    if (isset($auth_conf->loginUIPasswordTxt)) {
+      $form['pass']['#description'] = t($auth_conf->loginUIPasswordTxt);
+    }
   }
 }
 

@@ -1,3 +1,5 @@
+Issue #1612378 by Gisle Aas.  Fix for empty user logon help text.
+Add drupal user object and entity to ldap server test form, when devel enabled.
 Finished getting simpletests working and dealing with case sensitivity and escaping issues.
 Issue #1589148 by miscul.  Fix for login impossible with bind_method = 4.
 Issue #1066608#comment-6009682 by jdickmann.  fix for deriveFromEntryAttrMatchingUserAttr field implementation.
