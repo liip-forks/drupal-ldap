@@ -211,7 +211,6 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       if ($detailed_watchdog_log) {
         watchdog('ldap_authentication', '%username : Drupal User Account not found and configuration is set to not create new accounts.', $watchdog_tokens, WATCHDOG_DEBUG);
       }
-      return FALSE; // don't bother authenticating if account doesn't exists and account creation not allowed
     }
     if ($detailed_watchdog_log) {
       watchdog('ldap_authentication', '%username : Existing Drupal User Account not found.  Continuing on to attempt ldap authentication', $watchdog_tokens, WATCHDOG_DEBUG);

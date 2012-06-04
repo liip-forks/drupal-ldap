@@ -1,3 +1,4 @@
+Issue 1599632#comment-6076358 by jzornig. Finished applying patch.
 Issue #1599632 by jzornig. Patch by jzornig. Support $account->name being different to the users login id thru use of Persistent and Unique User Attribute.
 Issue #1612378 by Gisle Aas.  Fix for empty user logon help text.
 Add drupal user object and entity to ldap server test form, when devel enabled.
