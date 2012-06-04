@@ -85,8 +85,17 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
         'username' => $_SESSION['ldap_server_test_data']['username'],
       ));
     if (function_exists('dpm')) {
-      dpm("ldap full result array for: " . $_SESSION['ldap_server_test_data']['username']);
+      $user_name =  $_SESSION['ldap_server_test_data']['username'];
+      dpm("ldap full result array for: " . $user_name);
       dpm($_SESSION['ldap_server_test_data']['LDAP Entry']['attr']);
+
+      $user = user_load_by_name($user_name);
+      dpm("drupal user object for: $user_name");
+      dpm($user);
+      $user_entity = entity_load_single('user', $user->uid);
+      dpm("drupal user entity for: $user_name");
+      dpm($user_entity);
+
     }
 
     unset($_SESSION['ldap_server_test_data']);
