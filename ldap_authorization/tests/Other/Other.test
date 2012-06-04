@@ -34,7 +34,7 @@ class LdapAuthorizationOtherAuthenticationTests  extends LdapAuthorizationTestCa
     module_disable(array('ldap_authentication'));
     $this->ldapTestId = $this->module_name . ': test for integration with drupal authentication';
 
-    $consumer_conf_admin = ldap_authorization_get_consumer_admin_object($this->consumerType);
+    $consumer_conf_admin = ldap_authorization_get_consumer_admin_object($this->consumerType, FALSE);
     $consumer_conf_admin->onlyApplyToLdapAuthenticated = 0;
     $consumer_conf_admin->save();
 

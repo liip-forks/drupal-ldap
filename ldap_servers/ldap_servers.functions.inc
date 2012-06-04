@@ -205,12 +205,13 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
   $tokens = array();
 
   // 1. tokenize dn
-  $dn_parts = ldap_explode_dn($ldap_entry['dn'], 0);
+  $dn_parts = ldap_explode_dn($ldap_entry['dn'], 0); // escapes attribute values, need to be unescaped later.
   unset($dn_parts['count']);
   $parts_count = array();
   $parts_last_value = array();
   foreach ($dn_parts as $pair) {
     list($attr_name, $attr_value) = explode('=', $pair);
+    $attr_value = ldap_pear_unescape_dn_value($attr_value);
     try {
       $attr_value = check_plain($attr_value);
     }
@@ -222,16 +223,16 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
        continue; // don't tokenize data that can't pass check_plain
     }
     if (!isset($parts_count[$attr_name])) {
-      $tokens[$pre . strtolower($attr_name) . $post] = $attr_value;
+      $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = $attr_value;
       $parts_count[$attr_name] = 0;
     }
-    $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . (int)$parts_count[$attr_name] . $post] = $attr_value;
+    $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . (int)$parts_count[$attr_name] . $post] = $attr_value;
 
     $parts_last_value[$attr_name] = $attr_value;
     $parts_count[$attr_name]++;
   }
   foreach ($parts_count as $attr_name => $count) {
-    $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = $parts_last_value[$attr_name];
+    $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = $parts_last_value[$attr_name];
   }
 
   // tokenize other attributes
@@ -241,18 +242,18 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
     foreach ($token_keys as $attr_name) {
       $attr_value = $ldap_entry[$attr_name];
       if (is_array($attr_value) && is_scalar($attr_value[0]) && $attr_value['count'] == 1) {
-        $tokens[$pre . strtolower($attr_name) . $post] = check_plain($attr_value[0]);
-        $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = check_plain($attr_value[0]);
-        $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = check_plain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[0]);
       }
       elseif (is_array($attr_value) && $attr_value['count'] > 1) {
-        $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[$attr_value['count']-1]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[$attr_value['count']-1]);
         for ($i=0; $i<$attr_value['count']; $i++) {
-          $tokens[$pre . strtolower($attr_name) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = check_plain($attr_value[$i]);
+          $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = check_plain($attr_value[$i]);
         }
       }
       elseif (is_scalar($attr_value)) {
-        $tokens[$pre . strtolower($attr_name) . $post] = check_plain($attr_value);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($attr_value);
       }
     }
   }
@@ -276,7 +277,7 @@ function ldap_server_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDA
       else {
         $value = $ldap_entry[$token_key][0];
       }
-      $tokens[$pre . strtolower($token_key) . $post] = check_plain($value);
+      $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($value);
     }
   }
 
@@ -326,6 +327,84 @@ function ldap_servers_show_sample_user_tokens($sid) {
   return $table;
 }
 
+
+/**
+ * function to massage (change case, escape, unescape) ldap attribute names
+ * and values.  The primary purpose of this is to articulate and ensure consistency
+ * across ldap modules.
+ *
+ * @param mixed $value to be massaged
+ * @param enum $value_type = 'attr_name' or 'attr_value;
+ * @param enum $context...see LDAP_SERVER_MASSAGE_* constants
+ *
+ * .e.g. ldap_server_massage_text($value, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)
+ */
+function ldap_server_massage_text($value, $value_type, $context) {
+
+   $scalar = is_scalar($value);
+
+   if ($value_type == 'attr_value') {
+
+    if ($context == LDAP_SERVER_MASSAGE_QUERY_LDAP) {
+      $value = ldap_pear_escape_filter_value($value);
+    }
+    elseif ($context == LDAP_SERVER_MASSAGE_STORE_LDAP) {
+      $value = ldap_pear_escape_dn_value($value);
+    }
+
+    switch ($context) {
+
+      case LDAP_SERVER_MASSAGE_DISPLAY:
+      case LDAP_SERVER_MASSAGE_TOKEN_REPLACE:
+
+      case LDAP_SERVER_MASSAGE_QUERY_LDAP:
+      case LDAP_SERVER_MASSAGE_QUERY_DB:
+      case LDAP_SERVER_MASSAGE_QUERY_ARRAY:
+      case LDAP_SERVER_MASSAGE_QUERY_PROPERTY:
+
+      case LDAP_SERVER_MASSAGE_STORE_LDAP:
+      case LDAP_SERVER_MASSAGE_STORE_DB:
+      case LDAP_SERVER_MASSAGE_STORE_ARRAY:
+      case LDAP_SERVER_MASSAGE_STORE_PROPERTY:
+
+      break;
+
+     }
+   }
+   elseif ($value_type == 'attr_name') { // attr_name
+     switch ($context) {
+
+      case LDAP_SERVER_MASSAGE_DISPLAY:
+      break;
+
+      case LDAP_SERVER_MASSAGE_TOKEN_REPLACE:
+
+      case LDAP_SERVER_MASSAGE_QUERY_LDAP:
+      case LDAP_SERVER_MASSAGE_QUERY_DB:
+      case LDAP_SERVER_MASSAGE_QUERY_ARRAY:
+      case LDAP_SERVER_MASSAGE_QUERY_PROPERTY:
+
+      case LDAP_SERVER_MASSAGE_STORE_LDAP:
+      case LDAP_SERVER_MASSAGE_STORE_DB:
+      case LDAP_SERVER_MASSAGE_STORE_ARRAY:
+      case LDAP_SERVER_MASSAGE_STORE_PROPERTY:
+        if ($scalar) {
+          $value = drupal_strtolower($value);
+        }
+        else {
+          foreach ($value as $i => $val) {
+            $value[$i] = drupal_strtolower($val);
+          }
+        }
+      break;
+
+     }
+   }
+
+   return $value;
+
+}
+
  /**
     * from pear net_ldap2-2.0.11
     *
@@ -342,6 +421,7 @@ function ldap_servers_show_sample_user_tokens($sid) {
     */
     function ldap_pear_escape_filter_value($values = array()) {
         // Parameter validation
+        $is_scalar = is_scalar($values);
         if (!is_array($values)) {
             $values = array($values);
         }
@@ -361,7 +441,142 @@ function ldap_servers_show_sample_user_tokens($sid) {
             $values[$key] = $val;
         }
 
-        return $values;
+        return ($is_scalar) ? $values[0] : $values;
+    }
+
+    /**
+    * Undoes the conversion done by {@link escape_filter_value()}.
+    *
+    * Converts any sequences of a backslash followed by two hex digits into the corresponding character.
+    *
+    * @param array $values Array of values to escape
+    *
+    * @static
+    * @return array Array $values, but unescaped
+    */
+    function ldap_pear_unescape_filter_value($values = array()) {
+        // Parameter validation
+        $is_scalar = is_scalar($values);
+        if (!is_array($values)) {
+            $values = array($values);
+        }
+
+        foreach ($values as $key => $value) {
+            // Translate hex code into ascii
+            $values[$key] = ldap_pear_hex2asc($value);
+        }
+
+        return ($is_scalar) ? $values[0] : $values;
+    }
+
+
+ /**
+    * Escapes a DN value according to RFC 2253
+    *
+    * Escapes the given VALUES according to RFC 2253 so that they can be safely used in LDAP DNs.
+    * The characters ",", "+", """, "\", "<", ">", ";", "#", "=" with a special meaning in RFC 2252
+    * are preceeded by ba backslash. Control characters with an ASCII code < 32 are represented as \hexpair.
+    * Finally all leading and trailing spaces are converted to sequences of \20.
+    *
+    * @param array $values An array containing the DN values that should be escaped
+    *
+    * @static
+    * @return array The array $values, but escaped
+    */
+    function ldap_pear_escape_dn_value($values = array()) {
+        // Parameter validation
+        $is_scalar = is_scalar($values);
+
+        if (!is_array($values)) {
+            $values = array($values);
+        }
+
+        foreach ($values as $key => $val) {
+            // Escaping of filter meta characters
+            $val = str_replace('\\', '\\\\', $val);
+            $val = str_replace(',',    '\,', $val);
+            $val = str_replace('+',    '\+', $val);
+            $val = str_replace('"',    '\"', $val);
+            $val = str_replace('<',    '\<', $val);
+            $val = str_replace('>',    '\>', $val);
+            $val = str_replace(';',    '\;', $val);
+            $val = str_replace('#',    '\#', $val);
+            $val = str_replace('=',    '\=', $val);
+
+            // ASCII < 32 escaping
+            $val = ldap_pear_asc2hex32($val);
+
+            // Convert all leading and trailing spaces to sequences of \20.
+            if (preg_match('/^(\s*)(.+?)(\s*)$/', $val, $matches)) {
+                $val = $matches[2];
+                for ($i = 0; $i < strlen($matches[1]); $i++) {
+                    $val = '\20'.$val;
+                }
+                for ($i = 0; $i < strlen($matches[3]); $i++) {
+                    $val = $val.'\20';
+                }
+            }
+
+            if (null === $val) $val = '\0';  // apply escaped "null" if string is empty
+
+            $values[$key] = $val;
+        }
+
+        return ($is_scalar) ? $values[0] : $values;
+    }
+
+    /**
+    * Undoes the conversion done by escape_dn_value().
+    *
+    * Any escape sequence starting with a baskslash - hexpair or special character -
+    * will be transformed back to the corresponding character.
+    *
+    * @param array $values Array of DN Values
+    *
+    * @return array Same as $values, but unescaped
+    * @static
+    */
+    function ldap_pear_unescape_dn_value($values = array()) {
+      $is_scalar = is_scalar($values);
+
+        // Parameter validation
+        if (!is_array($values)) {
+            $values = array($values);
+        }
+
+        foreach ($values as $key => $val) {
+            // strip slashes from special chars
+            $val = str_replace('\\\\', '\\', $val);
+            $val = str_replace('\,',    ',', $val);
+            $val = str_replace('\+',    '+', $val);
+            $val = str_replace('\"',    '"', $val);
+            $val = str_replace('\<',    '<', $val);
+            $val = str_replace('\>',    '>', $val);
+            $val = str_replace('\;',    ';', $val);
+            $val = str_replace('\#',    '#', $val);
+            $val = str_replace('\=',    '=', $val);
+
+            // Translate hex code into ascii
+            $values[$key] = ldap_pear_hex2asc($val);
+        }
+
+      return ($is_scalar) ? $values[0] : $values;
+    }
+
+
+
+    /**
+    * Converts all Hex expressions ("\HEX") to their original ASCII characters
+    *
+    * @param string $string String to convert
+    *
+    * @static
+    * @author beni@php.net, heavily based on work from DavidSmith@byu.net
+    * @return string
+    */
+    function ldap_pear_hex2asc($string) {
+        $string = preg_replace("/\\\([0-9A-Fa-f]{2})/e", "''.chr(hexdec('\\1')).''", $string);
+        return $string;
     }
 
     /**

@@ -40,6 +40,18 @@ define('LDAP_SERVERS_DERIVE_GROUP_FROM_DN', 1);
 define('LDAP_SERVERS_DERIVE_GROUP_FROM_ATTRIBUTE', 2);
 define('LDAP_SERVERS_DERIVE_GROUP_FROM_ENTRY', 4);
 
+define('LDAP_SERVER_MASSAGE_DISPLAY', 1); //  ... value is being displayed in UI
+define('LDAP_SERVER_MASSAGE_TOKEN_REPLACE', 2); // ... value is about to be used to generate token (e.g. [...] to be replaced
+
+define('LDAP_SERVER_MASSAGE_QUERY_LDAP', 5); //  ...value is about to be used in ldap query
+define('LDAP_SERVER_MASSAGE_QUERY_DB', 6); //  ...value is about to be in an sql query
+define('LDAP_SERVER_MASSAGE_QUERY_ARRAY', 7); //  ...value is about to be found in array values
+define('LDAP_SERVER_MASSAGE_QUERY_PROPERTY', 8); //  ...value is about to be found in object property values
+
+define('LDAP_SERVER_MASSAGE_STORE_LDAP', 13); // ...value is about to be stored in ldap entry
+define('LDAP_SERVER_MASSAGE_STORE_DB', 14); // ...value is about to be stored in db
+define('LDAP_SERVER_MASSAGE_STORE_ARRAY', 15); // ...value is about to be stored in array
+define('LDAP_SERVER_MASSAGE_STORE_PROPERTY', 16); // ...value is about to be stored in object property
 
 define('LDAP_SERVER_GROUPS_RECURSE_DEPTH', 20);
 
@@ -314,7 +326,7 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
     );
 
   $available_user_targets['field.ldap_user_puid'] =  array(
-    'name' => t('Field: PUID'),
+    'name' => t('Field: PUID', $tokens),
     'configurable' => 0,
     'source' => $ldap_server->unique_persistent_attr,
     'notes' => 'configure at '. $server_edit_path,
@@ -327,9 +339,9 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
     );
 
   $available_user_targets['field.ldap_user_puid_property'] =  array(
-    'name' => t('Field: PUID Attribute'),
+    'name' => t('Field: PUID Attribute', $tokens),
     'configurable' => 0,
-    'source' => t('set to') . ' "' . $ldap_server->unique_persistent_attr . '"',
+    'source' => t('set to', $tokens) . ' "' . $ldap_server->unique_persistent_attr . '"',
     'notes' => 'configure at '. $server_edit_path,
     'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     'enabled' => TRUE,
@@ -341,7 +353,7 @@ function ldap_servers_ldap_user_targets_list_alter(&$available_user_targets, &$l
 
 
   $available_user_targets['field.ldap_user_current_dn'] =  array(
-    'name' => t('Field: Most Recent DN'),
+    'name' => t('Field: Most Recent DN', $tokens),
     'configurable' => 0,
     'source' => 'dn',
     'notes' => 'not configurable',

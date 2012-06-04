@@ -11,7 +11,7 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
   public static function getInfo() {
     return array(
       'group' => 'LDAP Authorization',
-      'name' => 'OG Tests.',
+      'name' => 'OG 7.x-1.x Tests.',
       'description' => 'Test ldap authorization og.',
 
     );

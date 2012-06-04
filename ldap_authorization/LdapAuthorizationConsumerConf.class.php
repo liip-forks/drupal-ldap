@@ -20,7 +20,7 @@ class LdapAuthorizationConsumerConf {
   public $consumerModule = NULL;
   public $consumer = NULL;
   public $inDatabase = FALSE;
-
+  public $numericConsumerConfId = NULL;
 
   public $description = NULL;
   public $status = NULL;
@@ -72,10 +72,14 @@ class LdapAuthorizationConsumerConf {
    /**
    * Constructor Method
    */
-  function __construct(&$consumer, $_new = FALSE, $_sid = NULL) {
+  function __construct(&$consumer, $_new = NULL, $_sid = NULL) {
     $this->consumer = $consumer;
     $this->consumerType = $consumer->consumerType;
-    if ($_new) {
+    if ($_new !== TRUE && $_new !== FALSE) {
+      $this->loadFromDb();
+      $_new = (boolean)!$this->inDatabase; // loadFromDb() will set inDatabase property.
+    }
+    elseif ($_new === TRUE) {
       $this->inDatabase = FALSE;
     }
     else {
@@ -95,7 +99,7 @@ class LdapAuthorizationConsumerConf {
   }
 
   protected function loadFromDb() {
-    if (module_exists('ctools')) {
+    /** if (module_exists('ctools')) {
       ctools_include('export');
       if ($this->consumerType) {
         $result = ctools_export_load_object('ldap_authorization', 'names', array($this->consumerType));
@@ -114,6 +118,7 @@ class LdapAuthorizationConsumerConf {
       }
     }
     else {
+    **/
       $select = db_select('ldap_authorization', 'ldap_authorization');
       $select->fields('ldap_authorization');
       if ($this->consumerType) {
@@ -121,7 +126,7 @@ class LdapAuthorizationConsumerConf {
       }
 
       $consumer_conf = $select->execute()->fetchObject();
-    }
+   // }
 
     if (!$consumer_conf) {
       $this->inDatabase = FALSE;
@@ -130,6 +135,7 @@ class LdapAuthorizationConsumerConf {
 
     $this->sid = $consumer_conf->sid;
     $this->consumerType = $consumer_conf->consumer_type;
+    $this->numericConsumerConfId = $consumer_conf->numeric_consumer_conf_id;
     $this->status = ($consumer_conf->status) ? 1 : 0;
     $this->onlyApplyToLdapAuthenticated  = (bool)(@$consumer_conf->only_ldap_authenticated);
 
@@ -152,7 +158,7 @@ class LdapAuthorizationConsumerConf {
     $this->deriveFromEntryUseFirstAttr  = (bool)($consumer_conf->derive_from_entry_use_first_attr);
     $this->deriveFromEntryNested = $consumer_conf->derive_from_entry_nested;
 
-    $this->mappings = $this->pipeListToArray($consumer_conf->mappings, TRUE);
+    $this->mappings = $this->pipeListToArray($consumer_conf->mappings, FALSE);
     $this->useMappingsAsFilter = (bool)(@$consumer_conf->use_filter);
 
     $this->synchToLdap = (bool)(@$consumer_conf->synch_to_ldap);
@@ -222,17 +228,13 @@ class LdapAuthorizationConsumerConf {
   }
 
 
-
-
-  protected function pipeListToArray($mapping_list_txt, $make_lowercase = FALSE) {
+  protected function pipeListToArray($mapping_list_txt, $make_item0_lowercase = FALSE) {
     $result_array = array();
     $mappings = preg_split('/[\n\r]+/', $mapping_list_txt);
     foreach ($mappings as $line) {
-      if ($make_lowercase) {
-        $line = drupal_strtolower($line);
-      }
       if (count($mapping = explode('|', trim($line))) == 2) {
-        $result_array[] = array(trim($mapping[0]), trim($mapping[1]));
+        $item_0 = ($make_item0_lowercase) ? drupal_strtolower(trim($mapping[0])) : trim($mapping[0]);
+        $result_array[] = array($item_0, trim($mapping[1]));
       }
     }
     return $result_array;

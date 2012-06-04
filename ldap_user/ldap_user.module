@@ -124,7 +124,6 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $sych_context, $ld
       $ldap_server = ldap_servers_get_servers($ldap_server, 'enabled', TRUE);
     }
 
-//    dpm("ldap_server"); dpm($ldap_server);
     switch ($sych_context) {
       case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
       case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
@@ -146,7 +145,6 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $sych_context, $ld
  */
 function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server) {
 
-  //dpm('ldap_user_ldap_user_targets_list_alter0'); dpm($available_user_targets);
   $tokens = array(
     '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
   );

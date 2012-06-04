@@ -108,10 +108,13 @@ function testFlags() {
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
   $roles1 = $new_authorizations[$this->consumerType];
 
-  $consumer_conf_admin = ldap_authorization_get_consumer_admin_object($this->consumerType);
+
+  $consumer_conf_admin = ldap_authorization_get_consumer_admin_object($this->consumerType, FALSE);
   $consumer_conf_admin->status = 0;
   $consumer_conf_admin->save();
-  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
+  
+
+  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query', $this->consumerType);  // just see if the correct ones are derived.
   $roles2 = isset($new_authorizations[$this->consumerType]) ? $new_authorizations[$this->consumerType] : array();
   $this->assertTrue((count($roles1) == 1 && count($roles2) == 0), 'disable consumer configuration disallows authorizations.', $this->ldapTestId . '.enable');
 
@@ -124,7 +127,7 @@ function testFlags() {
   $consumer_conf_admin->onlyApplyToLdapAuthenticated = 1;
   $consumer_conf_admin->status = 1;
   $consumer_conf_admin->save();
-
+ 
   // remove authmap for jkool then test
   $jkool = user_save($user, array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'));
   user_set_authmaps($jkool, array('authname_ldap_authentication' => NULL));
@@ -148,7 +151,7 @@ function testFlags() {
   $consumer_conf_admin->onlyApplyToLdapAuthenticated = 0;
   $consumer_conf_admin->revokeLdapProvisioned = 1;
   $consumer_conf_admin->save();
-
+ 
   // add an underserved, ldap granted drupal role
   $jkool = user_load($jkool->uid);
   $data = array(
@@ -190,7 +193,7 @@ function testFlags() {
 
   $consumer_conf_admin->createConsumers = 1;
   $consumer_conf_admin->save();
-
+ 
   // make sure role doesn't exist
   if (in_array('guests', array_values(user_roles()))) {
     user_role_delete('guests');

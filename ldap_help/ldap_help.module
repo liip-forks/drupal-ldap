@@ -55,7 +55,7 @@ function ldap_help_menu() {
     'weight' => 5,
   );
 
-    $items['admin/config/people/ldap/help/issues'] = array(
+  $items['admin/config/people/ldap/help/issues'] = array(
     'title' => 'Issue Reporting',
     'description' => 'Creating LDAP Issue Queue Items',
     'page callback' => 'ldap_help_issues',
@@ -64,8 +64,7 @@ function ldap_help_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 7,
   );
-
-
+  
   return $items;
 }
 

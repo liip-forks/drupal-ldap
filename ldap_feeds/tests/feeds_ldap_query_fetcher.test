@@ -82,7 +82,7 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
     $this->setPlugin('node', 'FeedsLdapQueryFetcher');
     $fetcher_conf = array(
       'sid' => 'ldapfeeds',
-      'basedn' => 'ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu',
+      'basedn' => 'ou=campus accounts,dc=ad,dc=myuniversity,dc=edu',
       'filter' => 'objectclass=user',
       'attributes' => '"dn","mail","cn","sn"',
       'sizelimit' => 5
@@ -139,7 +139,7 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
      *
       0 => array(
       'count' => 4,
-      'dn' => 'cn=bkool,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu',
+      'dn' => 'cn=bkool,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu',
       'mail' => 'bkool@myuniversity.edu',
       'cn' => 'bkool',
       'sn' => 'kool',
@@ -147,7 +147,7 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
 
      * 1 => array(
       'count' => 4,
-      'dn' => 'cn=jkool,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu',
+      'dn' => 'cn=jkool,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu',
       'mail' => 'jkool@myuniversity.edu',
       'cn' => 'jkool',
       'sn' => 'kool',
@@ -155,7 +155,7 @@ class LdapFeedsTestCase extends FeedsWebTestCase {
 
     2 => array(
       'count' => 4,
-      'dn' => 'cn=rkool,ou=campus accounts,dc=ad,dc=myuniveristy,dc=edu',
+      'dn' => 'cn=rkool,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu',
       'mail' => 'rkool@myuniversity.edu',
       'cn' => 'rkool',
       'sn' => 'kool',

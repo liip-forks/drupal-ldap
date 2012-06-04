@@ -122,7 +122,7 @@ class LdapAuthenticationConf {
      */
     $exclude = FALSE;
     foreach ($this->excludeIfTextInDn as $test) {
-      if (strpos(drupal_strtolower($ldap_user_entry['dn']), drupal_strtolower($test)) !== FALSE) {
+      if (stripos($ldap_user_entry['dn'], $test) !== FALSE) {
         return FALSE;//  if a match, return FALSE;
       }
     }
@@ -158,7 +158,7 @@ class LdapAuthenticationConf {
     if (count($this->allowOnlyIfTextInDn)) {
       $fail = TRUE;
       foreach ($this->allowOnlyIfTextInDn as $test) {
-        if (strpos(drupal_strtolower($ldap_user_entry['dn']), drupal_strtolower($test)) !== FALSE) {
+        if (stripos($ldap_user_entry['dn'], $test) !== FALSE) {
           $fail = FALSE;
         }
       }

@@ -50,7 +50,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
     $variables = array();
     $authentication = array();
     $authorization = array();
-    $this->testFunctions = new LdapTestFunctions0();
+    $this->testFunctions = new LdapTestFunctions();
     if ($this->useFeatureData) {
       module_enable(array('ctools'), TRUE);
       module_enable(array('strongarm'), TRUE);
@@ -77,7 +77,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
       }
 
       // make included fake sid match feature sid
-      $this->testFunctions->prepTestConfiguration($this->testData, TRUE);
+      $this->testFunctions->prepTestConfiguration($this->testData, FALSE);
     }
     else {
       include(drupal_get_path('module', 'ldap_authorization') . '/tests/' . $this->authorizationData);

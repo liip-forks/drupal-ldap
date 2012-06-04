@@ -6,7 +6,7 @@
  * ldap_authentication simpletests
  *
  */
-require_once('LdapTestFunctions0.class.php');
+require_once(drupal_get_path('module', 'ldap_servers') . '/tests/LdapTestFunctions.class.php');
 
 class LdapAuthenticationTestCase extends DrupalWebTestCase {
   public static function getInfo() {
@@ -44,7 +44,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
    *
    */
   function prepTestData($sid, $testid) {
-    $this->testFunctions = new LdapTestFunctions0();
+    $this->testFunctions = new LdapTestFunctions();
 
     include(drupal_get_path('module', 'ldap_authentication') . '/tests/LdapServerTestData.' . $sid . '.inc');
     $this->testFunctions->prepTestServers($test_data['servers']);
@@ -73,7 +73,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
     $parts = ldap_explode_dn($dn, 0);
     $cn_parts = explode('=', $parts[0]);
     $edit = array(
-      'name' => $cn_parts[1],
+      'name' => ldap_pear_unescape_dn_value($cn_parts[1]),
       'pass' => $user['password'][0],
     );
     $user = user_load_by_name($edit['name']);

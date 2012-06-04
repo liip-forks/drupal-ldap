@@ -1,4 +1,12 @@
 
+1.0 with ldap_user changes:
+
+-- need to move data in admin/config/people/ldap/user on update.
+
+
+
+
+
 Permanent Unique Identifier Tasks:
 
 - write code to check and resolve conflict with puid

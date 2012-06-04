@@ -30,9 +30,9 @@ class LdapTestFunctions  {
       }
     }
 
-  $consumer_conf_admin = ldap_authorization_get_consumer_admin_object('drupal_role');
-  $consumer_conf_admin->status = 1;
-  $consumer_conf_admin->save();
+  //$consumer_conf_admin = ldap_authorization_get_consumer_admin_object('drupal_role');
+  //$consumer_conf_admin->status = 1;
+  //$consumer_conf_admin->save();
 
   }
 

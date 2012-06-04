@@ -12,7 +12,7 @@ class LdapProfileConf {
   public $mapping = array();
   public $derivedMapping = array();
   public $inDatabase = FALSE;
-  public $auth_conf;
+  public $servers = array();
 
   protected $saveable = array(
     'ldap_fields',
@@ -21,7 +21,7 @@ class LdapProfileConf {
   );
 
   function __construct() {
-    $this->auth_conf = ldap_authentication_get_valid_conf();
+    $this->servers = ldap_servers_get_servers(NULL, 'enabled');
     $this->load();
   }
 

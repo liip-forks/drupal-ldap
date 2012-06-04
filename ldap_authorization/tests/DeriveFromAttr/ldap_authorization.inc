@@ -35,8 +35,8 @@ $authorization['drupal_role'] = array(
     array('cn=SYSadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'sysadmins'),
     array('cn=netadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'netadmins'),
     array('cn=phone operators,ou=it,dc=ad,dc=myuniversity,dc=edu', 'netadmins'),
-    array('cn=netadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'netadmins2'),
-    array('cn="punctuated,comma,freaks",ou=it,dc=ad,dc=myuniversity,dc=edu', 'comma freaks'),
+    array('netadmins', 'netadmins2'),
+    array('punctuated,comma,freaks', 'comma freaks'),
     array('17', 'mailgroup17'),
   ),
 

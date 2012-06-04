@@ -17,7 +17,7 @@ $conf['activedirectory']['properties'] = array(
       ),
     'binddn' => 'cn=service-account,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
     'bindpw' => 'goodpwd',
-    'user_dn_expression' => 'user_dn_expression',
+    'user_dn_expression' => NULL,
     'user_attr'  => 'sAMAccountName',
     'mail_attr'  => 'mail',
     'mail_template'  => NULL,

@@ -128,7 +128,7 @@ class LdapUserConfAdmin extends LdapUserConf {
       );
       return $form;
     }
-
+    $form['#storage'] = array();
     $form['#theme'] = 'ldap_user_conf_form';
 
     $form['intro'] = array(

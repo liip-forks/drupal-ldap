@@ -85,8 +85,17 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
         'username' => $_SESSION['ldap_server_test_data']['username'],
       ));
     if (function_exists('dpm')) {
-      dpm("ldap full result array for: " . $_SESSION['ldap_server_test_data']['username']);
+      $user_name =  $_SESSION['ldap_server_test_data']['username'];
+      dpm("ldap full result array for: " . $user_name);
       dpm($_SESSION['ldap_server_test_data']['LDAP Entry']['attr']);
+
+      $user = user_load_by_name($user_name);
+      dpm("drupal user object for: $user_name");
+      dpm($user);
+      $user_entity = entity_load_single('user', $user->uid);
+      dpm("drupal user entity for: $user_name");
+      dpm($user_entity);
+
     }
 
     unset($_SESSION['ldap_server_test_data']);
@@ -144,8 +153,8 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   $results = array_merge($results, $more_results);
   if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
-    $results = array_merge($results, $more_results);
 
+    $results = array_merge($results, $more_results);
     if (!$has_errors) {
       $mapping[] = "dn = " . $ldap_user['dn'];
       foreach ($ldap_user['attr'] as $key => $value) {

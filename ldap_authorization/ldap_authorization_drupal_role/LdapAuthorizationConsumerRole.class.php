@@ -45,7 +45,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     }
     $this->_availableConsumerIDs = array(); // array_values(user_roles(TRUE));
     foreach (array_values(user_roles(TRUE)) as $role_name) {
-      $this->_availableConsumerIDs[] = drupal_strtolower($role_name);
+      $this->_availableConsumerIDs[] = $role_name;
     }
 
   }
@@ -115,13 +115,14 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
   public function revokeSingleAuthorization(&$user, $role_name, &$user_auth_data) {
 
     $user_edit = array('roles' => array_diff($user->roles, array($this->drupalRolesByName[$role_name] => $role_name)));
-    $user = user_save($user, $user_edit);
+    $account = user_load($user->uid);
+    $user = user_save($account, $user_edit);
     $result = ($user && !isset($user->roles[$this->drupalRolesByName[$role_name]]));
 
     if ($this->detailedWatchdogLog) {
       watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.revokeSingleAuthorization()
         revoked:  rid=%rid, role_name=%role_name for username=%username, result=%result',
-        array('%rid' => $this->drupalRolesByName[$role_name], '%role_name' => $role_name, '%username' => $user->name,
+        array('%rid' => $this->drupalRolesByName[drupal_strtolower($role_name)], '%role_name' => $role_name, '%username' => $user->name,
           '%result' => $result), WATCHDOG_DEBUG);
     }
 
@@ -134,7 +135,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
    */
 
   public function grantSingleAuthorization(&$user, $role_name, &$user_auth_data) {
-    if (! isset($this->drupalRolesByName[$role_name])) {
+    if (! isset($this->drupalRolesByName[drupal_strtolower($role_name)])) {
         watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.grantSingleAuthorization()
         failed to grant %username the role %role_name because role does not exist',
         array('%role_name' => $role_name, '%username' => $user->name),
@@ -142,19 +143,19 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
         return FALSE;
     }
 
-    $user_edit = array('roles' => $user->roles + array($this->drupalRolesByName[$role_name] => $role_name));
+    $user_edit = array('roles' => $user->roles + array($this->drupalRolesByName[drupal_strtolower($role_name)] => $role_name));
     if ($this->detailedWatchdogLog) {
       watchdog('ldap_authorization', 'grantSingleAuthorization in drupal rold' . print_r($user, TRUE), array(), WATCHDOG_DEBUG);
     }
 
-    $user = user_save($user, $user_edit);
-    $result = ($user && isset($user->roles[$this->drupalRolesByName[$role_name]]));
-
+    $account = user_load($user->uid);
+    $user = user_save($account, $user_edit);
+    $result = ($user && isset($user->roles[$this->drupalRolesByName[drupal_strtolower($role_name)]]));
 
     if ($this->detailedWatchdogLog) {
       watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.grantSingleAuthorization()
         granted: rid=%rid, role_name=%role_name for username=%username, result=%result',
-        array('%rid' => $this->drupalRolesByName[$role_name], '%role_name' => $role_name, '%username' => $user->name,
+        array('%rid' => $this->drupalRolesByName[drupal_strtolower($role_name)], '%role_name' => $role_name, '%username' => $user->name,
           '%result' => $result), WATCHDOG_DEBUG);
     }
 
@@ -175,7 +176,9 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
 		$pass = FALSE;
 		if (is_array($normalized) && isset($normalized[0][1]) && $normalized[0][1] !== FALSE ) {
 			$available_authorization_ids = $this->availableConsumerIDs($clear_cache);
-			$pass = (in_array($normalized[0], $available_authorization_ids));
+      $available_authorization_ids = array_map('drupal_strtolower', $available_authorization_ids);
+     // debug($available_authorization_ids); debug($normalized[0]);
+			$pass = (in_array(drupal_strtolower($normalized[0]), $available_authorization_ids));
 		}
 
 		if (!$pass) {

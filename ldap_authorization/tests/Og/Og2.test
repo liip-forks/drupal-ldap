@@ -1,15 +1,13 @@
 <?php
 
 /**
- * @file simpletest for Ldap Authorization OG Module
+ * @file simpletest for Ldap Authorization OG Module, for og 7.x-2.x
  *
  * Manual testing to accompany simpletests:
  *  - logon with og authorization disabled and make sure nothing happens
- *  - logon with og authorization enabaled and make sure
- *
- *
- *
- *
+ *  - logon with og authorization enabled and make sure admin and member group memberships granted
+ *  - change mappings so no roles granted
+ *  - logon and make sure memberships revoked
  */
 
 require_once(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapAuthorizationTestCase.class.php');
@@ -25,7 +23,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
   public static function getInfo() {
     return array(
       'group' => 'LDAP Authorization',
-      'name' => 'OG 2 Tests.',
+      'name' => 'OG 7.x-2.x Tests.',
       'description' => 'Test ldap authorization og 2.',
     );
   }
@@ -55,15 +53,11 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     // Create group and group content node types.
     $this->group_type = $this->drupalCreateContentType()->type;
     og_create_field(OG_GROUP_FIELD, 'node', $this->group_type);
-    debug('this->group_type'); debug($this->group_type);
 
     $this->group_content_type = $this->drupalCreateContentType()->type;
     og_create_field(OG_AUDIENCE_FIELD, 'node', $this->group_content_type);
 
-    debug('this->group_content_type'); debug($this->group_content_type);
-
     foreach ($og_groups as $og_name => $og_conf) {
-      debug($og_conf);
       $label = $og_conf['label'];
       if ($og_conf['entity_type'] == 'node') {
         $settings = array();
@@ -75,8 +69,6 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
         $this->group_nodes[$og_name] = $this->drupalCreateNode($settings);
       }
     }
-    debug($this->group_nodes);
-
 
   }
 
@@ -116,20 +108,13 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     $web_user = $this->drupalCreateUser();
     $this->ldapTestId = $this->module_name . ': og functions';
 
-    list($og_knitters, $og_knitters_node) = ldap_authorization_og2_get_group('node','knitters', 'group_name','object');
-    list($og_bakers, $og_bakers_node) = ldap_authorization_og2_get_group('node','bakers', 'group_name','object');
-    list($og_butchers, $og_butchers_node) = ldap_authorization_og2_get_group('node','butchers', 'group_name','object');
+    list($og_knitters, $og_knitters_node) = ldap_authorization_og2_get_group('node', 'knitters', 'group_name', 'object');
+    list($og_bakers,   $og_bakers_node)   = ldap_authorization_og2_get_group('node', 'bakers',   'group_name', 'object');
+    list($og_butchers, $og_butchers_node) = ldap_authorization_og2_get_group('node', 'butchers', 'group_name', 'object');
 
-  //  debug(array('og_knitters', $og_knitters,  $og_knitters_node));
-  //  debug(array('og_bakers',   $og_bakers,    $og_bakers_node));
-  //  debug(array('og_butchers',  $og_butchers, $og_butchers_node));
-
-// ldap_authorization_og2_rid_from_role_name($entity_type, $gid, $role_name)
     $anonymous_rid = ldap_authorization_og2_rid_from_role_name('node', $og_knitters_node->nid, OG_ANONYMOUS_ROLE);
     $member_rid =    ldap_authorization_og2_rid_from_role_name('node', $og_bakers_node->nid,   OG_AUTHENTICATED_ROLE);
     $admin_rid =     ldap_authorization_og2_rid_from_role_name('node', $og_butchers_node->nid, OG_ADMINISTRATOR_ROLE);
-    debug("rids: anonymous_rid=$anonymous_rid, member_rid=$member_rid, admin_rid=$admin_rid");
-
 
     /**
      * II.0 basic granting tests to make sure og_role_grant, ldap_authorization_og_rid_from_role_name,
@@ -152,7 +137,6 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     og_role_grant('node', $og_bakers_node->nid, $web_user->uid, $admin_rid);
 
     $web_user = user_load($web_user->uid, TRUE); // need to reload because of issue with og_group and og_role_grant
-    debug($web_user);
     $ids = array($web_user->uid);
     $user_entity = entity_load('user', $ids);
     $this->assertTrue(og_is_member('node', $og_knitters_node->nid, 'user', $web_user),
@@ -172,7 +156,6 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     $this->ldapTestId = $this->module_name . ': LdapAuthorizationConsumerOG class';
 
     $og_auth = new LdapAuthorizationConsumerOG('og_group');
-   // debug('og_auth consumer object:'); debug($og_auth);
     $this->assertTrue(is_object($og_auth), 'Successfully instantiated LdapAuthorizationConsumerOG', $this->ldapTestId);
 
 
@@ -194,7 +177,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
         $should_haves[] = ldap_authorization_og_authorization_id($gid, $rid, 'node');
       }
     }
-    debug('consumer_ids'); debug($consumer_ids); debug('should_haves'); debug($should_haves);
+
     $match = (boolean)(count(array_intersect($consumer_ids, $should_haves)) == count($should_haves));
     $this->assertTrue($match,
       'LdapAuthorizationConsumerOG availableConsumerIDs()', $this->ldapTestId);
@@ -208,7 +191,6 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     );
 
     $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
-    debug('web_user_authorizations and should haves:'); debug($web_user_authorizations); debug($should_haves);
     $match = (boolean)(count(array_intersect($web_user_authorizations, $should_haves)) == count($should_haves));
     $this->assertTrue($match,
       'LdapAuthorizationConsumerOG usersAuthorizations()', $this->ldapTestId);
@@ -226,7 +208,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     $og_auth->authorizationGrant($web_user, $web_user->data['ldap_authorizations']['og_group'], array($butcher_member_id), NULL, TRUE);
     $web_user = user_load($web_user->uid, TRUE);
     $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
-    debug('web_user_authorizations and butchermemberid'); debug($web_user_authorizations); debug($butcher_member_id);
+
 
     $this->assertTrue(in_array($butcher_member_id, array_values($web_user_authorizations)),
       'LdapAuthorizationConsumerOG authorizationGrant()', $this->ldapTestId);
@@ -234,7 +216,6 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
       'hasLdapGrantedAuthorization() method works for non LDAP provisioned og authorization', $this->ldapTestId);
 
     $web_user = user_load($web_user->uid, TRUE);
-    debug('web_user->data[ldap_authorizations][og_group]'); debug($web_user->data['ldap_authorizations']['og_group']);
     $og_auth->authorizationRevoke($web_user, $web_user->data['ldap_authorizations']['og_group'], array($butcher_member_id), NULL, TRUE);
     $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
     $this->assertFalse(in_array($butcher_member_id, $web_user_authorizations),
@@ -270,13 +251,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
      * II.B. Also test function in ldap_authorization_og.module
      */
 
-   // $normalized_authorization_id = ldap_authorization_og_authorization_id(3, 2);
-  //  $this->assertTrue($normalized_authorization_id == '3-2', ' ldap_authorizations og ldap_authorization_og_authorization_id() function works', $this->ldapTestId);
-
-    $bakers_gid = ldap_authorization_og2_get_group('node', $og_bakers_node->nid, 'gid', 'gid');
-    $this->assertTrue($bakers_gid == $og_bakers->gid, 'ldap_authorization_og2_get_group() function gid return works with query type gid', $this->ldapTestId);
-
-    $bakers_label = ldap_authorization_og2_get_group('node',$og_bakers_node->nid, 'gid', 'label');
+    $bakers_label = ldap_authorization_og2_get_group('node', 'bakers', 'group_name', 'label');
     $this->assertTrue($bakers_label == 'bakers', 'ldap_authorization_og2_get_group() function label return works with query type gid', $this->ldapTestId);
 
     $test = ldap_authorization_og2_has_role($og_bakers_node->nid, $web_user->uid, OG_ADMINISTRATOR_ROLE);
@@ -285,16 +260,13 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     $test = ldap_authorization_og2_has_role($og_knitters_node->nid, $web_user->uid, OG_ADMINISTRATOR_ROLE);
     $this->assertTrue($test === FALSE, 'ldap_authorization_og2_has_role() function fails with FALSE', $this->ldapTestId);
 
-    $test = ldap_authorization_og_rid_from_role_name('sdfsdfsdfsdf');
-    $this->assertTrue($test === FALSE, 'ldap_authorization_og_rid_from_role_name() function fails with FALSE', $this->ldapTestId);
-
   }
   /***
       * III. functional tests based on various configurations, without actual user logon process
       * (will need to be expanded when batch, feed, etc, processing is added, but those
       * functional tests should not need to done for all ldap consumer types.
       */
-  function cccctestAuthorizationsWithoutLogon() {
+  function testAuthorizationsWithoutLogon() {
     if (ldap_authorization_og_og_version() != 2) {
       debug('LdapAuthorizationOg2Tests must be run with OG 7.x-2.x');
       return;
@@ -320,38 +292,45 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     $this->consumerType = 'og_group';
     $this->prepTestData();
 
-    return;
-
     $og_auth = new LdapAuthorizationConsumerOG('og_group');
     $this->assertTrue(is_object($og_auth),
      'Successfully instantiated LdapAuthorizationConsumerOG', $this->ldapTestId);
 
-    list($og_knitters, $og_knitters_node) = ldap_authorization_og2_get_group('node','knitters', 'group_name','object');
-    list($og_bakers, $og_bakers_node) = ldap_authorization_og2_get_group('node','bakers', 'group_name','object');
-    list($og_butchers, $og_butchers_node) = ldap_authorization_og2_get_group('node','butchers', 'group_name','object');
+    list($og_knitters, $og_knitters_node) = ldap_authorization_og2_get_group('node','knitters', 'group_name', 'object');
+    list($og_bakers, $og_bakers_node)     = ldap_authorization_og2_get_group('node','bakers',   'group_name', 'object');
+    list($og_butchers, $og_butchers_node) = ldap_authorization_og2_get_group('node','butchers', 'group_name', 'object');
+
     $anonymous_rid = ldap_authorization_og2_rid_from_role_name('node', $og_knitters_node->nid, OG_ANONYMOUS_ROLE);
     $member_rid =    ldap_authorization_og2_rid_from_role_name('node', $og_bakers_node->nid,   OG_AUTHENTICATED_ROLE);
     $admin_rid =     ldap_authorization_og2_rid_from_role_name('node', $og_butchers_node->nid, OG_ADMINISTRATOR_ROLE);
-    debug("rids: anonymous_rid=$anonymous_rid, member_rid=$member_rid, admin_rid=$admin_rid");
 
-    $butcher_member_id =     ldap_authorization_og_authorization_id($og_butchers_node->nid, $member_rid,    'node');
-    $butcher_admin_id =      ldap_authorization_og_authorization_id($og_butchers_node->nid, $admin_rid,     'node');
     $knitters_nonmember_id = ldap_authorization_og_authorization_id($og_knitters_node->nid, $anonymous_rid, 'node');
     $knitters_member_id =    ldap_authorization_og_authorization_id($og_knitters_node->nid, $member_rid,    'node');
+    $bakers_nonmember_id =   ldap_authorization_og_authorization_id($og_bakers_node->nid,   $anonymous_rid, 'node');
+    $bakers_member_id =      ldap_authorization_og_authorization_id($og_bakers_node->nid,   $member_rid,    'node');
+    $butcher_member_id =     ldap_authorization_og_authorization_id($og_butchers_node->nid, $member_rid,    'node');
+    $butcher_admin_id =      ldap_authorization_og_authorization_id($og_butchers_node->nid, $admin_rid,     'node');
+
+    debug("butcher_member_id=$butcher_member_id,
+          butcher_admin_id=$butcher_admin_id,
+          knitters_nonmember_id=$knitters_nonmember_id,
+          knitters_member_id=$knitters_member_id
+          ");
      /**
      * cn=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu
      * should not match any mappings
      */
 
-    return;
     $user = $this->drupalCreateUser(array());
     $unkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'unkool', 'mail' =>  'unkool@nowhere.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($unkool, 'query');  // just see if the correct ones are derived.
-    $this->assertTrue(count($new_authorizations) == 0, 'user account unkool tested for granting no drupal roles ', $this->ldapTestId . '.nomatch');
+    if (count($new_authorizations['og_group']) != 0) {
+      debug('new authorizations'); debug($new_authorizations);
+    }
+    $this->assertTrue(count($new_authorizations['og_group']) == 0, 'user account unkool tested for granting no drupal roles ', $this->ldapTestId . '.nomatch');
 
     /**
      *   jkool:  guest accounts, cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu
-     *    should yield: butchers member and butchers admin member
      */
 
     $user = $this->drupalCreateUser(array());
@@ -361,7 +340,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     $correct_roles = (bool)(
       isset($new_authorizations['og_group']) &&
       in_array($butcher_member_id, $new_authorizations['og_group']) &&
-      in_array($butcher_admin_id, $new_authorizations['og_group'])
+      in_array($bakers_member_id, $new_authorizations['og_group'])
     );
     if (!$correct_roles) {
       debug('jkool og ldap authorizations'); debug($new_authorizations); debug($new_authorizations);
@@ -370,7 +349,6 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
 
     /**
       verykool: 'cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', special guests, guest accounts
-      should yield: butchers and knitters member roles
      */
 
     $user = $this->drupalCreateUser(array());
@@ -379,7 +357,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($verykool, 'query');  // just see if the correct ones are derived.
     $correct_roles = (bool)(isset($new_authorizations['og_group']) &&
       in_array($butcher_member_id, $new_authorizations[$this->consumerType]) &&
-      in_array($knitters_member_id, $new_authorizations[$this->consumerType])
+      in_array($bakers_member_id, $new_authorizations[$this->consumerType])
       );
     if (!$correct_roles) {
       debug('verykool og ldap authorizations'); debug($new_authorizations); debug($new_authorizations);
@@ -391,13 +369,13 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
   /**
     * IV. Test authorizations granted on logon
     */
-  function xtestAuthorizationsOnLogon() {
+  function testAuthorizationsOnLogon() {
     if (ldap_authorization_og_og_version() != 2) {
       debug('LdapAuthorizationOg2Tests must be run with OG 7.x-2.x');
       return;
     }
     $this->ldapTestId = $this->module_name . ': og authorizations on logon';
-    // just to give warning if setup doesn't succeed.  may want to take these out at some point.
+
     $setup_success = (
         module_exists('ldap_authentication') &&
         module_exists('ldap_servers') &&
@@ -424,16 +402,28 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     list($og_knitters, $og_knitters_node) = ldap_authorization_og2_get_group('node','knitters', 'group_name','object');
     list($og_bakers, $og_bakers_node) = ldap_authorization_og2_get_group('node','bakers', 'group_name','object');
     list($og_butchers, $og_butchers_node) = ldap_authorization_og2_get_group('node','butchers', 'group_name','object');
-    $anonymous_rid = ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE);
-    $member_rid = ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE);
-    $admin_rid = ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
-    $butcher_member_id = ldap_authorization_og_authorization_id($og_butchers->gid, $member_rid);
-    $butcher_admin_id = ldap_authorization_og_authorization_id($og_butchers->gid, $admin_rid);
-    $knitters_nonmember_id = ldap_authorization_og_authorization_id($og_knitters->gid, $anonymous_rid);
-    $knitters_member_id = ldap_authorization_og_authorization_id($og_knitters->gid, $member_rid);
+
+    $anonymous_rid = ldap_authorization_og2_rid_from_role_name('node', $og_knitters_node->nid, OG_ANONYMOUS_ROLE);
+    $member_rid    = ldap_authorization_og2_rid_from_role_name('node', $og_knitters_node->nid, OG_AUTHENTICATED_ROLE);
+    $admin_rid     = ldap_authorization_og2_rid_from_role_name('node', $og_knitters_node->nid, OG_ADMINISTRATOR_ROLE);
+
+    $knitters_nonmember_id = ldap_authorization_og_authorization_id($og_knitters_node->nid, $anonymous_rid, 'node');
+    $knitters_member_id    = ldap_authorization_og_authorization_id($og_knitters_node->nid, $member_rid, 'node');
+    $bakers_nonmember_id   = ldap_authorization_og_authorization_id($og_bakers_node->nid, $anonymous_rid, 'node');
+    $bakers_member_id      = ldap_authorization_og_authorization_id($og_bakers_node->nid, $member_rid, 'node');
+    $butcher_member_id     = ldap_authorization_og_authorization_id($og_butchers_node->nid, $member_rid, 'node');
+    $butcher_admin_id      = ldap_authorization_og_authorization_id($og_butchers_node->nid, $admin_rid, 'node');
+
+    debug("
+      butcher_member_id=$butcher_member_id,<br/>
+      butcher_admin_id=$butcher_admin_id,<br/>
+      bakers_nonmember_id=$bakers_nonmember_id,<br/>
+      bakers_member_id=$bakers_member_id,<br/>
+      knitters_nonmember_id=$knitters_nonmember_id,<br/>
+      knitters_member_id=$knitters_member_id<br/>
+      ");
     /**
       verykool: 'cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', special guests, guest accounts
-      should yield: 'gid=3,rid=3', 'gid=3,rid=2', group-name=knitters,role-name=member
      */
     $verykool = user_load_by_name('verykool');
     if (is_object($verykool)) {
@@ -451,7 +441,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
 
     $verykool = user_load_by_name('verykool');
     $existing_authorizations = $og_auth->usersAuthorizations($verykool);
-    $correct_roles = in_array($butcher_member_id, $existing_authorizations) && in_array($knitters_member_id, $existing_authorizations);
+    $correct_roles = in_array($butcher_member_id, $existing_authorizations) && in_array($bakers_member_id, $existing_authorizations);
     if (!$correct_roles) {
       debug('verykool og authorizations'); debug($existing_authorizations);
     }
@@ -462,7 +452,6 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
 
     /**
      *   jkool:  guest accounts, cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu
-     *    should yield: 'gid=3,rid=2', 'gid=3,rid=3'
      */
 
     $user = $this->drupalCreateUser(array());
@@ -483,7 +472,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     $jkool = user_load_by_name('jkool');
     $existing_authorizations = $og_auth->usersAuthorizations($jkool);
 
-    $correct_roles = in_array($butcher_admin_id, $existing_authorizations);
+    $correct_roles = in_array($butcher_member_id, $existing_authorizations);
     if (!$correct_roles) {
       debug('jkool og authorizations'); debug($existing_authorizations);
     }

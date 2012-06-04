@@ -138,7 +138,7 @@ function theme_ldap_query_results($variables) {
   foreach ($results as $i => $entry) {
     $row = array($entry['dn']);
     foreach ($attributes_display as $i => $attr_name) {
-      $attr_name = drupal_strtolower($attr_name);
+      $attr_name = ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY); // drupal_strtolower($attr_name);
       if (!isset($entry[$attr_name])) {
         $row[] = 'no data';
       }

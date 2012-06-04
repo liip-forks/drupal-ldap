@@ -47,7 +47,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values->create_consumers = (int)$this->createConsumers;
     $values->regrant_ldap_provisioned = (int)$this->regrantLdapProvisioned;
 
-    if (module_exists('ctools')) {
+ /**   if (module_exists('ctools')) {
       ctools_include('export');
       // Populate our object with ctool's properties
       $object = ctools_export_crud_new('ldap_authorization');
@@ -56,9 +56,14 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
           $values->$property = $value;
         }
       }
+      $values->export_type = ($this->numericConsumerConfId) ? EXPORT_IN_DATABASE : NULL;
+      dpm('values, pre crud save'); dpm($values);
       $result = ctools_export_crud_save('ldap_authorization', $values);
     }
-    elseif ($op == 'edit') {
+    else
+  **/
+
+    if ($op == 'edit') {
       $result = drupal_write_record('ldap_authorization', $values, 'consumer_type');
     }
     else { // insert
@@ -73,13 +78,36 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     }
 
     // revert mappings to array and remove temporary properties from ctools export
-    $this->mappings = $this->pipeListToArray($values->mappings, TRUE);
-    foreach (array('consumer_type', 'consumer_module', 'only_ldap_authenticated',
+    $this->mappings = $this->pipeListToArray($values->mappings, FALSE);
+    foreach (array(
+      'consumer_type',
+      'consumer_module',
+      'only_ldap_authenticated',
+
       'derive_from_dn',
-      'derive_from_dn_attr', 'derive_from_attr', 'derive_from_attr_attr', 'derive_from_attr_use_first_attr', 'derive_from_attr_nested',
-      'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'derive_from_entry_search_all', 'derive_from_entry_use_first_attr', 'derive_from_entry_nested',
-      'use_filter', 'synch_to_ldap', 'synch_on_logon', 'revoke_ldap_provisioned', 'create_consumers',
-      'regrant_ldap_provisioned') as $prop_name) {
+      'derive_from_dn_attr',
+
+      'derive_from_attr',
+      'derive_from_attr_attr',
+      'derive_from_attr_use_first_attr',
+      'derive_from_attr_nested',
+
+      'derive_from_entry',
+      'derive_from_entry_search_all',
+      'derive_from_entry_entries',
+      'derive_from_entry_entries_attr',
+      'derive_from_entry_attr',
+      'derive_from_entry_user_ldap_attr',
+      'derive_from_entry_use_first_attr',
+      'derive_from_entry_nested',
+
+      'use_filter',
+      'synch_to_ldap',
+      'synch_on_logon',
+      'revoke_ldap_provisioned',
+      'create_consumers',
+      'regrant_ldap_provisioned'
+      ) as $prop_name) {
       unset($this->{$prop_name});
     }
   }
@@ -97,8 +125,11 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     }
   }
 
-  public function __construct(&$consumer = NULL, $new = FALSE) {
+  public function __construct(&$consumer = NULL, $new = NULL) {
     parent::__construct($consumer, $new);
+    if ($new !== FALSE && $new !== TRUE) {
+      $new = !$this->inDatabase;
+    }
     $this->fields = $this->fields();
     $this->consumers = ldap_authorization_get_consumers(NULL, TRUE);
 
@@ -647,7 +678,7 @@ Raw authorization ids look like:
   protected function populateFromDrupalForm($op, $values) {
 
     $this->inDatabase = (drupal_strtolower($op) == 'edit' || drupal_strtolower($op) == 'save');
-    $values['mappings'] = $this->pipeListToArray($values['mappings'], TRUE);
+    $values['mappings'] = $this->pipeListToArray($values['mappings'], FALSE);
     $values['derive_from_attr_attr'] = $this->linesToArray($values['derive_from_attr_attr']);
     $values['derive_from_entry_entries'] = $this->linesToArray($values['derive_from_entry_entries']);
 
@@ -827,6 +858,7 @@ Raw authorization ids look like:
       ),
 
       'derive_from_entry_entries_attr' => array(
+        'form_default' => 'dn',
         'schema' => array(
           'type' => 'varchar',
           'length' => 255,

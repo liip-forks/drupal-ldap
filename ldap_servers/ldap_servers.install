@@ -38,7 +38,7 @@ function ldap_servers_uninstall() {
 function ldap_servers_requirements($phase) {
   $requirements = array();
   $requirements['ldap_extension_loaded']['title'] = t('LDAP Extension Loaded');
-  if (extension_loaded('ldap')) {
+  if (extension_loaded('ldap') && function_exists('ldap_search')) {
     $requirements['ldap_extension_loaded']['value'] = t('Passed');
     $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_OK;
   }
@@ -239,4 +239,17 @@ function ldap_servers_update_7104() {
 
 
   return ($msg) ? $msg :  t('No database changes made.');
+}
+
+/**
+ * enable ldap_user module
+ */
+function ldap_servers_update_7105() {
+
+  if (!module_exists('ldap_user')) {
+    module_enable('ldap_user');
+     $msg = t('LDAP User module enabled.  Some authentication and authorization functionality shifted to LDAP User module.');
+  }
+
+  return ($msg) ? $msg :  t('LDAP User module was already enabled.  No action taken.');
 }

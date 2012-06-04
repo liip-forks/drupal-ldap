@@ -17,8 +17,8 @@
 
 **/
 
-$authorization['og_groups'] = array(
-  'consumerModule' => 'ldap_authorization_drupal_role',
+$authorization['og_group'] = array(
+  'consumerModule' => 'ldap_authorization_og',
 
   'description' => 'UIUC AD',
   'status' => 1,

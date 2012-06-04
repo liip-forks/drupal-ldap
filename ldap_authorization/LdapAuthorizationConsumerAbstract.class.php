@@ -210,6 +210,11 @@ class LdapAuthorizationConsumerAbstract {
    */
 
   protected function grantsAndRevokes($op, &$user, &$user_auth_data, $consumer_ids, &$ldap_entry = NULL, $user_save = TRUE) {
+
+    if (!is_array($user_auth_data)) {
+      $user_auth_data = array();
+    }
+
     $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
     $this->sortConsumerIds($op, $consumer_ids);
 
@@ -220,16 +225,22 @@ class LdapAuthorizationConsumerAbstract {
     }
     $watchdog_tokens['%username'] = $user->name;
     $watchdog_tokens['%action'] = $op;
+    $watchdog_tokens['%user_save'] = $user_save;
     $consumer_ids_log = array();
     $users_authorization_ids = $this->usersAuthorizations($user);
     $watchdog_tokens['%users_authorization_ids'] = join(', ', $users_authorization_ids);
+    if ($detailed_watchdog_log) {watchdog('ldap_authorization', "on call of grantsAndRevokes: user_auth_data=" . print_r($user_auth_data, TRUE), $watchdog_tokens, WATCHDOG_DEBUG);}
 
     foreach ($consumer_ids as $consumer_id) {
-      if ($detailed_watchdog_log) {watchdog('ldap_authorization', "consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
+      if ($detailed_watchdog_log) {watchdog('ldap_authorization', "consumer_id=$consumer_id, user_save=$user_save, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
       $log = "consumer_id=$consumer_id, op=$op,";
       $results[$consumer_id] = TRUE;
-      if ($op == 'grant'  && !in_array($consumer_id, $users_authorization_ids)) {
-        $log .='grant existing role, ';
+      if ($op == 'grant' && in_array($consumer_id, $users_authorization_ids) && !isset($user_auth_data[$consumer_id])) {
+         // authorization id already exists for user, but is not ldap provisioned.  mark as ldap provisioned, but don't regrant
+         $user_auth_data[$consumer_id] = array('date_granted' => time() );
+      }
+      elseif ($op == 'grant' && !in_array($consumer_id, $users_authorization_ids)) {
+        $log .=" grant existing consumer id ($consumer_id), ";
         if (!in_array($consumer_id, $this->availableConsumerIDs(TRUE))) {
           $log .= "consumer id not available for $op, ";
           if ($this->allowConsumerObjectCreation) {
@@ -284,12 +295,13 @@ class LdapAuthorizationConsumerAbstract {
       if ($detailed_watchdog_log) {watchdog('ldap_authorization', "user_auth_data after consumer $consumer_id" . print_r($user_auth_data, TRUE), $watchdog_tokens, WATCHDOG_DEBUG);}
 
       $watchdog_tokens['%consumer_ids_log'] = (count($consumer_ids_log)) ? join('<hr/>', $consumer_ids_log) : t('no actions');
-      if ($user_save) {
-        $user_edit['data']['ldap_authorizations'][$this->consumerType] = $user_auth_data;
-        $user = user_load($user->uid, TRUE);
-        $user = user_save($user, $user_edit);
-      }
+    }
 
+    if ($user_save) {
+      $user = user_load($user->uid, TRUE);
+      $user_edit = $user->data;
+      $user_edit['data']['ldap_authorizations'][$this->consumerType] = $user_auth_data;
+      $user = user_save($user, $user_edit);
     }
 
 
