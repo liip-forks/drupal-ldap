@@ -829,7 +829,7 @@ class LdapServer {
 
   public function deriveEmailFromEntry($ldap_entry) {
     if ($this->mail_attr) { // not using template
-      return @$ldap_entry[$this->mail_attr][0];
+      return @$ldap_entry[ldap_server_massage_text($this->mail_attr, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)][0];
     }
     elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
       ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
