@@ -8,7 +8,7 @@
  */
 // require_once(drupal_get_path('module', 'ldap_servers') . '/tests/LdapTestFunctions.class.php');
 
-ldap_server_module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
+ldap_server_module_load_include('php', 'ldap_test', 'LdapTestFunctionsv2.class');
 
 class LdapUserTestCase extends DrupalWebTestCase {
 
@@ -37,7 +37,7 @@ class LdapUserTestCase extends DrupalWebTestCase {
 
   function __construct($test_id = NULL) {
     parent::__construct($test_id);
-    $this->testFunctions = new LdapTestFunctions();
+    $this->testFunctions = new LdapTestFunctionsv2();
   }
 
   function setUp() {

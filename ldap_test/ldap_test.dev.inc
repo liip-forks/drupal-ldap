@@ -13,12 +13,12 @@
  */
 
 function ldap_test_dev_provision() {
-  ldap_server_module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
+  ldap_server_module_load_include('php', 'ldap_test', 'LdapTestFunctionsv2.class');
   variable_set('ldap_simpletest', 1);
   variable_set('ldap_help_watchdog_detail', 1);
   //return 'set to return and clear simpletest flag';
 
-  $test_functions = new LdapTestFunctions();
+  $test_functions = new LdapTestFunctionsv2();
   $sids = array('activedirectory');
   ldap_test_dev_prepTestData($sids, $test_functions, 'default', 'default');
 

@@ -9,7 +9,8 @@ array (
     'property.status' =>
     array (
       'name' => 'Property: Acount Status',
-      'configurable' => 1,
+    'configurable_to_drupal' => 1,
+    'configurable_to_ldap' => 1,
       'notes' => '1=enabled, 0=blocked.',
       'enabled' => false,
       'config_module' => 'ldap_user',
@@ -18,7 +19,8 @@ array (
     'property.timezone' =>
     array (
       'name' => 'Property: User Timezone',
-      'configurable' => 1,
+    'configurable_to_drupal' => 1,
+    'configurable_to_ldap' => 1,
       'enabled' => false,
       'config_module' => 'ldap_user',
       'synch_module' => 'ldap_user',
@@ -26,7 +28,8 @@ array (
     'property.signature' =>
     array (
       'name' => 'Property: User Signature',
-      'configurable' => 1,
+    'configurable_to_drupal' => 1,
+    'configurable_to_ldap' => 1,
       'enabled' => false,
       'config_module' => 'ldap_user',
       'synch_module' => 'ldap_user',
@@ -34,7 +37,8 @@ array (
     'field.ldap_user_puid_sid' =>
     array (
       'name' => 'Field: sid providing PUID',
-      'configurable' => 0,
+    'configurable_to_drupal' => 1,
+    'configurable_to_ldap' => 1,
       'source' => 'set to "activedirectory"',
       'notes' => 'not configurable',
       'direction' => 1,
@@ -52,7 +56,8 @@ array (
     'field.ldap_user_puid' =>
     array (
       'name' => 'Field: PUID',
-      'configurable' => 0,
+    'configurable_to_drupal' => 0,
+    'configurable_to_ldap' => 1,
       'source' => 'pixotechcomregistryuniqueid',
       'notes' => 'configure at admin/config/people/ldap/servers/edit/activedirectory',
       'convert' => false,
@@ -71,7 +76,8 @@ array (
     'field.ldap_user_puid_property' =>
     array (
       'name' => 'Field: PUID Attribute',
-      'configurable' => 0,
+    'configurable_to_drupal' => 0,
+    'configurable_to_ldap' => 1,
       'source' => 'set to "pixotechcomregistryuniqueid"',
       'notes' => 'configure at admin/config/people/ldap/servers/edit/activedirectory',
       'direction' => 1,
@@ -89,7 +95,8 @@ array (
     'field.ldap_user_current_dn' =>
     array (
       'name' => 'Field: Most Recent DN',
-      'configurable' => 0,
+    'configurable_to_drupal' => 0,
+    'configurable_to_ldap' => 0,
       'source' => 'dn',
       'notes' => 'not configurable',
       'direction' => 1,
@@ -107,7 +114,8 @@ array (
     'field.ldap_authorizations' =>
     array (
       'name' => 'Field: LDAP Authorizations',
-      'configurable' => 1,
+    'configurable_to_drupal' => 1,
+    'configurable_to_ldap' => 1,
       'enabled' => false,
       'config_module' => 'ldap_user',
       'synch_module' => 'ldap_user',
@@ -115,7 +123,8 @@ array (
     'field.field_lname' =>
     array (
       'name' => 'Field: Last Name',
-      'configurable' => 1,
+    'configurable_to_drupal' => 1,
+    'configurable_to_ldap' => 1,
       'enabled' => false,
       'config_module' => 'ldap_user',
       'synch_module' => 'ldap_user',
@@ -123,7 +132,8 @@ array (
     'field.field_fname' =>
     array (
       'name' => 'Field: First Name',
-      'configurable' => 1,
+    'configurable_to_drupal' => 1,
+    'configurable_to_ldap' => 1,
       'enabled' => false,
       'config_module' => 'ldap_user',
       'synch_module' => 'ldap_user',
@@ -131,7 +141,8 @@ array (
     'field.field_binary_test' =>
     array (
       'name' => 'Field: Binary test Field',
-      'configurable' => 1,
+    'configurable_to_drupal' => 1,
+    'configurable_to_ldap' => 1,
       'enabled' => false,
       'config_module' => 'ldap_user',
       'synch_module' => 'ldap_user',
@@ -139,7 +150,8 @@ array (
     'property.role' =>
     array (
       'name' => 'Property: Drupal Roles',
-      'configurable' => 0,
+    'configurable_to_drupal' => 0,
+    'configurable_to_ldap' => 1,
       'notes' => 'configure at:admin/config/people/ldap/authorization',
       'enabled' => true,
       'config_module' => 'ldap_authorization_drupal_role',
@@ -149,7 +161,8 @@ array (
     array (
       'name' => 'Property: Username',
       'source' => 'sAMAccountName',
-      'configurable' => 0,
+    'configurable_to_drupal' => 0,
+    'configurable_to_ldap' => 1,
       'notes' => 'configure at admin/config/people/ldap/servers/edit/activedirectory',
       'direction' => 1,
       'enabled' => true,
@@ -167,7 +180,8 @@ array (
     array (
       'name' => 'Property: Email',
       'source' => 'mail',
-      'configurable' => 0,
+    'configurable_to_drupal' => 0,
+    'configurable_to_ldap' => 1,
       'notes' => 'configure at admin/config/people/ldap/servers/edit/activedirectory',
       'direction' => 1,
       'enabled' => true,

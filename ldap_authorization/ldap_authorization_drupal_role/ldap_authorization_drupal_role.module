@@ -40,12 +40,13 @@ ou=IT,dc=myorg,dc=mytld,dc=edu|administrator
  *
  */
 
-function ldap_authorization_drupal_role_ldap_user_targets_list_alter(&$available_user_targets) {
+function ldap_authorization_drupal_role_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server, $provisionsDrupalAccountsFromLdap) {
 
   $available_user_targets['property.role'] = array(
     'name' => 'Property: Drupal Roles',
     'source' => 'depends on configuration',
-    'configurable' => 0,
+    'configurable_to_drupal' => 0,
+    'configurable_to_ldap' => 1,
     'notes' => t('configure at:') . 'admin/config/people/ldap/authorization',
     'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     'enabled' => TRUE,

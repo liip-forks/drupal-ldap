@@ -20,7 +20,7 @@
 
 ldap_server_module_load_include('php', 'ldap_servers', 'LdapServer.class');
 
-class LdapServerTest extends LdapServer {
+class LdapServerTestv2 extends LdapServer {
   // LDAP Settings
 
   public $entries;
@@ -87,7 +87,7 @@ class LdapServerTest extends LdapServer {
         $ldap_error = ldap_err2str($ldap_errno);
       }
       else {
-        $ldap_error = "Failed to find $userdn in LdapServerTest.class.php";
+        $ldap_error = "Failed to find $userdn in LdapServerTestv2.class.php";
       }
     }
     elseif (isset($this->testUsers[$userdn]['attr']['password'][0]) && $this->testUsers[$userdn]['attr']['password'][0] != $pass) {
@@ -96,7 +96,7 @@ class LdapServerTest extends LdapServer {
         $ldap_error = ldap_err2str($ldap_errno);
       }
       else {
-        $ldap_error = "Credentials for $userdn failed in LdapServerTest.class.php";
+        $ldap_error = "Credentials for $userdn failed in LdapServerTestv2.class.php";
       }
     }
     else {
@@ -209,12 +209,12 @@ class LdapServerTest extends LdapServer {
   }
 
 
-  public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServerTest') {
+  public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServerTestv2') {
 
     $server_ids = variable_get('ldap_test_servers', array());
     $servers = array();
     foreach ($server_ids as $sid => $_sid) {
-      $servers[$sid] = new LdapServerTest($sid);
+      $servers[$sid] = new LdapServerTestv2($sid);
     }
     return $servers;
 

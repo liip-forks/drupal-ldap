@@ -10,7 +10,9 @@
  * <field_type>.<field_name> => array(
  *   'name' => string for user friendly name for the UI,
  *   'source' => ldap attribute (even if target of synch.  this should be refactored at some point to avoid confusion)
- *   'configurable' => 0 | 1, is this configurable?
+ *   'configurable' =>
+ *   'configurable_to_drupal'  0 | 1, is this configurable?
+ *   'configurable_to_ldap' =>  0 | 1, is this configurable?
  *   'notes' => <user notes>
  *   'convert' => 1 | 0 convert from binary to string for storage and comparison purposes
  *   'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER or LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY leave empty if configurable
@@ -28,7 +30,7 @@
  * 'field_name' machine name of property, field, profile2 field, or data associative array key
  */
 
-function hook_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server) {
+function hook_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server, $provisionsDrupalAccountsFromLdap) {
 
  /** search for _ldap_user_targets_list_alter for good examples
   * the general trick to implementing this hook is:

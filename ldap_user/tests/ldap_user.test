@@ -186,7 +186,8 @@ class LdapUserBasicTests extends LdapUserTestCase {
         'notes' => 'notes',
         'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER),
         'name' => 'Field: Last Name',
-        'configurable' => 1,
+        'configurable_to_drupal' => 1,
+        'configurable_to_ldap' => 1,
         'enabled' => TRUE,
         'config_module' => 'ldap_user',
         'synch_module' => 'ldap_user',
@@ -202,7 +203,8 @@ class LdapUserBasicTests extends LdapUserTestCase {
         'notes' => 'notes',
         'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER),
         'name' => 'Property: Mail',
-        'configurable' => 0,
+        'configurable_to_drupal' => 0,
+        'configurable_to_ldap' => 1,
         'enabled' => TRUE,
         'config_module' => 'ldap_servers',
         'synch_module' => 'ldap_user',
@@ -416,7 +418,7 @@ class LdapUserUITests extends LdapUserTestCase {
       in_array('delete',$ldap_user_conf->wsActions)
       , t('wsActions fields set correctly'), $this->ldapTestId);
 
-    
+
     debug($ldap_user_conf);
 /**
  *

@@ -15,8 +15,9 @@ class LdapUserConf {
   public $acctCreation = LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT;
   public $inDatabase = FALSE;
   public $synchMapping = NULL; // array of field synching directions for each operation
-  public $ldapUserSynchMappings = NULL;
+  public $ldapUserSynchMappings = NULL;  // synch mappings configured in ldap user module
   public $detailedWatchdog = FALSE;
+  public $provisionsDrupalAccountsFromLdap = FALSE;
 
   public $wsKey = NULL;
   public $wsEnabled = 0;
@@ -61,21 +62,26 @@ class LdapUserConf {
 
   function __construct() {
     $this->load();
-
+   // dpm('filter'); dpm(array_filter(array_values($this->provisionMethods)));
+    $this->provisionsDrupalAccountsFromLdap = (count(array_filter(array_values($this->provisionMethods))) > 0);
     $this->synchTypes = array(
       LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER => t('On User Creation'),
       LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER => t('On User Update/Save'),
       LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER => t('On User Logon'),
       LDAP_USER_SYNCH_CONTEXT_CRON => t('Via Cron Batch'),
     );
+   // dpm('this before setSynchMapping'); dpm($this->ldapUserSynchMappings['uiuc_ad']);
     $this->setSynchMapping(TRUE);
 
     $this->detailedWatchdog = variable_get('ldap_help_watchdog_detail', 0);
+
+   // dpm('this after construct'); dpm($this->ldapUserSynchMappings['uiuc_ad']);
   }
 
   function load() {
 
     if ($saved = variable_get("ldap_user_conf", FALSE)) {
+//      dpm('saved'); dpm($saved);
       $this->inDatabase = TRUE;
       foreach ($this->saveable as $property) {
         if (isset($saved[$property])) {
@@ -87,6 +93,8 @@ class LdapUserConf {
           $this->servers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
         }
       }
+
+    //  dpm('loaded'); dpm($this);
     }
     else {
       $this->inDatabase = FALSE;
@@ -157,9 +165,8 @@ class LdapUserConf {
       $ldap_servers = ldap_servers_get_servers(NULL, 'enabled', FALSE);
       $available_user_targets = array();
       foreach ($ldap_servers as $sid => $ldap_server) {
-        $available_user_targets[$sid] = isset($this->ldapUserSynchMappings[$sid]) ? $this->ldapUserSynchMappings[$sid] : array();
-        drupal_alter('ldap_user_targets_list', $available_user_targets[$sid], $ldap_server);
-        // @todo need to add configured values in here (ones saved in $this->ldapUserSynchMappings)
+        $available_user_targets[$sid] = array();
+        drupal_alter('ldap_user_targets_list', $available_user_targets[$sid], $ldap_server, $this->provisionsDrupalAccountsFromLdap);
       }
       $this->synchMapping = $available_user_targets;
       cache_set('ldap_user_synch_mapping',  $this->synchMapping);

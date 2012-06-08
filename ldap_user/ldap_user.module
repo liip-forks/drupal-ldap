@@ -143,7 +143,7 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $sych_context, $ld
  *
  * !note.  should not set values configured; just list possible values  those are set in ldapUserConf class.
  */
-function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server) {
+function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server, $provisionsDrupalAccountsFromLdap) {
 
   $tokens = array(
     '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
@@ -160,7 +160,8 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
   //@todo make these merges so they don't override saved values such as 'enabled'
   $available_user_targets['property.status'] = $available_user_targets['property.status'] + array(
     'name' => 'Property: Acount Status',
-    'configurable' => 1,
+    'configurable_to_drupal' => 1,
+    'configurable_to_ldap' => 1,
     'notes' => '1=enabled, 0=blocked.',
     'enabled' => FALSE,
     'config_module' => 'ldap_user',
@@ -169,7 +170,8 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
 
   $available_user_targets['property.timezone'] = $available_user_targets['property.timezone'] + array(
     'name' => 'Property: User Timezone',
-    'configurable' => 1,
+    'configurable_to_drupal' => 1,
+    'configurable_to_ldap' => 1,
     'enabled' => FALSE,
     'config_module' => 'ldap_user',
     'synch_module' => 'ldap_user',
@@ -177,7 +179,8 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
 
   $available_user_targets['property.signature'] = $available_user_targets['property.signature'] + array(
     'name' => 'Property: User Signature',
-    'configurable' => 1,
+    'configurable_to_drupal' => 1,
+    'configurable_to_ldap' => 1,
     'enabled' => FALSE,
     'config_module' => 'ldap_user',
     'synch_module' => 'ldap_user',
@@ -192,13 +195,33 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
     }
     $available_user_targets[$field_id] = $available_user_targets[$field_id] + array(
       'name' => t('Field: '). $field_instance['label'],
-      'configurable' => 1,
+      'configurable_to_drupal' => 1,
+      'configurable_to_ldap' => 1,
       'enabled' => FALSE,
       'config_module' => 'ldap_user',
       'synch_module' => 'ldap_user',
     );
   }
 
+  $configurable_to_drupal = (int)($provisionsDrupalAccountsFromLdap) ? 0 : 1;
+  $available_user_targets['property.name'] = array(
+    'configurable_to_drupal' => $configurable_to_drupal,
+    'configurable_to_ldap' => 1,
+    );
+
+  $available_user_targets['property.mail'] = array(
+    'configurable_to_drupal' => $configurable_to_drupal,
+    'configurable_to_ldap' => 1,
+    );
+
+  if (!$provisionsDrupalAccountsFromLdap) {
+    $available_user_targets['property.mail']['config_module'] = 'ldap_user';
+    $available_user_targets['property.name']['config_module'] = 'ldap_user';
+  }
+
+  //    'notes' => 'configure at '. $server_edit_path,
+
+ // dpm('available_user_targets'. $configurable_to_drupal); dpm($available_user_targets);dpm("provisionsDrupalAccountsFromLdap=" . $provisionsDrupalAccountsFromLdap);
   // 3. profile2 fields
 
 

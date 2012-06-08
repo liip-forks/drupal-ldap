@@ -16,7 +16,7 @@ require_once('ldap_user.conf.inc');
 require_once('ldap_authentication.conf.inc');
 require_once('ldap_authorization.conf.inc');
 
-class LdapTestFunctions  {
+class LdapTestFunctionsv2  {
 
   public $data = array();
 

@@ -7,10 +7,10 @@
  *
  */
 
-module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
+module_load_include('php', 'ldap_test', 'LdapTestFunctionsv2.class');
 module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
 
-class LdapAuthorizationTestCase extends DrupalWebTestCase {
+class LdapAuthorizationTestCasev2 extends DrupalWebTestCase {
 
   public $module_name = 'ldap_authorization';
   public $testFunctions;
@@ -54,7 +54,7 @@ class LdapAuthorizationTestCase extends DrupalWebTestCase {
     $variables = array();
     $authentication = array();
     $authorization = array();
-    $this->testFunctions = new LdapTestFunctions();
+    $this->testFunctions = new LdapTestFunctionsv2();
     if ($this->useFeatureData) {
       module_enable(array('ctools'), TRUE);
       module_enable(array('strongarm'), TRUE);

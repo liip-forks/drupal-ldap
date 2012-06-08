@@ -85,8 +85,12 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
   // Add help information for entering in username/password
   $auth_conf = ldap_authentication_get_valid_conf();
   if ($auth_conf) {
-    $form['name']['#description'] = t($auth_conf->loginUIUsernameTxt);
-    $form['pass']['#description'] = t($auth_conf->loginUIPasswordTxt);
+    if (isset($auth_conf->loginUIUsernameTxt)) {
+      $form['name']['#description'] = t($auth_conf->loginUIUsernameTxt);
+    }
+    if (isset($auth_conf->loginUIPasswordTxt)) {
+      $form['pass']['#description'] = t($auth_conf->loginUIPasswordTxt);
+    }
   }
 }
 
@@ -128,7 +132,7 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
 function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
-  $name = $form_state['values']['name'];
+  $authname = $form_state['values']['name']; // $name = $form_state['values']['name']; // patch 1599632
   $pass = $form_state['values']['pass'];
 
   /*
@@ -140,7 +144,8 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
    */
   $sso_login = (isset($form_state['sso_login']) && $form_state['sso_login']) ? TRUE : FALSE;
 
-  $watchdog_tokens = array('%username' => $name);
+
+  $watchdog_tokens = array('%username' => $authname); // $watchdog_tokens = array('%username' => $name); // patch 1599632
   if ($detailed_watchdog_log) {
     watchdog('ldap_authentication', '%username : Beginning authentification....', $watchdog_tokens, WATCHDOG_DEBUG);
   }
@@ -177,7 +182,10 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     watchdog('ldap_authentication', '%username : user_load_by_name(%username)', $watchdog_tokens, WATCHDOG_DEBUG);
   }
 
-  $account = user_load_by_name($name);
+  if(!($account = user_load_by_name($authname))) {
+    $uid = db_query("SELECT uid FROM {authmap} WHERE authname = :authname AND module = 'ldap_authentication'", array(':authname' => $authname))->fetchColumn();
+    $account = $uid ? user_load($uid) : FALSE;
+  }
 
   if (is_object($account)) {
     if ($account->uid == 1) {
@@ -189,7 +197,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     else {
       $account_exists = TRUE;
       $user_data = $account->data;
-      $authmaps = user_get_authmaps($name);
+      $authmaps = user_get_authmaps($authname); // $authmaps = user_get_authmaps($name); // patch 1599632
       $ldap_authentication_authmap = isset($authmaps['ldap_authentication']);
       $no_authmaps = (boolean)(count($authmaps));
       if ($detailed_watchdog_log) {
@@ -203,7 +211,6 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       if ($detailed_watchdog_log) {
         watchdog('ldap_authentication', '%username : Drupal User Account not found and configuration is set to not create new accounts.', $watchdog_tokens, WATCHDOG_DEBUG);
       }
-      return FALSE; // don't bother authenticating if account doesn't exists and account creation not allowed
     }
     if ($detailed_watchdog_log) {
       watchdog('ldap_authentication', '%username : Existing Drupal User Account not found.  Continuing on to attempt ldap authentication', $watchdog_tokens, WATCHDOG_DEBUG);
@@ -236,7 +243,6 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     // #2 BIND TO SERVER
     $bind_success = FALSE;
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
-        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON ||
         $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
         ) {
       $bind_success = ($ldap_server->bind() == LDAP_SUCCESS);
@@ -251,7 +257,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       // with sso enabled this method of binding isn't valid
       foreach ($ldap_server->basedn as $basedn) {
         $search = array('%basedn', '%username');
-        $transformname = $ldap_server->drupalToLdapNameTransform($name, $watchdog_tokens);
+        $transformname =  $ldap_server->drupalToLdapNameTransform($authname, $watchdog_tokens);
         $replace = array($basedn, $transformname);
         $userdn = str_replace($search, $replace, $ldap_server->user_dn_expression);
         $bind_success = ($ldap_server->bind($userdn, $pass) == LDAP_SUCCESS);
@@ -276,10 +282,10 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
 
     // #3 DOES USER EXIST IN SERVER'S LDAP
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-      $ldap_user = $ldap_server->user_lookup($name);
+      $ldap_user = $ldap_server->user_lookup($authname);
     }
     elseif ($sso_login) {
-      $ldap_user = $ldap_server->user_lookup($name);
+      $ldap_user = $ldap_server->user_lookup($authname);
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%result'] = var_export($result, TRUE);
         watchdog('ldap_authentication', '%username : attempting single sign-on
@@ -288,7 +294,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       }
     }
     else {
-      $ldap_user = $ldap_server->user_lookup($name);
+      $ldap_user = $ldap_server->user_lookup($authname);
     }
 
     if (!$ldap_user) {
@@ -311,7 +317,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     /**
     * #4 CHECK ALLOWED AND EXCLUDED LIST AND PHP FOR ALLOWED USERS
     */
-    $allow = $auth_conf->allowUser($name, $ldap_user);
+    $allow = $auth_conf->allowUser($authname, $ldap_user);
     if (!$allow) {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED;
       break;  // regardless of how many servers, disallowed user fails
@@ -349,9 +355,16 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     else {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_SUCCESS;
       if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-        $ldap_user = $ldap_server->user_lookup($name); // after successful bind, lookup user again to get private attributes
+        $ldap_user = $ldap_server->user_lookup($authname); // after successful bind, lookup user again to get private attributes
         $watchdog_tokens['%mail'] = $ldap_user['mail'];
       }
+      if ($ldap_server->account_name_attr != '') {
+        $accountname = $ldap_user['attr'][$ldap_server->account_name_attr][0];
+      }
+      else {
+      	$accountname = $authname;
+      }
+      $watchdog_tokens['%account_name_attr'] = $accountname;
       break; //success
     }
 
@@ -420,6 +433,10 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
    * case 1: previously drupal authenticated user authenticated successfully on ldap
    *
    */
+  if (!$account_exists && ($account = user_load_by_name($accountname))) {
+ 	  user_set_authmaps($account, array('authname_ldap_authentication' => $authname));
+   	$account_exists = TRUE;
+  }
   if (!$account_exists) {
     if ($account_with_same_email = user_load_by_mail($ldap_user['mail'])) {
       /**
@@ -467,7 +484,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       }
       else { // LDAP_authen.AC.disallow.ldap.drupal
       // add ldap_authentication authmap to user.  account name is fine here, though cn could be used
-        user_set_authmaps($account, array('authname_ldap_authentication' => $name));
+        user_set_authmaps($account, array('authname_ldap_authentication' => $authname));
         if ($detailed_watchdog_log) {
           watchdog('ldap_authentication', 'set authmap for %username authname_ldap_authentication', $watchdog_tokens, WATCHDOG_DEBUG);
         }
