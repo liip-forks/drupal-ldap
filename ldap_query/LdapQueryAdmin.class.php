@@ -103,6 +103,7 @@ class LdapQueryAdmin extends LdapQuery {
         }
       }
       $result = ctools_export_crud_save('ldap_query', $ctools_values);
+      ctools_export_load_object_reset('ldap_query'); // ctools_export_crud_save doesn't invalidate cache
     }
     else {
       $values = array();

@@ -115,6 +115,7 @@ class LdapServerAdmin extends LdapServer {
           }
         }
         $result = ctools_export_crud_save('ldap_servers', $entry);
+        ctools_export_load_object_reset('ldap_servers'); // ctools_export_crud_save doesn't invalidate cache
       }
       else {
         $result = drupal_write_record('ldap_servers', $entry);

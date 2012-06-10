@@ -22,7 +22,7 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
   public $testData;
   public $sid;
 
-  function setUp() {
+  function setUp($addl_modules = array()) {
     parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role')); // don't need any real servers, configured, just ldap_servers code base
     variable_set('ldap_simpletest', 1);
     variable_set('ldap_help_watchdog_detail', 0);

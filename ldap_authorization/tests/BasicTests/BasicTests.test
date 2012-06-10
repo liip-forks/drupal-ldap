@@ -9,6 +9,11 @@
 require_once(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapAuthorizationTestCase.class.php');
 
 class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
+
+  public function setUp($addl_modules = array()) {
+    parent::setUp(array());
+  }
+
   public static function getInfo() {
     return array(
       'group' => 'LDAP Authorization',
@@ -53,6 +58,70 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
     $this->ldapTestId = $this->module_name . ': cron test';
     $this->assertTrue(drupal_cron_run(), t('Cron can run with ldap authorization enabled.'), $this->ldapTestId);
 
+    /**
+     * test that exportables are supported.  since exportables is just used for loading
+     * and saving the configuration,
+     *
+     * -- test auth conf loads correctly and conf is saved correctly when ctools enabled
+     * -- test auth conf loads correctly and conf is saved correctly when ctools not enabled
+     * -- @todo: test auth conf loads correctly from an enabled Features module
+     * -- @todo: its difficult to test generation of a feature module. ignore this as configurables in d8 will be different
+     */
+
+    $ctools_originally_enabled = module_exists('ctools');
+    foreach (array('no_ctools', 'ctools') as $mode) { // should add 'feature' instance to test feature
+
+      if ($mode == 'ctools') {
+        module_enable(array('ctools'));
+        $label_text = "ctool enabled";
+      }
+      elseif ($mode == 'no_ctools') {
+        module_disable(array('ctools'), TRUE);
+        $label_text = "ctools disabled";
+      }
+
+      $this->ldapTestId = 'BasicTests';
+      $this->serversData = 'BasicTests/ldap_servers.inc';
+      $this->authorizationData = 'BasicTests/ldap_authorization.simple.inc';
+      $this->authenticationData = 'BasicTests/ldap_authentication.inc';
+      $this->consumerType = 'drupal_role';
+      $this->prepTestData();
+
+
+      // make small change and make sure additional rows are not created,
+      // change is saved, change is loaded, and numeric id is present.
+      // #1601270, #1468990, #1588854
+      $rows = db_query('select * from ldap_authorization')->fetchAllAssoc('numeric_consumer_conf_id');
+      $initial_count = count(array_keys($rows));
+
+      $consumer_conf_admin = ldap_authorization_get_consumer_admin_object($this->consumerType);
+      $consumer_conf_admin->status = 0;
+    //  $consumer_conf_admin->deriveFromDnAttr = "blah";
+      $consumer_conf_admin->save();
+      $consumer_conf_admin = ldap_authorization_get_consumer_admin_object($this->consumerType);
+
+      $rows = db_query('select * from ldap_authorization')->fetchAllAssoc('numeric_consumer_conf_id');
+      $second_count = count(array_keys($rows));
+      $this->ldapTestId = $this->module_name . ": $label_text save doesn't break record count";
+      $this->assertTrue(($initial_count == $second_count), t("ldap_authorization record count consistent with $label_text, intiial count = $initial_count, final count=$second_count"), $this->ldapTestId);
+
+      $this->ldapTestId = $this->module_name . ": $label_text saves status correctly";
+      $this->assertTrue(($consumer_conf_admin->status === 0), t("ldap_authorization status saved correctly."), $this->ldapTestId);
+
+      $this->ldapTestId = $this->module_name . ": $label_text loads numericConsumerConfId correctly";
+      $this->assertTrue(($consumer_conf_admin->numericConsumerConfId > 0), t("ldap_authorization loaded numericConsumerConfId correctly.(" . $consumer_conf_admin->numericConsumerConfId . ")"), $this->ldapTestId);
+
+      $consumer_conf_admin->status = 1;
+      $consumer_conf_admin->save();
+      $consumer_conf_admin = ldap_authorization_get_consumer_admin_object($this->consumerType);
+
+    }
+    if ($ctools_originally_enabled) {
+      module_enable(array('ctools'));
+    }
+    else {
+      module_disable(array('ctools'), TRUE);
+    }
 
     /**
     * authorizations are tested in ldap_authorization.Derivations.test
