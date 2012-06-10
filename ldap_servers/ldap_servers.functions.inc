@@ -333,6 +333,7 @@ function ldap_servers_show_sample_user_tokens($sid) {
  * @param enum $context...see LDAP_SERVER_MASSAGE_* constants
  *
  * .e.g. ldap_server_massage_text($value, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)
+ * ldap_server_massage_text($value, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_ARRAY)
  */
 function ldap_server_massage_text($value, $value_type, $context) {
 
