@@ -17,10 +17,13 @@ class LdapServerAdmin extends LdapServer {
   /**
    * @param $type = 'all', 'enabled'
    */
-  public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServer') {
+  public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServer', $reset = FALSE) {
     $servers = array();
     if (module_exists('ctools')) {
       ctools_include('export');
+      if ($reset) {
+        ctools_export_load_object_reset('ldap_servers');
+      }
       $select = ctools_export_load_object('ldap_servers', 'all');
     }
     else {
@@ -77,7 +80,7 @@ class LdapServerAdmin extends LdapServer {
 
   }
 
-  public function save($op) {
+  protected function entry() {
 
     $entry = $this;
     foreach ($this->field_to_properties_map() as $field_name => $property_name) {
@@ -93,12 +96,19 @@ class LdapServerAdmin extends LdapServer {
       $entry->bindpw = NULL;
     }
     $entry->tls = (int)$entry->tls;
+    return $entry;
+
+  }
+  public function save($op) {
+
+    $entry = $this->entry();
 
     $result = FALSE;
     if ($op == 'edit') {
       if (module_exists('ctools')) {
         ctools_include('export');
         $result = ctools_export_crud_save('ldap_servers', $entry);
+         ctools_export_load_object_reset('ldap_servers'); // ctools_export_crud_save doesn't invalidate cache
       }
       else {
         $result = drupal_write_record('ldap_servers', $entry, 'sid');
@@ -131,13 +141,18 @@ class LdapServerAdmin extends LdapServer {
 
   public function delete($sid) {
     if ($sid == $this->sid) {
+      $result = db_delete('ldap_servers')->condition('sid', $sid)->execute();
+      if (module_exists('ctools')) {
+        ctools_export_load_object_reset('ldap_servers'); // invalidate cache
+      }
       $this->inDatabase = FALSE;
-      return db_delete('ldap_servers')->condition('sid', $sid)->execute();
+      return $result;
     }
     else {
       return FALSE;
     }
   }
+
   public function getLdapServerActions() {
     $switch = ($this->status ) ? 'disable' : 'enable';
     $actions = array();

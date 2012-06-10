@@ -38,7 +38,7 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
     $servers = array();
   }
   if (!isset($servers['all'])) {
-    $servers['all'] = LdapServerAdmin::getLdapServerObjects('all');
+    $servers['all'] = LdapServerAdmin::getLdapServerObjects('all', NULL, 'LdapServer', $reset);
   }
 
   if (!isset($servers['enabled'])) {
@@ -71,8 +71,7 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
   }
  // debug("_ldap_servers_get_simpletest_servers sid=$sid, type=$type, flatten=$flatten reset=$reset");
   ldap_server_module_load_include('php', 'ldap_servers', 'tests/LdapServerTest.class');
-  $servers['all'] = LdapServerTest::getLdapServerObjects('all');
-
+  $servers['all'] = LdapServerTest::getLdapServerObjects('all', NULL, 'LdapServer', $reset );
   foreach ($servers['all'] as $_sid => $ldap_server) {
     if ($ldap_server->status == 1) {
       $servers['enabled'][$_sid] = $ldap_server;

@@ -1,3 +1,5 @@
+Fix for ldap servers caching issue when ctools enabled.  noticed the bug when building simpletests.  There is no issue for this.
+Issue #1371452.  Simpletest coverage for ldap servers add, update, delete and class property population.
 Fixed bug where ldap server could not be deleted even if disabled in ldap authentication.
 Issues #1588854, #1601270.  The gist of this patch was to fix exportables, fix setting of numeric id property on ldap authorization class load and rework simpltests to be able to test if the admin interface works with and without ctools
 Issue #1617696 by thomas.borrmann.  Fix for case sensitivity of mail attribute.

@@ -295,7 +295,7 @@ function ldap_servers_fields() {
 }
 
 function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL) {
- ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
+  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
   return _ldap_servers_get_user_ldap_data($drupal_user, $sid);
 }
 
