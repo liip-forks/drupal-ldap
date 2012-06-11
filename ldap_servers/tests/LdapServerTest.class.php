@@ -136,9 +136,10 @@ class LdapServerTest extends LdapServer {
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
 
     $filter = trim(str_replace(array("\n", "  "),array('',''), $filter)); // for test matching simplicity remove line breaks and tab spacing
+   // debug("filter=$filter");
    // debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");
-    $my_debug = ($base_dn == 'ou=guest accounts,dc=ad,dc=myuniversity,dc=edu' && $filter == "(sAMAccountName=wilmaf)");
-  //  if ($my_debug) {debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");}
+    $my_debug = ($filter == "(samaccountname=verykool)" || $filter == "(sAMAccountName=verykool)");
+  //  if ($my_debug) {debug('attributes'); debug($attributes); debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");}
 
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
@@ -167,7 +168,7 @@ class LdapServerTest extends LdapServer {
      // if ($my_debug2) {debug('test user ' . $dn); debug($user_data);}
       $user_data_lcase = array();
       foreach ($user_data['attr'] as $attr => $values) {
-        $user_data_lcase['attr'][strtolower($attr)] = $values;
+        $user_data_lcase['attr'][drupal_strtolower($attr)] = $values;
       }
 
       $dn = strtolower($dn);
@@ -177,10 +178,8 @@ class LdapServerTest extends LdapServer {
       // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       $pos = stripos($dn, $base_dn);
       if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) == FALSE) {
-//         if ($my_debug2) {debug("dn=$dn not in base_dn=$base_dn");}
+        if ($my_debug2) {debug("dn=$dn not in base_dn=$base_dn");}
         continue; // not in basedn
-      }
-      else {
       }
 
       // check for mixed case and lowercase attribute's existance
@@ -210,7 +209,8 @@ class LdapServerTest extends LdapServer {
       $user_data_lcase['attr']['dn'] = $dn;
       if ($attributes) {
         $selected_user_data = array();
-        foreach ($attributes as $key => $value) {
+        foreach ($attributes as $i => $attr_name) {
+          $key = drupal_strtolower($attr_name);
           $selected_user_data[$key] = (isset($user_data_lcase['attr'][$key])) ? $user_data_lcase['attr'][$key] : NULL;
         }
         $results[] = $selected_user_data;
@@ -264,7 +264,7 @@ class LdapServerTest extends LdapServer {
 
     $results['count'] = count($results);
     $results = ($results['count'] > 0) ? $results : FALSE;
- // if ($my_debug) {  debug('search-results 2'); debug($results);}
+   // if ($my_debug) {  debug('search-results 2'); debug($results);}
     return $results;
   }
 

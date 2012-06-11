@@ -69,7 +69,7 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
   if (!$type) {
     $type = 'all';
   }
- // debug("_ldap_servers_get_simpletest_servers sid=$sid, type=$type, flatten=$flatten reset=$reset");
+
   ldap_server_module_load_include('php', 'ldap_servers', 'tests/LdapServerTest.class');
   $servers['all'] = LdapServerTest::getLdapServerObjects('all', NULL, 'LdapServer', $reset );
   foreach ($servers['all'] as $_sid => $ldap_server) {

@@ -58,6 +58,39 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
     $this->ldapTestId = $this->module_name . ': cron test';
     $this->assertTrue(drupal_cron_run(), t('Cron can run with ldap authorization enabled.'), $this->ldapTestId);
 
+
+    /**
+    * authorizations are tested in ldap_authorization.Derivations.test
+    *
+    * this is geared toward testing logon functionality
+    */
+
+    $this->ldapTestId = 'BasicTests';
+    $this->serversData = 'BasicTests/ldap_servers.inc';
+    $this->authorizationData = 'BasicTests/ldap_authorization.simple.inc';
+    $this->authenticationData = 'BasicTests/ldap_authentication.inc';
+    $this->consumerType = 'drupal_role';
+    $this->prepTestData();
+
+    // test for same role mapped multiple times:  issue #1174332
+    $edit = array(
+      'name' => 'verykool',
+      'pass' => 'goodpwd',
+    );
+    $this->drupalPost('user', $edit, t('Log in'));
+    $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', $this->ldapTestId);
+    $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('verykool'), 'Ldap user properly authmapped.', $this->ldapTestId);
+
+    $verykool = user_load_by_name('verykool');
+    $correct_roles = in_array('content editors', array_values($verykool->roles)) && in_array('content approvers', array_values($verykool->roles));
+    if (!$correct_roles) {
+      debug('verykool roles'); debug($verykool->roles);
+    }
+    $this->assertTrue($correct_roles, 'verykool granted 2 roles on actual logon "content editors" and "content approvers" drupal roles ', $this->ldapTestId . '.duplicate_entry');
+
+    $this->drupalGet('user/logout');
+
+
     /**
      * test that exportables are supported.  since exportables is just used for loading
      * and saving the configuration,
@@ -79,14 +112,6 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
         module_disable(array('ctools'), TRUE);
         $label_text = "ctools disabled";
       }
-
-      $this->ldapTestId = 'BasicTests';
-      $this->serversData = 'BasicTests/ldap_servers.inc';
-      $this->authorizationData = 'BasicTests/ldap_authorization.simple.inc';
-      $this->authenticationData = 'BasicTests/ldap_authentication.inc';
-      $this->consumerType = 'drupal_role';
-      $this->prepTestData();
-
 
       // make small change and make sure additional rows are not created,
       // change is saved, change is loaded, and numeric id is present.
@@ -122,39 +147,6 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
     else {
       module_disable(array('ctools'), TRUE);
     }
-
-    /**
-    * authorizations are tested in ldap_authorization.Derivations.test
-    *
-    * this is geared toward testing logon functionality
-    */
-
-    $this->ldapTestId = 'BasicTests';
-    $this->serversData = 'BasicTests/ldap_servers.inc';
-    $this->authorizationData = 'BasicTests/ldap_authorization.simple.inc';
-    $this->authenticationData = 'BasicTests/ldap_authentication.inc';
-    $this->consumerType = 'drupal_role';
-    $this->prepTestData();
-
-    // test for same role mapped multiple times:  issue #1174332
-    $edit = array(
-      'name' => 'verykool',
-      'pass' => 'goodpwd',
-    );
-    $this->drupalPost('user', $edit, t('Log in'));
-    $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', $this->ldapTestId);
-    $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('verykool'), 'Ldap user properly authmapped.', $this->ldapTestId);
-
-    $verykool = user_load_by_name('verykool');
-    $correct_roles = in_array('content editors', array_values($verykool->roles)) && in_array('content approvers', array_values($verykool->roles));
-    if (!$correct_roles) {
-      debug('verykool roles'); debug($verykool->roles);
-    }
-    $this->assertTrue($correct_roles, 'verykool granted 2 roles on actual logon "content editors" and "content approvers" drupal roles ', $this->ldapTestId . '.duplicate_entry');
-
-    $this->drupalGet('user/logout');
-
-
 }
 
 /**
@@ -236,12 +228,12 @@ function testFlags() {
   );
   $jkool = user_save($jkool, $data);
   $was_set = isset($jkool->roles[3]);
-  debug('user load jkool1, was_set='. $was_set); debug($jkool);
+  //debug('user load jkool1, was_set='. $was_set); debug($jkool);
   // apply correct authorizations.  should remove the administrator role.
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'set', $this->consumerType, 'logon');
-  debug('authorizations'); debug(array($new_authorizations, $notifications));
+ // debug('authorizations'); debug(array($new_authorizations, $notifications));
   $jkool = user_load($jkool->uid);
-  debug('user load jkool'); debug($jkool);
+//  debug('user load jkool'); debug($jkool);
   $this->assertTrue(($was_set && !isset($jkool->roles[3])), ' revoke ldap granted roles when no longer deserved.', $this->ldapTestId . '.revokeRoles');
 
 
@@ -276,7 +268,7 @@ function testFlags() {
   $jkool = user_load($jkool->uid);
   $guest_role_recreated = in_array('guests', array_values(user_roles()));
   $roles_by_name = array_flip(user_roles());
-  debug('roles_by_name'); debug($roles_by_name);
+ // debug('roles_by_name'); debug($roles_by_name);
   $jkool_granted_guest = isset($jkool->roles[$roles_by_name['guests']]);
   $this->assertTrue(($guest_role_deleted && $guest_role_recreated && $jkool_granted_guest), ' create consumers (e.g. roles)', $this->ldapTestId . '.createRoles');
 

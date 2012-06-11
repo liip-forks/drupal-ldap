@@ -417,8 +417,8 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
       if (drupal_strtolower(trim($pair[0])) == drupal_strtolower($consumer_conf->deriveFromDnAttr)) {
-        $id = drupal_strtolower(ldap_pear_unescape_dn_value(trim($pair[1])));
-        $derive_from_dn_authorizations[$id] = (string)$id;
+        $authorization_id = ldap_pear_unescape_dn_value(trim($pair[1]));
+        $derive_from_dn_authorizations[drupal_strtolower($authorization_id)] = (string)$authorization_id;
       }
     }
   //  debug($derive_from_dn_authorizations);
@@ -430,10 +430,10 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   // Strategy 2: groups in user attributes
   $derive_from_attr_authorizations = array();
   if ($consumer_conf->deriveFromAttr) {
-    //debug('consumer_conf->deriveFromAttr');
+   // debug('consumer_conf->deriveFromAttr');
     foreach ($consumer_conf->deriveFromAttrAttr as $derive_from_attribute_name) {
       $authorizations = $ldap_server->deriveFromAttrGroups($derive_from_attribute_name, $user_ldap_entry, $consumer_conf->deriveFromAttrNested);
-     // debug('authorizations'); debug($authorizations);
+     //debug('authorizations'); debug($authorizations);
       foreach ($authorizations as $id => $authorization) {
         if ($consumer_conf->deriveFromAttrUseFirstAttr) {
          // debug('authorization'); debug($authorization);
@@ -441,21 +441,14 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
          // debug('attr_parts'); debug($attr_parts);
           $first_part = explode('=', $attr_parts[0]);
          // debug('first_part'); debug($first_part); debug(ldap_pear_unescape_filter_value($first_part));
-          $derive_from_attr_authorizations[] = ldap_pear_unescape_filter_value(trim($first_part[1]));
+          $authorization_id = ldap_pear_unescape_filter_value(trim($first_part[1]));
         }
         else {
-          $derive_from_attr_authorizations[] = $authorization;
+          $authorization_id = $authorization;
         }
+        $derive_from_attr_authorizations[drupal_strtolower($authorization_id)] = $authorization_id;
       }
     }
-   // debug($derive_from_attr_authorizations);
-  }
-  if (count($derive_from_attr_authorizations)) {
-   // debug('derive_from_attr_authorizations'); debug($derive_from_attr_authorizations);
-   // array_walk($derive_from_attr_authorizations, 'drupal_strtolower');
-    $derive_from_attr_authorizations = array_unique($derive_from_attr_authorizations);
-    $derive_from_attr_authorizations = array_combine($derive_from_attr_authorizations, $derive_from_attr_authorizations);
-   // debug('derive_from_attr_authorizations combined'); debug($derive_from_attr_authorizations);
   }
   if ($op == 'test_query') {
     $_SESSION['ldap_authorization_test_query']['maps']['Strategy 2. Groups in User Attributes'] = ($consumer_conf->deriveFromAttr) ? $derive_from_attr_authorizations : t('disabled');
@@ -491,11 +484,12 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
         if ($entries !== FALSE) {
           foreach ($entries as $entry) {
             if (isset($entry['cn'])) {
-              $derive_from_entry_authorizations[$entry['cn'][0]] = $entry['cn'][0];
+              $authorization_id = $entry['cn'][0];
             }
             elseif (isset($entry['dn'])) {
-              $derive_from_entry_authorizations[$entry['dn']] = (string)$entry['dn'];
+              $authorization_id = (string)$entry['dn'];
             }
+            $derive_from_entry_authorizations[drupal_strtolower($authorization_id)] = $authorization_id;
           }
         }
       }
@@ -516,14 +510,13 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
           if ($consumer_conf->deriveFromEntryUseFirstAttr) {
             $attr_parts = ldap_explode_dn($authorization, 0); // escapes attribute values, need to be unescaped later
             $first_part = explode('=', $attr_parts[0]);
-            $derive_from_entry_authorizations[$i] = ldap_pear_unescape_dn_value(trim($first_part[1]));
+            $authorization_id = ldap_pear_unescape_dn_value(trim($first_part[1]));
           }
           else {
-            $derive_from_entry_authorizations[$i] = $authorization;
+            $authorization_id = $authorization;
           }
+          $derive_from_entry_authorizations[drupal_strtolower($authorization_id)] = $authorization_id;
         }
-        $derive_from_entry_authorizations = array_unique($derive_from_entry_authorizations);
-        $derive_from_entry_authorizations = array_combine($derive_from_entry_authorizations, $derive_from_entry_authorizations);
       }
     }
   }

@@ -120,6 +120,9 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
   public function delete() {
     if ($this->consumerType) {
       $this->inDatabase = FALSE;
+      if (module_exists('ctools')) {
+        ctools_export_load_object_reset('ldap_authorization');
+      }
       return db_delete('ldap_authorization')->condition('consumer_type', $this->consumerType)->execute();
     }
     else {

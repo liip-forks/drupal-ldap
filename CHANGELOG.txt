@@ -1,3 +1,4 @@
+Changes in ldap_authorization.inc to make logic clearer and set array keys in authorization lowercase.
 Fix for ldap servers caching issue when ctools enabled.  noticed the bug when building simpletests.  There is no issue for this.
 Issue #1371452.  Simpletest coverage for ldap servers add, update, delete and class property population.
 Fixed bug where ldap server could not be deleted even if disabled in ldap authentication.
