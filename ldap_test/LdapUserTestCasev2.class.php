@@ -10,7 +10,7 @@
 
 ldap_server_module_load_include('php', 'ldap_test', 'LdapTestFunctionsv2.class');
 
-class LdapUserTestCase extends DrupalWebTestCase {
+class LdapUserTestCasev2 extends DrupalWebTestCase {
 
   public $module_name = 'ldap_user';
   public $testFunctions;
@@ -42,7 +42,7 @@ class LdapUserTestCase extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role', 'ldap_test'));
-    variable_set('ldap_simpletest', 1);
+    variable_set('ldap_simpletest', 2);
     variable_set('ldap_help_watchdog_detail', 0);
     // create field_lname, field_binary_test user fields
 

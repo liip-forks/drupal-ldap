@@ -7,12 +7,12 @@
  */
 
 
-module_load_include('php', 'ldap_test', 'LdapUserTestCase.class');
+module_load_include('php', 'ldap_test', 'LdapUserTestCasev2.class');
 
-class LdapUserFunctionalTests extends LdapUserTestCase {
+class LdapUserFunctionalTests extends LdapUserTestCasev2 {
   public static function getInfo() {
     return array(
-      'name' => 'LDAP User Tests: Basic Functional Tests',
+      'name' => 'LDAP User Tests: Basic Functional Tests v2',
       'description' => 'Test ldap user.  Event handling functions such as logon, user update, etc.',
       'group' => 'LDAP User'
     );
@@ -48,10 +48,10 @@ function testUserProvision() {
 }
 
 
-class LdapUserBasicTests extends LdapUserTestCase {
+class LdapUserBasicTests extends LdapUserTestCasev2 {
   public static function getInfo() {
     return array(
-      'name' => 'LDAP User Tests: Basic Function Tests',
+      'name' => 'LDAP User Tests: Basic Function Tests v2',
       'description' => 'Test ldap user.  Basic functionality tests.',
       'group' => 'LDAP User'
     );
@@ -69,7 +69,7 @@ class LdapUserBasicTests extends LdapUserTestCase {
     $setup_success = (
         module_exists('ldap_user') &&
         module_exists('ldap_servers') &&
-        (variable_get('ldap_simpletest', 0) == 1)
+        (variable_get('ldap_simpletest', 0) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->ldapTestId);
 
@@ -309,11 +309,11 @@ class LdapUserBasicTests extends LdapUserTestCase {
 
 
 
-class LdapUserUITests extends LdapUserTestCase {
+class LdapUserUITests extends LdapUserTestCasev2 {
 
   public static function getInfo() {
     return array(
-      'name' => 'LDAP User Tests: User Interface',
+      'name' => 'LDAP User Tests: User Interface v2',
       'description' => 'Test ldap user admin interface.',
       'group' => 'LDAP User'
     );
@@ -330,7 +330,7 @@ class LdapUserUITests extends LdapUserTestCase {
     $setup_success = (
         module_exists('ldap_user') &&
         module_exists('ldap_servers') &&
-        (variable_get('ldap_simpletest', 0) == 1)
+        (variable_get('ldap_simpletest', 0) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->ldapTestId);
 

@@ -28,7 +28,7 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
         module_exists('ldap_servers') &&
         module_exists('ldap_authorization') &&
         module_exists('ldap_authorization_drupal_role') &&
-        (variable_get('ldap_simpletest', 0) == 1)
+        (variable_get('ldap_simpletest', 0) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_authorizations setup successful', $this->ldapTestId);
 

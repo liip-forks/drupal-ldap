@@ -77,7 +77,7 @@ class LdapServerTestv2 extends LdapServer {
   }
 
 
-  function bind($userdn = NULL, $pass = NULL) {
+  function bind($userdn = NULL, $pass = NULL, $anon_bind = FALSE) {
     $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
     $pass = ($pass != NULL) ? $pass : $this->bindpw;
 

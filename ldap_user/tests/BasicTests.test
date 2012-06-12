@@ -11,7 +11,7 @@ require_once(drupal_get_path('module', 'ldap_user') . '/tests/LdapUserTestCase.c
 class LdapUserBasicTests extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
-      'name' => 'LDAP User Tests: Basic Tests',
+      'name' => 'LDAP User Tests: Basic Tests v1',
       'description' => 'Test ldap user.  Basic functionality tests.',
       'group' => 'LDAP User'
     );
@@ -28,7 +28,7 @@ class LdapUserBasicTests extends DrupalWebTestCase {
         module_exists('ldap_servers') &&
         module_exists('ldap_authorization') &&
         module_exists('ldap_authorization_drupal_role') &&
-        (variable_get('ldap_simpletest', 0) == 1)
+        (variable_get('ldap_simpletest', 0) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_authorizations setup successful', $this->ldapTestId);
 

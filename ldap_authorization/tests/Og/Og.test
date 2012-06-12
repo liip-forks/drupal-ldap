@@ -76,7 +76,7 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
         module_exists('ldap_authorization') &&
         module_exists('ldap_authorization_drupal_role') &&
         module_exists('ldap_authorization_og') &&
-        (variable_get('ldap_simpletest', 0) == 1)
+        (variable_get('ldap_simpletest', 0) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_authorizations og setup successful', $this->ldapTestId);
 
@@ -240,7 +240,7 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
         module_exists('ldap_authorization') &&
         module_exists('ldap_authorization_drupal_role') &&
         module_exists('ldap_authorization_og') &&
-        (variable_get('ldap_simpletest', 0) == 1)
+        (variable_get('ldap_simpletest', 0) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_authorizations og setup successful', $this->ldapTestId);
 
@@ -332,7 +332,7 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
         module_exists('ldap_authorization') &&
         module_exists('ldap_authorization_drupal_role') &&
         module_exists('ldap_authorization_og') &&
-        (variable_get('ldap_simpletest', 0) == 1)
+        (variable_get('ldap_simpletest', 0) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_authorizations og setup successful', $this->ldapTestId);
 

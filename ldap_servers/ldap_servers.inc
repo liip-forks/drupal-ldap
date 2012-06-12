@@ -84,11 +84,22 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
     $type = 'all';
   }
 
-  ldap_server_module_load_include('php', 'ldap_servers', 'tests/LdapServerTest.class');
-  $servers['all'] = LdapServerTest::getLdapServerObjects('all', NULL, 'LdapServer', $reset );
-  foreach ($servers['all'] as $_sid => $ldap_server) {
-    if ($ldap_server->status == 1) {
-      $servers['enabled'][$_sid] = $ldap_server;
+  if (variable_get('ldap_simpletest', 0) == 2) {
+    ldap_server_module_load_include('php', 'ldap_test', 'LdapServerTestv2.class');
+    $servers['all'] = LdapServerTestv2::getLdapServerObjects('all', NULL, 'LdapServer', $reset );
+    foreach ($servers['all'] as $_sid => $ldap_server) {
+      if ($ldap_server->status == 1) {
+        $servers['enabled'][$_sid] = $ldap_server;
+      }
+    }
+  }
+  else {
+     ldap_server_module_load_include('php', 'ldap_servers', 'tests/LdapServerTest.class');
+    $servers['all'] = LdapServerTest::getLdapServerObjects('all', NULL, 'LdapServer', $reset );
+    foreach ($servers['all'] as $_sid => $ldap_server) {
+      if ($ldap_server->status == 1) {
+        $servers['enabled'][$_sid] = $ldap_server;
+      }
     }
   }
 

@@ -391,10 +391,13 @@ function ldap_server_massage_text($value, $value_type, $context) {
         if ($scalar) {
           $value = drupal_strtolower($value);
         }
-        else {
+        elseif (is_array($value)) {
           foreach ($value as $i => $val) {
             $value[$i] = drupal_strtolower($val);
           }
+        }
+        else {
+          debug("neither scalar nor array $value, $value_type, $context");
         }
       break;
 
