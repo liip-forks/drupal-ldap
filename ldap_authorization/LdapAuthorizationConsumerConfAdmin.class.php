@@ -19,6 +19,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $op = $this->inDatabase ? 'edit' : 'insert';
     $values = new stdClass; // $this;
     $values->sid = $this->sid;
+    $values->numeric_consumer_conf_id = $this->numericConsumerConfId;
     $values->consumer_type = $this->consumerType;
     $values->consumer_module = $this->consumer->consumerModule;
     $values->status = ($this->status) ? 1 : 0;
@@ -47,7 +48,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values->create_consumers = (int)$this->createConsumers;
     $values->regrant_ldap_provisioned = (int)$this->regrantLdapProvisioned;
 
- /**   if (module_exists('ctools')) {
+    if (module_exists('ctools')) {
       ctools_include('export');
       // Populate our object with ctool's properties
       $object = ctools_export_crud_new('ldap_authorization');
@@ -57,24 +58,24 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
         }
       }
       $values->export_type = ($this->numericConsumerConfId) ? EXPORT_IN_DATABASE : NULL;
-      dpm('values, pre crud save'); dpm($values);
       $result = ctools_export_crud_save('ldap_authorization', $values);
-    }
-    else
-  **/
-
-    if ($op == 'edit') {
-      $result = drupal_write_record('ldap_authorization', $values, 'consumer_type');
-    }
-    else { // insert
-      $result = drupal_write_record('ldap_authorization', $values);
-    }
-
-    if ($result) {
-      $this->inDatabase = TRUE;
+      ctools_export_load_object_reset('ldap_authorization'); // ctools_export_crud_save doesn't invalidate cache
     }
     else {
-      drupal_set_message(t('Failed to write LDAP Authorization to the database.'));
+
+      if ($op == 'edit') {
+        $result = drupal_write_record('ldap_authorization', $values, 'consumer_type');
+      }
+      else { // insert
+        $result = drupal_write_record('ldap_authorization', $values);
+      }
+
+      if ($result) {
+        $this->inDatabase = TRUE;
+      }
+      else {
+        drupal_set_message(t('Failed to write LDAP Authorization to the database.'));
+      }
     }
 
     // revert mappings to array and remove temporary properties from ctools export
@@ -125,11 +126,8 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     }
   }
 
-  public function __construct(&$consumer = NULL, $new = NULL) {
+  public function __construct(&$consumer = NULL, $new = FALSE) {
     parent::__construct($consumer, $new);
-    if ($new !== FALSE && $new !== TRUE) {
-      $new = !$this->inDatabase;
-    }
     $this->fields = $this->fields();
     $this->consumers = ldap_authorization_get_consumers(NULL, TRUE);
 

@@ -37,13 +37,11 @@ class LdapServerTest extends LdapServer {
   function __construct($sid) {
     if (!is_scalar($sid)) {
       $test_data = $sid;
-      $this->sid = $test_data['sid'];
     }
     else {
       $test_data = variable_get('ldap_test_server__' . $sid, array());
-      $this->sid = $sid;
     }
-
+    $this->sid = $sid;
     $this->methodResponses = $test_data['methodResponses'];
     $this->testUsers = $test_data['users'];
     $this->testGroups = (is_array($test_data) && isset($test_data['groups'])) ? $test_data['groups'] : array();

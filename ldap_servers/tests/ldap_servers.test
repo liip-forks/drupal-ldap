@@ -73,62 +73,185 @@ class LdapServersTestCase extends DrupalWebTestCase {
     module_enable($modules, TRUE);
   }
 
-/**
- private function testEncryption() {
-    // test that pwds in config files are encrypted.
-    // test that switching encryption, decrypes and reincrypts pwd.
+  public function testUIForms() {
+
+    variable_del('ldap_simpletest'); // need to be out of fake server mode to test ui.
+    $this->privileged_user = $this->drupalCreateUser(array(
+      'administer site configuration',
+      ));
+    $this->drupalLogin($this->privileged_user);
+
+    $ctools_originally_enabled = module_exists('ctools');
+    // because ctools has different method of saving and loading data, need to test ui with and without ctools
+
+    foreach (array('ctools', 'noctools') as $i => $mode) {
+      $this->ldapTestId = 'ServerUI.ctools.' . $mode;
+      if ($mode == 'ctools' && !module_exists('ctools')) {
+        module_enable(array('ctools'), TRUE);
+        if (!module_exists('ctools')) {
+          $this->assertTrue(FALSE, 'Could not enable ctools.  It is needed for some test coverage', $this->ldapTestId);
+          debug('could not enable ctools');
+          continue;
+        }
+      }
+      elseif ($mode == 'noctools' && module_exists('ctools')) {
+        module_disable(array('ctools'));
+      }
+    //  debug('module list'); debug(module_list());
+
+      // keep in mind that these fake real ldap servers will conflict
+      // with the real fake ldap servers and need to be removed if any
+      // testing besides the UI needs to be done before another setup()
+      // is called.
+
+
+
+      $sid = 'server1';
+      $server_data = array();
+      $server_data[$sid] = array(
+        'sid'        => array($sid, $sid),
+        'name'       => array("Server $sid", "My Server $sid"),
+        'status'     => array(1, 1),
+        'ldap_type'  => array('openldap', 'ad'),
+        'address'    => array("${sid}.ldap.fake", "${sid}.ldap.fake"),
+        'port'       => array(389, 7000),
+        'tls'        => array(TRUE, FALSE),
+        'bind_method' => array(1, 3),
+        'binddn'  => array('cn=service_account,dc=a,dc=b,dc=org', ''),
+        'bindpw'  => array('sdfsdafsdfasdf', ''),
+        'basedn' => array('cn=accounts,dc=a,dc=b,dc=org', 'cn=campus accounts,dc=a,dc=b,dc=org', array('cn=accounts,dc=a,dc=b,dc=org'), array('cn=campus accounts,dc=a,dc=b,dc=org')),
+        'user_attr' => array('sAMAccountName', 'blah'),
+        'account_name_attr' => array('sAMAccountName', 'blah'),
+        'mail_attr' => array('mail', ''),
+        'mail_template' => array('' , '[email]'),
+        'allow_conflicting_drupal_accts' => array(TRUE, FALSE),
+        'unique_persistent_attr' => array('dn', 'uniqueregistryid'),
+        'user_dn_expression' => array('cn=%cn,%basedn', 'cn=%username,%basedn'),
+        'ldap_to_drupal_user' => array('code', 'different code'),
+        'testing_drupal_username' => array('johndoe', 'janedoe'),
+        'group_object_category' => array('group', 'groupofentries'),
+        'search_pagination' => array(1, 0),
+        'search_page_size' => array(1000, ''),
+      );
+
+
+      if (!ldap_servers_php_supports_pagination()) {
+        unset( $server_data[$sid]['search_pagination']);
+        unset( $server_data[$sid]['search_page_size']);
+      }
+
+      if (!module_exists('php')) {
+        unset( $server_data[$sid]['ldap_to_drupal_user']);
+      }
+
+      /** add server conf test **/
+      $this->drupalGet('admin/config/people/ldap/servers/add');
+
+      $edit = array();
+      foreach ($server_data['server1'] as $input_name => $input_values) {
+        $edit[$input_name] = $input_values[0];
+      }
+     // debug('edit array for server add test'); debug($edit);
+      $this->drupalPost('admin/config/people/ldap/servers/add', $edit, t('Add'));
+    //  debug('server row count2' . $this->serverConfCount());
+      $field_to_prop_map = LdapServer::field_to_properties_map();
+      $field_to_prop_map['bindpw'] = 'bindpw';
+      $ldap_servers = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE);
+     // debug('ldap servers'); debug($ldap_servers);
+      $this->assertTrue(count(array_keys($ldap_servers)) == 1, 'Add form for ldap server added server.',  $this->ldapTestId . ' Add Server');
+      $this->assertText('LDAP Server Server server1 added', 'Add form confirmation message',  $this->ldapTestId . ' Add Server');
+      // assert one ldap server exists in db table
+
+      // assert load of server has correct properties for each input
+      $mismatches = $this->compareFormToProperties($ldap_servers['server1'], $server_data['server1'], 0, $field_to_prop_map);
+      if (count($mismatches)) {
+        debug('mismatches between ldap server properties and form submitted values'); debug($mismatches);
+      }
+      $this->assertTrue(count($mismatches) == 0, 'Add form for ldap server properties match values submitted.',  $this->ldapTestId . ' Add Server');
+
+
+      /** update server conf test **/
+
+      $this->drupalGet('admin/config/people/ldap/servers/edit/server1');
+
+      $edit = array();
+      foreach ($server_data['server1'] as $input_name => $input_values) {
+        $edit[$input_name] = $input_values[1];
+      }
+      unset($edit['sid']);
+      unset($edit['bindpw']);
+     // debug('edit array for server update test'); debug($edit);
+      $this->drupalPost('admin/config/people/ldap/servers/edit/server1', $edit, t('Update'));
+     // debug('server row count3' . $this->serverConfCount());
+      $ldap_servers = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE);
+     // debug('ldap servers'); debug($ldap_servers);
+      $this->assertTrue(count(array_keys($ldap_servers)) == 1, 'Update form for ldap server didnt delete or add another server.',  $this->ldapTestId . '.Update Server');
+      // assert confirmation message without error
+      // assert one ldap server exists in db table
+      // assert load of server has correct properties for each input
+      unset($server_data['server1']['bindpw']);
+      $mismatches = $this->compareFormToProperties($ldap_servers['server1'], $server_data['server1'], 1, $field_to_prop_map);
+      if (count($mismatches)) {
+        debug('mismatches between ldap server properties and form submitted values'); debug($mismatches);
+      }
+      $this->assertTrue(count($mismatches) == 0, 'Update form for ldap server properties match values submitted.',  $this->ldapTestId . '.Update Server');
+
+
+      /** delete server conf test **/
+      $this->drupalGet('admin/config/people/ldap/servers/delete/server1');
+      $this->drupalPost('admin/config/people/ldap/servers/delete/server1', array(), t('Delete'));
+    //  debug('server row count4' . $this->serverConfCount());
+      $ldap_servers = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE);
+    //  debug('ldap servers'); debug($ldap_servers);
+      $this->assertTrue(count(array_keys($ldap_servers)) == 0, 'Delete form for ldap server deleted server.',  $this->ldapTestId . '.Delete Server');
+    }
+    if (!$ctools_originally_enabled) {
+      module_disable(array('ctools'), FALSE);
+    }
+    variable_set('ldap_help_watchdog_detail', 1); // return to fake server mode
+ }
+
+  public function serverConfCount() {
+    $records = db_query('SELECT * FROM {ldap_servers}')->fetchAllAssoc('sid');
+    return count(array_keys($records));
   }
 
- private function testHttps() {
-    // enable https required
-    // get logon form over http and see if disabled
+  public function compareFormToProperties($object, $data, $item_id, $map, $testid = '') {
+
+    $mismatches = array();
+
+    foreach ($data as $field_id => $values) {
+      if (!isset($map[$field_id])) {
+        debug("no mapping for field: $field_id in test $testid");
+        continue;
+      }
+      $property = $map[$field_id];
+      if (!property_exists($object, $property)) {
+        debug("property $property does not exist in object in test $testid");
+        continue;
+      }
+      $property_value = $object->{$property};
+
+      $property_value_show = (is_scalar($property_value)) ? $property_value : serialize($property_value);
+      $field_value = isset($values[$item_id + 2]) ? $values[$item_id + 2] : $values[$item_id]; // for cases where string input is not same as array.
+      $field_value_show = (is_scalar($field_value)) ? $field_value : serialize($field_value);
+      //debug("property name $property "); debug($property_value); debug("field id: $field_id"); debug($field_value);
+      if (is_array($property_value) && is_array($field_value)) {
+        $pass = count(array_diff($property_value, $field_value)) == 0;
+      }
+      elseif (is_scalar($property_value) && is_scalar($field_value)) {
+        $pass = ($property_value == $field_value);
+      }
+      else {
+        $pass = FALSE;
+      }
+      if (!$pass) {
+       // debug($property_value); debug($field_value);
+        $mismatches[] = "property $property ($property_value_show) does not match field $field_id value ($field_value_show)";
+      }
+    }
+
+    return $mismatches;
   }
-
-
-
-
- private function testServerCRUD() {
-    // add, edit, and delete a server.
-    // test critical validations
-    // test if server object can be instantiated from server record
-  }
-
- private function testLdap() {
-    // test some basic ldap functions just to see if ldap connection is real.
-
-
-
-  }
-
- private function testAPIFunctions() {
-    // test some functions in the api
-
-HTTPS
------------------------
-Tests and desired results.
------------------------
-
-LDAP_servers.HTTPS.user_profile_form.overhttps
-LDAP_servers.HTTPS.user_profile_form.overhttp
-LDAP_servers.HTTPS.user_login_block.overhttps
-LDAP_servers.HTTPS.user_login_block.overhttp
-LDAP_servers.HTTPS.user_login.overhttps
-LDAP_servers.HTTPS.user_login.overhttp
-
-
--------------------------
-Encryption (ENCR)
--------------------------
-Tests and desired results.
------------------------
-LDAP_servers.ENCR.on -- desired result:  password encypted in db
-LDAP_servers.ENCR.off -- desired result:  password encypted in db
-LDAP_servers.ENCR.mcrypt.off -- desired result:  password encypt checkbox not visible and suggestion to enable it.
-LDAP_servers.ENCR.off.on -- desired result:  when encyrption turned on pwd is encypted, and still works
-LDAP_servers.ENCR.on.off -- desired result:  when encyrption turned off pwd is dencypted, and still works
-
-
-  }
- */
 
 }

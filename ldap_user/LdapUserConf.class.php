@@ -134,6 +134,7 @@ class LdapUserConf {
     $result = (boolean)(
       isset($this->synchMapping[$ldap_server->sid][$field]) &&
       in_array($synch_context, $this->synchMapping[$ldap_server->sid][$field]) &&
+      isset($this->synchMapping[$ldap_server->sid][$field]['direction']) &&
       $this->synchMapping[$ldap_server->sid][$field]['direction'] == $direction
     );
 

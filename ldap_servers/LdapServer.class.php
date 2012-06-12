@@ -36,6 +36,7 @@ class LdapServer {
   public $bindpw = FALSE; // Default to an anonymous bind.
   public $user_dn_expression;
   public $user_attr;
+  public $account_name_attr;
   public $mail_attr;
   public $mail_template;
   public $unique_persistent_attr;
@@ -47,8 +48,6 @@ class LdapServer {
   public $editPath;
   public $queriableWithoutUserCredentials = FALSE; // can this server be queried without user credentials provided?
   public $userAttributeNeededCache = array(); // array of attributes needed keyed on $op such as 'user_update'
-
-
 
   /**
    * @param scalar $puid is permanent unique id value and
@@ -96,6 +95,7 @@ class LdapServer {
     'binddn'  => 'binddn',
     'user_dn_expression' => 'user_dn_expression',
     'user_attr'  => 'user_attr',
+    'account_name_attr'  => 'account_name_attr',
     'mail_attr'  => 'mail_attr',
     'mail_template'  => 'mail_template',
     'unique_persistent_attr' => 'unique_persistent_attr',
@@ -836,8 +836,12 @@ class LdapServer {
 
 
   public function deriveUsernameFromLdapEntry($ldap_entry) {
-    if ($this->user_attr) { // not using template
-      return @$ldap_entry[$this->user_attr][0];
+
+    if ($this->account_name_attr != '') {
+      $accountname = @$ldap_entry[$this->account_name_attr][0];
+    }
+    elseif ($this->user_attr != '')  {
+      $accountname = @$ldap_entry[$this->user_attr][0];
     }
     else {
       return FALSE;

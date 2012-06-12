@@ -72,14 +72,10 @@ class LdapAuthorizationConsumerConf {
    /**
    * Constructor Method
    */
-  function __construct(&$consumer, $_new = NULL, $_sid = NULL) {
+  function __construct(&$consumer, $_new = FALSE, $_sid = NULL) {
     $this->consumer = $consumer;
     $this->consumerType = $consumer->consumerType;
-    if ($_new !== TRUE && $_new !== FALSE) {
-      $this->loadFromDb();
-      $_new = (boolean)!$this->inDatabase; // loadFromDb() will set inDatabase property.
-    }
-    elseif ($_new === TRUE) {
+    if ($_new) {
       $this->inDatabase = FALSE;
     }
     else {
@@ -99,34 +95,21 @@ class LdapAuthorizationConsumerConf {
   }
 
   protected function loadFromDb() {
-    /** if (module_exists('ctools')) {
+     if (module_exists('ctools')) {
       ctools_include('export');
-      if ($this->consumerType) {
-        $result = ctools_export_load_object('ldap_authorization', 'names', array($this->consumerType));
-      }
-      else {
-        $result = ctools_export_load_object('ldap_authorization', 'all');
-      }
+      $result = ctools_export_load_object('ldap_authorization', 'names', array($this->consumerType));
+
       // @todo, this is technically wrong, but I don't quite grok what we're doing in the non-ctools case - justintime
       $consumer_conf = array_pop($result);
       // There's no ctools api call to get the reserved properties, so instead of hardcoding a list of them
       // here, we just grab everything.  Basically, we sacrifice a few bytes of RAM for forward-compatibility.
-      if ($consumer_conf) {
-        foreach ($consumer_conf as $property => $value) {
-          $this->$property = $value;
-        }
-      }
     }
     else {
-    **/
       $select = db_select('ldap_authorization', 'ldap_authorization');
       $select->fields('ldap_authorization');
-      if ($this->consumerType) {
-        $select->condition('ldap_authorization.consumer_type',  $this->consumerType);
-      }
-
+      $select->condition('ldap_authorization.consumer_type',  $this->consumerType);
       $consumer_conf = $select->execute()->fetchObject();
-   // }
+    }
 
     if (!$consumer_conf) {
       $this->inDatabase = FALSE;

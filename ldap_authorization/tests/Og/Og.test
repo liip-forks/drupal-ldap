@@ -19,8 +19,9 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
 
   public $consumerType = 'og_group';
 
-  function setUp() {
-    parent::setUp('og_ui');
+  function setUp($addl_modules = array()) {
+    parent::setUp(array('ldap_authorization_og', 'og_example'));
+
 
     if (ldap_authorization_og_og_version() != 1) {
       debug('LdapAuthorizationOg2Tests must be run with OG 7.x-1.x');
