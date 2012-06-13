@@ -48,11 +48,11 @@ function testUserProvision() {
 }
 
 
-class LdapUserBasicTests extends LdapUserTestCasev2 {
+class LdapUserUnitTests extends LdapUserTestCasev2 {
   public static function getInfo() {
     return array(
-      'name' => 'LDAP User Tests: Basic Function Tests v2',
-      'description' => 'Test ldap user.  Basic functionality tests.',
+      'name' => 'LDAP User Tests: API and Function Tests v2',
+      'description' => 'Test functions outside of real contexts (unit tests).',
       'group' => 'LDAP User'
     );
   }
@@ -223,7 +223,7 @@ class LdapUserBasicTests extends LdapUserTestCasev2 {
     foreach ($test_contexts  as $i => $context) {
       foreach (array(1, 0) as $flagged_for_synch) {
         // Test 1: make sure that synchToDrupalAccount() method works for field and property for appropriate context
-        debug("test context: $context, flagged for synch:" . (int)$flagged_for_synch);
+       // debug("test context: $context, flagged for synch:" . (int)$flagged_for_synch);
 
 
         // Test 1.  Clear out user and settings for mapping
@@ -262,14 +262,14 @@ class LdapUserBasicTests extends LdapUserTestCasev2 {
 
 
         $jkeats = user_load_by_name('jkeats');
-        debug('intial load'); debug($jkeats);
+       // debug('intial load'); debug($jkeats);
         $user_edit = array();
         // Test 1.C Do synch for given context
         $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $context, NULL, TRUE);
 
         // TEST 1.D: check that field and property were altered correctly given context
         $jkeats = user_load_by_name('jkeats');
-        debug('after user synch'); debug($jkeats);
+      //  debug('after user synch'); debug($jkeats);
 
         // Test 2:  Make sure synch does not occur when no context given
         // disable synching for property and field in given context
@@ -291,11 +291,11 @@ class LdapUserBasicTests extends LdapUserTestCasev2 {
           $test['field_values'][1],
           0);
 
-        debug('before user false synch'); debug($jkeats);
+     //   debug('before user false synch'); debug($jkeats);
         $user_edit = array('name' => 'jkeats');
         $jkeats = user_load_by_name('jkeats');
         $ldap_user_conf->synchToDrupalAccount($jkeats, $user_edit, $context, NULL, TRUE);
-        debug('after user false synch'); debug($jkeats);
+      //  debug('after user false synch'); debug($jkeats);
         // TEST #2: check that field and property were not altered
 
       }
@@ -369,47 +369,63 @@ class LdapUserUITests extends LdapUserTestCasev2 {
       'wsKey' => $wsKey,
 
       'sm__ldap_source__7' => 'sn',
-      'sm__convert__7' => 0,
+      'sm__convert__7' => FALSE,
       'sm__direction__7' => 1,
       'sm__user_target__7' => 'field.field_lname',
-      'sm__1__7' => 1,
-      'sm__2__7' => 1,
-      'sm__3__7' => 1,
-      'sm__4__7' => 1,
+      'sm__1__7' => TRUE,
+      'sm__2__7' => TRUE,
+      'sm__3__7' => TRUE,
+      'sm__4__7' => TRUE,
 
       'sm__ldap_source__8' => 'givenname',
-      'sm__convert__8' => 0,
+      'sm__convert__8' => FALSE,
       'sm__direction__8' => 1,
       'sm__user_target__8' => 'field.field_fname',
-      'sm__1__8' => 1,
-      'sm__2__8' => 1,
-      'sm__3__8' => 1,
-      'sm__4__8' => 1,
+      'sm__1__8' => TRUE,
+      'sm__2__8' => TRUE,
+      'sm__3__8' => TRUE,
+      'sm__4__8' => TRUE,
 
     );
 
     $this->drupalPost('admin/config/people/ldap/user', $edit, t('Save'));
 
-    $ldap_user_conf = ldap_user_conf();
-    $this->assertTrue($ldap_user_conf->sids['activedirectory'] == 1, t('Server field set correctly'), $this->ldapTestId);
+    $ldap_user_conf = ldap_user_conf('admin', TRUE);
+   // debug('user conf object after save'); debug($ldap_user_conf);
+  //  debug('ldap_user_conf variable'); debug(variable_get('ldap_user_conf',''));
+    $this->assertTrue($ldap_user_conf->sids['activedirectory'] == 'activedirectory', t('Server field set correctly'), $this->ldapTestId);
     $this->assertTrue(
-      $ldap_user_conf->provisionMethods[0] == LDAP_USER_PROV_ON_LOGON &&
-      $ldap_user_conf->provisionMethods[1] == LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE &&
-      $ldap_user_conf->provisionMethods[2] == LDAP_USER_PROV_ON_ALL_USER_CREATION
+      isset($ldap_user_conf->provisionMethods[LDAP_USER_PROV_ON_LOGON]) &&
+      isset($ldap_user_conf->provisionMethods[LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE]) &&
+      isset($ldap_user_conf->provisionMethods[LDAP_USER_PROV_ON_ALL_USER_CREATION])
       , t('provision methods field set correctly'), $this->ldapTestId);
     $this->assertTrue($ldap_user_conf->userConflictResolve == LDAP_USER_CONFLICT_LOG, t('Account conflict field set correctly'), $this->ldapTestId);
     $this->assertTrue($ldap_user_conf->acctCreation == LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT, t('Account creation field set correctly'), $this->ldapTestId);
-    $this->assertTrue($ldap_user_conf->synchMapping[$sid]['field.field_lname']['enabled'] == TRUE &&
-      $ldap_user_conf->synchMapping[$sid]['field.field_lname']['direction'] == 1 &&
-      $ldap_user_conf->synchMapping[$sid]['field.field_lname']['source'] == 'sn',
-       t('Synch mapping for field.field_lname  field set correctly'), $this->ldapTestId);
-    $this->assertTrue($ldap_user_conf->synchMapping[$sid]['field.field_fname']['enabled'] == TRUE &&
-      $ldap_user_conf->synchMapping[$sid]['field.field_lname']['direction'] == 1 &&
-      $ldap_user_conf->synchMapping[$sid]['field.field_lname']['source'] == 'givenname',
-       t('Synch mapping for field.field_lname  field set correctly'), $this->ldapTestId);
+
+    $field_lname_set_correctly = ($ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_lname']['enabled'] == TRUE &&
+      $ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_lname']['direction'] == 1 &&
+      $ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_lname']['ldap_source'] == 'sn');
+
+    $this->assertTrue($field_lname_set_correctly, t('Synch mapping for field.field_lname  field set correctly'), $this->ldapTestId);
+    if (!$field_lname_set_correctly) {
+      debug('ldap_user_conf->synchMapping[sid][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_lname']);
+    }
+
+    $field_fname_set_correctly = ($ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_fname']['enabled'] == TRUE &&
+      $ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_fname']['direction'] == 1 &&
+      $ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_fname']['ldap_source'] == 'givenname');
+
+    $this->assertTrue($field_fname_set_correctly, t('Synch mapping for field.field_lname  field set correctly'), $this->ldapTestId);
+     if (!$field_fname_set_correctly) {
+      debug('ldap_user_conf->synchMapping[sid][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_lname']);
+    }
+
     $this->assertTrue($ldap_user_conf->wsKey == $wsKey, t('wsKey field set correctly'), $this->ldapTestId);
     $this->assertTrue($ldap_user_conf->wsEnabled == 1, t('wsEnabled field set correctly'), $this->ldapTestId);
     $this->assertTrue($ldap_user_conf->wsUserIps[0] == $wsUserIps[0], t('wsUserIps field set correctly'), $this->ldapTestId);
+    if (!($ldap_user_conf->wsUserIps[0] == $wsUserIps[0])) {
+      debug('wsUserIps'); debug($ldap_user_conf->wsUserIps); debug($wsUserIps[0]);
+    }
 
     $this->assertTrue(
       in_array('create',$ldap_user_conf->wsActions) &&
@@ -419,7 +435,7 @@ class LdapUserUITests extends LdapUserTestCasev2 {
       , t('wsActions fields set correctly'), $this->ldapTestId);
 
 
-    debug($ldap_user_conf);
+  //  debug($ldap_user_conf);
 /**
  *
  *define('LDAP_USER_PROV_ON_LOGON', 1);

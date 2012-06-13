@@ -94,7 +94,7 @@ class LdapUserConfAdmin extends LdapUserConf {
     foreach ($this->saveable as $property) {
       $save[$property] = $this->{$property};
     }
-   // dpm('saving'); dpm($save);
+    // debug('saving in ldapUserConfAdmin->save()'); debug($save);
     variable_set('ldap_user_conf', $save);
   }
 
@@ -362,7 +362,7 @@ mappings need to be setup for each server.
     $this->wsEnabled  = ($values['wsEnabled']) ? (int)$values['wsEnabled'] : 0;
     $this->wsActions = ($values['wsActions']) ? $values['wsActions'] : array();
     $this->ldapUserSynchMappings = $this->synchMappingsFromForm($values, $storage);
-  //  dpm('populateFromDrupalForm this->synchMapping'); dpm($this->synchMapping);
+   // debug('populateFromDrupalForm this->synchMapping'); debug($this->synchMapping);
 
   }
 
@@ -435,7 +435,7 @@ mappings need to be setup for each server.
       }
     //   dpm("final mappings"); dpm($mappings[$sid][$row_mappings['user_target']]);
     }
-   // dpm('mappings in form submit'); dpm($mappings);
+   // debug('mappings in form submit'); debug($mappings);
     return $mappings;
   }
 

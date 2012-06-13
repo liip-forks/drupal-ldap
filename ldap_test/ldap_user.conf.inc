@@ -21,7 +21,7 @@ function ldap_test_ldap_user_data() {
       'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
       'wsEnabled'  => 1,
       'wsActions'  => array('create','synch','disable','delete'),
-      'wsUserIps' => array(),
+      'wsUserIps' => array('1.2.3.4'),
       'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
       'synchMapping' => array(),
     );

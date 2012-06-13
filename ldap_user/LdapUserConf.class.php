@@ -70,8 +70,10 @@ class LdapUserConf {
       LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER => t('On User Logon'),
       LDAP_USER_SYNCH_CONTEXT_CRON => t('Via Cron Batch'),
     );
-   // dpm('this before setSynchMapping'); dpm($this->ldapUserSynchMappings['uiuc_ad']);
+   // dpm('this before setSynchMapping'); dpm($this->synchMapping); dpm($this->ldapUserSynchMappings);
     $this->setSynchMapping(TRUE);
+  //  debug('this->provisionsDrupalAccountsFromLdap'); debug($this->provisionsDrupalAccountsFromLdap );
+  //  debug('this after setSynchMapping'); debug($this->synchMapping); debug($this->ldapUserSynchMappings);
 
     $this->detailedWatchdog = variable_get('ldap_help_watchdog_detail', 0);
 
@@ -131,16 +133,17 @@ class LdapUserConf {
    */
 
   public function isSynched($field, $ldap_server, $synch_context, $direction) {
+    //debug($this->synchMapping[$ldap_server->sid][$field]);
     $result = (boolean)(
-      isset($this->synchMapping[$ldap_server->sid][$field]) &&
-      in_array($synch_context, $this->synchMapping[$ldap_server->sid][$field]) &&
+      isset($this->synchMapping[$ldap_server->sid][$field]['contexts']) &&
+      in_array($synch_context, $this->synchMapping[$ldap_server->sid][$field]['contexts']) &&
       isset($this->synchMapping[$ldap_server->sid][$field]['direction']) &&
       $this->synchMapping[$ldap_server->sid][$field]['direction'] == $direction
     );
 
-    debug("synchMapping in isSynched=$result, field=$field, synch_context=$synch_context direction=$direction, server:");
+   // debug("synchMapping in isSynched=$result, field=$field, synch_context=$synch_context direction=$direction, server:" . $ldap_server->sid);
    // debug($ldap_server);
-   // debug('this->synchMapping'); debug($this->synchMapping);
+   // debug("this->synchMapping[sid][field] in isSynched"); debug($this->synchMapping[$ldap_server->sid][$field]);
 
     return $result;
   }
@@ -191,8 +194,9 @@ class LdapUserConf {
       'account' => $account,
       'user_edit' => $user_edit,
       'ldap_user' => $ldap_user,
+      'synch_context' => $synch_context,
     );
-   // debug($debug);
+   // debug('synchToDrupalAccount call'); debug($debug);
     if (
         (!$ldap_user  && !isset($account->name)) ||
         (!$account && $save) ||
@@ -205,11 +209,11 @@ class LdapUserConf {
     $drupal_user = user_load_by_name($account->name);
     if (!$ldap_user) {
       $sids = array_keys($this->sids);
-      debug("call ldap_servers_get_user_ldap_data,, account:"); debug($account);
+    //  debug("call ldap_servers_get_user_ldap_data,, account:"); debug($account);
       $ldap_user = ldap_servers_get_user_ldap_data($account->name, $sids, $synch_context);
     }
     $ldap_servers = ldap_servers_get_servers(NULL, 'enabled', FALSE);
-    debug("ldap user line 203 ldapuserconf.class, synch_context=$synch_context"); debug($ldap_user);
+    //debug("ldap user line 203 ldapuserconf.class, synch_context=$synch_context"); debug($ldap_user);
     foreach ($ldap_servers as $sid => $ldap_server) {
       $this->entryToUserEdit($ldap_user, $ldap_server, $user_edit, $synch_context, 'update');
     }
@@ -260,8 +264,8 @@ class LdapUserConf {
   public function provisionDrupalAccount($account = FALSE, &$user_edit, $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, $ldap_user = NULL, $save = TRUE) {
     $watchdog_tokens = array();
 
-  //  debug('call to provisionDrupalAccount'); debug('account'); debug($account); debug('user_edit'); debug($user_edit);
-  //  debug('synch_context'); debug($synch_context); debug('ldap_user'); debug($ldap_user); debug('save=' . $save);
+//    debug('call to provisionDrupalAccount'); debug('account'); debug($account); debug('user_edit'); debug($user_edit);
+ //   debug('synch_context'); debug($synch_context); debug('ldap_user'); debug($ldap_user); debug('save=' . $save);
   //  debug('this->sids'); debug($this->sids);  debug('this->servers'); debug($this->servers); debug('this'); debug($this);
     /**
      * @todo
@@ -299,7 +303,7 @@ class LdapUserConf {
     }
 
     $ldap_servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);  // $ldap_user['sid']
-    debug('ldap user line 293 ldapuserconf.class'); debug($ldap_user);
+   // debug('ldap user line 302ish ldapuserconf.class'); debug($ldap_user);
     foreach ($ldap_servers as $sid => $ldap_server) {
       $this->entryToUserEdit($ldap_user, $ldap_server, $user_edit, $synch_context, 'create');
     }
@@ -332,16 +336,22 @@ class LdapUserConf {
   function entryToUserEdit($ldap_user, $ldap_server, &$edit, $synch_context, $op) {
     // need array of user fields and which direction and when they should be synched.
    // dpm('entryToUserEdit'); dpm($ldap_server);
-  //  debug("isSynched property.mail, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER: ".
-    //    $this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER));
-    if ($this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) && !isset($edit['mail'])) {
+
+    $synch_email = $this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER);
+  //  debug("entryToUserEdit isSynched property.mail synch_context=$synch_context, issynched=$synch_email");
+    if ($synch_email && !isset($edit['mail'])) {
     //  debug('entryToUserEdit ldap entry'); debug($ldap_user);
-      $mail = $ldap_server->deriveEmailFromLdapEntry($ldap_user['attr']);
-    //   debug("isSynched property.mail: $mail");
-      if ($mail) {
-        $edit['mail'] = $mail;
+      $derived_mail = $ldap_server->deriveEmailFromLdapEntry($ldap_user['attr']);
+   //    debug("isSynched derived_mail: $derived_mail");
+      if ($derived_mail) {
+        $edit['mail'] = $derived_mail;
       }
     }
+    else {
+      $edit['mail'] = NULL;
+    }
+
+  //  debug('edit'); debug($edit);
 
     if ($this->isSynched('property.name', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) && !isset($edit['name'])) {
       $name = $ldap_server->deriveUsernameFromLdapEntry($ldap_user['attr']);
