@@ -10,7 +10,8 @@ class LdapUserConf {
 
   public $sids = array();  // server configuration ids being used by ldap user
   public $servers = array(); // ldap server objects enabled for ldap user
-  public $provisionMethods = array(LDAP_USER_PROV_ON_LOGON, LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE);
+  public $drupalAcctProvisionEvents = array(LDAP_USER_PROV_ON_LOGON, LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE);
+  public $ldapEntryProvisionEvents = array();
   public $userConflictResolve = LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
   public $acctCreation = LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT;
   public $inDatabase = FALSE;
@@ -18,6 +19,7 @@ class LdapUserConf {
   public $ldapUserSynchMappings = NULL;  // synch mappings configured in ldap user module
   public $detailedWatchdog = FALSE;
   public $provisionsDrupalAccountsFromLdap = FALSE;
+  public $provisionsLdapEntriesFromDrupalUsers = FALSE;
 
   public $wsKey = NULL;
   public $wsEnabled = 0;
@@ -42,7 +44,8 @@ class LdapUserConf {
 
   public $saveable = array(
     'sids',
-    'provisionMethods',
+    'drupalAcctProvisionEvents',
+    'ldapEntryProvisionEvents',
     'userConflictResolve',
     'acctCreation',
     'ldapUserSynchMappings',
@@ -62,8 +65,9 @@ class LdapUserConf {
 
   function __construct() {
     $this->load();
-   // dpm('filter'); dpm(array_filter(array_values($this->provisionMethods)));
-    $this->provisionsDrupalAccountsFromLdap = (count(array_filter(array_values($this->provisionMethods))) > 0);
+   // dpm('filter'); dpm(array_filter(array_values($this->drupalAcctProvisionEvents)));
+    $this->provisionsDrupalAccountsFromLdap = (count(array_filter(array_values($this->drupalAcctProvisionEvents))) > 0);
+    $this->provisionsLdapEntriesFromDrupalUsers = (count(array_filter(array_values($this->ldapEntryProvisionEvents))) > 0);
     $this->synchTypes = array(
       LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER => t('On User Creation'),
       LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER => t('On User Update/Save'),
@@ -178,6 +182,23 @@ class LdapUserConf {
   }
 
   /**
+   * given a drupal account, synch to related ldap entry
+   *
+   * @param array $account.  Drupal user object
+   * @param string $synch_context.
+   * @param array $ldap_user_entry.  any overrides of ldap user entry attributes
+   *
+   * @return array of ldap_entry or LDAP_USER_PROVISION_LDAP_ENTRY_SYNCH_FAILED on fail.
+   */
+
+  public function synchToLdapEntry($account, $synch_context, $ldap_user_entry = array()) {
+
+
+
+
+  }
+
+  /**
    * given a drupal account, query ldap and get all user fields and create user account
    *
    * @param array $account drupal account array with minimum of name
@@ -245,6 +266,83 @@ class LdapUserConf {
       return FALSE;
     }
   }
+
+ /**
+   * given a drupal account, provision an ldap entry if none exists.  if one exists do nothing
+   *
+   * @param array $account drupal account array with minimum of name
+   * @param int $synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
+   * @param array $ldap_user as prepopulated ldap entry.  usually not provided
+   *
+   * @return ldap entry that is created or one of the following constants:
+   *   LDAP_USER_PROVISION_LDAP_ENTRY_EXISTS
+   *   LDAP_USER_PROVISION_LDAP_ENTRY_CREATE_FAILED
+   */
+
+  public function provisionLdapEntry($account = FALSE, $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, $ldap_user = NULL) {
+    $watchdog_tokens = array();
+
+    // @todo determine server to use for provisioning
+
+    $ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $synch_context, 'create');
+
+    /**
+     * @todo check if user exists, given proposed $ldap_entry
+    if (user exists ) {
+      return LDAP_USER_PROVISION_LDAP_ENTRY_EXISTS;
+    }
+    */
+
+    // is a hook needed here, or is it in drupalUserToLdapEntry ?
+   // @todo implement: $ldap_server->createLdapEntry($ldap_entry);
+
+    /** @todo
+     * create ldap entry
+    if (entry created) {
+      return $entry;
+    }
+    else {
+      return LDAP_USER_PROVISION_LDAP_ENTRY_CREATE_FAILED;
+    }
+    **/
+
+  }
+
+/** populate ldap entry array
+   *
+   * @param array ldap entry $user_ldap_entry
+   * @param object $ldap_server
+   * @param array $edit see hook_user_save, hook_user_update, etc
+   * @param drupal account object $account
+   * @param string $op see hook_ldap_attributes_needed_alter
+   *
+   * @return ldap entry in ldap extension array format.
+   */
+
+  function drupalUserToLdapEntry($account, $ldap_server, $ldap_user_entry = array(), $synch_context, $op) {
+
+    // @todo: special code to derive cn, dn and any other attributes that are not in standard mapping/synching code.
+
+     /**
+     * @todo
+     * -- loop through all mapped fields
+     * -- where do tokens fit in here?
+     */
+
+    $params = array(
+      'account' => $account,
+      'ldap_server' => $ldap_server,
+      'synch_context' => $synch_context,
+      'op' => $op,
+    );
+
+    drupal_alter('ldap_user_ldap_entry', $ldap_user_entry, $params);
+
+    return $ldap_user_entry;
+
+  }
+
+
 
    /**
    * given a drupal account, query ldap and get all user fields and save user account

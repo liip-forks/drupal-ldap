@@ -355,9 +355,9 @@ class LdapUserUITests extends LdapUserTestCasev2 {
     $wsUserIps = array('1.2.3.4');
     $edit = array(
       'provisionServers[' . $sid . ']' => 1,
-      'provisionMethods[' . LDAP_USER_CONFLICT_LOG . ']' => 1,
-      'provisionMethods[' . LDAP_USER_CONFLICT_RESOLVE . ']' => 1,
-      'provisionMethods[' . LDAP_USER_CONFLICT_RESOLVE_DEFAULT . ']' => 1,
+      'drupalAcctProvisionEvents[' . LDAP_USER_CONFLICT_LOG . ']' => 1,
+      'drupalAcctProvisionEvents[' . LDAP_USER_CONFLICT_RESOLVE . ']' => 1,
+      'drupalAcctProvisionEvents[' . LDAP_USER_CONFLICT_RESOLVE_DEFAULT . ']' => 1,
       'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
       'acctCreation' => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT,
       'wsEnabled'  => 1,
@@ -395,9 +395,9 @@ class LdapUserUITests extends LdapUserTestCasev2 {
   //  debug('ldap_user_conf variable'); debug(variable_get('ldap_user_conf',''));
     $this->assertTrue($ldap_user_conf->sids['activedirectory'] == 'activedirectory', t('Server field set correctly'), $this->ldapTestId);
     $this->assertTrue(
-      isset($ldap_user_conf->provisionMethods[LDAP_USER_PROV_ON_LOGON]) &&
-      isset($ldap_user_conf->provisionMethods[LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE]) &&
-      isset($ldap_user_conf->provisionMethods[LDAP_USER_PROV_ON_ALL_USER_CREATION])
+      isset($ldap_user_conf->drupalAcctProvisionEvents[LDAP_USER_PROV_ON_LOGON]) &&
+      isset($ldap_user_conf->drupalAcctProvisionEvents[LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE]) &&
+      isset($ldap_user_conf->drupalAcctProvisionEvents[LDAP_USER_PROV_ON_ALL_USER_CREATION])
       , t('provision methods field set correctly'), $this->ldapTestId);
     $this->assertTrue($ldap_user_conf->userConflictResolve == LDAP_USER_CONFLICT_LOG, t('Account conflict field set correctly'), $this->ldapTestId);
     $this->assertTrue($ldap_user_conf->acctCreation == LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT, t('Account creation field set correctly'), $this->ldapTestId);
@@ -450,9 +450,9 @@ define('LDAP_USER_PROV_ON_ALL_USER_CREATION', 3);
         'form_mapping' => array('provisionServers[]' => array('activedirectory')),
       ),
       'provision_methods' => array(
-        'property' => 'provisionMethods',
+        'property' => 'drupalAcctProvisionEvents',
         'expected_value' => array(1, 2, 3),
-        'form_mapping' => array('provisionMethods[]' =>  array(1, 2, 3)),
+        'form_mapping' => array('drupalAcctProvisionEvents[]' =>  array(1, 2, 3)),
       ),
       'userConflictResolve' => array(
         'property' => 'userConflictResolve',

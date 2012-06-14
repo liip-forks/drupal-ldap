@@ -15,11 +15,11 @@ class LdapUserConfAdmin extends LdapUserConf {
     $values['provisionServersDescription'] = t('Check all LDAP server configurations to use
       in provisioning Drupal users and their user fields.');
 
-    $values['provisionMethodsDescription'] = t('"LDAP Associated" Drupal user accounts (1) have
+    $values['drupalAccountProvisionEventsDescription'] = t('"LDAP Associated" Drupal user accounts (1) have
       data mapping the account to an LDAP entry and (2) can leverage LDAP module functionality
       such as authorization, profile field synching, etc.');
 
-    $values['provisionMethodsOptions'] = array(
+    $values['drupalAccountProvisionEventsOptions'] = array(
       LDAP_USER_PROV_ON_LOGON => t('On successful authentication with LDAP
         credentials and no existing Drupal account, create "LDAP Associated" Drupal account.  (Requires LDAP Authentication module).'),
       LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE => t('On manual creation of Drupal
@@ -30,6 +30,16 @@ class LdapUserConfAdmin extends LdapUserConf {
         (includes manual creation, feeds module, Shib, CAS, other provisioning modules, etc).
         Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
     );
+
+    $values['ldapEntryProvisionEventsDescription'] = t('When should a corresponding LDAP Entry
+      be created for a Drupal User?');
+
+    $values['ldapEntryProvisionEventsOptions'] = array(
+      LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE => t('When a Drupal Account has a status of approved.
+        This could be when an account is initially created, when it is approved, or when confirmation
+        via email sets enables an account.'),
+    );
+
 
     /**
     *  Drupal Account Provisioning and Synching
@@ -63,9 +73,12 @@ class LdapUserConfAdmin extends LdapUserConf {
   protected $provisionServersDescription;
   protected $provisionServersOptions = array();
 
-  protected $provisionMethodsDescription;
-  protected $provisionMethodsOptions = array();
-  public $provisionMethods = array();
+  protected $drupalAccountProvisionEventsDescription;
+  protected $drupalAccountProvisionEventsOptions = array();
+
+  protected $ldapEntryProvisionEventsDescription;
+  protected $ldapEntryProvisionEventsOptions = array();
+
   protected $synchFormRow = 0;
 
   /*
@@ -153,13 +166,22 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#description' => $this->provisionServersDescription
     );
 
-    $form['basic']['provisionMethods'] = array(
+    $form['basic']['drupalAcctProvisionEvents'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('New Account Provisioning Options'),
+      '#title' => t('New Drupal Account Provisioning Options'),
       '#required' => FALSE,
-      '#default_value' => $this->provisionMethods,
-      '#options' => $this->provisionMethodsOptions,
-      '#description' => $this->provisionMethodsDescription
+      '#default_value' => $this->drupalAcctProvisionEvents,
+      '#options' => $this->drupalAccountProvisionEventsOptions,
+      '#description' => $this->drupalAccountProvisionEventsDescription
+    );
+
+    $form['basic']['ldapEntryProvisionEvents'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('New LDAP Entry Provisioning Options'),
+      '#required' => FALSE,
+      '#default_value' => $this->ldapEntryProvisionEvents,
+      '#options' => $this->ldapEntryProvisionEventsOptions,
+      '#description' => $this->ldapEntryProvisionEventsDescription
     );
 
     $form['basic']['userConflictResolve'] = array(
@@ -349,7 +371,8 @@ mappings need to be setup for each server.
   protected function populateFromDrupalForm($values, $storage) {
 ///    dpm('populateFromDrupalForm'); dpm($values); dpm($storage);
     $this->sids = $values['provisionServers'];
-    $this->provisionMethods = $values['provisionMethods'];
+    $this->drupalAcctProvisionEvents = $values['drupalAcctProvisionEvents'];
+    $this->ldapEntryProvisionEvents = $values['ldapEntryProvisionEvents'];
     $this->userConflictResolve  = ($values['userConflictResolve']) ? (int)$values['userConflictResolve'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;
     $this->wsKey  = ($values['wsKey']) ? $values['wsKey'] : NULL;

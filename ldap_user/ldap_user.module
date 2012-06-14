@@ -12,6 +12,12 @@ define('LDAP_USER_PROV_ON_LOGON', 1);
 define('LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE', 2);
 define('LDAP_USER_PROV_ON_ALL_USER_CREATION', 3);
 
+define('LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE', 1);
+
+define('LDAP_USER_PROVISION_LDAP_ENTRY_EXISTS', 1);
+define('LDAP_USER_PROVISION_LDAP_ENTRY_CREATE_FAILED', 2);
+define('LDAP_USER_PROVISION_LDAP_ENTRY_SYNCH_FAILED', 3);
+
 define('LDAP_USER_CONFLICT_LOG', 1);
 define('LDAP_USER_CONFLICT_RESOLVE', 2);
 define('LDAP_USER_CONFLICT_RESOLVE_DEFAULT', 2);
@@ -283,7 +289,11 @@ function ldap_user_provision($ldap_user, $user_edit = array()) {
 function ldap_user_user_login(&$edit, $account) {
   $ldap_user_conf = ldap_user_conf();
   $user_edit = array();
+  /** synching of attributes between drupal and ldap is configured per attribute.  so call to synch is always
+      made even if no synching occurs.
+  **/
   $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, FALSE);
+  $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, FALSE);
 }
 
 /**
@@ -292,7 +302,17 @@ function ldap_user_user_login(&$edit, $account) {
  */
 function ldap_user_user_insert(&$user_edit, $account, $category) {
   $ldap_user_conf = ldap_user_conf();
+
+  if (in_array(LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE, $ldap_user_conf->ldapEntryProvisionEvents)) {
+
+
+  }
+
+  /** synching of attributes between drupal and ldap is configured per attribute.  so call to synch is always
+      made even if no synching occurs.
+  **/
   $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, FALSE);
+  $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, FALSE);
 }
 
 
@@ -301,7 +321,11 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
  */
 function ldap_user_user_update(&$user_edit, $account, $category) {
   $ldap_user_conf = ldap_user_conf();
+  /** synching of attributes between drupal and ldap is configured per attribute.  so call to synch is always
+      made even if no synching occurs.
+  **/
   $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, NULL, FALSE);
+  $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, NULL, FALSE);
 }
 
 
@@ -309,9 +333,11 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
  * Implements hook_user_delete().
  */
 function ldap_user_user_delete($account) {
+  // drupal user account is about to be deleted.  @todo.  check if ldap account needs to be deleted also
   $ldap_user_conf = ldap_user_conf();
   $user_edit = array();
-  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER, NULL, FALSE);
+
+
 }
 
 
