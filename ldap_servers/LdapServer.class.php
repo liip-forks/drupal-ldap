@@ -367,6 +367,7 @@ class LdapServer {
       $result = $this->ldapQuery($scope, $ldap_query_params);
       if ($result && (ldap_count_entries($this->connection, $result) !== FALSE) ) {
         $entries = ldap_get_entries($this->connection, $result);
+        drupal_alter('ldap_server_search_results', $entries, $ldap_query_params);
         return (is_array($entries)) ? $entries : FALSE;
       }
       elseif ($this->ldapErrorNumber()) {
