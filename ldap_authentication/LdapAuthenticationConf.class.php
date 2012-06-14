@@ -147,7 +147,7 @@ class LdapAuthenticationConf {
       else {
         drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
         $tokens = array('!ldap_authentication_config' => l(t('LDAP Authentication Configuration'), 'admin/config/people/ldap/authentication'));
-        watchdog('warning', 'LDAP Authentication is configured to deny users based on php execution with php_eval function, but php module is not enabled. Please enable php module or remove php code at !ldap_authentication_config .', $tokens);
+        watchdog('ldap_authentication', 'LDAP Authentication is configured to deny users based on php execution with php_eval function, but php module is not enabled. Please enable php module or remove php code at !ldap_authentication_config .', $tokens);
         return FALSE;
       }
     }
@@ -175,7 +175,7 @@ class LdapAuthenticationConf {
       if (!module_exists('ldap_authorization')) {
         drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
         $tokens = array('!ldap_authentication_config' => l(t('LDAP Authentication Configuration'), 'admin/config/people/ldap/authentication'));
-        watchdog('warning', 'LDAP Authentication is configured to deny users without LDAP Authorization mappings, but LDAP Authorization module is not enabled.  Please enable and configure LDAP Authorization or disable this option at !ldap_authentication_config .', $tokens);
+        watchdog('ldap_authentication', 'LDAP Authentication is configured to deny users without LDAP Authorization mappings, but LDAP Authorization module is not enabled.  Please enable and configure LDAP Authorization or disable this option at !ldap_authentication_config .', $tokens);
         return FALSE;
       }
       $user = new stdClass();
@@ -198,13 +198,20 @@ class LdapAuthenticationConf {
       if (!$has_enabled_consumers) {
         drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
         $tokens = array('!ldap_consumer_config' => l(t('LDAP Authorization Configuration'), 'admin/config/people/ldap/authorization'));
-        watchdog('warning', 'LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured:  !ldap_consumer_config .', $tokens);
+        watchdog('ldap_authentication', 'LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured:  !ldap_consumer_config .', $tokens);
         return FALSE;
       }
 
       return FALSE;
     }
 
+    // allow other modules to hook in and refuse if they like
+    $hook_result = TRUE;
+    drupal_alter('ldap_authentication_allowuser_results', $ldap_user_entry, $name, $hook_result);
+    if (!$hook_result) {
+      watchdog('ldap_authentication', "Authentication Allow User Result=refused for %name", array('%name' => $name), WATCHDOG_NOTICE);
+      return FALSE;
+    }
 
     /**
      * default to allowed
