@@ -361,7 +361,7 @@ class LdapQuery {
         'property_name' => 'sizelimit',
         'schema' => array(
           'type' => 'int',
-          'length' => 'small',
+          'size' => 'small',
           'not null' => TRUE,
           'default' => 0,
         ),
@@ -381,7 +381,7 @@ class LdapQuery {
         'property_name' => 'timelimit',
         'schema' => array(
           'type' => 'int',
-          'length' => 'small',
+          'size' => 'small',
           'not null' => TRUE,
           'default' => 0,
 
