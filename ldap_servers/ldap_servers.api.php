@@ -10,7 +10,7 @@
  * (readonly)
  *
  */
-function hook_ldap_server_search_results_alter($entries, $ldap_query_params) {
+function hook_ldap_server_search_results_alter(&$entries, $ldap_query_params) {
   // look for a specific part of the $results array
   // and maybe change it
 }
