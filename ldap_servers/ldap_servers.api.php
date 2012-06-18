@@ -39,7 +39,25 @@ function hook_ldap_attributes_needed_alter(&$attributes, $op, $server) {
 
 }
 
+/**
+ * Perform alterations of ldap entry
+ *
+ *
+ * @param array $ldap_entry
+ *   array of an ldap entry as ldap php extension would return from a query
+ * @param array $params context array with some or all of the following key/values
+ *   'account' => drupal account object,
+ *   'synch_context' => LDAP_USER_SYNCH_CONTEXT_* constant,
+ *   'op' => 'create_ldap_user',
+ *   'module' =>  module calling alter, e.g. 'ldap_user',
+ *   'function' => function calling alter, e.g. 'provisionLdapEntry'
+ *
+ */
 
+function hook_ldap_entry_alter(&$ldap_entry, $params) {
+
+  
+}
 
 /**
  * Allow the results from the ldap search answer to be modified
@@ -47,9 +65,7 @@ function hook_ldap_attributes_needed_alter(&$attributes, $op, $server) {
  * (readonly)
  *
  */
-function hook_ldap_server_search_results_alter($entries, $ldap_query_params) {
+function hook_ldap_server_search_results_alter(&$entries, $ldap_query_params) {
   // look for a specific part of the $results array
   // and maybe change it
 }
-
-

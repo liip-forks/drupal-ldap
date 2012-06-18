@@ -14,6 +14,7 @@ class LdapUserConfAdmin extends LdapUserConf {
 
     $values['provisionServersDescription'] = t('Check all LDAP server configurations to use
       in provisioning Drupal users and their user fields.');
+    $values['provisionTargetServersDescription'] = t('Check all LDAP server configurations to create ldap entries on.');
 
     $values['drupalAccountProvisionEventsDescription'] = t('"LDAP Associated" Drupal user accounts (1) have
       data mapping the account to an LDAP entry and (2) can leverage LDAP module functionality
@@ -29,6 +30,10 @@ class LdapUserConfAdmin extends LdapUserConf {
         is created, make account "LDAP Associated" if corresponding LDAP entry exists.
         (includes manual creation, feeds module, Shib, CAS, other provisioning modules, etc).
         Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
+      LDAP_USER_PROV_CANCEL_DRUPAL_USER_ON_LDAP_ENTRY_MISSING => t('Anytime the corresponding
+        LDAP entry for a user is gone, disable the Drupal Account.'),
+      LDAP_USER_PROV_DELETE_DRUPAL_USER_ON_LDAP_ENTRY_MISSING => t('Anytime the corresponding
+        LDAP entry for a user is gone, delete the Drupal Account.'),
     );
 
     $values['ldapEntryProvisionEventsDescription'] = t('When should a corresponding LDAP Entry
@@ -38,6 +43,8 @@ class LdapUserConfAdmin extends LdapUserConf {
       LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE => t('When a Drupal Account has a status of approved.
         This could be when an account is initially created, when it is approved, or when confirmation
         via email sets enables an account.'),
+      LDAP_USER_LDAP_ENTRY_DELETION_ON_DELETE => t('When a Drupal Account that has a corresponding LDAP
+        entry is deleted, delete the corresponding LDAP entry.'),
     );
 
 
@@ -59,6 +66,7 @@ class LdapUserConfAdmin extends LdapUserConf {
          at /admin/config/people/accounts/settings applies to both Drupal and LDAP Authenticated users.
          "Visitors" option automatically creates and account when they successfully LDAP authenticate.
          "Admin" and "Admin with approval" do not allow user to authenticate until the account is approved.'),
+
       );
 
       foreach ($values as $property => $default_value) {
@@ -72,6 +80,7 @@ class LdapUserConfAdmin extends LdapUserConf {
 
   protected $provisionServersDescription;
   protected $provisionServersOptions = array();
+  protected $provisionTargetServersOptions = array();
 
   protected $drupalAccountProvisionEventsDescription;
   protected $drupalAccountProvisionEventsOptions = array();
@@ -107,7 +116,6 @@ class LdapUserConfAdmin extends LdapUserConf {
     foreach ($this->saveable as $property) {
       $save[$property] = $this->{$property};
     }
-    // debug('saving in ldapUserConfAdmin->save()'); debug($save);
     variable_set('ldap_user_conf', $save);
   }
 
@@ -128,6 +136,7 @@ class LdapUserConfAdmin extends LdapUserConf {
       foreach ($servers as $sid => $ldap_server) {
         $enabled = ($ldap_server->status) ? 'Enabled' : 'Disabled';
         $this->provisionServersOptions[$sid] = $ldap_server->name . ' (' . $ldap_server->address . ') Status: ' . $enabled;
+        $this->provisionTargetServersOptions[$sid] = $ldap_server->name . ' (' . $ldap_server->address . ') Status: ' . $enabled;
       }
     }
   }
@@ -150,41 +159,34 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#markup' => t('<h1>LDAP User Settings</h1>'),
     );
 
-    $form['basic'] = array(
+    $form['basic_to_drupal'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Basic Provisioning Settings'),
+      '#title' => t('Basic Provisioning to Drupal Account Settings'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
 
-    $form['basic']['provisionServers'] = array(
+    $form['basic_to_drupal']['provisionServers'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('Servers Providing Provisioning Data'),
+      '#title' => t('LDAP Servers Providing Provisioning Data'),
       '#required' => FALSE,
       '#default_value' => $this->sids,
       '#options' => $this->provisionServersOptions,
       '#description' => $this->provisionServersDescription
     );
 
-    $form['basic']['drupalAcctProvisionEvents'] = array(
+    $form['basic_to_drupal']['drupalAcctProvisionEvents'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('New Drupal Account Provisioning Options'),
+      '#title' => t('Drupal Account Provisioning Options'),
       '#required' => FALSE,
       '#default_value' => $this->drupalAcctProvisionEvents,
       '#options' => $this->drupalAccountProvisionEventsOptions,
       '#description' => $this->drupalAccountProvisionEventsDescription
     );
 
-    $form['basic']['ldapEntryProvisionEvents'] = array(
-      '#type' => 'checkboxes',
-      '#title' => t('New LDAP Entry Provisioning Options'),
-      '#required' => FALSE,
-      '#default_value' => $this->ldapEntryProvisionEvents,
-      '#options' => $this->ldapEntryProvisionEventsOptions,
-      '#description' => $this->ldapEntryProvisionEventsDescription
-    );
 
-    $form['basic']['userConflictResolve'] = array(
+
+    $form['basic_to_drupal']['userConflictResolve'] = array(
       '#type' => 'radios',
       '#title' => t('Existing Drupal User Account Conflict'),
       '#required' => 1,
@@ -193,13 +195,38 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#description' => t( $this->userConflictResolveDescription),
     );
 
-    $form['basic']['acctCreation'] = array(
+    $form['basic_to_drupal']['acctCreation'] = array(
       '#type' => 'radios',
       '#title' => t('Application of Drupal Account settings to LDAP Authenticated Users'),
       '#required' => 1,
       '#default_value' => $this->acctCreation,
       '#options' => $this->acctCreationOptions,
       '#description' => t($this->acctCreationDescription),
+    );
+
+    $form['basic_to_ldap'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Basic Provisioning to LDAP Settings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+
+    $form['basic_to_ldap']['provisionTargetServers'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('LDAP Servers to Provision LDAP Entries on'),
+      '#required' => FALSE,
+      '#default_value' => $this->provisionTargetServers,
+      '#options' => $this->provisionTargetServersOptions,
+      '#description' => $this->provisionTargetServersDescription,
+    );
+
+    $form['basic_to_ldap']['ldapEntryProvisionEvents'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('LDAP Entry Provisioning Options'),
+      '#required' => FALSE,
+      '#default_value' => $this->ldapEntryProvisionEvents,
+      '#options' => $this->ldapEntryProvisionEventsOptions,
+      '#description' => $this->ldapEntryProvisionEventsDescription
     );
 
     $form['ws'] = array(
@@ -369,8 +396,9 @@ mappings need to be setup for each server.
   }
 
   protected function populateFromDrupalForm($values, $storage) {
-///    dpm('populateFromDrupalForm'); dpm($values); dpm($storage);
+    //dpm('populateFromDrupalForm'); dpm($values); dpm($storage);
     $this->sids = $values['provisionServers'];
+    $this->provisionTargetServers = $values['provisionTargetServers'];
     $this->drupalAcctProvisionEvents = $values['drupalAcctProvisionEvents'];
     $this->ldapEntryProvisionEvents = $values['ldapEntryProvisionEvents'];
     $this->userConflictResolve  = ($values['userConflictResolve']) ? (int)$values['userConflictResolve'] : NULL;

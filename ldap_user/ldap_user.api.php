@@ -39,6 +39,4 @@ function hook_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_serv
   *   be sure to merge with existing values as ldap_user configured values will already exist in $available_user_targets
   */
 
-
-
 }

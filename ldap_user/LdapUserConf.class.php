@@ -9,6 +9,7 @@
 class LdapUserConf {
 
   public $sids = array();  // server configuration ids being used by ldap user
+  public $provisionTargetServers = array();  // servers which are used for provisioning to ldap
   public $servers = array(); // ldap server objects enabled for ldap user
   public $drupalAcctProvisionEvents = array(LDAP_USER_PROV_ON_LOGON, LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE);
   public $ldapEntryProvisionEvents = array();
@@ -44,6 +45,7 @@ class LdapUserConf {
 
   public $saveable = array(
     'sids',
+    'provisionTargetServers',
     'drupalAcctProvisionEvents',
     'ldapEntryProvisionEvents',
     'userConflictResolve',
@@ -81,7 +83,7 @@ class LdapUserConf {
 
     $this->detailedWatchdog = variable_get('ldap_help_watchdog_detail', 0);
 
-   // dpm('this after construct'); dpm($this->ldapUserSynchMappings['uiuc_ad']);
+    //dpm('this after construct'); dpm($this);
   }
 
   function load() {
@@ -128,6 +130,36 @@ class LdapUserConf {
    */
   function __destruct() { }
 
+
+  /**
+   * load user $account and $entity, given uid or $username
+   *
+   * @param string $user_id is username or uid
+   * @param enum $user_id_type is 'username' or 'uid'
+   *
+   * return array $account and $user_entity
+   */
+
+  function ldap_user_load_user_acct_and_entity($user_id, $user_id_type = 'username') {
+
+    if ($user_id_type == 'username') {
+      $account = user_load_by_name($user_id);
+    }
+    else {
+      $account = user_load($user_id);
+    }
+    if ($account) {
+      $user_entities = entity_load('user', array($account->uid));
+      $user_entity = $user_entities[$account->uid];
+    }
+    else {
+      $user_entity = NULL;
+    }
+
+    return array($account, $user_entity);
+
+
+  }
   /**
    * given configuration of synching, determine is a given synch should occur
    *
@@ -274,38 +306,93 @@ class LdapUserConf {
    * @param int $synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
    * @param array $ldap_user as prepopulated ldap entry.  usually not provided
    *
-   * @return ldap entry that is created or one of the following constants:
-   *   LDAP_USER_PROVISION_LDAP_ENTRY_EXISTS
-   *   LDAP_USER_PROVISION_LDAP_ENTRY_CREATE_FAILED
+   * @return array of form:
+   *   <sid> =>
+   *     array('status' => 'success', 'fail', or 'conflict'),
+   *     array('ldap_server' => ldap server object),
+   *     array('proposed' => proposed ldap entry),
+   *     array('existing' => existing ldap entry),
+   *
    */
 
   public function provisionLdapEntry($account = FALSE, $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, $ldap_user = NULL) {
     $watchdog_tokens = array();
+    $results = array();
+    foreach ($this->provisionTargetServers as $sid => $discard) {
+      $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
+      $proposed_ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $synch_context, 'create');
+      $params = array(
+        'account' => $account,
+        'synch_context' => $synch_context,
+        'op' => 'create_ldap_user_entry',
+        'module' => 'ldap_user',
+        'function' => 'provisionLdapEntry',
+      );
+      drupal_alter('ldap_entry', $proposed_ldap_entry, $params);
 
-    // @todo determine server to use for provisioning
-
-    $ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $synch_context, 'create');
-
-    /**
-     * @todo check if user exists, given proposed $ldap_entry
-    if (user exists ) {
-      return LDAP_USER_PROVISION_LDAP_ENTRY_EXISTS;
+      $existing_ldap_entry = $ldap_server->user_lookup($account->name);
+      if ($existing_ldap_entry) {
+        $results[$sid]['status'] = 'conflict';
+        $results[$sid]['existing'] = $existing_ldap_entry;
+        $results[$sid]['proposed'] = $proposed_ldap_entry;
+        $results[$sid]['ldap_server'] = $ldap_server;
+        continue;
+      }
+      $result = $ldap_server->createLdapUserEntry($ldap_entry);
+      if ($existing_ldap_entry) {
+        $results[$sid]['status'] = ($result) ? 'success' : 'fail';
+        $results[$sid]['proposed'] = $proposed_ldap_entry;
+        $results[$sid]['ldap_server'] = $ldap_server;
+      }
     }
-    */
 
-    // is a hook needed here, or is it in drupalUserToLdapEntry ?
-   // @todo implement: $ldap_server->createLdapEntry($ldap_entry);
+    foreach ($results as $sid => $result) {
 
-    /** @todo
-     * create ldap entry
-    if (entry created) {
-      return $entry;
+      $tokens = array(
+        '%dn' => $result['proposed']['dn'],
+        '%sid' => $result['ldap_server']->sid,
+        '%username' => $account->name,
+        '%uid' => $account->uid,
+      );
+
+      if ($result['status'] == 'success') {
+        watchdog('ldap_user', 'LDAP entry on server %sid created dn=%dn. username=%username, uid=%uid', array(), WATCHDOG_INFO);
+      }
+      elseif($result['status'] == 'conflict') {
+        watchdog('ldap_user', 'LDAP entry on server %sid not created because of existing ldap entry. username=%username, uid=%uid', array(), WATCHDOG_WARNING);
+      }
+      elseif($result['status'] == 'fail') {
+        watchdog('ldap_user', 'LDAP entry on server %sid not created because error. username=%username, uid=%uid', array(), WATCHDOG_ERROR);
+      }
+
+    }
+
+    return $results;
+  }
+
+
+  /**
+   * given a drupal account, delete ldap entry
+   *
+   * @param string $username drupal account name
+   * @param int synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
+   *
+   * @return TRUE or FALSE.  FALSE indicates failed or action not enabled in ldap user configuration
+   */
+  public function deleteCorrespondingLdapEntry($account) {
+    // determine server that is associated with user
+    list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name);
+    $dn = $user_entity->ldap_user_current_dn['und'][0]['value'];
+    $sid = $user_entity->ldap_user_puid_sid['und'][0]['value'];
+    $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
+
+    if (is_object($ldap_server) && $dn) {
+      $result = $ldap_server->delete($dn);
     }
     else {
-      return LDAP_USER_PROVISION_LDAP_ENTRY_CREATE_FAILED;
+      $result = FALSE;
     }
-    **/
-
+    return $result;
   }
 
 /** populate ldap entry array
@@ -401,8 +488,19 @@ class LdapUserConf {
     }
 
     $ldap_servers = ldap_servers_get_servers(NULL, 'enabled', TRUE);  // $ldap_user['sid']
-   // debug('ldap user line 302ish ldapuserconf.class'); debug($ldap_user);
+
+    // keep in mind here that different servers may provide different user properties, fields, etc.
+    // @todo: need to add this idea into simpletest coverage
     foreach ($ldap_servers as $sid => $ldap_server) {
+      $params = array(
+        'account' => $account,
+        'user_edit' => $user_edit,
+        'synch_context' => $synch_context,
+        'op' => 'create_drupal_user',
+        'module' => 'ldap_user',
+        'function' => 'provisionDrupalAccount',
+      );
+      drupal_alter('ldap_entry', $ldap_user, $params);
       $this->entryToUserEdit($ldap_user, $ldap_server, $user_edit, $synch_context, 'create');
     }
 

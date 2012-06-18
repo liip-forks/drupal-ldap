@@ -284,6 +284,40 @@ class LdapServer {
   }
 
   /**
+   * Perform an LDAP delete.
+   *
+   * @param string $dn
+   *
+   * @return boolean result per ldap_delete
+   */
+
+  public function delete($dn) {
+    if (!$this->connection) {
+      $this->connect();
+      $this->bind();
+    }
+    $result = @ldap_delete($this->connection, $dn);
+    return $result;
+  }
+
+  /**
+   * create ldap entry.
+   *
+   * @param array $ldap_entry
+   *
+   * @return boolean result
+   */
+
+  public function createLdapUserEntry($ldap_entry) {
+    if (!$this->connection) {
+      $this->connect();
+      $this->bind();
+    }
+    $result = @ldap_add($this->connection, $ldap_entry['dn'], $ldap_entry);
+    return $result;
+  }
+
+  /**
    * Perform an LDAP search.
    * @param string $basedn
    *   The search base. If NULL, we use $this->basedn. should not be esacaped
