@@ -299,7 +299,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
         }
       }
       $params[] = &$entries;
-      call_user_func_array('array_multisort', $params);
+
       // Some LDAP setups output a 'count' variable first in the array, which changes the array size;
       // temporarily remove it, sort the arrays, and then put it back.
       if (array_key_exists('count', $entries)) {
