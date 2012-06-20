@@ -1,3 +1,4 @@
+Issue #1543382 by larowlan.  Finished implementing synching of profile fields to drupal user.
 Issue #1634930 by boran.  Added hook alter to allow intervention in ldap authentication->allowUser method.
 Issue #1601222 by jbagley to fix call ldap provision function
 Issue #1559088 by NimbyDagda.  LDAP SSO "noisily" checks the remote users headers for mod_auth_kerb.

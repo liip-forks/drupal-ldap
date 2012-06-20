@@ -57,6 +57,49 @@ class LdapUserConf {
     'wsActions',
   );
 
+  /**
+   * Util to fetch mappings for a given server id
+   *
+   * @param string $sid
+   *   The server id
+   *
+   * @return array/bool
+   *   Array of mappings or FALSE if none found
+  */
+  private function getSynchMappings($sid) {
+    if (!empty($this->ldapUserSynchMappings[$sid]) &&
+        ($mappings = $this->ldapUserSynchMappings[$sid]) &&
+        is_array($mappings)) {
+      return $mappings;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Util to fetch attributes required for this user conf.
+   *
+   * @param int $synch_context
+   *   Any valid sync context constant.
+  */
+  public function getRequiredAttributes($synch_context) {
+    // Get the enabled servers.
+    $sids = array_filter(array_values($this->sids));
+    // Initialize our array.
+    $attributes = array() ;
+    // Loop over each server and fetch the mappings required.
+    foreach ($sids as $sid) {
+      if (($mappings = $this->getSynchMappings($sid))) {
+        foreach ($mappings as $detail) {
+          // Make sure the mapping is relevant to this context.
+          if (in_array($synch_context, $detail['contexts'])) {
+            // Add the attribute to our array.
+            $attributes[] = $detail['ldap_source'];
+          }
+        }
+      }
+    }
+    return $attributes;
+  }
 
   /**
    * @return boolean if any ldap servers are available for ldap user
@@ -532,7 +575,6 @@ class LdapUserConf {
   function entryToUserEdit($ldap_user, $ldap_server, &$edit, $synch_context, $op) {
     // need array of user fields and which direction and when they should be synched.
    // dpm('entryToUserEdit'); dpm($ldap_server);
-
     $synch_email = $this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER);
   //  debug("entryToUserEdit isSynched property.mail synch_context=$synch_context, issynched=$synch_email");
     if ($synch_email && !isset($edit['mail'])) {
@@ -546,7 +588,6 @@ class LdapUserConf {
     else {
       $edit['mail'] = NULL;
     }
-
   //  debug('edit'); debug($edit);
 
     if ($this->isSynched('property.name', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) && !isset($edit['name'])) {
@@ -591,12 +632,47 @@ class LdapUserConf {
       $edit['ldap_user_current_dn'][LANGUAGE_NONE][0]['value'] = $ldap_user['dn'];
     }
 
+//  dpm('post-entryToUserEdit edit'); dpm($edit);
+    // Get any additional mappings.
+    if (($mappings = $this->getSynchMappings($ldap_server->sid))) {
+      // Loop over the mappings.
+      foreach ($mappings as $field_key => $field_detail) {
+        // Make sure this mapping is relevant to the sync context.
+        if (in_array($synch_context, $field_detail['contexts']) &&
+          // And that we have a value for this attribute in the ldap entry.
+          ($value = $ldap_server->getAttributeValue($ldap_user, $field_detail['ldap_source']))) {
+          // Explode the value type (field/property) and name from the key.
+          list($value_type, $value_name) = explode('.', $field_key);
+          // Are we dealing with a field?
+          if ($value_type == 'field') {
+            // Field api field - first we get the field.
+            $field = field_info_field($value_name);
+            // Then the columns for the field in the schema.
+            $columns = array_keys($field['columns']);
+            // Then we convert the value into an array if it's scalar.
+            $values = $field['cardinality'] == 1 ? array($value) : (array) $value;
 
-        /**
-     * @todo
-     * -- loop through all mapped entries AND invoke hook to get them all (or both)
-     */
-
+            $items = array();
+            // Loop over the values and set them in our $items array.
+            foreach ($values as $delta => $value) {
+              if (isset($value)) {
+                // We set the first column value only, this is consistent with
+                // the Entity Api (@see entity_metadata_field_property_set).
+                $items[$delta][$columns[0]] = $value;
+              }
+            }
+            // Add them to our edited item.
+            $edit[$value_name][LANGUAGE_NONE] = $items;
+          }
+          elseif ($value_type == 'property') {
+            // Straight property.
+            $edit[$value_name] = $value;
+          }
+        }
+      }
+    }
+    // Allow other modules to have a say.
+    drupal_alter('ldap_user_edit_user', $edit, $ldap_user, $ldap_server, $synch_context);
   //  dpm('post-entryToUserEdit edit'); dpm($edit);
   }
 

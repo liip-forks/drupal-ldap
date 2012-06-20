@@ -40,3 +40,24 @@ function hook_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_serv
   */
 
 }
+
+
+
+/**
+ * Allow modules to alter the user object in the context of an ldap entry
+ * during synchronization
+ *
+ * @param array $edit
+ *   The edit array (see hook_user_insert). Make changes to this object as
+ *   required.
+ * @param array $ldap_user
+ *   Array, the ldap user object relating to the drupal user
+ * @param object $ldap_server
+ *   The LdapServer object from which the ldap entry was fetched
+ * @param int $synch_context
+ *   The synch context, refer to the constants in ldap_user for more info
+ *
+*/
+function hook_ldap_user_edit_user_alter(&$edit, &$ldap_user, $ldap_server, $synch_context) {
+  $edit['myfield'] = $ldap_server->getAttributeValue($ldap_user, 'myfield');
+}

@@ -121,9 +121,9 @@ function ldap_user_conf($type = NULL, $reset = FALSE) {
 
 
 /**
- * implements hook_ldap_attributes_needed_alter()
+ * implements hook_ldap_attributes_needed_alter().
  */
-function ldap_user_ldap_attributes_needed_alter(&$attributes, $sych_context, $ldap_server) {
+function ldap_user_ldap_attributes_needed_alter(&$attributes, $synch_context, $ldap_server) {
 
   //@todo need to load all ldap_user attributes used in synch mapping and add to list based on synch context.
  // dpm("ldap_user_ldap_attributes_needed_alter"); dpm($attributes); dpm($ldap_server); dpm($sych_context);
@@ -133,9 +133,13 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $sych_context, $ld
       $ldap_server = ldap_servers_get_servers($ldap_server, 'enabled', TRUE);
     }
 
-    switch ($sych_context) {
+    switch ($synch_context) {
       case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
       case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
+          // Load the user configuration.
+        $conf = ldap_user_conf();
+        // Add the attributes required by the user configuration.
+        $attributes += $conf->getRequiredAttributes($synch_context);
         $attributes[] = $ldap_server->user_attr;
         $attributes[] = $ldap_server->mail_attr;
         ldap_servers_extract_attributes_from_token($attributes,  $ldap_server->mail_template);
@@ -300,6 +304,21 @@ function ldap_user_user_login(&$edit, $account) {
 }
 
 /**
+ * Implements hook_user_presave().
+*/
+function ldap_user_user_presave(&$user_edit, $account, $category) {
+  $ldap_user_conf = ldap_user_conf();
+  $synch_context = $account->is_new ? LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER : LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER;
+  // Update the Drupal user object from the LDAP account.
+  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $synch_context, NULL, FALSE);
+  // Make sure we've not removed the email address.
+  if (empty($user_edit['mail']) && !empty($account->mail)) {
+    // Use the original value.
+    $user_edit['mail'] = $account->mail;
+  }
+}
+
+/**
  * Implements hook_user_insert().
  *
  */
@@ -312,7 +331,6 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
     $results = $ldap_user_conf->provisionLdapEntry($account, $synch_context);
   }
 
-  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $synch_context, NULL, FALSE);
   $ldap_user_conf->synchToLdapEntry($account, $user_edit, $synch_context, NULL, FALSE);
 }
 
@@ -330,7 +348,6 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
     $result = $ldap_user_conf->provisionLdapEntry($account, $synch_context);
   }
 
-  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $synch_context, NULL, FALSE);
   $ldap_user_conf->synchToLdapEntry($account, $user_edit, $synch_context, NULL, FALSE);
 }
 
