@@ -1,3 +1,4 @@
+Issue #1647950 by BobA.  Patch by BobA.  Ldap Profile issue.
 Issue #1650718 by alanrussian.  Patch by alanrussian.
 Issue #1661644 by thesaunterer.  Patch by by thesaunterer. Bad error message code throws warning.
 Issue #1623584 by alanrussian.  Patch by alanrussian.
