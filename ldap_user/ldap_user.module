@@ -126,7 +126,7 @@ function ldap_user_conf($type = NULL, $reset = FALSE) {
 function ldap_user_ldap_attributes_needed_alter(&$attributes, $synch_context, $ldap_server) {
 
   //@todo need to load all ldap_user attributes used in synch mapping and add to list based on synch context.
- // dpm("ldap_user_ldap_attributes_needed_alter"); dpm($attributes); dpm($ldap_server); dpm($sych_context);
+ // // temp_out dpm("ldap_user_ldap_attributes_needed_alter"); // temp_out dpm($attributes); // temp_out dpm($ldap_server); // temp_out dpm($sych_context);
   $attributes[] = 'dn';
   if ($ldap_server) { // puid attributes are server specific
     if (is_scalar($ldap_server)) {
@@ -152,36 +152,37 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $synch_context, $l
 
 
 /**
- * implements hook_ldap_user_targets_list_alter()
+ * implements hook_ldap_user_attrs_list_alter()
  *
- * !note.  should not set values configured; just list possible values  those are set in ldapUserConf class.
  */
-function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server, $provisionsDrupalAccountsFromLdap) {
+function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_server, $ldap_user_conf) {
 
+  $sid = $ldap_server->sid;
   $tokens = array(
     '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
   );
 
 
+
   // 1. Drupal user properties
   // 1.a make sure empty array are present so array + function works
   foreach (array('property.status','property.timezone','property.signature') as $i => $property_id) {
-    if (!isset($available_user_targets[$property_id]) || !is_array($available_user_targets[$property_id])) {
-      $available_user_targets[$property_id] = array();
+    if (!isset($available_user_attrs[$property_id]) || !is_array($available_user_attrs[$property_id])) {
+      $available_user_attrs[$property_id] = array();
     }
   }
   //@todo make these merges so they don't override saved values such as 'enabled'
-  $available_user_targets['property.status'] = $available_user_targets['property.status'] + array(
+  $available_user_attrs['property.status'] = $available_user_attrs['property.status'] + array(
     'name' => 'Property: Acount Status',
     'configurable_to_drupal' => 1,
     'configurable_to_ldap' => 1,
-    'notes' => '1=enabled, 0=blocked.',
+    'user_tokens' => '1=enabled, 0=blocked.',
     'enabled' => FALSE,
     'config_module' => 'ldap_user',
     'synch_module' => 'ldap_user',
   );
 
-  $available_user_targets['property.timezone'] = $available_user_targets['property.timezone'] + array(
+  $available_user_attrs['property.timezone'] = $available_user_attrs['property.timezone'] + array(
     'name' => 'Property: User Timezone',
     'configurable_to_drupal' => 1,
     'configurable_to_ldap' => 1,
@@ -190,7 +191,7 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
     'synch_module' => 'ldap_user',
   );
 
-  $available_user_targets['property.signature'] = $available_user_targets['property.signature'] + array(
+  $available_user_attrs['property.signature'] = $available_user_attrs['property.signature'] + array(
     'name' => 'Property: User Signature',
     'configurable_to_drupal' => 1,
     'configurable_to_ldap' => 1,
@@ -203,10 +204,10 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
   $user_fields = field_info_instances('user', 'user');
   foreach ($user_fields as $field_name => $field_instance) {
     $field_id = "field.$field_name";
-    if (!isset($available_user_targets[$field_id]) || !is_array($available_user_targets[$field_id])) {
-      $available_user_targets[$field_id] = array();
+    if (!isset($available_user_attrs[$field_id]) || !is_array($available_user_attrs[$field_id])) {
+      $available_user_attrs[$field_id] = array();
     }
-    $available_user_targets[$field_id] = $available_user_targets[$field_id] + array(
+    $available_user_attrs[$field_id] = $available_user_attrs[$field_id] + array(
       'name' => t('Field: '). $field_instance['label'],
       'configurable_to_drupal' => 1,
       'configurable_to_ldap' => 1,
@@ -216,25 +217,57 @@ function ldap_user_ldap_user_targets_list_alter(&$available_user_targets, &$ldap
     );
   }
 
-  $configurable_to_drupal = (int)($provisionsDrupalAccountsFromLdap) ? 0 : 1;
-  $available_user_targets['property.name'] = array(
+  $configurable_to_drupal = (int)($ldap_user_conf->provisionsDrupalAccountsFromLdap) ? 0 : 1;
+  $available_user_attrs['property.name'] = array(
     'configurable_to_drupal' => $configurable_to_drupal,
     'configurable_to_ldap' => 1,
     );
 
-  $available_user_targets['property.mail'] = array(
+  $available_user_attrs['property.mail'] = array(
     'configurable_to_drupal' => $configurable_to_drupal,
     'configurable_to_ldap' => 1,
     );
 
-  if (!$provisionsDrupalAccountsFromLdap) {
-    $available_user_targets['property.mail']['config_module'] = 'ldap_user';
-    $available_user_targets['property.name']['config_module'] = 'ldap_user';
+  if (!$ldap_user_conf->provisionsDrupalAccountsFromLdap) {
+    $available_user_attrs['property.mail']['config_module'] = 'ldap_user';
+    $available_user_attrs['property.name']['config_module'] = 'ldap_user';
   }
+
+  //this is where  need to be added to arrays
+  // temp_out dpm("sic=$sid, ldap_user_ldap_user_attrs_list_alter, ldapUserSynchMappings: "); // temp_out dpm($ldap_user_conf->ldapUserSynchMappings[$sid]);
+  if (isset($ldap_user_conf->ldapUserSynchMappings[$sid])) {
+    foreach ($ldap_user_conf->ldapUserSynchMappings[$sid] as $target_attribute => $mapping) {
+      //// temp_out dpm($target_attribute); // temp_out dpm($mapping);
+      if (isset($mapping['direction']) && $mapping['direction'] == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER && isset($mapping['user_attr'])) {
+        $key = $mapping['user_attr'];
+      }
+      elseif (isset($mapping['direction']) && $mapping['direction'] == LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY && isset($mapping['ldap_attr'])) {
+        $key = $mapping['ldap_attr'];
+      }
+      else {
+        continue;
+      }
+
+
+      foreach (array('sid','ldap_attr','user_attr','convert','direction','enabled','contexts') as $k) {
+        if (isset($mapping[$k])) {
+          $available_user_attrs[$key][$k] = $mapping[$k];
+        }
+        else {
+          $available_user_attrs[$key][$k] = NULL;
+        }
+        $available_user_attrs[$key]['config_module'] = 'ldap_user';
+        $available_user_attrs[$key]['synch_module'] = 'ldap_user';
+      }
+
+    }
+  }
+
+  // temp_out dpm('available_user_attrs'); // temp_out dpm($available_user_attrs);  // temp_out dpm("ldap_user_conf->ldapUserSynchMappings[sid]");  // temp_out dpm($ldap_user_conf->ldapUserSynchMappings[$sid]);
 
   //    'notes' => 'configure at '. $server_edit_path,
 
- // dpm('available_user_targets'. $configurable_to_drupal); dpm($available_user_targets);dpm("provisionsDrupalAccountsFromLdap=" . $provisionsDrupalAccountsFromLdap);
+ // // temp_out dpm('available_user_attrs'. $configurable_to_drupal); // temp_out dpm($available_user_attrs);// temp_out dpm("provisionsDrupalAccountsFromLdap=" . $provisionsDrupalAccountsFromLdap);
   // 3. profile2 fields
 
 

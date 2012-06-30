@@ -17,6 +17,10 @@ function ldap_server_module_load_include($type, $module, $name = NULL) {
 
 /**
   * Modify an LDAP Entry
+  *
+  * this has been depracated in favor or $ldap_server->modifyLdapEntry($dn, $attributes)
+  * which handles empty attributes better.
+  *
   */
 function ldap_user_modify($userdn, $attributes, $ldap_server) {
   $status = ldap_modify($ldap_server->connection, $userdn, $attributes);

@@ -303,18 +303,70 @@ class LdapServer {
   /**
    * create ldap entry.
    *
-   * @param array $ldap_entry
-   *
+   * @param array $ldap_entry should follow the structure of ldap_add functions
+   *   entry array: http://us.php.net/manual/en/function.ldap-add.php
+        $attributes["attribute1"] = "value";
+        $attributes["attribute2"][0] = "value1";
+        $attributes["attribute2"][1] = "value2";
    * @return boolean result
    */
 
-  public function createLdapUserEntry($ldap_entry) {
+  public function createLdapEntry($ldap_entry) {
     if (!$this->connection) {
       $this->connect();
       $this->bind();
     }
+    set_error_handler(array('LDAPInterface', 'void_error_handler'));
     $result = @ldap_add($this->connection, $ldap_entry['dn'], $ldap_entry);
+    restore_error_handler();
     return $result;
+  }
+
+
+  /**
+   * modify attributes of ldap entry
+   *
+   * @param string $dn DN of entry
+   * @param array $attributes should follow the structure of ldap_add functions
+   *   entry array: http://us.php.net/manual/en/function.ldap-add.php
+        $attributes["attribute1"] = "value";
+        $attributes["attribute2"][0] = "value1";
+        $attributes["attribute2"][1] = "value2";
+   */
+
+  function modifyLdapEntry($dn, $attributes) {
+    foreach ($attributes as $key => $cur_val) {
+      if ($cur_val == '') {
+        unset($attributes[$key]);
+        $old_value = $this->retrieveAttribute($dn, $key);
+        if (isset($old_value)) {
+          ldap_mod_del($this->connection, $dn, array($key => $old_value));
+        }
+      }
+      if (is_array ($cur_val)) {
+        foreach ($cur_val as $mv_key => $mv_cur_val) {
+          if ($mv_cur_val == '') {
+            unset($attributes[$key][$mv_key]);
+          }
+          else {
+            $attributes[$key][$mv_key] = $mv_cur_val;
+          }
+        }
+      }
+    }
+    $status =ldap_modify($this->connection, $dn, $attributes);
+
+    if (!$status) {
+      watchdog(
+      'ldap_servers',
+      'Error: ldapModify() failed to modify ldap entry w/ DN "!dn" with values: !values',
+      array('!dn' => $userdn, '!value' => var_export($attributes, TRUE)),
+      WATCHDOG_ERROR
+      );
+    }
+
+    return $status;
+
   }
 
   /**

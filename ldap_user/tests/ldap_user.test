@@ -180,7 +180,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
       'field_values' => array('johnny', 'jonathon'),
       'field_mapping' => array(
         'sid' => 'activediretory',
-        'ldap_source' => 'givenname',
+        'ldap_attr' => 'givenname',
         'convert' => 0,
         'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
         'notes' => 'notes',
@@ -197,7 +197,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
       'property_values' => array('jkeats@hotmail.com', 'jkeats@yahoo.com'),
       'property_mapping' => array(
         'sid' => 'activediretory',
-        'ldap_source' => 'mail',
+        'ldap_attr' => 'mail',
         'convert' => 0,
         'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
         'notes' => 'notes',
@@ -368,19 +368,19 @@ class LdapUserUITests extends LdapUserTestCasev2 {
       'wsUserIps' => join("\n", $wsUserIps),
       'wsKey' => $wsKey,
 
-      'sm__ldap_source__7' => 'sn',
+      'sm__ldap_attr__7' => 'sn',
       'sm__convert__7' => FALSE,
       'sm__direction__7' => 1,
-      'sm__user_target__7' => 'field.field_lname',
+      'sm__user_attr__7' => 'field.field_lname',
       'sm__1__7' => TRUE,
       'sm__2__7' => TRUE,
       'sm__3__7' => TRUE,
       'sm__4__7' => TRUE,
 
-      'sm__ldap_source__8' => 'givenname',
+      'sm__ldap_attr__8' => 'givenname',
       'sm__convert__8' => FALSE,
       'sm__direction__8' => 1,
-      'sm__user_target__8' => 'field.field_fname',
+      'sm__user_attr__8' => 'field.field_fname',
       'sm__1__8' => TRUE,
       'sm__2__8' => TRUE,
       'sm__3__8' => TRUE,
@@ -404,7 +404,7 @@ class LdapUserUITests extends LdapUserTestCasev2 {
 
     $field_lname_set_correctly = ($ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_lname']['enabled'] == TRUE &&
       $ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_lname']['direction'] == 1 &&
-      $ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_lname']['ldap_source'] == 'sn');
+      $ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_lname']['ldap_attr'] == 'sn');
 
     $this->assertTrue($field_lname_set_correctly, t('Synch mapping for field.field_lname  field set correctly'), $this->ldapTestId);
     if (!$field_lname_set_correctly) {
@@ -413,7 +413,7 @@ class LdapUserUITests extends LdapUserTestCasev2 {
 
     $field_fname_set_correctly = ($ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_fname']['enabled'] == TRUE &&
       $ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_fname']['direction'] == 1 &&
-      $ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_fname']['ldap_source'] == 'givenname');
+      $ldap_user_conf->ldapUserSynchMappings[$sid]['field.field_fname']['ldap_attr'] == 'givenname');
 
     $this->assertTrue($field_fname_set_correctly, t('Synch mapping for field.field_lname  field set correctly'), $this->ldapTestId);
      if (!$field_fname_set_correctly) {

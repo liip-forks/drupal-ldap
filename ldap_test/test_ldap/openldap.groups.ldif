@@ -1,0 +1,69 @@
+version: 1
+
+dn: ou=groups,o=openldap
+objectClass: organizationalUnit
+objectClass: top
+ou: groups
+
+dn: cn=gryffindor students,ou=groups,o=openldap
+objectClass: groupOfNames
+objectClass: top
+cn: gryffindor students
+member: cn=hpotter,ou=people,o=openldap
+member: cn=rweasley,ou=people,o=openldap
+member: cn=hgranger,ou=people,o=openldap
+member: cn=fweasley,ou=people,o=openldap
+member: cn=gweasley,ou=people,o=openldap
+
+dn: cn=slytherin students,ou=groups,o=openldap
+objectClass: groupOfNames
+objectClass: top
+cn: slytherin students
+member: cn=dmalfoy,ou=people,o=openldap
+member: cn=ggoyle,ou=people,o=openldap
+
+dn: cn=students,ou=groups,o=openldap
+objectClass: groupOfNames
+objectClass: top
+cn: students
+member: cn=gryffindor students,ou=groups,o=openldap
+member: cn=slytherin students,ou=groups,o=openldap
+
+dn: cn=gryffindor alumni,ou=groups,o=openldap
+objectClass: groupOfNames
+objectClass: top
+cn: gryffindor alumni
+member: cn=adumbledore,ou=people,o=openldap
+member: cn=mmcgonagal,ou=people,o=openldap
+
+dn: cn=slytherin alumni,ou=groups,o=openldap
+objectClass: groupOfNames
+objectClass: top
+cn: slytherin alumni
+member: cn=ssnape,ou=people,o=openldap
+member: cn=triddle,ou=people,o=openldap
+
+dn: cn=alumni,ou=groups,o=openldap
+objectClass: groupOfNames
+objectClass: top
+cn: alumni
+member: cn=gryffindor alumni,ou=groups,o=openldap
+member: cn=slytherin alumni,ou=groups,o=openldap
+
+dn: cn=faculty,ou=groups,o=openldap
+objectClass: groupOfNames
+objectClass: top
+cn: faculty
+member: cn=adumbledore,ou=people,o=openldap
+member: cn=ssnape,ou=people,o=openldap
+member: cn=spomana,ou=people,o=openldap
+member: cn=mmcgonagal,ou=people,o=openldap
+
+dn: cn=all,ou=groups,o=openldap
+objectClass: groupOfNames
+objectClass: top
+cn: all
+member: cn=alumni,ou=groups,o=openldap
+member: cn=faculty,ou=groups,o=openldap
+member: cn=students,ou=groups,o=openldap
+

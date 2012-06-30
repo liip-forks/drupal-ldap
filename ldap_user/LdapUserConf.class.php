@@ -16,7 +16,7 @@ class LdapUserConf {
   public $userConflictResolve = LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
   public $acctCreation = LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT;
   public $inDatabase = FALSE;
-  public $synchMapping = NULL; // array of field synching directions for each operation
+  public $synchMapping = NULL; // array of field synching directions for each operation.  should include ldapUserSynchMappings
   public $ldapUserSynchMappings = NULL;  // synch mappings configured in ldap user module
   public $detailedWatchdog = FALSE;
   public $provisionsDrupalAccountsFromLdap = FALSE;
@@ -93,7 +93,7 @@ class LdapUserConf {
           // Make sure the mapping is relevant to this context.
           if (in_array($synch_context, $detail['contexts'])) {
             // Add the attribute to our array.
-            $attributes[] = $detail['ldap_source'];
+            $attributes[] = $detail['ldap_attr'];
           }
         }
       }
@@ -119,10 +119,9 @@ class LdapUserConf {
       LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER => t('On User Logon'),
       LDAP_USER_SYNCH_CONTEXT_CRON => t('Via Cron Batch'),
     );
-   // dpm('this before setSynchMapping'); dpm($this->synchMapping); dpm($this->ldapUserSynchMappings);
+   // dpm('this before setSynchMapping'); dpm($this->ldapUserSynchMappings);
     $this->setSynchMapping(TRUE);
-  //  debug('this->provisionsDrupalAccountsFromLdap'); debug($this->provisionsDrupalAccountsFromLdap );
-  //  debug('this after setSynchMapping'); debug($this->synchMapping); debug($this->ldapUserSynchMappings);
+   // dpm('this after setSynchMapping'); dpm($this->synchMapping); dpm($this->ldapUserSynchMappings);
 
     $this->detailedWatchdog = variable_get('ldap_help_watchdog_detail', 0);
 
@@ -244,14 +243,15 @@ class LdapUserConf {
       $this->synchMapping = $synch_mapping_cache->data;
     }
     else {
-     // $this->synchMapping = ldap_user_get_user_targets();
+     // $this->synchMapping = ldap_user_get_user_attrs();
       $ldap_servers = ldap_servers_get_servers(NULL, 'enabled', FALSE);
-      $available_user_targets = array();
+      $available_user_attrs = array();
       foreach ($ldap_servers as $sid => $ldap_server) {
-        $available_user_targets[$sid] = array();
-        drupal_alter('ldap_user_targets_list', $available_user_targets[$sid], $ldap_server, $this->provisionsDrupalAccountsFromLdap);
+        $available_user_attrs[$sid] = array();
+        drupal_alter('ldap_user_attrs_list', $available_user_attrs[$sid], $ldap_server, $this);
       }
-      $this->synchMapping = $available_user_targets;
+      $this->synchMapping = $available_user_attrs;
+    //  dpm('available_user_attrs');dpm($available_user_attrs);
       cache_set('ldap_user_synch_mapping',  $this->synchMapping);
     }
   }
@@ -381,10 +381,13 @@ class LdapUserConf {
         $results[$sid]['ldap_server'] = $ldap_server;
         continue;
       }
-      $result = $ldap_server->createLdapUserEntry($ldap_entry);
-      if ($existing_ldap_entry) {
+
+      $dn = $proposed_ldap_entry['dn'];
+      $ldap_entry_created = $ldap_server->createLdapEntry($dn, $proposed_ldap_entry);
+      if ($ldap_entry_created) {
         $results[$sid]['status'] = ($result) ? 'success' : 'fail';
         $results[$sid]['proposed'] = $proposed_ldap_entry;
+        $results[$sid]['created'] = $ldap_entry_created;
         $results[$sid]['ldap_server'] = $ldap_server;
       }
     }
@@ -451,8 +454,17 @@ class LdapUserConf {
 
   function drupalUserToLdapEntry($account, $ldap_server, $ldap_user_entry = array(), $synch_context, $op) {
 
-    // @todo: special code to derive cn, dn and any other attributes that are not in standard mapping/synching code.
+    if (!isset($ldap_user_entry['cn'])) {
+     //  need to have token mapping of drupal user attributes to ldap user values
+      // and store in configuration in ldap user conf or ldap server once per server
 
+    }
+
+    // @todo: special code to derive cn, dn and any other attributes that are not in standard mapping/synching code.
+    if (!isset($ldap_user_entry['dn'])) {
+
+
+    }
      /**
      * @todo
      * -- loop through all mapped fields
@@ -640,7 +652,7 @@ class LdapUserConf {
         // Make sure this mapping is relevant to the sync context.
         if (in_array($synch_context, $field_detail['contexts']) &&
           // And that we have a value for this attribute in the ldap entry.
-          ($value = $ldap_server->getAttributeValue($ldap_user, $field_detail['ldap_source']))) {
+          ($value = $ldap_server->getAttributeValue($ldap_user, $field_detail['ldap_attr']))) {
           // Explode the value type (field/property) and name from the key.
           list($value_type, $value_name) = explode('.', $field_key);
           // Are we dealing with a field?

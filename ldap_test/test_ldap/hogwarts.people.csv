@@ -1,0 +1,13 @@
+Last Name,First Name,House,Department,Faculty,Staff,Student,GPA,Probation
+Potter,Harry,Gryffindor,,N,N,Y,3.8,N
+Granger,Hermione,Gryffindor,,N,N,Y,4,N
+Weasley,Ron,Gryffindor,,N,N,Y,3.6,N
+Weasley,Fred,Gryffindor,,N,N,Y,3,N
+Weasley,George,Gryffindor,,N,N,Y,2.7,N
+Malfoy,Draco,Slytherin,,N,N,Y,3.7,Y
+Riddle,Tom,Slytherin,,N,N,Y,3.6,N
+Goyle,Gregory,Slytherin,,N,N,Y,3.3,Y
+Snape,Severus ,Slytherin,Defence Against the Dark Arts professor ,Y,Y,N,,
+Dumbledore,Albus,,Head Master Of Hogwarts,Y,Y,N,,
+McGonagall,Minerva,Gryffindor,Tranfiguration/ Deputy Head Mistress,Y,Y,N,,
+Pomona,Sprout,Hufflepuff,Herbology,Y,Y,N,,

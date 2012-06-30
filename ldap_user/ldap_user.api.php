@@ -1,7 +1,7 @@
 <?php
 
 /**
- * hook_ldap_user_targets_alter().
+ * hook_ldap_user_attrs_alter().
  *
  * alter list of available drupal user targets (fields, properties, etc.)
  *   for ldap_user provisioning mapping form (admin/config/people/ldap/user)
@@ -13,7 +13,7 @@
  *   'configurable' =>
  *   'configurable_to_drupal'  0 | 1, is this configurable?
  *   'configurable_to_ldap' =>  0 | 1, is this configurable?
- *   'notes' => <user notes>
+ *   'user_tokens' => <user_tokens>
  *   'convert' => 1 | 0 convert from binary to string for storage and comparison purposes
  *   'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER or LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY leave empty if configurable
  *   'config_module' => module providing synching configuration.
@@ -30,13 +30,13 @@
  * 'field_name' machine name of property, field, profile2 field, or data associative array key
  */
 
-function hook_ldap_user_targets_list_alter(&$available_user_targets, &$ldap_server, $provisionsDrupalAccountsFromLdap) {
+function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_server, $provisionsDrupalAccountsFromLdap) {
 
- /** search for _ldap_user_targets_list_alter for good examples
+ /** search for _ldap_user_attrs_list_alter for good examples
   * the general trick to implementing this hook is:
   *   make sure to specify config and synch module
-  *   if its configurable by ldap_user module, don't specify convert, notes, direction, or contexts.  these will be set by UI and stored values
-  *   be sure to merge with existing values as ldap_user configured values will already exist in $available_user_targets
+  *   if its configurable by ldap_user module, don't specify convert, user_tokens, direction, or contexts.  these will be set by UI and stored values
+  *   be sure to merge with existing values as ldap_user configured values will already exist in $available_user_attrs
   */
 
 }
