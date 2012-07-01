@@ -23,6 +23,7 @@ define('LDAP_SERVERS_DRUPAL_HELP_URL', 'http://drupal.org/node/997082');
 define('LDAP_SERVERS_TOKEN_PRE', '[');
 define('LDAP_SERVERS_TOKEN_POST', ']');
 define('LDAP_SERVERS_TOKEN_DEL', ':');
+define('LDAP_SERVERS_TOKEN_MODIFIER_DEL', ';');
 
 define('LDAP_SERVERS_ENC_TYPE_MD5', 1);
 define('LDAP_SERVERS_ENC_TYPE_CRYPT', 2);
@@ -140,6 +141,7 @@ define('LDAP_CLIENT_LOOP', 0x60);
 define('LDAP_REFERRAL_LIMIT_EXCEEDED', 0x61);
 
 require_once('ldap_servers.functions.inc');
+require_once('ldap_servers.tokens.inc');
 
 /**
  * Advertise the current ldap api version
@@ -286,13 +288,13 @@ function ldap_servers_theme() {
         $attributes[] = $ldap_server->user_attr;
         $attributes[] = $ldap_server->mail_attr;
         $attributes[] = $ldap_server->unique_persistent_attr;
-        ldap_servers_extract_attributes_from_token($attributes,  $ldap_server->user_attr);
-        ldap_servers_extract_attributes_from_token($attributes,  $ldap_server->mail_template);
+        ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_attr);
+        ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);
         break;
 
       case LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
         $attributes[] = $ldap_server->user_attr;
-        ldap_servers_extract_attributes_from_token($attributes,  $ldap_server->user_dn_expression);
+        ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_dn_expression);
         break;
 
       }
@@ -340,7 +342,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
       'name' => t('Field: sid providing PUID'),
       'configurable_to_drupal' => 0,
       'configurable_to_ldap' => 0,
-      'source' => t('set to "!sid"', $tokens),
+      'source' => t('!sid', $tokens),
       'notes' => 'not configurable',
       'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
@@ -354,7 +356,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
       'name' => t('Field: PUID', $tokens),
       'configurable_to_drupal' => 0,
       'configurable_to_ldap' => 0,
-      'source' => $ldap_server->unique_persistent_attr,
+      'source' => '[' . $ldap_server->unique_persistent_attr . ']',
       'notes' => 'configure at '. $server_edit_path,
       'convert' => $ldap_server->unique_persistent_attr_binary,
       'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
@@ -370,7 +372,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
       'name' => t('Field: PUID Attribute', $tokens),
       'configurable_to_drupal' => 0,
       'configurable_to_ldap' => 0,
-      'source' => t('set to', $tokens) . ' "' . $ldap_server->unique_persistent_attr . '"',
+      'source' =>  $ldap_server->unique_persistent_attr ,
       'notes' => 'configure at '. $server_edit_path,
       'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
@@ -384,7 +386,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
       'name' => t('Field: Most Recent DN', $tokens),
       'configurable_to_drupal' => 0,
       'configurable_to_ldap' => 0,
-      'source' => 'dn',
+      'source' => '[dn]',
       'notes' => 'not configurable',
       'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
@@ -396,7 +398,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
 
   $available_user_attrs['property.name'] =  array(
     'name' => 'Property: Username',
-    'source' => $ldap_server->user_attr,
+    'source' => '[' . $ldap_server->user_attr . ']',
     'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     'enabled' => TRUE,
     'contexts' => $all_contexts,
@@ -406,7 +408,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
 
   $available_user_attrs['property.mail'] =  array(
     'name' => 'Property: Email',
-    'source' => ($ldap_server->mail_template) ? $ldap_server->mail_template : $ldap_server->mail_attr,
+    'source' => ($ldap_server->mail_template) ? $ldap_server->mail_template : '[' . $ldap_server->mail_attr . ']',
     'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     'enabled' => TRUE,
     'contexts' => $all_contexts,

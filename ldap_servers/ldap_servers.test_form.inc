@@ -179,7 +179,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
     ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
     $results = array_merge($results, $more_results);
-    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? ldap_server_tokenize_entry($ldap_user['attr'], 'all') : array();
+    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? ldap_servers_token_tokenize_entry($ldap_user['attr'], 'all') : array();
     $_SESSION['ldap_server_test_data'] = array(
       'username' => $values['testing_drupal_username'],
       'Tokens Available' => $tokens,

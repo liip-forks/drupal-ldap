@@ -943,39 +943,14 @@ class LdapServer {
     }
     elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
       ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
-      return ldap_server_token_replace($ldap_entry, $this->mail_template);
+      return ldap_servers_token_replace($ldap_entry, $this->mail_template);
     }
     else {
       return FALSE;
     }
   }
 
-
-  /**
-   * Util function to fetch an attribute value from an ldap entry
-   *
-   * @param array $ldap_entry
-   *   LDAP User entry array
-   * @param string $attribute
-   *   The attribute to fetch
-   * @param int $delta
-   *   The delta of the attribute to fetch.
-   *
-   * @return mixed
-   *   The attribute value or FALSE if not found
-  */
-  public function getAttributeValue($ldap_entry, $attribute, $delta = 0) {
-    if (!empty($ldap_entry['attr'][$attribute][$delta]) &&
-      // Get the value.
-      ($value = $ldap_entry['attr'][$attribute][$delta])) {
-      // Note we still return array values - caller can handle extraction.
-      return $value;
-    }
-    return FALSE;
-  }
-
-
-   public function derivePuidFromLdapEntry($user_ldap_entry) {
+  public function derivePuidFromLdapEntry($user_ldap_entry) {
     // dpm('derivePuidFromLdapEntry'); dpm($this->unique_persistent_attr); dpm($user_ldap_entry);
     if ($this->unique_persistent_attr
         && isset($user_ldap_entry[$this->unique_persistent_attr][0])

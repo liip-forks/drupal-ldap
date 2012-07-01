@@ -30,7 +30,7 @@ function hook_ldap_attributes_needed_alter(&$attributes, $op, $server) {
       case 'user_update':
         $attributes[] = $ldap_server->user_attr;
         $attributes[] = $ldap_server->mail_attr;
-        ldap_servers_extract_attributes_from_token($attributes,  $ldap_server_obj->mail_template);
+        ldap_servers_token_extract_attributes($attributes,  $ldap_server_obj->mail_template);
         $attributes[] = $ldap_server->unique_persistent_attr;
       break;
 
@@ -56,7 +56,7 @@ function hook_ldap_attributes_needed_alter(&$attributes, $op, $server) {
 
 function hook_ldap_entry_alter(&$ldap_entry, $params) {
 
-  
+
 }
 
 /**

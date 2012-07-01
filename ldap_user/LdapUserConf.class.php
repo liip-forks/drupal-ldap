@@ -93,7 +93,9 @@ class LdapUserConf {
           // Make sure the mapping is relevant to this context.
           if (in_array($synch_context, $detail['contexts'])) {
             // Add the attribute to our array.
-            $attributes[] = $detail['ldap_attr'];
+            if (ldap_servers_token_is_token($detail['ldap_attr'])) {
+              $attributes[] = ldap_servers_token_extract_attribute_name($detail['ldap_attr']);
+            }
           }
         }
       }
@@ -650,36 +652,45 @@ class LdapUserConf {
       // Loop over the mappings.
       foreach ($mappings as $field_key => $field_detail) {
         // Make sure this mapping is relevant to the sync context.
-        if (in_array($synch_context, $field_detail['contexts']) &&
+        if (!in_array($synch_context, $field_detail['contexts'])) {
+          continue;
+        }
+        if (!ldap_servers_token_is_token($field_detail['ldap_attr'])) {
+          $value = $field_detail['ldap_attr']; // literal value
+        }
+        else {
           // And that we have a value for this attribute in the ldap entry.
-          ($value = $ldap_server->getAttributeValue($ldap_user, $field_detail['ldap_attr']))) {
-          // Explode the value type (field/property) and name from the key.
-          list($value_type, $value_name) = explode('.', $field_key);
-          // Are we dealing with a field?
-          if ($value_type == 'field') {
-            // Field api field - first we get the field.
-            $field = field_info_field($value_name);
-            // Then the columns for the field in the schema.
-            $columns = array_keys($field['columns']);
-            // Then we convert the value into an array if it's scalar.
-            $values = $field['cardinality'] == 1 ? array($value) : (array) $value;
+          $value = ldap_servers_token_replace($ldap_user, $field_detail['ldap_attr']);
+          if ($value === FALSE) {
+            continue; // if attribute value doesn't exist, do not evaluate.
+          }
+        }
+        // Explode the value type (field/property) and name from the key.
+        list($value_type, $value_name) = explode('.', $field_key);
+        // Are we dealing with a field?
+        if ($value_type == 'field') {
+          // Field api field - first we get the field.
+          $field = field_info_field($value_name);
+          // Then the columns for the field in the schema.
+          $columns = array_keys($field['columns']);
+          // Then we convert the value into an array if it's scalar.
+          $values = $field['cardinality'] == 1 ? array($value) : (array) $value;
 
-            $items = array();
-            // Loop over the values and set them in our $items array.
-            foreach ($values as $delta => $value) {
-              if (isset($value)) {
-                // We set the first column value only, this is consistent with
-                // the Entity Api (@see entity_metadata_field_property_set).
-                $items[$delta][$columns[0]] = $value;
-              }
+          $items = array();
+          // Loop over the values and set them in our $items array.
+          foreach ($values as $delta => $value) {
+            if (isset($value)) {
+              // We set the first column value only, this is consistent with
+              // the Entity Api (@see entity_metadata_field_property_set).
+              $items[$delta][$columns[0]] = $value;
             }
-            // Add them to our edited item.
-            $edit[$value_name][LANGUAGE_NONE] = $items;
           }
-          elseif ($value_type == 'property') {
-            // Straight property.
-            $edit[$value_name] = $value;
-          }
+          // Add them to our edited item.
+          $edit[$value_name][LANGUAGE_NONE] = $items;
+        }
+        elseif ($value_type == 'property') {
+          // Straight property.
+          $edit[$value_name] = $value;
         }
       }
     }

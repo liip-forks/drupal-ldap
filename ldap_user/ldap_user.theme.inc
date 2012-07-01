@@ -43,10 +43,10 @@ function theme_ldap_user_conf_form($variables) {
 
   $second_header = array(
     array('data' => t(''), 'header' => TRUE),
-    array('data' => t('LDAP attribute or tokens (see http://drupal.org/node/1245736)'), 'header' => TRUE),
+    array('data' => t('LDAP attribute tokens (see http://drupal.org/node/1245736)'), 'header' => TRUE),
     array('data' => t('Convert From Binary'), 'header' => TRUE),
     array('data' => t(''), 'header' => TRUE),
-    array('data' => t('Available user fields, properties, and profile2 fields'), 'header' => TRUE),
+    array('data' => t(''), 'header' => TRUE),
   );
 
   foreach ($ldap_user_conf_admin->synchTypes as $col_id => $col_name) {

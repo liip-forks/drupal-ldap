@@ -448,21 +448,11 @@ the top of this form.
 /**
  * $values input names in form:
 
-    sm__configurable__N
-    sm__remove__N
-    sm__ldap_attr__N
-    sm__convert__N
-    sm__direction__N
-    sm__user_attr__N
-    sm__user_tokens__N
-    sm__1__N
-    sm__2__N
-    sm__3__N
-    sm__4__N
+    sm__configurable__N, sm__remove__N, sm__ldap_attr__N, sm__convert__N, sm__direction__N, sm__user_attr__N, sm__user_tokens__N
+    sm__1__N, sm__2__N, sm__3__N, sm__4__N
     ...where N is the row in the configuration form
 
    where additiond data is in $form['#storage']['synch_mapping_fields'][N]
-
     $form['#storage']['synch_mapping_fields'][N] = array(
       'sid' => $sid,
       'action' => 'add',

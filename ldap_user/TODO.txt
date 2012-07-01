@@ -5,6 +5,11 @@
 
 
 
+Mapping and mapping UI Tasks:
+- add validation
+- add some CSS to make sections clearer and generally improve usability
+- allow for feeds tamper plugins be configured and act on mappings
+- add some js to disable disallowed directions for selected user attributes
 
 
 Permanent Unique Identifier Tasks:
