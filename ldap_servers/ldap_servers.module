@@ -3,7 +3,7 @@
 
 function ldap_servers_form_user_admin_permissions_alter(&$form, &$form_state) {
 
- dpm(array($form, &$form_state));
+ // dpm(array($form, &$form_state));
 
 }
 
@@ -305,7 +305,7 @@ function ldap_servers_theme() {
  * implements hook_ldap_user_attrs_list_alter().
  */
 
-function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_server, $provisionsDrupalAccountsFromLdap) {
+function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_server, $ldap_user_conf) {
 
   $tokens = array(
     '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
@@ -322,7 +322,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
   $server_edit_path = 'admin/config/people/ldap/servers/edit/' . $ldap_server->sid;
 
   //dpm('ldap_user_conf->provisionsDrupalAccountsFromLdap'); dpm($ldap_user_conf->provisionsDrupalAccountsFromLdap);
-  if ($provisionsDrupalAccountsFromLdap) {
+  if ($ldap_user_conf->provisionsDrupalAccountsFromLdap) {
 
     foreach (array(
       'field.ldap_user_puid_sid',
@@ -400,7 +400,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
     'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     'enabled' => TRUE,
     'contexts' => $all_contexts,
-    'config_module' => ($provisionsDrupalAccountsFromLdap) ? 'ldap_server' : 'ldap_user',
+    'config_module' => ($ldap_user_conf->provisionsDrupalAccountsFromLdap) ? 'ldap_server' : 'ldap_user',
     'synch_module' => 'ldap_user',
     ) + $available_user_attrs['property.name'];
 
@@ -410,7 +410,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
     'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     'enabled' => TRUE,
     'contexts' => $all_contexts,
-    'config_module' => ($provisionsDrupalAccountsFromLdap) ? 'ldap_server' : 'ldap_user',
+    'config_module' => ($ldap_user_conf->provisionsDrupalAccountsFromLdap) ? 'ldap_server' : 'ldap_user',
     'synch_module' => 'ldap_user',
     ) + $available_user_attrs['property.mail'];
 

@@ -30,7 +30,7 @@
  * 'field_name' machine name of property, field, profile2 field, or data associative array key
  */
 
-function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_server, $provisionsDrupalAccountsFromLdap) {
+function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_server, $ldap_user_conf) {
 
  /** search for _ldap_user_attrs_list_alter for good examples
   * the general trick to implementing this hook is:

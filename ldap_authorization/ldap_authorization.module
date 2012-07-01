@@ -299,3 +299,28 @@ function ldap_authorization_get_consumer_admin_object($consumer_type, $new = NUL
   $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_object, $new);
   return $consumer_conf_admin;
 }
+
+
+/**
+ * implements hook_ldap_user_attrs_list_alter().
+ *
+ */
+
+function ldap_authorization_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_server, $provisionsDrupalAccountsFromLdap) {
+
+  // this is a case where a field is being denied synching configuration because its not meant to be used by other modules
+  $available_user_attrs['field.ldap_authorizations'] = array(
+    'name' => 'Field: LDAP Authorizations',
+    'source' => 'LDAP Authorization modules',
+    'configurable_to_drupal' => 0,
+    'configurable_to_ldap' => 0,
+    'notes' => t('configure at:') . 'admin/config/people/ldap/authorization',
+    'direction' => NULL,
+    'enabled' => FALSE,
+    'config_module' => 'ldap_authorization',
+    'contexts' => array(),
+    'synch_module' => 'ldap_authorization',
+    'exclude_from_mapping_ui' => TRUE,
+  );
+
+}

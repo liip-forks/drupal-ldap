@@ -34,9 +34,9 @@ function theme_ldap_user_conf_form($variables) {
 
   $header = array(
     array('data' => t('Remove'), 'rowspan' => 2),
-    array('data' => t('LDAP Source or Target'), 'rowspan' => 2, 'colspan' => 2),
+    array('data' => t('LDAP Attribute'), 'rowspan' => 2, 'colspan' => 2),
     array('data' => t('Direction'), 'rowspan' => 2),
-    array('data' => t('User Source or Target'), 'rowspan' => 2),
+    array('data' => t('User Attribute'), 'rowspan' => 2),
     array('data' => t('When Should Data Be Synchronized?'), 'colspan' => count($ldap_user_conf_admin->synchTypes), 'rowspan' => 1),
     array('data' => t('User Tokens'), 'rowspan' => 1),
   );

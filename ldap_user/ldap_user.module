@@ -207,6 +207,8 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
     if (!isset($available_user_attrs[$field_id]) || !is_array($available_user_attrs[$field_id])) {
       $available_user_attrs[$field_id] = array();
     }
+   // dpm($field_id);
+   // dpm($available_user_attrs[$field_id]);
     $available_user_attrs[$field_id] = $available_user_attrs[$field_id] + array(
       'name' => t('Field: '). $field_instance['label'],
       'configurable_to_drupal' => 1,
@@ -215,6 +217,9 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
       'config_module' => 'ldap_user',
       'synch_module' => 'ldap_user',
     );
+  //  dpm($available_user_attrs[$field_id]);
+
+  //  dpm($field_id); dpm($available_user_attrs[$field_id]);
   }
 
   $configurable_to_drupal = (int)($ldap_user_conf->provisionsDrupalAccountsFromLdap) ? 0 : 1;
