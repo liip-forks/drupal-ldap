@@ -127,7 +127,7 @@ class LdapUserConf {
 
     $this->detailedWatchdog = variable_get('ldap_help_watchdog_detail', 0);
 
-    dpm('this after construct'); dpm($this);
+    //dpm('this after construct'); dpm($this);
   }
 
   function load() {
