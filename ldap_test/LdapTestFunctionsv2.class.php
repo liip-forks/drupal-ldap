@@ -30,7 +30,7 @@ class LdapTestFunctionsv2  {
 
   function getLdifData($ldap_file_name) {
     require_once('Net/LDAP2/LDIF.php');
-    $ldif = new Net_LDAP2_LDIF(drupal_get_path('module','ldap_test') .'/ldif/' . $ldap_file_name, 'r');
+    $ldif = new Net_LDAP2_LDIF(drupal_get_path('module','ldap_test') .'/test_ldap/' . $ldap_file_name, 'r');
     $entries = array();
      do {
         $entry = $ldif->read_entry();
@@ -92,7 +92,7 @@ class LdapTestFunctionsv2  {
 
 
   function configureLdapServers($sids, $feetures = FALSE, $feature_name = NULL) {
-   // debug('configureLdapServers data'); debug($sids); debug($this->data);
+    //debug('configureLdapServers data'); debug($sids); debug($this->data);
     foreach ($sids as $i => $sid) {
       $current_sids[$sid] = $sid;
       $this->data['ldap_servers'][$sid]['entries'] = $this->getLdifData($sid . '.ldif');

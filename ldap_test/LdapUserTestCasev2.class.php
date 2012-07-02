@@ -73,6 +73,7 @@ class LdapUserTestCasev2 extends DrupalWebTestCase {
       $ldap_query_conf_id = NULL
     ) {
 
+
     $this->testFunctions->configureLdapServers($sids);
     if ($ldap_user_conf_id) {
       $this->testFunctions->configureLdapUser($ldap_user_conf_id, $sids);

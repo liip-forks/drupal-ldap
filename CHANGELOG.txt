@@ -1,3 +1,4 @@
+Mix of work on drupal to ldap provisioning, fixing simpletests, and reworking mapping UI.
 Issue #1543382 by larowlan.  Finished implementing synching of profile fields to drupal user.
 Issue #1634930 by boran.  Added hook alter to allow intervention in ldap authentication->allowUser method.
 Issue #1601222 by jbagley to fix call ldap provision function

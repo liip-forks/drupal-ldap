@@ -1,0 +1,164 @@
+
+
+dn: dc=activedirectory,dc=ldap,dc=pixotech,dc=com
+dc: activedirectory
+description: Pixotech.com testing ldap in support of Drupal LDAP module.
+objectClass: dcObject
+objectClass: organization
+o: Active Directory structured LDAP for testing Drupal LDAP module.
+
+
+dn: ou=people, dc=activedirectory,dc=ldap,dc=pixotech,dc=com
+ou: people
+description: All people in organisation
+objectclass: organizationalunit
+
+
+dn: CN=fflinstone,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+sn: Flintstone
+l: bedrock
+title: Mr.
+givenName: Fred
+cn: fflinstone
+distinguishedName: CN=fred_flintstone,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+whenCreated: 20051214194925.0Z
+whenChanged: 20060508145255.0Z
+displayName: Fred Flintstone
+memberOf: CN=flintstones,OU=Families,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+memberOf: CN=The Flintstones,OU=Cartoons,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+department: boulder harversting
+name: fflinstone
+objectGUID: 0105000000000005150000002760837c3c14e17f5f52937ab2070000
+objectSid: 0105000000000007150000002760837d3c14e17f5f52937ab2070000
+accountExpires: 9223372036854775807
+sAMAccountName: fflinstone
+sAMAccountType: 805306368
+userPrincipalName: fred_flintstone@pixotech.com
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+mail: fred_flintstone@pixotech.co
+pixotechcomregistryuniqueid: e2eb4d760f81e80df1524cff71f720a0
+
+
+dn: CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+sn: Keats
+l: London
+title: Mr.
+givenName: John
+cn: jkeats
+distinguishedName: CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+whenCreated: 20051217194925.0Z
+whenChanged: 20060509145255.0Z
+displayName: John Keats
+memberOf: OU=Romantics,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+memberOf: OU=Romantics Poetry,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+department: English Literature
+name: jkeats
+objectGUID: 0105000000000005150000002760837c3c14e17f5g52937ab2070000
+objectSid: 0105000000000007150000002760837d3c14e17f5c52937ab2070000
+accountExpires: 9223372036854775807
+sAMAccountName: jkeats
+sAMAccountType: 805306368
+userPrincipalName: jkeats@pixotech.com
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+mail: boygen@hotmail.com
+pixotechcomregistryuniqueid: e2eb4d760f81e80df1524cff71f720a0
+
+
+dn: CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+sn: Keats
+l: London
+title: Mr.
+givenName: John
+cn: jkeats
+distinguishedName: CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+whenCreated: 20051217194925.0Z
+whenChanged: 20060509145255.0Z
+displayName: John Keats
+memberOf: OU=Romantics,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+memberOf: OU=Romantics Poetry,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+department: English Literature
+name: jkeats
+objectGUID: 0105000000000005150000002760837c3c14e17f5g52937ab2070000
+objectSid: 0105000000000007150000002760837d3c14e17f5c52937ab2070000
+accountExpires: 9223372036854775807
+sAMAccountName: jkeats
+sAMAccountType: 805306368
+userPrincipalName: jkeats@pixotech.com
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+mail: boygen@hotmail.com
+pixotechcomregistryuniqueid: e2eb4d760f81e89df1524cff71f720a0
+
+
+dn: CN=pshelly,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+sn: Shelly
+l: London
+title: Mr.
+givenName: John
+cn: pshelly
+distinguishedName: CN=pshelly,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+whenCreated: 20051217194925.0Z
+whenChanged: 20060509145255.0Z
+displayName: John Keats
+memberOf: OU=Romantics,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+memberOf: OU=Romantics Non Fiction,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+department: English Literature
+name: pshelly
+objectGUID: 0105000000000005150000002760837c3b14e17f5g52937ab2070000
+objectSid: 0105000000000007150000002760837d3f14e17f5c52937ab2070000
+accountExpires: 9223372036854775807
+sAMAccountName: pshelly
+sAMAccountType: 805306368
+userPrincipalName: pshelly@pixotech.com
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+mail: poetandknowit@hotmail.com
+pixotechcomregistryuniqueid: e2eb4d760f81e87df1524cff71f720a0
+
+
+dn: CN=hwapole,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+sn: Walpole
+l: London
+title: Sir
+givenName: Horace
+cn: hwapole
+distinguishedName: CN=hwapole,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+whenCreated: 20051217194925.0Z
+whenChanged: 20060509145255.0Z
+displayName: Sir Horace Walpole
+memberOf: OU=Romantics,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+memberOf: OU=Romantics Fiction,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+department: English Literature
+name: hwapole
+objectGUID: 0105000000000005150000006760837c7b14e17f5g52937ab2070000
+objectSid: 0105000000000007180000002760837d3f19e17f5c52937ab2070000
+accountExpires: 9223372036854775807
+sAMAccountName: hwapole
+sAMAccountType: 805306368
+userPrincipalName: hwapole@pixotech.com
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+mail: walpole@gmail.com
+pixotechcomregistryuniqueid: e2eb4d760f81e83df1524cff71f760a0
+
+
+dn: CN=wwordsworth,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+sn: Wordsworth
+l: Hawks Head
+title: Sir
+givenName: William
+cn: wwordsworth
+distinguishedName: CN=wwordsworth,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+whenCreated: 20051217194925.0Z
+whenChanged: 20060509145255.0Z
+displayName: Billy Wordsworth
+memberOf: OU=Romantics,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+memberOf: OU=Romantics Poetry,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+department: English Literature
+name: wwordsworth
+objectGUID: 0105000000000005158000006760837c7b14e17f5g52937ab2070000
+objectSid: 0105000000000007186000002760837d3f19e17f5c52937ab2070000
+accountExpires: 9223372036854775807
+sAMAccountName: wwordsworth
+sAMAccountType: 805306368
+userPrincipalName: wwordsworth@pixotech.com
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
+mail: wwordsworth@gmail.com
+pixotechcomregistryuniqueid: e2eb4d760f81e83df1524cff71f760a0

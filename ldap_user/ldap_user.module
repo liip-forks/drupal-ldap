@@ -345,14 +345,16 @@ function ldap_user_user_login(&$edit, $account) {
  * Implements hook_user_presave().
 */
 function ldap_user_user_presave(&$user_edit, $account, $category) {
-  $ldap_user_conf = ldap_user_conf();
-  $synch_context = $account->is_new ? LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER : LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER;
-  // Update the Drupal user object from the LDAP account.
-  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $synch_context, NULL, FALSE);
-  // Make sure we've not removed the email address.
-  if (empty($user_edit['mail']) && !empty($account->mail)) {
-    // Use the original value.
-    $user_edit['mail'] = $account->mail;
+  if ($category != 'ldap_user') { // avoid recursion
+    $ldap_user_conf = ldap_user_conf();
+    $synch_context = $account->is_new ? LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER : LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER;
+    // Update the Drupal user object from the LDAP account.
+    $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $synch_context, NULL, FALSE);
+    // Make sure we've not removed the email address.
+    if (empty($user_edit['mail']) && !empty($account->mail)) {
+      // Use the original value.
+      $user_edit['mail'] = $account->mail;
+    }
   }
 }
 
@@ -361,15 +363,16 @@ function ldap_user_user_presave(&$user_edit, $account, $category) {
  *
  */
 function ldap_user_user_insert(&$user_edit, $account, $category) {
+  if ($category != 'ldap_user') { // avoid recursion
+    $ldap_user_conf = ldap_user_conf();
+    $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER;
 
-  $ldap_user_conf = ldap_user_conf();
-  $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER;
+    if ($account->status && in_array(LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE, $ldap_user_conf->ldapEntryProvisionEvents)) {
+      $results = $ldap_user_conf->provisionLdapEntry($account, $synch_context);
+    }
 
-  if ($account->status && in_array(LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE, $ldap_user_conf->ldapEntryProvisionEvents)) {
-    $results = $ldap_user_conf->provisionLdapEntry($account, $synch_context);
+    $ldap_user_conf->synchToLdapEntry($account, $user_edit, $synch_context, NULL, FALSE);
   }
-
-  $ldap_user_conf->synchToLdapEntry($account, $user_edit, $synch_context, NULL, FALSE);
 }
 
 
@@ -377,16 +380,17 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
  * Implements hook_user_update().
  */
 function ldap_user_user_update(&$user_edit, $account, $category) {
+  if ($category != 'ldap_user') { // avoid recursion
+    $ldap_user_conf = ldap_user_conf();
+    $synch_context = LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE;
 
-  $ldap_user_conf = ldap_user_conf();
-  $synch_context = LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE;
+    $status_enabled =  ($account->original->status != $account->status && $account->status == 1);
+    if ($status_enabled && in_array(LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE, $ldap_user_conf->ldapEntryProvisionEvents)) {
+      $result = $ldap_user_conf->provisionLdapEntry($account, $synch_context);
+    }
 
-  $status_enabled =  ($account->original->status != $account->status && $account->status == 1);
-  if ($status_enabled && in_array(LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE, $ldap_user_conf->ldapEntryProvisionEvents)) {
-    $result = $ldap_user_conf->provisionLdapEntry($account, $synch_context);
+    $ldap_user_conf->synchToLdapEntry($account, $user_edit, $synch_context, NULL, FALSE);
   }
-
-  $ldap_user_conf->synchToLdapEntry($account, $user_edit, $synch_context, NULL, FALSE);
 }
 
 
@@ -513,3 +517,93 @@ function ldap_user_all_contexts() {
 
 
 }
+
+
+/**
+ * @param array $account
+ * @param string $text
+ * @return string text with tokens replaced
+ */
+
+function ldap_user_token_replace($account, $token) {
+  $desired_tokens = ldap_servers_token_tokens_needed_for_template($token);
+  $tokens = ldap_user_token_tokenize_entry($account, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
+  $result = str_replace(array_keys($tokens), array_values($tokens), $token);
+  return $result;
+}
+
+
+
+/**
+ * Turn an ldap entry into a token array suitable for the t() function
+ * @param drupal user object $account
+ * @param array $token_keys as list of token/value pairs to generate
+ * @param string prefix token prefix such as !,%,[
+ * @param string suffix token suffix such as ]
+ *
+ * @return token array suitable for t() functions of with lowercase keys as exemplified below
+ */
+function ldap_user_token_tokenize_entry($account, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
+
+  $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
+  $tokens = array();
+  list($discard, $user_entity) = ldap_user_load_user_acct_and_entity($account->uid, 'uid');
+
+  $token_keys = ($token_keys == 'all') ? $this->synchMapping[$ldap_server->sid] : $token_keys;
+  foreach ($token_keys as $token_key) {
+    // target id is of form field.lname, property.mail, field.dept:0, etc.
+    list($type, $attr) = explode('.', $token_key);
+
+    $token = $pre . $target_id . $post;
+    switch ($type) {
+
+      case 'field':
+        if (isset( $user_entity->{$attr}['und'][0]['value'])) {
+          $tokens[$token] = $user_entity->{$attr}['und'][0]['value'];
+        }
+      break;
+
+
+      case 'property':
+        if (property_exists($account, $attr)) {
+          $tokens[$token] = $account->{$attr};
+        }
+       break;
+
+      // @todo: 3. tokenize profile 2
+    }
+
+  }
+
+  return $tokens;
+}
+
+  /**
+   * load user $account and $entity, given uid or $username
+   *
+   * @param string $user_id is username or uid
+   * @param enum $user_id_type is 'username' or 'uid'
+   *
+   * return array $account and $user_entity
+   */
+
+  function ldap_user_load_user_acct_and_entity($user_id, $user_id_type = 'username') {
+
+    if ($user_id_type == 'username') {
+      $account = user_load_by_name($user_id);
+    }
+    else {
+      $account = user_load($user_id);
+    }
+    if ($account) {
+      $user_entities = entity_load('user', array($account->uid));
+      $user_entity = $user_entities[$account->uid];
+    }
+    else {
+      $user_entity = NULL;
+    }
+
+    return array($account, $user_entity);
+
+
+  }

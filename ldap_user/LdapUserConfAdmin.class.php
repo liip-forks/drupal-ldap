@@ -543,7 +543,7 @@ the top of this form.
       return;
     }
 
-    $target_options = array('0' => 'Select Target');
+    $user_attr_options = array('0' => 'Select Target');
   //  // temp_out dpm('addServerMappingFields:synchMapping['. $ldap_server->sid . ']'); // temp_out dpm($this->synchMapping[$ldap_server->sid]);
     foreach ($this->synchMapping[$ldap_server->sid] as $target_id => $mapping) {
       if (isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
@@ -554,10 +554,10 @@ the top of this form.
         ||
         (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap'])
         ){
-        $target_options[$target_id] = substr($mapping['name'], 0, 25);
+        $user_attr_options[$target_id] = substr($mapping['name'], 0, 25);
       }
     }
-     $target_options['user_tokens'] = '-- user tokens --';
+     $user_attr_options['user_tokens'] = '-- user tokens --';
 
     $this->synchFormRow = 0;
 
@@ -570,7 +570,7 @@ the top of this form.
       }
       if ( !$this->isMappingConfigurable($mapping, 'ldap_user')) {
       //  dpm("non configurable addSynchFormRow - $target_id");  dpm($mapping);
-        $this->addSynchFormRow($form, 'nonconfigurable', $mapping, $target_options, $ldap_server);
+        $this->addSynchFormRow($form, 'nonconfigurable', $mapping, $user_attr_options, $ldap_server);
       }
       else {
       //  dpm("configurable addSynchFormRow - $target_id");  dpm($mapping);
@@ -587,7 +587,7 @@ the top of this form.
      //   dpm("target_attr_name=$target_attr_name");  dpm($mapping);
         if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($this->synchMapping[$ldap_server->sid][$target_attr_name], 'ldap_user')) {
      //   dpm("addSynchFormRow - $target_id");  dpm($mapping);
-          $this->addSynchFormRow($form, 'update', $mapping, $target_options, $ldap_server);
+          $this->addSynchFormRow($form, 'update', $mapping, $user_attr_options, $ldap_server);
         }
       }
       // temp_out dpm('form'); // temp_out dpm($form);
@@ -596,7 +596,7 @@ the top of this form.
 
     // 3. leave 4 rows for adding more mappings
     for ($i=0; $i<4; $i++) {
-      $this->addSynchFormRow($form, 'add', NULL, $target_options, $ldap_server);
+      $this->addSynchFormRow($form, 'add', NULL, $user_attr_options, $ldap_server);
     }
 
   }
@@ -625,13 +625,13 @@ the top of this form.
    * @param drupal form array $form
    * @param string $action is 'add', 'update', or 'nonconfigurable'
    * @param array $mapping is current setting for updates or nonconfigurable items
-   * @param array $target_options of drupal user target options
+   * @param array $user_attr_options of drupal user target options
    * @param string $user_attr is current drupal user field/property for updates or nonconfigurable items
    * @param object $ldap_server
    *
    * @return by reference to $form
    */
-  private function addSynchFormRow(&$form, $action, $mapping, $target_options, $ldap_server) {
+  private function addSynchFormRow(&$form, $action, $mapping, $user_attr_options, $ldap_server) {
 
     $row = $this->synchFormRow;
     $form['#storage']['synch_mapping_fields'][$row] = array(
@@ -728,7 +728,7 @@ the top of this form.
         '#col' => 4,
         '#type' => 'select',
         '#default_value' => isset($mapping['user_attr']) ? $mapping['user_attr'] : '',
-        '#options' => $target_options,
+        '#options' => $user_attr_options,
       );
     }
 

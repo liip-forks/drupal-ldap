@@ -9,43 +9,6 @@
 
 module_load_include('php', 'ldap_test', 'LdapUserTestCasev2.class');
 
-class LdapUserFunctionalTests extends LdapUserTestCasev2 {
-  public static function getInfo() {
-    return array(
-      'name' => 'LDAP User Tests: Basic Functional Tests v2',
-      'description' => 'Test ldap user.  Event handling functions such as logon, user update, etc.',
-      'group' => 'LDAP User'
-    );
-  }
-
-/**
- * test variations on drupal user account creation/provisioning and updating
- * these are not api calls, they are actual user create, user edit, user logon etc
- * events being tested.  api calls are tested in testFunctionsAndInstall()
- */
-function testUserProvision() {
-
- // $this->ldapTestId = 'UserProvision';
- // $this->serversData = 'activedirectory.ldif';
- // $this->prepTestData();
-
-
-  // create user with user_save with no ldap data specified and make sure its derived
-
-  // create user with user_save with all ldap data specified and make sure it overrides defaults
-
-  // test for provisioning of confict in puid and correct errors thrown
-
-  // test for provisioning with conflict username
-
-  // test for provisioning with conflict in ldap, but not drupal users or puid
-
-  // test webservices for provisioning
-
-
-
-}
-}
 
 
 class LdapUserUnitTests extends LdapUserTestCasev2 {
@@ -91,6 +54,8 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
 
     $this->ldapTestId = $this->module_name . ': cron test';
     $this->assertTrue(drupal_cron_run(), t('Cron can run with ldap user enabled.'), $this->ldapTestId);
+
+
 
     $sids = array('activedirectory');
     $this->prepTestData($sids, 'default', 'default');
@@ -153,8 +118,9 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     $user_edit = NULL;
     $this->testFunctions->setFakeServerUserAttribute('activedirectory', 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com', 'mail', 'boygen@yahoo.com', 0);
     $user = $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, NULL, TRUE);
-
+   // debug('user after synchToDrupalAccount'); debug($user);
     $jkeats = user_load_by_name('jkeats');
+    $jkeats_uid = $jkeats->uid;
     $this->assertTrue($jkeats->mail == 'boygen@yahoo.com', t('synchToDrupalAccount worked for property (mail) for jkeats'), $this->ldapTestId);
 
 
@@ -164,10 +130,12 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
 
     // delete and recreate test account to make sure account is in correct state
     $ldap_user_conf->deleteDrupalAccount('jkeats', LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER);
+    $this->assertFalse(user_load($jkeats_uid, TRUE), t('deleteDrupalAccount deleted jkeats successfully'), $this->ldapTestId);
     $account = NULL;
     $user_edit = array('name' => 'jkeats');
     $jkeats = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
 
+   // debug('new jkeats'); debug($jkeats);
     /**
      * test that $ldap_user_conf->synchToDrupalAccount() works for various contexts.
      * make sure changing when a given field/property is flagged for a particular context, everything works
@@ -181,16 +149,15 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
       'field_mapping' => array(
         'sid' => 'activediretory',
         'ldap_attr' => '[givenname]',
+        'user_attr' => '[field.field_lname]',
         'convert' => 0,
         'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
-        'notes' => 'notes',
-        'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER),
+        'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER => 1),
         'name' => 'Field: Last Name',
-        'configurable_to_drupal' => 1,
-        'configurable_to_ldap' => 1,
         'enabled' => TRUE,
         'config_module' => 'ldap_user',
         'synch_module' => 'ldap_user',
+        'user_tokens' => '',
       ),
 
       'property' => 'property.mail',
@@ -200,14 +167,12 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
         'ldap_attr' => '[mail]',
         'convert' => 0,
         'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
-        'notes' => 'notes',
-        'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER),
+        'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER => 1),
         'name' => 'Property: Mail',
-        'configurable_to_drupal' => 0,
-        'configurable_to_ldap' => 1,
         'enabled' => TRUE,
         'config_module' => 'ldap_servers',
         'synch_module' => 'ldap_user',
+        'user_tokens' => '',
       ),
     );
 
@@ -227,8 +192,8 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
 
 
         // Test 1.  Clear out user and settings for mapping
-        unset($ldap_user_conf->synchMapping[$sid][$test['property']]);
-        unset($ldap_user_conf->synchMapping[$sid][$test['field']]);
+        unset($ldap_user_conf->ldapUserSynchMappings[$sid][$test['property']]);
+        unset($ldap_user_conf->ldapUserSynchMappings[$sid][$test['field']]);
         $ldap_user_conf->save();
         $jkeats = user_load_by_name('jkeats');
         if (is_object($jkeats)) {
@@ -240,8 +205,8 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
         $jkeats = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
 
         // Test 1.A set mappings for field and property being tested
-        $ldap_user_conf->synchMapping[$sid][$test['property']] = $test['property_mapping'];
-        $ldap_user_conf->synchMapping[$sid][$test['field']] = $test['field_mapping'];
+        $ldap_user_conf->ldapUserSynchMappings[$sid][$test['property']] = $test['property_mapping'];
+        $ldap_user_conf->ldapUserSynchMappings[$sid][$test['field']] = $test['field_mapping'];
         $ldap_user_conf->save();
 
 
@@ -269,12 +234,12 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
 
         // TEST 1.D: check that field and property were altered correctly given context
         $jkeats = user_load_by_name('jkeats');
-      //  debug('after user synch'); debug($jkeats);
+        debug('after user synch'); debug($jkeats);
 
         // Test 2:  Make sure synch does not occur when no context given
         // disable synching for property and field in given context
-        $ldap_user_conf->synchMapping[$sid][$test['property']]['contexts'] = array();
-        $ldap_user_conf->synchMapping[$sid][$test['field']]['contexts'] = array();
+        $ldap_user_conf->ldapUserSynchMappings[$sid][$test['property']]['contexts'] = array();
+        $ldap_user_conf->ldapUserSynchMappings[$sid][$test['field']]['contexts'] = array();
         $ldap_user_conf->save();
 
         // change fake ldap values for field and property
@@ -295,7 +260,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
         $user_edit = array('name' => 'jkeats');
         $jkeats = user_load_by_name('jkeats');
         $ldap_user_conf->synchToDrupalAccount($jkeats, $user_edit, $context, NULL, TRUE);
-      //  debug('after user false synch'); debug($jkeats);
+        debug('after user false synch'); debug($jkeats);
         // TEST #2: check that field and property were not altered
 
       }
@@ -510,5 +475,73 @@ define('LDAP_USER_PROV_ON_ALL_USER_CREATION', 3);
 
   }
 
+
+}
+
+class LdapUserFunctionalTests extends LdapUserTestCasev2 {
+  public static function getInfo() {
+    return array(
+      'name' => 'LDAP User Tests: Basic Functional Tests v2',
+      'description' => 'Test ldap user.  Event handling functions such as logon, user update, etc.',
+      'group' => 'LDAP User'
+    );
+  }
+
+/**
+ * test variations on drupal user account creation/provisioning and updating
+ * these are not api calls, they are actual user create, user edit, user logon etc
+ * events being tested.  api calls are tested in testFunctionsAndInstall()
+ */
+function x_testDrupalUserProvision() {
+
+  $this->ldapTestId = 'UserProvision';
+  $this->serversData = 'activedirectory.ldif';
+ // $this->prepTestData();
+
+
+  // create user with user_save with no ldap data specified and make sure its derived
+
+  // create user with user_save with all ldap data specified and make sure it overrides defaults
+
+  // test for provisioning of confict in puid and correct errors thrown
+
+  // test for provisioning with conflict username
+
+  // test for provisioning with conflict in ldap, but not drupal users or puid
+
+  // test webservices for provisioning
+
+
+
+}
+
+
+/**
+ * test variations on ldap entry account creation/provisioning and updating
+ * these are not api calls, they are actual drupal user create, user edit, user logon etc
+ * event handlers being tested.  api calls are tested in testFunctionsAndInstall()
+ */
+function x_testLdapUserProvision() {
+
+  $this->ldapTestId = 'LdapeEntryProvision';
+  $this->serversData = 'activedirectory.ldif';
+ // $this->prepTestData();
+
+
+  // create user with user_save with no ldap data specified and make sure its derived
+
+  // create user with user_save with all ldap data specified and make sure it overrides defaults
+
+  // test for provisioning of confict in puid and correct errors thrown
+
+  // test for provisioning with conflict username
+
+  // test for provisioning with conflict in ldap, but not drupal users or puid
+
+  // test webservices for provisioning
+
+
+
+}
 
 }
