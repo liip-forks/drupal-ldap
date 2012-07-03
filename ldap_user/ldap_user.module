@@ -525,9 +525,9 @@ function ldap_user_all_contexts() {
  * @return string text with tokens replaced
  */
 
-function ldap_user_token_replace($account, $token) {
+function ldap_user_token_replace($token, $account, $entity = NULL) {
   $desired_tokens = ldap_servers_token_tokens_needed_for_template($token);
-  $tokens = ldap_user_token_tokenize_entry($account, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
+  $tokens = ldap_user_token_tokenize_entry($account, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST, $entity);
   $result = str_replace(array_keys($tokens), array_values($tokens), $token);
   return $result;
 }
@@ -543,23 +543,27 @@ function ldap_user_token_replace($account, $token) {
  *
  * @return token array suitable for t() functions of with lowercase keys as exemplified below
  */
-function ldap_user_token_tokenize_entry($account, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
+function ldap_user_token_tokenize_entry($account, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST, $user_entity = NULL) {
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
-  list($discard, $user_entity) = ldap_user_load_user_acct_and_entity($account->uid, 'uid');
+  if (!$user_entity) {
+    list($discard, $user_entity) = ldap_user_load_user_acct_and_entity($account->uid, 'uid');
+  }
 
   $token_keys = ($token_keys == 'all') ? $this->synchMapping[$ldap_server->sid] : $token_keys;
   foreach ($token_keys as $token_key) {
     // target id is of form field.lname, property.mail, field.dept:0, etc.
-    list($type, $attr) = explode('.', $token_key);
-
-    $token = $pre . $target_id . $post;
+    list($type, $attr_ordinal) = explode('.', $token_key);
+    $parts = explode(':', $attr_ordinal);
+    $attr = $parts[0];
+    $ordinal = (count($parts) > 1) ? $parts[1] : 0;
+    $token = $pre . $token_key . $post;
     switch ($type) {
 
       case 'field':
-        if (isset( $user_entity->{$attr}['und'][0]['value'])) {
-          $tokens[$token] = $user_entity->{$attr}['und'][0]['value'];
+        if (isset( $user_entity->{$attr}['und'][$ordinal]['value'])) {
+          $tokens[$token] = $user_entity->{$attr}['und'][$ordinal]['value'];
         }
       break;
 

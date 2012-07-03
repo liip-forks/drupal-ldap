@@ -22,6 +22,9 @@ function ldap_servers_token_is_token($text) {
 function ldap_servers_token_replace($ldap_entry, $text) {
   $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);
   $tokens = ldap_servers_token_tokenize_entry($ldap_entry, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
+  foreach ($tokens as $key => $value) {
+    $tokens[drupal_strtolower($key)] = $value;
+  }
   $result = str_replace(array_keys($tokens), array_values($tokens), $text);
   return $result;
 }
@@ -105,6 +108,11 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
+  
+  // add lowercase keyed entries to ldap array
+  foreach ($ldap_entry as $key => $values) {
+    $ldap_entry[drupal_strtolower($key)] = $values;
+  }
 
   // 1. tokenize dn
   $dn_parts = ldap_explode_dn($ldap_entry['dn'], 0); // escapes attribute values, need to be unescaped later.
@@ -160,32 +168,37 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
     }
   }
   else {
+
     foreach ($token_keys as $token_key) {
+      // $token_key = 'dn', 'mail', 'mail:0', 'mail:last', 'dept:1', etc.
       $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token_key);
-      $last_key = $parts[count($parts) -1];
-      if ($last_key == 'last') {
-        $attr_name = join(LDAP_SERVERS_TOKEN_DEL, array_pop($parts));
-        $count =  $ldap_entry[$attr_name]['count'];
-        $value = $ldap_entry[$attr_name][$count-1];
-      }
-      elseif (is_numeric($last_key) || $last_key == '0') {
-        $discard = array_pop($parts);
-        $attr_name = join(LDAP_SERVERS_TOKEN_DEL, $parts);
-        $value = $ldap_entry[$attr_name][(int)$last_key];
-      }
-      elseif (empty($ldap_entry[$token_key])) {
+      $attr_name = $parts[0];
+      $ordinal_key = isset($parts[1]) ? (int)$parts[1] : 0;
+      
+      if ($attr_name == 'dn' || !isset($ldap_entry[$attr_name])) { // don't use empty() since a 0, "", etc value may be a desired value
           continue;
       }
       else {
-        $value = $ldap_entry[$token_key][0];
+        $count = $ldap_entry[$attr_name]['count'];
+        if ($ordinal_key == 'last') {
+          $value = $ldap_entry[$attr_name][$count - 1];
+        }
+        elseif (is_numeric($ordinal_key) || $ordinal_key == '0') {
+          $value = $ldap_entry[$attr_name][$ordinal_key];
+        }
+        else { 
+          continue;  // don't add token if case not covered
+        }
       }
-      $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($value);
+      $tokens[$pre . $token_key . $post] = check_plain($value);
+      if ($token_key != drupal_strtolower($token_key)) {
+        $tokens[$pre . drupal_strtolower($token_key) . $post] = check_plain($value);
+      }
     }
   }
 
   // include the dn.  it will not be handled correctly by previous loops
   $tokens[$pre . 'dn' . $post] = check_plain($ldap_entry['dn']);
-
   return $tokens;
 }
 

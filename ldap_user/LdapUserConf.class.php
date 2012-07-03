@@ -453,7 +453,7 @@ class LdapUserConf {
       else {
         $token = $this->synchMapping[$ldap_server->sid]['dn']['user_attr'];
       }
-      $dn = ldap_user_token_replace($account, $token);
+      $dn = ldap_user_token_replace($token, $account);
       if (!$dn) {
         watchdog('ldap_user', 'Failed to provision drupal account %drupal_username because dn could not be derived.', $watchdog_tokens, WATCHDOG_ALERT);
         return FALSE;

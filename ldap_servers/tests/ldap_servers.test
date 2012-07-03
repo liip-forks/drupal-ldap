@@ -70,6 +70,34 @@ class LdapServersTestCase extends DrupalWebTestCase {
     $var_created = $this->assertFalse(variable_get('ldap_servers_encryption', FALSE), 'ldap_servers_encryption variable removed', $group);
     $var_created = $this->assertFalse(variable_get('ldap_servers_encrypt_key', FALSE), 'ldap_servers_encrypt_key variable removed', $group);
 
+
+    // test tokens, see http://drupal.org/node/1245736
+    $ldap_entry = array(
+      'dn' => 'cn=jdoe,ou=campus accounts,ou=toledo campus,dc=ad,dc=myuniveristy,dc=edu',
+      'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
+      'sAMAccountName' => array( 0 => 'jdoe', 'count' => 1),
+      'dept' => array( 0 => 'physics', 1 => 'chemistry', 'count' => 2),
+      
+    );
+    
+    $this->ldapTestId = 'LdapServer.tokens';
+    
+    $dn = ldap_servers_token_replace($ldap_entry, '[dn]');
+    $this->assertTrue( $dn == $ldap_entry['dn'], t('[dn] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
+    
+    $dept1 = ldap_servers_token_replace($ldap_entry, '[dept:1]');
+    $this->assertTrue( $dept1 == 'chemistry', t('[dept:1] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
+    
+    $sAMAccountName = ldap_servers_token_replace($ldap_entry, '[samaccountname:0]');
+    $this->assertTrue($sAMAccountName == $ldap_entry['sAMAccountName'][0], t('[samaccountname:0] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
+ 
+    $sAMAccountName2 = ldap_servers_token_replace($ldap_entry, '[samaccountname]');
+    $this->assertTrue($sAMAccountName2 == $ldap_entry['sAMAccountName'][0], t('[samaccountname] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
+
+    $sAMAccountName3 = ldap_servers_token_replace($ldap_entry, '[sAMAccountName]');
+    $this->assertTrue($sAMAccountName2 == $ldap_entry['sAMAccountName'][0], t('[sAMAccountName] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
+  
+  
     module_enable($modules, TRUE);
   }
 

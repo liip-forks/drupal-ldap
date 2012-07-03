@@ -56,7 +56,21 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     $this->assertTrue(drupal_cron_run(), t('Cron can run with ldap user enabled.'), $this->ldapTestId);
 
 
+    // test user token functions
+    $entity = new stdClass();
+    $entity->lname['und'][0]['value'] = 'doe';
+    $entity->dept['und'][0]['value'] = 'physics';
+    $entity->dept['und'][1]['value'] = 'chemistry';
+    $account = new stdClass();
+    $account->mail = 'jdoe@college.edu';
+    $mail = ldap_user_token_replace('[property.mail]', $account, $entity);
+    $this->assertTrue($mail == $account->mail, t('[property.mail] token worked on ldap_user_token_replace().'), $this->ldapTestId);
+    $dept1 = ldap_user_token_replace('[field.dept:1]', $account, $entity);
+    $this->assertTrue($dept1 == $entity->dept['und'][1]['value'], t('[field.dept:1] token worked on ldap_user_token_replace().'), $this->ldapTestId);
+    $lname = ldap_user_token_replace('[field.lname]', $account, $entity);
+    $this->assertTrue($lname ==  $entity->lname['und'][0]['value'], t('[field.lname] token worked on ldap_user_token_replace().'), $this->ldapTestId);
 
+  
     $sids = array('activedirectory');
     $this->prepTestData($sids, 'default', 'default');
 
@@ -73,11 +87,13 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     $user_edit = array('name' => 'jkeats');
     $this->ldapTestId = $this->module_name . ': provisionDrupalAccount function test';
 
+    // test method provisionDrupalAccount() 
     $jkeats = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
-  //  debug('jkeats user afterprovisionDrupalAccount'); debug($jkeats);
-
+    
     $jkeats = user_load_by_name('jkeats');
-
+    list($jkeats_account, $jkeats_user_entity) = ldap_user_load_user_acct_and_entity($jkeats->uid, 'uid');
+    $this->assertTrue(is_object($jkeats_account) && is_object($jkeats_user_entity), t('ldap_user_load_user_acct_and_entity() method tested'), $this->ldapTestId);
+    
     $properties_set = (
       $jkeats->name == 'jkeats' &&
       $jkeats->mail == 'boygen@hotmail.com' &&
