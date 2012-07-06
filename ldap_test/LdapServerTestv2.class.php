@@ -135,7 +135,8 @@ class LdapServerTestv2 extends LdapServer {
    *   empty.
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
-
+    
+  //  debug("ldap test server search base_dn=$base_dn, filter=$filter"); debug($attributes);
     $lcase_attribute = array();
     foreach ($attributes as $i => $attribute_name) {
       $lcase_attribute[] = drupal_strtolower($attribute_name);
@@ -205,6 +206,7 @@ class LdapServerTestv2 extends LdapServer {
     }
 
     $results['count'] = count($results);
+   // debug("ldap test server search results"); debug($results);
     return $results;
   }
 

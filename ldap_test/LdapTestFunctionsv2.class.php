@@ -107,10 +107,16 @@ class LdapTestFunctionsv2  {
     $test_data['properties'][$prop] = $value;
     variable_set('ldap_test_server__' . $sid, $test_data);
   }
-
+// ('jkeats@hotmail.com', 'jkeats@yahoo.com')
   function setFakeServerUserAttribute($sid, $dn, $attr_name, $attr_value, $i=0) {
     $test_data = variable_get('ldap_test_server__' . $sid, array());
+   // if ($attr_value == 'jkeats@hotmail.com' || $attr_value == 'jkeats@yahoo.com') {
+   //   debug("setFakeServerUserAttribute: test data before set: $sid, $dn, $attr_name, $attr_value, $i"); debug($test_data['entries']['CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com']['mail']);
+  //  }
     $test_data['entries'][$dn][$attr_name][$i] = $attr_value;
+  //  if ($attr_value == 'jkeats@hotmail.com' || $attr_value == 'jkeats@yahoo.com') {
+  //    debug('setFakeServerUserAttribute: test data after set'); debug($test_data['entries']['CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com']['mail']);
+  //  }
     variable_set('ldap_test_server__' . $sid, $test_data);
   }
 

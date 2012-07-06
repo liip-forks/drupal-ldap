@@ -280,23 +280,29 @@ function ldap_servers_theme() {
       if (is_scalar($ldap_server)) {
         $ldap_server = ldap_servers_get_servers($ldap_server, 'enabled', TRUE);
       }
-
-      switch ($op) {
-
-      case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
-      case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
-        $attributes[] = $ldap_server->user_attr;
-        $attributes[] = $ldap_server->mail_attr;
+    
+      // mail, unique_persistent_attr, user_attr, mail_template, and user_dn_expression are needed for all functionality
+      $attributes[] = $ldap_server->mail_attr;
+      if ($ldap_server->unique_persistent_attr) {
         $attributes[] = $ldap_server->unique_persistent_attr;
-        ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_attr);
-        ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);
+      }
+      ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_attr);
+      ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);
+      $attributes[] = $ldap_server->user_attr;
+      ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_dn_expression);
+          
+      switch ($op) {
+  
+        case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
+        case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
+        case LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
+        case LDAP_USER_SYNCH_CONTEXT_CRON:
+        case LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER:
+        case LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER:
+        case LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
+         
         break;
-
-      case LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
-        $attributes[] = $ldap_server->user_attr;
-        ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_dn_expression);
-        break;
-
+  
       }
     }
 
@@ -314,12 +320,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
     '!sid' => $ldap_server->sid,
   );
 
-  $all_contexts = array(
-    LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER,
-    LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER,
-    LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER,
-    LDAP_USER_SYNCH_CONTEXT_CRON
-  );
+  $all_contexts = ldap_user_synch_contexts();
 
   $server_edit_path = 'admin/config/people/ldap/servers/edit/' . $ldap_server->sid;
 
@@ -411,14 +412,24 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
     'source' => ($ldap_server->mail_template) ? $ldap_server->mail_template : '[' . $ldap_server->mail_attr . ']',
     'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
     'enabled' => TRUE,
-    'contexts' => $all_contexts,
+    'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER),
     'config_module' => ($ldap_user_conf->provisionsDrupalAccountsFromLdap) ? 'ldap_server' : 'ldap_user',
     'synch_module' => 'ldap_user',
     ) + $available_user_attrs['property.mail'];
 
 }
 
+//@todo  Email Behavior and email update options need to be in ldap_user module, see: admin/config/people/ldap/authentication
+// this will determine if mail is needed in LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER and LDAP_USER_SYNCH_CONTEXT_CRON
 
+
+/**
+ * flush server static cache
+ */
+
+function ldap_servers_flush_server_cache() {
+  $discard = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE); // flush server cache
+}
 
 /**
  *

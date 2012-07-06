@@ -115,8 +115,10 @@ function ldap_badattr($attr, $attr_name) {
  *
  * @param string $op is operation being performed, user_update, user_insert, etc.
  * @param mixed $ldap_server server id or ldap server object being used
+ *
+ * @todo set $reset default to true.
  */
-function ldap_servers_attributes_needed($op, $ldap_server = NULL) {
+function ldap_servers_attributes_needed($op, $ldap_server = NULL, $reset = TRUE) {
  // debug("call of ldap_servers_attributes_needed, op=$op,ldap_server="); debug($ldap_server);
  // dpm("call of ldap_servers_attributes_needed, op=$op,ldap_server="); dpm($ldap_server);
   static $attributes;
@@ -125,12 +127,15 @@ function ldap_servers_attributes_needed($op, $ldap_server = NULL) {
   if (!is_array($attributes)) {
     $attributes = array();
   }
-  if (!isset($attributes[$static_cache_id])) {
+  if (!isset($attributes[$static_cache_id]) || $reset) {
+  //  debug('call drupal_alter(ldap_attributes_needed),op='. $op);
     drupal_alter('ldap_attributes_needed', $attributes[$static_cache_id], $op, $sid);
     // attributes array needs to have no gaps of ldap_search(), ldap_read(), ldap_list() so apply array_values()
     $attributes[$static_cache_id] = array_values(array_unique($attributes[$static_cache_id]));
   }
-  return $attributes[$static_cache_id];
+  $return = $attributes[$static_cache_id];
+  //debug('ldap_servers_attributes_needed return, op=' . ldap_user_synch_context_text($op));debug($return);
+  return $return;
 }
 
 

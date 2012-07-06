@@ -80,7 +80,7 @@ class LdapServersTestCase extends DrupalWebTestCase {
       
     );
     
-    $this->ldapTestId = 'LdapServer.tokens';
+    $this->ldapTestId = 'ldap_server.tokens';
     
     $dn = ldap_servers_token_replace($ldap_entry, '[dn]');
     $this->assertTrue( $dn == $ldap_entry['dn'], t('[dn] token worked on ldap_servers_token_replace().'), $this->ldapTestId);

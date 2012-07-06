@@ -67,6 +67,7 @@ class LdapUserConf {
    *   Array of mappings or FALSE if none found
   */
   private function getSynchMappings($sid) {
+   // debug('this.getSynchMappings,$sid='. $sid);debug($this->ldapUserSynchMappings);
     if (!empty($this->ldapUserSynchMappings[$sid]) &&
         ($mappings = $this->ldapUserSynchMappings[$sid]) &&
         is_array($mappings)) {
@@ -76,7 +77,7 @@ class LdapUserConf {
   }
 
   /**
-   * Util to fetch attributes required for this user conf.
+   * Util to fetch attributes required for this user conf, not other modules.
    *
    * @param int $synch_context
    *   Any valid sync context constant.
@@ -88,13 +89,19 @@ class LdapUserConf {
     $attributes = array() ;
     // Loop over each server and fetch the mappings required.
     foreach ($sids as $sid) {
-      if (($mappings = $this->getSynchMappings($sid))) {
+      $mappings = $this->getSynchMappings($sid);
+    //  debug('getRequiredAttributes.mappings,'. $sid); debug($mappings);
+      if ($mappings) {
+      //  debug('getRequiredAttributes.mappings:,sid='. $sid); debug($mappings);
         foreach ($mappings as $detail) {
           // Make sure the mapping is relevant to this context.
           if (in_array($synch_context, $detail['contexts'])) {
             // Add the attribute to our array.
+        //    debug("token=" . $detail['ldap_attr'] . ", is token=" . ldap_servers_token_is_token($detail['ldap_attr']));
             if (ldap_servers_token_is_token($detail['ldap_attr'])) {
-              $attributes[] = ldap_servers_token_extract_attribute_name($detail['ldap_attr']);
+              $extracted = ldap_servers_token_extract_attribute_name($detail['ldap_attr']);
+             // debug('extracted from '.$detail['ldap_attr'] . '='. $extracted);
+              $attributes[] = $extracted;
             }
           }
         }
@@ -185,7 +192,7 @@ class LdapUserConf {
    */
 
   public function isSynched($field, $ldap_server, $synch_context, $direction) {
-    //debug($this->synchMapping[$ldap_server->sid][$field]);
+   // debug('synchMapping'); debug($this->synchMapping[$ldap_server->sid][$field]);
     $result = (boolean)(
       isset($this->synchMapping[$ldap_server->sid][$field]['contexts']) &&
       in_array($synch_context, $this->synchMapping[$ldap_server->sid][$field]['contexts']) &&
@@ -268,7 +275,7 @@ class LdapUserConf {
       'ldap_user' => $ldap_user,
       'synch_context' => $synch_context,
     );
-   // debug('synchToDrupalAccount call'); debug($debug);
+    //debug('synchToDrupalAccount call'); debug($debug);
     if (
         (!$ldap_user  && !isset($account->name)) ||
         (!$account && $save) ||
@@ -283,10 +290,12 @@ class LdapUserConf {
       $sids = array_keys($this->sids);
       $ldap_user = ldap_servers_get_user_ldap_data($account->name, $sids, $synch_context);
     }
+   // debug('ldap user data:,'. $account->name); debug($ldap_user);
     $ldap_servers = ldap_servers_get_servers(NULL, 'enabled', FALSE);
     foreach ($ldap_servers as $sid => $ldap_server) {
       $this->entryToUserEdit($ldap_user, $ldap_server, $user_edit, $synch_context, 'update');
     }
+   // debug('user edit before save:'); debug($user_edit);
     if ($save) {
       return user_save($account, $user_edit, 'ldap_user');
     }
@@ -593,17 +602,22 @@ class LdapUserConf {
    */
 
   function entryToUserEdit($ldap_user, $ldap_server, &$edit, $synch_context, $op) {
+   //  debug('user_edit in entryToUserEdit start'); debug($edit);
+  //  debug('entryToUserEdit'); debug($ldap_user);
     // need array of user fields and which direction and when they should be synched.
     $synch_email = $this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER);
+  //  debug('this->synchMapping'); debug($this->synchMapping); debug("sid=" . $ldap_server->sid . "synch context=$synch_context");
+  //  debug("synch_email=$synch_email");
     if ($synch_email && !isset($edit['mail'])) {
       $derived_mail = $ldap_server->deriveEmailFromLdapEntry($ldap_user['attr']);
       if ($derived_mail) {
         $edit['mail'] = $derived_mail;
       }
     }
-    else {
-      $edit['mail'] = NULL;
-    }
+  // just because mail is not synching in this context, doesn't mean to null it out.
+  //  else { 
+  //    $edit['mail'] = NULL;
+  //  }
 
     if ($this->isSynched('property.name', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) && !isset($edit['name'])) {
       $name = $ldap_server->deriveUsernameFromLdapEntry($ldap_user['attr']);
@@ -649,17 +663,21 @@ class LdapUserConf {
 
     // Get any additional mappings.
     if (($mappings = $this->getSynchMappings($ldap_server->sid))) {
+      //debug('getSynchMappings()');debug($this->getSynchMappings($ldap_server->sid));
       // Loop over the mappings.
       foreach ($mappings as $field_key => $field_detail) {
+      //  debug('field detail'); debug($field_detail);
         // Make sure this mapping is relevant to the sync context.
         if (!in_array($synch_context, $field_detail['contexts'])) {
           continue;
         }
         if (!ldap_servers_token_is_token($field_detail['ldap_attr'])) {
+       //   debug('not token');
           $value = $field_detail['ldap_attr']; // literal value
         }
         else {
           // And that we have a value for this attribute in the ldap entry.
+        //  debug('token');
           $value = ldap_servers_token_replace($ldap_user, $field_detail['ldap_attr']);
           if ($value === FALSE) {
             continue; // if attribute value doesn't exist, do not evaluate.
@@ -667,6 +685,7 @@ class LdapUserConf {
         }
         // Explode the value type (field/property) and name from the key.
         list($value_type, $value_name) = explode('.', $field_key);
+     //   debug('field_key='. $field_key);
         // Are we dealing with a field?
         if ($value_type == 'field') {
           // Field api field - first we get the field.
@@ -692,10 +711,13 @@ class LdapUserConf {
           // Straight property.
           $edit[$value_name] = $value;
         }
+     //   debug("value_name=$value_name,value=$value");
       }
     }
     // Allow other modules to have a say.
+  //  debug('user_edit in ldapuser before drupal alter'); debug($edit);
     drupal_alter('ldap_user_edit_user', $edit, $ldap_user, $ldap_server, $synch_context);
+  //  debug('user_edit in ldapuser after drupal alter'); debug($edit);
   }
 
 

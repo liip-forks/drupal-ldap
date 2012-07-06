@@ -117,6 +117,7 @@ class LdapUserConfAdmin extends LdapUserConf {
       $save[$property] = $this->{$property};
     }
     variable_set('ldap_user_conf', $save);
+    ldap_user_conf_cache_clear();
   }
 
   static public function getSaveableProperty($property) {

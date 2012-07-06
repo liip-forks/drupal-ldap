@@ -50,10 +50,16 @@ class LdapUserTestCasev2 extends DrupalWebTestCase {
 
   foreach ($this->ldap_user_test_entity_fields() as $field_id => $field_conf) {
     $field_info = field_info_field($field_id);
+  //  debug("field: $field_id"); debug($field_info);
     if (!$field_info) {
+    //  debug("create field: $field_id");
+     // debug($field_conf['field']);
+     // debug($field_conf['instance']);
       field_create_field($field_conf['field']);
       field_create_instance($field_conf['instance']);
     }
+    $field_info = field_info_field($field_id);
+   // debug("created field: $field_id"); debug($field_info);
   }
 
 
@@ -89,44 +95,69 @@ class LdapUserTestCasev2 extends DrupalWebTestCase {
 
     $fields = array();
 
-    $field_name = 'field_lname';
-    $fields[$field_name]['field'] = array(
-      'field_name' => $field_name,
-      'type' => 'text',
-      'entity_types' => array('user'),
-      'cadinality' => 1,
-      'translatable' => 0,
-      );
 
-    $fields[$field_name]['instance'] = array(
-      'field_name' => $field_name,
-      'entity_type' => 'user',
-      'bundle' => 'user',
-      'label' => 'Last Name',
-      'description' => '',
-      'required' => 0,
+
+ //  $this->field = array(
+  //    'field_name' => drupal_strtolower($this->randomName()),
+  //    'type' => 'text',
+  //    'settings' => array(
+   //     'max_length' => $max_length,
+   //   )
+  //  );
+  //  field_create_field($this->field); 
+    $fields['field_lname']['field'] = array(
+      'field_name' => 'field_lname',
+      'type' => 'text',
       'settings' => array(
-        'text_processing' => 0,
-      ),
-      'widget' => array(
-        'type' => 'text_textfield',
-        'weight' => 0,
-      ),
+        'max_length' => 64,
+      )
     );
 
-    $field_name = 'field_fname';
-    $fields[$field_name]['field'] = $fields['field_lname']['field'];
-    $fields[$field_name]['field']['field_name'] = $field_name;
-    $fields[$field_name]['instance'] = $fields['field_lname']['instance'];
-    $fields[$field_name]['instance']['field_name'] =  $field_name;
-    $fields[$field_name]['instance']['label'] =  'First Name';
+  //  $this->instance = array(
+  //    'field_name' => $this->field['field_name'],
+  //    'entity_type' => 'test_entity',
+  //    'bundle' => 'test_bundle',
+  //    'widget' => array(
+ //       'type' => 'text_textfield',
+ //     ),
+  //    'display' => array(
+  //      'default' => array(
+  //        'type' => 'text_default',
+  //      ),
+  //    ),
+  //  );
+  //  field_create_instance($this->instance);
 
-    $field_name = 'field_binary_test';
-    $fields[$field_name]['field'] = $fields['field_lname']['field'];
-    $fields[$field_name]['field']['field_name'] = $field_name;
-    $fields[$field_name]['instance'] = $fields['field_lname']['instance'];
-    $fields[$field_name]['instance']['field_name'] =  $field_name;
-    $fields[$field_name]['instance']['label'] =  'Binary test Field';
+    $fields['field_lname']['instance'] = array(
+      'field_name' => 'field_lname',
+      'entity_type' => 'user',
+      'label' => 'Last Name',
+      'bundle' => 'user',
+      'required' => FALSE,
+      'widget' => array(
+        'type' => 'text_textfield',
+      ),
+      'display' => array(
+        'default' => array(
+          'type' => 'text_default',
+        ),
+      ),
+      'settings' => array('user_register_form' => FALSE)
+    );
+
+  //  $field_name = 'field_fname';
+  //  $fields[$field_name]['field'] = $fields['field_lname']['field'];
+  //  $fields[$field_name]['field']['field_name'] = $field_name;
+  //  $fields[$field_name]['instance'] = $fields['field_lname']['instance'];
+ //   $fields[$field_name]['instance']['field_name'] =  $field_name;
+ //   $fields[$field_name]['instance']['label'] =  'First Name';
+
+  //  $field_name = 'field_binary_test';
+  //  $fields[$field_name]['field'] = $fields['field_lname']['field'];
+  //  $fields[$field_name]['field']['field_name'] = $field_name;
+  //  $fields[$field_name]['instance'] = $fields['field_lname']['instance'];
+  //  $fields[$field_name]['instance']['field_name'] =  $field_name;
+  //  $fields[$field_name]['instance']['label'] =  'Binary test Field';
 
     return $fields;
 

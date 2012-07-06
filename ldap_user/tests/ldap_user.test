@@ -57,6 +57,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
 
 
     // test user token functions
+    $this->ldapTestId = $this->module_name . ': user tokens';
     $entity = new stdClass();
     $entity->lname['und'][0]['value'] = 'doe';
     $entity->dept['und'][0]['value'] = 'physics';
@@ -92,8 +93,19 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     
     $jkeats = user_load_by_name('jkeats');
     list($jkeats_account, $jkeats_user_entity) = ldap_user_load_user_acct_and_entity($jkeats->uid, 'uid');
-    $this->assertTrue(is_object($jkeats_account) && is_object($jkeats_user_entity), t('ldap_user_load_user_acct_and_entity() method tested'), $this->ldapTestId);
+  //  debug('initially provisioned user and entity'); debug($jkeats_account); debug($jkeats_user_entity);
+ 
+ 
+ //   debugging check that field_lname is created and saveable
+ //    $edit = array();
+ //   $edit['field_lname']['und'][0]['value'] = 'barclay';
+ //   $account = user_save($jkeats_account, $edit);
+ //   list($jkeats_account, $jkeats_user_entity) = ldap_user_load_user_acct_and_entity($jkeats->uid, 'uid');
+ //   debug('saved user and entity'); debug($jkeats_account); debug($jkeats_user_entity);
+   
     
+    $this->assertTrue(is_object($jkeats_account) && is_object($jkeats_user_entity), t('ldap_user_load_user_acct_and_entity() method tested'), $this->ldapTestId);
+
     $properties_set = (
       $jkeats->name == 'jkeats' &&
       $jkeats->mail == 'boygen@hotmail.com' &&
@@ -132,6 +144,23 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     // change some user mock ldap data first, (mail and fname) then synch
     $account = user_load_by_name('jkeats');
     $user_edit = NULL;
+    $ldap_user_conf->ldapUserSynchMappings = array();
+    $sid = 'activedirectory';
+    $ldap_user_conf->ldapUserSynchMappings[$sid]['property.mail'] = array(
+      'sid' => $sid,
+      'ldap_attr' => '[mail]',
+      'user_attr' => '[property.mail]',
+      'convert' => 0,
+      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+      'contexts' => array(LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER),
+      'name' => 'Property: Mail',
+      'enabled' => TRUE,
+      'config_module' => 'ldap_servers',
+      'synch_module' => 'ldap_user',
+      'user_tokens' => '',
+      );
+    $ldap_user_conf->save();
+    
     $this->testFunctions->setFakeServerUserAttribute('activedirectory', 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com', 'mail', 'boygen@yahoo.com', 0);
     $user = $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, NULL, TRUE);
    // debug('user after synchToDrupalAccount'); debug($user);
@@ -155,20 +184,23 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     /**
      * test that $ldap_user_conf->synchToDrupalAccount() works for various contexts.
      * make sure changing when a given field/property is flagged for a particular context, everything works
-     * should test one property and one field as well as username, puid, and mail
+     * tests one property (property.mail) and one field (field.field_lname) as well as username, puid
      */
-
-    $test =  array(
+    
+    $sid = 'activedirectory';
+    $tests = array();
+    $tests[0] =  array(
       'user' => 'jkeats',
-      'field' => 'field.field_lname',
-      'field_values' => array('johnny', 'jonathon'),
+      'field_name' => 'field_lname',
+      'field_values' => array('keatsalicious', 'keats-o-matic'),
+      'field_results' => array('keatsalicious', 'keats-o-matic'),
       'field_mapping' => array(
-        'sid' => 'activediretory',
-        'ldap_attr' => '[givenname]',
+        'sid' => $sid,
+        'ldap_attr' => '[sn]',
         'user_attr' => '[field.field_lname]',
         'convert' => 0,
         'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
-        'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER => 1),
+        'contexts' => array(),
         'name' => 'Field: Last Name',
         'enabled' => TRUE,
         'config_module' => 'ldap_user',
@@ -176,14 +208,16 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
         'user_tokens' => '',
       ),
 
-      'property' => 'property.mail',
+      'property_name' => 'mail',
       'property_values' => array('jkeats@hotmail.com', 'jkeats@yahoo.com'),
+      'property_results' => array('jkeats@hotmail.com', 'jkeats@yahoo.com'),
       'property_mapping' => array(
-        'sid' => 'activediretory',
+        'sid' => $sid,
         'ldap_attr' => '[mail]',
+        'user_attr' => '[property.mail]',
         'convert' => 0,
         'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
-        'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER => 1),
+        'contexts' => array(),
         'name' => 'Property: Mail',
         'enabled' => TRUE,
         'config_module' => 'ldap_servers',
@@ -191,101 +225,174 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
         'user_tokens' => '',
       ),
     );
+    
+    
+    $tests[1] =  array(
+      'user' => 'jkeats',
+      'field_name' => 'field_lname',
+      'field_values' => array('keatsalicious', 'keats-o-matic'),
+      'field_results' => array('Smith', 'Smith'),
+      'field_mapping' => array(
+        'sid' => $sid,
+        'ldap_attr' => 'Smith', // testing of a constant mapped to a field.  that is everyone should have last name smith
+        'user_attr' => '[field.field_lname]',
+        'convert' => 0,
+        'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+        'contexts' => array(),
+        'name' => 'Field: Last Name',
+        'enabled' => TRUE,
+        'config_module' => 'ldap_user',
+        'synch_module' => 'ldap_user',
+        'user_tokens' => '',
+      ),
 
-    $test_contexts = array(
-      LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER,
-      LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER,
-      LDAP_USER_SYNCH_CONTEXT_CRON,
-      LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER,
-      LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER,
+      'property_name' => 'status',
+      'property_values' => array('z', 'z'),
+      'property_results' => array(0, 0),
+      'property_mapping' => array(
+        'sid' => $sid,
+        'ldap_attr' => '0',
+        'user_attr' => '[property.status]',  // testing of a constant mapped to property
+        'convert' => 0,
+        'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+        'contexts' => array(),
+        'name' => 'Property: Status',
+        'enabled' => TRUE,
+        'config_module' => 'ldap_servers',
+        'synch_module' => 'ldap_user',
+        'user_tokens' => '',
+      ),
     );
+    
+    
+    // @todo test with compound token string
+    // @todo test with binary field
+    
+    $test_contexts = ldap_user_synch_contexts();
+    //$test_contexts = array(LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER);
+    
+    foreach ($tests as $j => $test) {
+      foreach ($test_contexts  as $i => $synch_context) {  // test for each context
+        foreach (array(0, 1) as $flagged_for_synch) { // test with and without field flagged for synch to test for false positives
+         // debug("test context: $context, flagged for synch:" . (int)$flagged_for_synch);
+          $field_name = $test['field_name'];
+          $property_name = $test['property_name'];
+ 
+          // 1. set fake ldap values for field and property in fake ldap server
+          $this->testFunctions->setFakeServerUserAttribute(
+            'activedirectory',
+            'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
+            ldap_servers_token_extract_attribute_name($test['property_mapping']['ldap_attr']),
+            $test['property_values'][0],
+            0);
+          $this->testFunctions->setFakeServerUserAttribute(
+            'activedirectory',
+            'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
+            ldap_servers_token_extract_attribute_name($test['field_mapping']['ldap_attr']),
+            $test['field_values'][0],
+            0);
+          ldap_servers_flush_server_cache();
 
-    $sid = $sids[0];
-    foreach ($test_contexts  as $i => $context) {
-      foreach (array(1, 0) as $flagged_for_synch) {
-        // Test 1: make sure that synchToDrupalAccount() method works for field and property for appropriate context
-       // debug("test context: $context, flagged for synch:" . (int)$flagged_for_synch);
+          // 2.  Clear out mappings and set to provision account with test field and prop[0] on provision
+          unset($ldap_user_conf->ldapUserSynchMappings[$sid][$property_name]);
+          unset($ldap_user_conf->ldapUserSynchMappings[$sid][$field_name]);
+          $ldap_user_conf->ldapUserSynchMappings[$sid]['property.' . $property_name] = $test['property_mapping'];
+          $ldap_user_conf->ldapUserSynchMappings[$sid]['field.'    . $field_name] = $test['field_mapping'];
+          $ldap_user_conf->ldapUserSynchMappings[$sid]['property.' . $property_name]['contexts'] = array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER);
+          $ldap_user_conf->ldapUserSynchMappings[$sid]['field.'    . $field_name]['contexts'] = array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER);
+          $ldap_user_conf->save();
+          
+          
+          // 3. delete user
+          $username = $test['user'];
+          $user_object = user_load_by_name($username);
+          if (is_object($user_object)) {
+            user_delete($user_object->uid);
+          }
+          
+          // 4. create new user with provisionDrupalAccount
+          $account = NULL;
+          $user_edit = array('name' => $username);
+         // $this->ldapTestId = $this->module_name . ': provisionDrupalAccount function test';
+          $discard = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
+          $this->ldapTestId = $this->module_name . ":provisionDrupalAccount.i=$j.contextenabled=$flagged_for_synch.context=" . ldap_user_synch_context_text($synch_context);
+          list($user_object, $user_entity) = ldap_user_load_user_acct_and_entity($username);
+        //  debug('initially provisioned user and entity'); debug($user_object); debug($user_entity);
+       //   debug('before user synch,  mail (should be jkeats@hotmail.com)=' . $user_object->{$property_name} . ',lname (should be keatsalicious) =') . debug($user_entity->{$field_name});        
+          $property_success = ($user_object->{$property_name} == $test['property_results'][0]);
+          $field_success = isset($user_entity->{$field_name}['und'][0]['value']) &&
+              $user_entity->{$field_name}['und'][0]['value'] == $test['field_results'][0];          
+          $this->assertTrue($property_success, t("provisionDrupalAccount worked for property $property_name"), $this->ldapTestId);
+          $this->assertTrue($field_success,    t("provisionDrupalAccount worked for field $field_name"),       $this->ldapTestId);
+                     
+          // 5. set mappings to be tested for field and property being tested
+          unset($ldap_user_conf->ldapUserSynchMappings[$sid][$property_name]);
+          unset($ldap_user_conf->ldapUserSynchMappings[$sid][$field_name]);
+          $ldap_user_conf->ldapUserSynchMappings[$sid]['property.' . $property_name] = $test['property_mapping'];
+          $ldap_user_conf->ldapUserSynchMappings[$sid]['field.'    . $field_name] = $test['field_mapping'];
+          if ($flagged_for_synch) {
+            $ldap_user_conf->ldapUserSynchMappings[$sid]['property.' . $property_name]['contexts'] = array($synch_context);
+            $ldap_user_conf->ldapUserSynchMappings[$sid]['field.'    . $field_name]['contexts'] = array($synch_context);
+          }
+          $ldap_user_conf->save();
+         // debug('-------2'); debug($ldap_user_conf->ldapUserSynchMappings);
+  
+          // 6. change fake ldap values for field and property, to property[1] and field[1]
+          $this->testFunctions->setFakeServerUserAttribute(
+            'activedirectory',
+            'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
+            ldap_servers_token_extract_attribute_name($test['property_mapping']['ldap_attr']),
+            $test['property_values'][1],
+            0);
+          $this->testFunctions->setFakeServerUserAttribute(
+            'activedirectory',
+            'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
+            ldap_servers_token_extract_attribute_name($test['field_mapping']['ldap_attr']),
+            $test['field_values'][1],
+            0);
+          ldap_servers_flush_server_cache();
+          
+          // 8. debug statements
+          list($user_object, $user_entity) = ldap_user_load_user_acct_and_entity($username);
+        //  debug('initially provisioned user and entity'); debug($user_object); debug($user_entity);
+         // debug('before user synch, mail=' . $user_object->mail . ',lname=') . debug($user_entity->field_lname);
+          
+          // 8. execute synch
+          $user_edit = array();
+          $ldap_user_conf->synchToDrupalAccount($user_object, $user_edit, $synch_context, NULL, TRUE);
+  
 
-
-        // Test 1.  Clear out user and settings for mapping
-        unset($ldap_user_conf->ldapUserSynchMappings[$sid][$test['property']]);
-        unset($ldap_user_conf->ldapUserSynchMappings[$sid][$test['field']]);
-        $ldap_user_conf->save();
-        $jkeats = user_load_by_name('jkeats');
-        if (is_object($jkeats)) {
-          user_delete($jkeats->uid);
+          list($user_object, $user_entity) = ldap_user_load_user_acct_and_entity($username); 
+        //  debug('after user synch, mail=' . $jkeats->mail . ',lname=') . debug($user_entity->field_lname);
+          $field_desired_value = $flagged_for_synch; // field[0] or field[1]
+          $property_desired_value = $flagged_for_synch; // field[0] or field[1]
+          if ($synch_context == LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER && $flagged_for_synch == 0) {
+            $property_desired_value = 1;
+            // on insert email is always derived regardless of ldap_user module config
+          }
+          else {
+            $this->ldapTestId = $this->module_name . ":synchToDrupalAccount.property=$property_name.i=$j.contextenabled=$flagged_for_synch.context=" . ldap_user_synch_context_text($synch_context);
+            $property_success = ($user_object->{$property_name} == $test['property_results'][$property_desired_value]);
+            $this->assertTrue($property_success, t("synchToDrupalAccount worked for property ($property_name) for " . $username), $this->ldapTestId);
+             if (!$property_success) {
+              debug("property synch failed: " . $user_object->{$property_name} .'!=' . $test['property_results'][$property_desired_value]);
+              debug($user_object);
+            }
+          }
+          
+          
+          $this->ldapTestId = $this->module_name . ":synchToDrupalAccount.field=$field_name.i=$j.contextenabled=$flagged_for_synch.context=" . ldap_user_synch_context_text($synch_context);
+          $field_success = isset($user_entity->{$field_name}['und'][0]['value']) &&
+              $user_entity->{$field_name}['und'][0]['value'] == $test['field_results'][$field_desired_value];
+          $this->assertTrue($field_success, t("synchToDrupalAccount worked for field ($field_name) for " . $username), $this->ldapTestId);
+          if (!$field_success) {
+            debug("field synch failed: " . $user_entity->{$field_name}['und'][0]['value'] .'!=' . $test['field_results'][$field_desired_value]);
+         //   debug($user_entity);
+          }
         }
-        $account = NULL;
-        $user_edit = array('name' => 'jkeats');
-        $this->ldapTestId = $this->module_name . ': provisionDrupalAccount function test';
-        $jkeats = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
-
-        // Test 1.A set mappings for field and property being tested
-        $ldap_user_conf->ldapUserSynchMappings[$sid][$test['property']] = $test['property_mapping'];
-        $ldap_user_conf->ldapUserSynchMappings[$sid][$test['field']] = $test['field_mapping'];
-        $ldap_user_conf->save();
-
-
-        // Test 1.B change fake ldap values for field and property
-        $this->testFunctions->setFakeServerUserAttribute(
-          'activedirectory',
-          'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
-          $test['property'],
-          $test['property_values'][0],
-          0);
-        $this->testFunctions->setFakeServerUserAttribute(
-          'activedirectory',
-          'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
-          $test['field'],
-          $test['field_values'][0],
-          0);
-
-
-
-        $jkeats = user_load_by_name('jkeats');
-       // debug('intial load'); debug($jkeats);
-        $user_edit = array();
-        // Test 1.C Do synch for given context
-        $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $context, NULL, TRUE);
-
-        // TEST 1.D: check that field and property were altered correctly given context
-        $jkeats = user_load_by_name('jkeats');
-        debug('after user synch'); debug($jkeats);
-
-        // Test 2:  Make sure synch does not occur when no context given
-        // disable synching for property and field in given context
-        $ldap_user_conf->ldapUserSynchMappings[$sid][$test['property']]['contexts'] = array();
-        $ldap_user_conf->ldapUserSynchMappings[$sid][$test['field']]['contexts'] = array();
-        $ldap_user_conf->save();
-
-        // change fake ldap values for field and property
-        $this->testFunctions->setFakeServerUserAttribute(
-          'activedirectory',
-          'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
-          $test['property'],
-          $test['property_values'][1],
-          0);
-        $this->testFunctions->setFakeServerUserAttribute(
-          'activedirectory',
-          'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
-          $test['field'],
-          $test['field_values'][1],
-          0);
-
-     //   debug('before user false synch'); debug($jkeats);
-        $user_edit = array('name' => 'jkeats');
-        $jkeats = user_load_by_name('jkeats');
-        $ldap_user_conf->synchToDrupalAccount($jkeats, $user_edit, $context, NULL, TRUE);
-        debug('after user false synch'); debug($jkeats);
-        // TEST #2: check that field and property were not altered
-
       }
     }
-
-}
-
-
-
+  }
 }
 
 
@@ -415,82 +522,7 @@ class LdapUserUITests extends LdapUserTestCasev2 {
       in_array('delete',$ldap_user_conf->wsActions)
       , t('wsActions fields set correctly'), $this->ldapTestId);
 
-
-  //  debug($ldap_user_conf);
-/**
- *
- *define('LDAP_USER_PROV_ON_LOGON', 1);
-define('LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE', 2);
-define('LDAP_USER_PROV_ON_ALL_USER_CREATION', 3);
-    $ldap_user_conf = ldap_user_conf();
-    debug('ldap_user_conf after form submission'); debug($ldap_user_conf);
-    $tests = array(
-      'sids' => array(
-        'property' => 'sids',
-        'expected_value' => array('provisionServers'),
-        'form_mapping' => array('provisionServers[]' => array('activedirectory')),
-      ),
-      'provision_methods' => array(
-        'property' => 'drupalAcctProvisionEvents',
-        'expected_value' => array(1, 2, 3),
-        'form_mapping' => array('drupalAcctProvisionEvents[]' =>  array(1, 2, 3)),
-      ),
-      'userConflictResolve' => array(
-        'property' => 'userConflictResolve',
-        'expected_value' => 2,
-        'form_mapping' => array('userConflictResolve' => 2),
-      ),
-
-      'acctCreation' => array(
-        'property' => 'acctCreation',
-        'expected_value' => 4,
-        'form_mapping' => array('acctCreation[]' => array(4)),
-      ),
-      'wsEnabled' => array(
-        'property' => 'wsEnabled',
-        'expected_value' => array(1),
-        'form_mapping' => array('wsEnabled' => 1),
-      ),
-      'wsActions' => array(
-        'property' => 'wsActions',
-        'expected_value' =>  array('create', 'synch', 'disable', 'delete'),
-        'form_mapping' => array('wsActions[]' => array('create', 'synch', 'disable', 'delete')),
-      ),
-      'wsUserIps' => array(
-        'property' => 'wsUserIps',
-        'expected_value' =>  '1.2.3.4',
-        'form_mapping' => array('wsUserIps' => '1.2.3.4'),
-      ),
-      'wsKey' => array(
-        'property' => 'wsKey',
-        'expected_value' => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
-        'form_mapping' => array('wsKey' => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf'),
-      ),
-      'synchMapping' => array(
-        'property' => 'synchMapping',
-        'expected_value' => array(),
-      ),
-    );
-
-    foreach ($tests as $test_id => $test) {
-      $value = $ldap_user_conf->{$test['property']};
-      if (is_array($test['expected_value'])) {
-        $diff = array_diff($test['expected_value'], $value);
-        $this->assertTrue(count($diff) == 0, "ldap_user_conf $test_id successful", $this->ldapTestId);
-      }
-      else {
-        $this->assertTrue($value == $test['expected_value'], "ldap_user_conf $test_id successful", $this->ldapTestId);
-      }
-    }
-
-**/
-    // load on user conf class and test values!
-
-    // test form with non default values for all fields
-
-
   }
-
 
 }
 
