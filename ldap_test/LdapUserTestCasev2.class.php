@@ -95,16 +95,6 @@ class LdapUserTestCasev2 extends DrupalWebTestCase {
 
     $fields = array();
 
-
-
- //  $this->field = array(
-  //    'field_name' => drupal_strtolower($this->randomName()),
-  //    'type' => 'text',
-  //    'settings' => array(
-   //     'max_length' => $max_length,
-   //   )
-  //  );
-  //  field_create_field($this->field); 
     $fields['field_lname']['field'] = array(
       'field_name' => 'field_lname',
       'type' => 'text',
@@ -112,21 +102,6 @@ class LdapUserTestCasev2 extends DrupalWebTestCase {
         'max_length' => 64,
       )
     );
-
-  //  $this->instance = array(
-  //    'field_name' => $this->field['field_name'],
-  //    'entity_type' => 'test_entity',
-  //    'bundle' => 'test_bundle',
-  //    'widget' => array(
- //       'type' => 'text_textfield',
- //     ),
-  //    'display' => array(
-  //      'default' => array(
-  //        'type' => 'text_default',
-  //      ),
-  //    ),
-  //  );
-  //  field_create_instance($this->instance);
 
     $fields['field_lname']['instance'] = array(
       'field_name' => 'field_lname',
@@ -145,20 +120,81 @@ class LdapUserTestCasev2 extends DrupalWebTestCase {
       'settings' => array('user_register_form' => FALSE)
     );
 
-  //  $field_name = 'field_fname';
-  //  $fields[$field_name]['field'] = $fields['field_lname']['field'];
-  //  $fields[$field_name]['field']['field_name'] = $field_name;
-  //  $fields[$field_name]['instance'] = $fields['field_lname']['instance'];
- //   $fields[$field_name]['instance']['field_name'] =  $field_name;
- //   $fields[$field_name]['instance']['label'] =  'First Name';
+    $fields['field_fname']['field'] = array(
+      'field_name' => 'field_fname',
+      'type' => 'text',
+      'settings' => array(
+        'max_length' => 64,
+      )
+    );
 
-  //  $field_name = 'field_binary_test';
-  //  $fields[$field_name]['field'] = $fields['field_lname']['field'];
-  //  $fields[$field_name]['field']['field_name'] = $field_name;
-  //  $fields[$field_name]['instance'] = $fields['field_lname']['instance'];
-  //  $fields[$field_name]['instance']['field_name'] =  $field_name;
-  //  $fields[$field_name]['instance']['label'] =  'Binary test Field';
+    $fields['field_fname']['instance'] = array(
+      'field_name' => 'field_fname',
+      'entity_type' => 'user',
+      'label' => 'Last Name',
+      'bundle' => 'user',
+      'required' => FALSE,
+      'widget' => array(
+        'type' => 'text_textfield',
+      ),
+      'display' => array(
+        'default' => array(
+          'type' => 'text_default',
+        ),
+      ),
+      'settings' => array('user_register_form' => FALSE)
+    );
+    
+    // display name for testing compound tokens
+    $fields['field_display_name']['field'] = array(
+      'field_name' => 'field_display_name',
+      'type' => 'text',
+      'settings' => array(
+        'max_length' => 64,
+      )
+    );
 
+    $fields['field_display_name']['instance'] = array(
+      'field_name' => 'field_display_name',
+      'entity_type' => 'user',
+      'label' => 'Display Name',
+      'bundle' => 'user',
+      'required' => FALSE,
+      'widget' => array(
+        'type' => 'text_textfield',
+      ),
+      'display' => array(
+        'default' => array(
+          'type' => 'text_default',
+        ),
+      ),
+      'settings' => array('user_register_form' => FALSE)
+    );
+    
+    // display name for testing compound tokens
+    $fields['field_binary_test']['field'] = array(
+      'field_name' => 'field_binary_test',
+      'type' => 'text',
+      'size' => 'big',
+    );
+
+    $fields['field_binary_test']['instance'] = array(
+      'field_name' => 'field_binary_test',
+      'entity_type' => 'user',
+      'label' => 'Binary Field',
+      'bundle' => 'user',
+      'required' => FALSE,
+      'widget' => array(
+        'type' => 'text_textfield',
+      ),
+      'display' => array(
+        'default' => array(
+          'type' => 'text_default',
+        ),
+      ),
+      'settings' => array('user_register_form' => FALSE)
+    );
+    
     return $fields;
 
   }

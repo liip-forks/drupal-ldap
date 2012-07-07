@@ -1,0 +1,52 @@
+
+/**********************************************
+ * this is a summary of how to test ldap_user manually.
+ * it attempts to cover all facets of the automated simpletests
+ **********************************************/
+ 
+1. Disable and uninstall ldap_user module.
+2. Clear any variables that may not have been uninstalled:
+   DELETE FROM variable where name like 'ldap_user%'
+2A. Delete the user(2) you use for testing.
+3. Clear watchdog logs.
+4. Enable ldap_user module and check watchdog logs
+5. Prepare user settings/entity for testing
+  -- add field_lname, field_fname, field_dept, and field_display_name text fields to user
+6. Configure ldap user for general synching with no explicit mappings
+    A. Select enabled server
+    B. Drupal Accoutn Provisioning: [x] On manual creation of Drupal user account...
+    C. Existing Drupal User Account Conflict: [x] Associate Drupal account with LDAP Entry
+    D. Application of Drupal Account settings to LDAP Authenticated Users: [x] Account Creationg Settings ... do not affect...
+    E. Basic Provisioning to LDAP Settings: leave empty
+    F. Rest Webservice: leave disabled
+    G. Server mappings section.
+       i. [givenname] -- to drupal user -> Field: First Name [x] on user creation
+       ii. [sn:0] -- to drupal user -> Field: Last Name [x] on user creation
+       iii. [givenname] [sn] -- to drupal user -> Field: Display Name [x] on user creation
+       iv. Physics -- to drupal user -> Field: Department [x] on user creation
+   
+7.  Test on drupal user create synching.
+    A. Create new user via admin/people/create
+    B. field_lname, field_fname, field_dept, and field_display_name should be visible and populated
+    C. goto admin/config/people/ldap/user/test/<username> and hit the test button.  this will show the user object and entity
+       if the devel module is enabled
+       i.     user object->ldap_user_puid_sid should be the id of the server
+       ii.    user object->ldap_user_puid should be the value of the puid attribute
+       iii.   user object->ldap_user_puid_property  should be the name of the puid attribute
+       iv.    user object->ldap_user_current_dn should be the dn of the ldap entry
+       v.     user object->mail and init should be correct, matching email
+       vii.   user authmap should be empty.  this record is only generated when account created via ldap authentication
+       
+8.  Test on logon user create synching
+    A. Authenticate with a user not in drupal (be sure user is deleted before test)
+    B. view the user from the user list (admin/people/people) and make sure
+         field_lname, field_fname, field_dept, and field_display_name should be visible and populated
+    B. goto admin/config/people/ldap/user/test/<username> and hit the test button.  this will show the user object and entity
+       if the devel module is enabled
+       i.     user object->ldap_user_puid_sid should be the id of the server
+       ii.    user object->ldap_user_puid should be the value of the puid attribute
+       iii.   user object->ldap_user_puid_property  should be the name of the puid attribute
+       iv.    user object->ldap_user_current_dn should be the dn of the ldap entry
+       v.     user object->mail and init should be correct, matching email
+       vii.   user authmap should have an entry where module=ldap_authentication and authname=username
+

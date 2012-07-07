@@ -97,16 +97,18 @@ class LdapUserConf {
           // Make sure the mapping is relevant to this context.
           if (in_array($synch_context, $detail['contexts'])) {
             // Add the attribute to our array.
-        //    debug("token=" . $detail['ldap_attr'] . ", is token=" . ldap_servers_token_is_token($detail['ldap_attr']));
+           // debug("token=" . $detail['ldap_attr'] . ", is token=" . ldap_servers_token_is_token($detail['ldap_attr']));
+            ldap_servers_token_extract_attributes($attributes,  $detail['ldap_attr']);
             if (ldap_servers_token_is_token($detail['ldap_attr'])) {
-              $extracted = ldap_servers_token_extract_attribute_name($detail['ldap_attr']);
+          //    $extracted = ldap_servers_token_extract_attribute_name($detail['ldap_attr']);
              // debug('extracted from '.$detail['ldap_attr'] . '='. $extracted);
-              $attributes[] = $extracted;
+            //  $attributes[] = $extracted;
             }
           }
         }
       }
     }
+  //  debug('attribute needed from getRequiredAttributes'); debug($attributes);
     return $attributes;
   }
 
@@ -507,7 +509,7 @@ class LdapUserConf {
    * given a drupal account, query ldap and get all user fields and save user account
    * (note: parameters are in odd order to match synchDrupalAccount handle)
    *
-   * @param array $account drupal account array with minimum of name
+   * @param array $account drupal account object or null
    * @param array $user_edit drupal edit array in form user_save($account, $user_edit) would take.
    * @param int $synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
    * @param array $ldap_user as user's ldap entry.  passed to avoid requerying ldap in cases where already present
@@ -602,12 +604,12 @@ class LdapUserConf {
    */
 
   function entryToUserEdit($ldap_user, $ldap_server, &$edit, $synch_context, $op) {
-   //  debug('user_edit in entryToUserEdit start'); debug($edit);
+  //  debug('user_edit in entryToUserEdit start'); debug($edit);
   //  debug('entryToUserEdit'); debug($ldap_user);
     // need array of user fields and which direction and when they should be synched.
     $synch_email = $this->isSynched('property.mail', $ldap_server, $synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER);
-  //  debug('this->synchMapping'); debug($this->synchMapping); debug("sid=" . $ldap_server->sid . "synch context=$synch_context");
-  //  debug("synch_email=$synch_email");
+   // dpm('this->synchMapping'); dpm($this->synchMapping); dpm("sid=" . $ldap_server->sid . "synch context=$synch_context");
+  //  dpm("synch_email=$synch_email");
     if ($synch_email && !isset($edit['mail'])) {
       $derived_mail = $ldap_server->deriveEmailFromLdapEntry($ldap_user['attr']);
       if ($derived_mail) {
@@ -671,18 +673,18 @@ class LdapUserConf {
         if (!in_array($synch_context, $field_detail['contexts'])) {
           continue;
         }
-        if (!ldap_servers_token_is_token($field_detail['ldap_attr'])) {
+      //  if (!ldap_servers_token_is_token($field_detail['ldap_attr'])) {
        //   debug('not token');
-          $value = $field_detail['ldap_attr']; // literal value
-        }
-        else {
+        //  $value = $field_detail['ldap_attr']; // literal value
+       // }
+       // else {
           // And that we have a value for this attribute in the ldap entry.
         //  debug('token');
           $value = ldap_servers_token_replace($ldap_user, $field_detail['ldap_attr']);
-          if ($value === FALSE) {
-            continue; // if attribute value doesn't exist, do not evaluate.
-          }
-        }
+        //  if ($value === FALSE) {
+        //    continue; // if attribute value doesn't exist, do not evaluate.
+       //   }
+       // }
         // Explode the value type (field/property) and name from the key.
         list($value_type, $value_name) = explode('.', $field_key);
      //   debug('field_key='. $field_key);

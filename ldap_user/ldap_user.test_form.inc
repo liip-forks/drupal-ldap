@@ -22,12 +22,6 @@
 
 function ldap_user_test_form($form, &$form_state, $op = NULL) {
 
-  ldap_server_module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
-  $test_functions = new LdapTestFunctions();
-  $ldap_data = $test_functions->getLdifData('activedirectory.ldif');
- // dpm($ldap_data);
-  //$ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
-  $action = arg(count(explode('/', LDAP_USER_TEST_FORM_PATH)) + 1);
   $username = arg(count(explode('/', LDAP_USER_TEST_FORM_PATH)));
 
   $form['#prefix'] = t('<h1>Test LDAP User Configuration</h1>');
@@ -43,13 +37,15 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
     '#maxlength' => 255,
     '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
   );
-
+  
+  $synch_context_options = ldap_user_synch_contexts_key_values();
+  $selected_actions = isset($_SESSION['ldap_user_test_form']) ? $_SESSION['ldap_user_test_form'] : array();
   $form['action'] = array(
-      '#type' => 'radios',
-      '#title' => t('Action to Test'),
+      '#type' => 'checkboxes',
+      '#title' => t('Actions/Event Handlers to Test'),
       '#required' => FALSE,
-      '#default_value' => $action,
-      '#options' => array('create' => 'create', 'synch' => 'synch', 'delete' => 'delete'),
+      '#default_value' => $selected_actions,
+      '#options' => $synch_context_options,
       '#states' => array(
         'visible' => array(   // action to take.
           ':input[name="wsEnabled"]' => array('checked' => TRUE),
@@ -63,42 +59,6 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
     '#weight' => 100,
   );
 
-  if ($username) {
-    $form['#suffix'] = "$username user test data results for action=$action:";
-    $user = user_load_by_name($username);
-    if ($user) {
-      $user_entities = entity_load('user', array($user->uid));
-      $user_entity = $user_entities[$user->uid];
-    }
-    else {
-      $user_entity = NULL;
-    }
-  //  dpm("calling ldap_servers_get_user_ldap_data username=$username");
-
-    $user_ldap_entry = ldap_servers_get_user_ldap_data($username, NULL, LDAP_TEST_QUERY_CONTEXT);
-
-    if (function_exists('dpm')) {
-      dpm("status before action: $action, username: $username");
-      dpm('user'); dpm($user);
-      dpm('user_entity'); dpm($user_entity);
-      dpm('ldap_data'); dpm($user_ldap_entry);
-    }
-
-    $ldap_user_conf = ldap_user_conf();
-
-    if ($action == 'create') {
-      $account = NULL;
-      $user_edit = array('name' => $username);
-      $user = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
-      dpm('user after save'); dpm($user);
-    }
-    elseif ($action == 'delete') {
-      $result = $ldap_user_conf->deleteDrupalAccount($username, LDAP_TEST_QUERY_CONTEXT);
-      dpm("delete result: $result");
-    }
-
-
-  }
   return $form;
 }
 
@@ -106,8 +66,64 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
  * Submit hook for the LDAP server form.
  */
 function ldap_user_test_form_submit($form, &$form_state) {
-  $name = $form_state['values']['testing_drupal_username'];
-  $action = $form_state['values']['action'];
-  $form_state['redirect'] = ($name) ? LDAP_USER_TEST_FORM_PATH . "/" . $name . '/' . $action :  LDAP_USER_TEST_FORM_PATH;
+  $username = $form_state['values']['testing_drupal_username'];
+  $selected_actions = $form_state['values']['action'];
+  
+ if ($username && count($selected_actions) > 0) {
+    $synch_context_options = ldap_user_synch_contexts_key_values();
+    $user_object = user_load_by_name($username);
+    if ($user_object) {
+      $user_entities = entity_load('user', array($user_object->uid));
+      $user_entity = $user_entities[$user_object->uid];
+    }
+    else {
+      $user_entity = NULL;
+    }
+
+    $user_ldap_entry = ldap_servers_get_user_ldap_data($username, NULL, LDAP_TEST_QUERY_CONTEXT);
+    
+    $results = array();
+    $results['username'] = $username;
+    $results['user object'] = $user_object;
+    $results['user entity'] = $user_entity;
+    $results['related ldap entry'] = $user_ldap_entry;
+    
+    if (is_object($user_object)) {
+      $authmaps = db_query("SELECT aid, uid, module, authname FROM {authmap} WHERE uid = :uid", array(':uid' => $user_object->uid))->fetchAllAssoc('aid',  PDO::FETCH_ASSOC);
+    }
+    else {
+      $authmaps = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
+    }
+    $results['User Authmap'] = $authmaps;
+    
+    $ldap_user_conf = ldap_user_conf();
+    $results['LDAP User Configuration Object'] = $ldap_user_conf;
+    
+    foreach ($selected_actions as $i => $synch_context) {
+      if (!$synch_context) {
+        continue;
+      }
+      $synch_context_description = $synch_context_options[$synch_context];
+      $user_edit = array('name' => $username);
+      if ($synch_context == LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER) {
+        $discard = $ldap_user_conf->provisionDrupalAccount(NULL, $user_edit, $synch_context, NULL, FALSE);
+        $results['provisionDrupalAccount method results']["context = $synch_context_description"]['user edit array on provision'] = $user_edit;
+      }
+      
+      $user_edit = array('name' => $username);
+      $discard = $ldap_user_conf->synchToDrupalAccount(NULL, $user_edit, $synch_context, NULL, FALSE); 
+      $results['synchToDrupalAccount method results']["context = $synch_context_description"]['user edit array on synch'] = $user_edit;
+    }
+
+    if (function_exists('dpm')) {
+      dpm($results);
+    }
+    else {
+      drupal_set_message('This form will not display results unless the devel module is enabled.', 'warning');  
+    }
+  }
+  
+  $_SESSION['ldap_user_test_form'] = $form_state['values']['action'];
+  $form_state['redirect'] = ($username) ? LDAP_USER_TEST_FORM_PATH . "/" . $username :  LDAP_USER_TEST_FORM_PATH;
 
 }

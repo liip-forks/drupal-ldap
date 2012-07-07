@@ -70,6 +70,7 @@ function ldap_user_menu() {
     'page arguments' => array('ldap_user_test_form'),
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_user.test_form.inc',
+    'type' => MENU_LOCAL_ACTION,
   );
 
   $ws_arg_start = count(explode('/', LDAP_USER_WS_USER_PATH));
@@ -517,9 +518,9 @@ function ldap_user_permission() {
 function ldap_user_synch_contexts_key_values() {
 
   return array(
-    LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER => 'Insert Drupal User Sycnch Context',
-    LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER => 'Update Drupal User Sycnch Context',
-    LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER => 'Authenticate Drupal User Sycnch Context',
+    LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER => 'Insert Drupal User Synch Context',
+    LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER => 'Update Drupal User Synch Context',
+    LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER => 'Authenticate Drupal User Synch Context',
     LDAP_USER_SYNCH_CONTEXT_CRON => 'Cron Drupal User Synch Context',
     LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER => 'Delete Drupal User Synch Context',
     LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER => 'Disable Drupal User Synch Context',

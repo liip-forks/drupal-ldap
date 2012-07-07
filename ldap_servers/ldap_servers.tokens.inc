@@ -10,7 +10,16 @@
 //define('LDAP_SERVERS_TOKEN_DEL', ':');
 //define('LDAP_SERVERS_TOKEN_MODIFIER_DEL', ';');
 
+/**
+ * @todo this function does not account for tokens of form [cn]@mycompany.com
+ */
 function ldap_servers_token_is_token($text) {
+  /** token could be in a number of formats
+   * [sn]
+   * [field.field_lname]
+   * [cn]@mycompany.com
+   */
+  
   return  (strpos($text, LDAP_SERVERS_TOKEN_PRE) === 0 && strpos($text, LDAP_SERVERS_TOKEN_POST) === strlen($text) - 1);
 }
 /**
@@ -46,20 +55,22 @@ function ldap_servers_token_extract_attributes(&$attributes,  $text) {
 }
 
 /**
- * @param string $token with singular token in it, eg. [dn], [dn;binary], [titles:0]
+ * @param string $token or token expression with singular token in it, eg. [dn], [dn;binary], [titles:0] [cn]@mycompany.com
  *
  * @return token converted to dn, titles, etc.
  */
 function ldap_servers_token_extract_attribute_name($token) {
-  $attr_name = trim($token, LDAP_SERVERS_TOKEN_PRE . LDAP_SERVERS_TOKEN_POST); // remove token brackets
+  $attributes = array();
+  ldap_servers_token_extract_attributes($attributes,  $token); 
+//  $attr_name = trim($token, LDAP_SERVERS_TOKEN_PRE . LDAP_SERVERS_TOKEN_POST); // remove token brackets
 
-  $parts = explode(LDAP_SERVERS_TOKEN_MODIFIER_DEL, $attr_name); //remove modifiers
-  $attr_name = $parts[0];
+  //$parts = explode(LDAP_SERVERS_TOKEN_MODIFIER_DEL, $attr_name); //remove modifiers
+ // $attr_name = $parts[0];
 
-  $parts = explode(LDAP_SERVERS_TOKEN_DEL, $attr_name); // remove ordinal
-  $attr_name = $parts[0];
+ // $parts = explode(LDAP_SERVERS_TOKEN_DEL, $attr_name); // remove ordinal
+//  $attr_name = $parts[0];
 
-  return $attr_name;
+  return (is_array($attributes) && isset($attributes[0])) ? $attributes[0] : NULL;
 }
 
 

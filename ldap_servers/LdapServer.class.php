@@ -653,7 +653,7 @@ class LdapServer {
     else {
       $attributes = ldap_servers_attributes_needed($op, $this->sid);
     }
-    //debug('attributes needed'); debug($attributes);
+  //  debug('attributes needed'); debug($attributes);
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
