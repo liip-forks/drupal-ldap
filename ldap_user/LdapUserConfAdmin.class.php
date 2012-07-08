@@ -387,7 +387,7 @@ the top of this form.
     $this->populateFromDrupalForm($values, $storage);
     list($errors, $warnings) = $this->validate($values);
     // since failed mapping rows in form, don't populate ->ldapUserSynchMappings, need to validate these from values
-    dpm($values); dpm($storage);
+   // dpm($values); dpm($storage);
     foreach ($values as $field => $value) {
       $parts = explode('__', $field);
       // since synch mapping fields are in n-tuples, process entire n-tuple at once
@@ -415,7 +415,7 @@ the top of this form.
         }
         if ($row_mappings['direction'] == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER && $row_mappings['user_attr'] == 'user_tokens') {
           $input_name = join('__', array('sm','user_attr', $i));
-          dpm($input_name);
+          //dpm($input_name);
           $errors[$input_name] =  t('User tokens not allowed when mapping to Drupal user.  Location: !row_descriptor', $tokens); 
         }
         if (!$row_mappings['ldap_attr']) {
@@ -484,7 +484,7 @@ the top of this form.
             }
           }
         }
-        dpm("mappings"); dpm($mappings);
+       // dpm("mappings"); dpm($mappings);
         foreach ($mappings as $target_attr => $mapping) {
           foreach ($mapping as $key => $value) {
             if (is_scalar($value)) {
