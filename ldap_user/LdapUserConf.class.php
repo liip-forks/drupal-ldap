@@ -7,10 +7,10 @@
  */
 
 class LdapUserConf {
-
-  public $sids = array();  // server configuration ids being used by ldap user
-  public $provisionTargetServers = array();  // servers which are used for provisioning to ldap
-  public $servers = array(); // ldap server objects enabled for ldap user
+  // sids -> drupalAcctProvisionServers
+  public $drupalAcctProvisionServers = array();  // servers used for to drupal acct provisioning
+  public $ldapEntryProvisionServers = array();  // servers used for provisioning to ldap
+  public $provisionServers = array(); // ldap server objects enabled for ldap user
   public $drupalAcctProvisionEvents = array(LDAP_USER_PROV_ON_LOGON, LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE);
   public $ldapEntryProvisionEvents = array();
   public $userConflictResolve = LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
@@ -26,6 +26,7 @@ class LdapUserConf {
   public $wsEnabled = 0;
   public $wsUserIps = array();
   public $wsActions = array();
+
 
   public $synchTypes = NULL; // array of synch types (keys) and user friendly names (values)
 
@@ -44,8 +45,8 @@ class LdapUserConf {
   );
 
   public $saveable = array(
-    'sids',
-    'provisionTargetServers',
+    'drupalAcctProvisionServers',
+    'ldapEntryProvisionServers',
     'drupalAcctProvisionEvents',
     'ldapEntryProvisionEvents',
     'userConflictResolve',
@@ -76,6 +77,14 @@ class LdapUserConf {
     return FALSE;
   }
 
+  public function isDrupalAcctProvisionServer($sid) {
+    return in_array($sid, array_filter($this->drupalAcctProvisionServers));
+  }
+  
+  public function isLdapEntryProvisionServer($sid) {
+    return in_array($sid, array_filter($this->ldapEntryProvisionServers));
+  }
+  
   /**
    * Util to fetch attributes required for this user conf, not other modules.
    *
@@ -84,7 +93,7 @@ class LdapUserConf {
   */
   public function getRequiredAttributes($synch_context) {
     // Get the enabled servers.
-    $sids = array_filter(array_values($this->sids));
+    $sids = array_filter(array_values($this->drupalAcctProvisionServers));
     // Initialize our array.
     $attributes = array() ;
     // Loop over each server and fetch the mappings required.
@@ -116,7 +125,7 @@ class LdapUserConf {
    * @return boolean if any ldap servers are available for ldap user
    */
   public function enabled_servers() {
-    return !(count(array_filter(array_values($this->sids))) == 0);
+    return !(count(array_filter(array_values($this->drupalAcctProvisionServers))) == 0);
   }
 
   function __construct() {
@@ -149,9 +158,14 @@ class LdapUserConf {
           $this->{$property} = $saved[$property];
         }
       }
-      foreach ($this->sids as $sid => $is_enabled) {
+      foreach ($this->drupalAcctProvisionServers as $sid => $is_enabled) {
         if ($is_enabled) {
-          $this->servers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
+          $this->provisionServers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
+        }
+      }
+      foreach ($this->ldapEntryProvisionServers as $sid => $is_enabled) {
+        if ($is_enabled && !isset($this->provisionServers[$sid])) {
+          $this->provisionServers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
         }
       }
 
@@ -287,7 +301,7 @@ class LdapUserConf {
 
     $drupal_user = user_load_by_name($account->name);
     if (!$ldap_user) {
-      $sids = array_keys($this->sids);
+      $sids = array_keys($this->drupalAcctProvisionServers);
       $ldap_user = ldap_servers_get_user_ldap_data($account->name, $sids, $synch_context);
     }
    // debug('ldap user data:,'. $account->name); debug($ldap_user);
@@ -344,7 +358,7 @@ class LdapUserConf {
   public function provisionLdapEntry($account = FALSE, $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, $ldap_user = NULL) {
     $watchdog_tokens = array();
     $results = array();
-    foreach ($this->provisionTargetServers as $sid => $discard) {
+    foreach ($this->ldapEntryProvisionServers as $sid => $discard) {
       $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
       $params = array(
         'synch_context' => $synch_context,
@@ -523,7 +537,7 @@ class LdapUserConf {
 
 //    debug('call to provisionDrupalAccount'); debug('account'); debug($account); debug('user_edit'); debug($user_edit);
  //   debug('synch_context'); debug($synch_context); debug('ldap_user'); debug($ldap_user); debug('save=' . $save);
-  //  debug('this->sids'); debug($this->sids);  debug('this->servers'); debug($this->servers); debug('this'); debug($this);
+  //  debug('this->sids'); debug($this->drupalAcctProvisionServers);  debug('this->provisionServers'); debug($this->provisionServers); debug('this'); debug($this);
     /**
      * @todo
      * -- add check in for mail, puid, username, and existing drupal user conflicts
@@ -539,7 +553,7 @@ class LdapUserConf {
     }
     if (!$ldap_user) {
       $watchdog_tokens['%username'] = $user_edit['name'];
-      foreach ($this->sids as $sid => $discard) {
+      foreach ($this->drupalAcctProvisionServers as $sid => $discard) {
         $ldap_user = ldap_servers_get_user_ldap_data($user_edit['name'], $sid, $synch_context);
         if ($ldap_user) {
           $watchdog_tokens['%user_sid'] = $sid;
@@ -627,14 +641,15 @@ class LdapUserConf {
     }
 
     if ($op == 'create') {
+      $mail = isset($edit['mail']) ? $edit['mail'] : $ldap_user['mail'];
       $edit['pass'] = user_password(20);
-      $edit['init'] = $edit['mail'];
+      $edit['init'] = $mail;
       $edit['status'] = 1;
       if (!isset($edit['signature'])) {
         $edit['signature'] = '';
       }
       // save 'init' data to know the origin of the ldap authentication provisioned account
-      $mail = isset($edit['mail']) ? $edit['mail'] : $ldap_user['mail'];
+      
       $edit['data']['ldap_authentication']['init'] = array(
         'sid'  => $ldap_user['sid'],
         'dn'   => $ldap_user['dn'],

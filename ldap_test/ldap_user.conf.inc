@@ -11,10 +11,10 @@
 function ldap_test_ldap_user_data() {
 
   $conf['default']  = array(
-      'sids' => array(
+      'drupalAcctProvisionServers' => array(
         'activedirectory' => 'activedirectory',
       ),
-      'provisionTargetServers' => array(
+      'ldapEntryProvisionServers' => array(
         'activedirectory' => 0
       ),
       'drupalAcctProvisionEvents' => array(

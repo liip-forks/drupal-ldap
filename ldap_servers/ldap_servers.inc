@@ -10,7 +10,7 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context = N
   //$drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
   //debug("_ldap_servers_get_user_ldap_data, drupal_username=$drupal_username"); debug($sid);
 
-  if (is_object($drupal_user) && $authname = db_query("SELECT authname FROM {authmap} WHERE uid = :uid AND module = 'ldap_authentication'", array(':uid' => $drupal_user->uid))->fetchColumn()) {
+  if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = db_query("SELECT authname FROM {authmap} WHERE uid = :uid AND module = 'ldap_authentication'", array(':uid' => $drupal_user->uid))->fetchColumn()) {
     $drupal_username = $authname;
   }
   else {
