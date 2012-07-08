@@ -134,7 +134,7 @@ class LdapServerTest extends LdapServer {
    *   An array of matching entries->attributes, or FALSE if the search is empty.
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
-    debug("feaux_server_filter=$filter");
+    //debug("feaux_server_filter=$filter");
     $filter = trim(str_replace(array("\n", "  "),array('',''), $filter)); // for test matching simplicity remove line breaks and tab spacing
    // debug("filter=$filter");
    // debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");
