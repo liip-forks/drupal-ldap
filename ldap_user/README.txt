@@ -25,7 +25,6 @@ Provide interface for manually working with LDAP identified user data.
 Populate/Synch/Create/Update/Remove LDAP identified Drupal users via batch, hook responses, webservices
 
 
-
 ----------------------
 Diagrams
 ----------------------

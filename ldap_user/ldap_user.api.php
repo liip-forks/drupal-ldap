@@ -1,5 +1,6 @@
 <?php
 
+
 /**
  * hook_ldap_user_attrs_alter().
  *

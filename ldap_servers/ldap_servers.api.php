@@ -40,11 +40,10 @@ function hook_ldap_attributes_needed_alter(&$attributes, $op, $server) {
 }
 
 /**
- * Perform alterations of ldap entry
+ * Perform alterations of $ldap_user variable.  
  *
  *
- * @param array $ldap_entry
- *   array of an ldap entry as ldap php extension would return from a query
+ * @param array $ldap_user see README.developers.txt for structure
  * @param array $params context array with some or all of the following key/values
  *   'account' => drupal account object,
  *   'synch_context' => LDAP_USER_SYNCH_CONTEXT_* constant,
@@ -54,7 +53,7 @@ function hook_ldap_attributes_needed_alter(&$attributes, $op, $server) {
  *
  */
 
-function hook_ldap_entry_alter(&$ldap_entry, $params) {
+function hook_ldap_user_alter(&$ldap_entry, $params) {
 
 
 }

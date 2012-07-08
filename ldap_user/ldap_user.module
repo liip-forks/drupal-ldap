@@ -355,7 +355,7 @@ function ldap_user_user_login(&$edit, $account) {
       made even if no synching occurs.
   **/
   $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, FALSE);
-  $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, FALSE);
+  $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
 }
 
 /**
@@ -388,7 +388,7 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
       $results = $ldap_user_conf->provisionLdapEntry($account, $synch_context);
     }
 
-    $ldap_user_conf->synchToLdapEntry($account, $user_edit, $synch_context, NULL, FALSE);
+    $ldap_user_conf->synchToLdapEntry($account, $user_edit, $synch_context);
   }
 }
 
@@ -406,7 +406,7 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
       $result = $ldap_user_conf->provisionLdapEntry($account, $synch_context);
     }
 
-    $ldap_user_conf->synchToLdapEntry($account, $user_edit, $synch_context, NULL, FALSE);
+    $ldap_user_conf->synchToLdapEntry($account, $user_edit, $synch_context);
   }
 }
 

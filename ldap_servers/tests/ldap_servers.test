@@ -77,7 +77,7 @@ class LdapServersTestCase extends DrupalWebTestCase {
       'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
       'sAMAccountName' => array( 0 => 'jdoe', 'count' => 1),
       'dept' => array( 0 => 'physics', 1 => 'chemistry', 'count' => 2),
-      
+      'count' => 3,
     );
     
     $this->ldapTestId = 'ldap_server.tokens';

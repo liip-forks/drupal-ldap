@@ -151,13 +151,13 @@ function ldap_feeds_drupal_user_legend(&$form) {
         }
       }
 
-      $user_ldap_entry = ldap_servers_get_user_ldap_data($ldap_server->testingDrupalUsername, $sid);
-      foreach ($user_ldap_entry['attr'] as $id => $value) {
-        if (!is_numeric($id) && is_scalar($user_ldap_entry['attr'][$id][0]) && $user_ldap_entry['attr'][$id]['count'] == 1) {
-          $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $user_ldap_entry['attr'][$id][0]));
+      $ldap_user = ldap_servers_get_user_ldap_data($ldap_server->testingDrupalUsername, $sid);
+      foreach ($ldap_user['attr'] as $id => $value) {
+        if (!is_numeric($id) && is_scalar($ldap_user['attr'][$id][0]) && $ldap_user['attr'][$id]['count'] == 1) {
+          $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $ldap_user['attr'][$id][0]));
         }
-        elseif ($user_ldap_entry['attr'][$id]['count'] > 1) {
-          $item = t('MULTIVALUED ATTRIBUTE:') . join(" , \n", $user_ldap_entry['attr'][$id]);
+        elseif ($ldap_user['attr'][$id]['count'] > 1) {
+          $item = t('MULTIVALUED ATTRIBUTE:') . join(" , \n", $ldap_user['attr'][$id]);
           $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $item));
         }
       }

@@ -115,14 +115,14 @@ class LdapAuthenticationConf {
    *
    * return boolean
    */
-  public function allowUser($name, $ldap_user_entry) {
+  public function allowUser($name, $ldap_user) {
 
     /**
      * do one of the exclude attribute pairs match
      */
     $exclude = FALSE;
     foreach ($this->excludeIfTextInDn as $test) {
-      if (stripos($ldap_user_entry['dn'], $test) !== FALSE) {
+      if (stripos($ldap_user['dn'], $test) !== FALSE) {
         return FALSE;//  if a match, return FALSE;
       }
     }
@@ -135,7 +135,7 @@ class LdapAuthenticationConf {
       if (module_exists('php')) {
         global $_name, $_ldap_user_entry;
         $_name = $name;
-        $_ldap_user_entry = $ldap_user_entry;
+        $_ldap_user_entry = $ldap_user;
         $code = '<?php ' . "global \$_name; \n  global \$_ldap_user_entry; \n" . $this->allowTestPhp . ' ?>';
         $code_result = php_eval($code);
         $_name = NULL;
@@ -158,7 +158,7 @@ class LdapAuthenticationConf {
     if (count($this->allowOnlyIfTextInDn)) {
       $fail = TRUE;
       foreach ($this->allowOnlyIfTextInDn as $test) {
-        if (stripos($ldap_user_entry['dn'], $test) !== FALSE) {
+        if (stripos($ldap_user['dn'], $test) !== FALSE) {
           $fail = FALSE;
         }
       }
@@ -207,8 +207,8 @@ class LdapAuthenticationConf {
 
     // allow other modules to hook in and refuse if they like
     $hook_result = TRUE;
-    drupal_alter('ldap_authentication_allowuser_results', $ldap_user_entry, $name, $hook_result);
-    if (!$hook_result) {
+    drupal_alter('ldap_authentication_allowuser_results', $ldap_user, $name, $hook_result);
+    if ($hook_result === FALSE) {
       watchdog('ldap_authentication', "Authentication Allow User Result=refused for %name", array('%name' => $name), WATCHDOG_NOTICE);
       return FALSE;
     }

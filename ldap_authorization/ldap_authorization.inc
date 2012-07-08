@@ -146,7 +146,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     }
 
     $consumer_sid = $consumer->consumerConf->deriveFromEntrySearchAll ? NULL : $consumer->consumerConf->sid;
-    if (! ($user_ldap_entry = ldap_servers_get_user_ldap_data($user, $consumer_sid))) {
+    if (! ($ldap_user = ldap_servers_get_user_ldap_data($user, $consumer_sid))) {
       $notifications[$consumer_type][] = LDAP_AUTHORIZATION_USER_LDAP_NOT_FOUND;
       if ($detailed_watchdog_log) {
         watchdog('ldap_authorization', '%username : %consumer_type ldap user not found.', $watchdog_tokens, WATCHDOG_DEBUG);
@@ -174,7 +174,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
      * the authorization ids may represent drupal roles, organic groups, civicrm groups, etc.
      * these mappings are a function of:
      *   -  drupal user entry, $user
-     *   -  a user ldap entry, $user_ldap_entry
+     *   -  $ldap_user. see README.developers.txt for structure
      *   -  an ldap server configuration, $ldap_server
      *   -  a mapping configuration ($consumer_conf)
      */
@@ -186,7 +186,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $watchdog_tokens, WATCHDOG_DEBUG);
     }
 
-    ldap_authorization_maps_alter_invoke($user, $user_ldap_entry, $ldap_server, $consumer->consumerConf, $proposed_ldap_authorizations, $op);
+    ldap_authorization_maps_alter_invoke($user, $ldap_user, $ldap_server, $consumer->consumerConf, $proposed_ldap_authorizations, $op);
 
     if ($detailed_watchdog_log || $debug) {
       $_proposed_ldap_authorizations = is_array($proposed_ldap_authorizations) ? $proposed_ldap_authorizations : array();
@@ -268,7 +268,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       $_SESSION['ldap_authorization_test_query']['tokens'] = $watchdog_tokens;
     }
     if ($op == 'set') {
-      _ldap_authorizations_user_authorizations_set($user, $consumer, $filtered_ldap_authorizations, $user_ldap_entry, $watchdog_tokens);
+      _ldap_authorizations_user_authorizations_set($user, $consumer, $filtered_ldap_authorizations, $ldap_user, $watchdog_tokens);
     }
    // debug('filtered,'. $consumer_type); debug($authorizations[$consumer_type]);
     $authorizations[$consumer_type] = $filtered_ldap_authorizations;

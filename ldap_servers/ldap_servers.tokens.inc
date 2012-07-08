@@ -85,9 +85,9 @@ function ldap_servers_token_extract_attribute_name($token) {
  * @return token array suitable for t() functions of with lowercase keys as exemplified below
 
 
-an ldap entry such as:
+$ldap_entry should be in form of single entry returned from ldap_search() function:
 
-   'dn' => 'cn=jdoe,ou=campus accounts,ou=toledo campus,dc=ad,dc=myuniversity,dc=edu',
+    'dn' => 'cn=jdoe,ou=campus accounts,ou=toledo campus,dc=ad,dc=myuniversity,dc=edu',
     'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
     'sAMAccountName' => array( 0 => 'jdoe', 'count' => 1),
 
@@ -159,10 +159,10 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
 
   // tokenize other attributes
   if ($token_keys == 'all') {
-    $token_keys = array_keys($ldap_entry['attr']);
+    $token_keys = array_keys($ldap_entry);
     $token_keys = array_filter($token_keys, "is_string");
     foreach ($token_keys as $attr_name) {
-      $attr_value = $ldap_entry['attr'][$attr_name];
+      $attr_value = $ldap_entry[$attr_name];
       if (is_array($attr_value) && is_scalar($attr_value[0]) && $attr_value['count'] == 1) {
         $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($attr_value[0]);
         $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = check_plain($attr_value[0]);
@@ -187,17 +187,17 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
       $attr_name = $parts[0];
       $ordinal_key = isset($parts[1]) ? (int)$parts[1] : 0;
       
-      if ($attr_name == 'dn' || !isset($ldap_entry['attr'][$attr_name])) { // don't use empty() since a 0, "", etc value may be a desired value
+      if ($attr_name == 'dn' || !isset($ldap_entry[$attr_name])) { // don't use empty() since a 0, "", etc value may be a desired value
           continue;
       }
       else {
-        $count = $ldap_entry['attr'][$attr_name]['count'];
+        $count = $ldap_entry[$attr_name]['count'];
         if ($ordinal_key == 'last') {
           $i = ($count > 0) ? $count - 1 : 0;
-          $value = $ldap_entry['attr'][$attr_name][$i];
+          $value = $ldap_entry[$attr_name][$i];
         }
         elseif (is_numeric($ordinal_key) || $ordinal_key == '0') {
-          $value = $ldap_entry['attr'][$attr_name][$ordinal_key];
+          $value = $ldap_entry[$attr_name][$ordinal_key];
         }
         else { 
           continue;  // don't add token if case not covered

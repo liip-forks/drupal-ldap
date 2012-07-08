@@ -46,10 +46,14 @@ class LdapServerTestv2 extends LdapServer {
     // debug("test data ldapservertest.class.php, sid=$sid"); debug($test_data);
 
     $this->sid = $sid;
+    $this->refreshFakeData();
+  }
+
+  private function refreshFakeData() {
+    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
     $this->methodResponses = (is_array($test_data) && isset($test_data['methodResponses'])) ? $test_data['methodResponses'] : array();
     $this->entries = (is_array($test_data) && isset($test_data['entries'])) ? $test_data['entries'] : array();
     $this->searchResults = (isset($test_data['search_results'])) ? $test_data['search_results'] : array();
-
     $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
     foreach ($test_data['properties'] as $property_name => $property_value ) {
       $this->{$property_name} = $property_value;
@@ -61,7 +65,7 @@ class LdapServerTestv2 extends LdapServer {
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
   }
-
+  
   /**
    * Destructor Method
    */
@@ -221,5 +225,93 @@ class LdapServerTestv2 extends LdapServer {
     return $servers;
 
   }
+  
+  
+  /**
+   * create ldap entry.
+   *
+   * @param array $ldap_entry should follow the structure of ldap_add functions
+   *   entry array: http://us.php.net/manual/en/function.ldap-add.php
+        $attributes["attribute1"] = "value";
+        $attributes["attribute2"][0] = "value1";
+        $attributes["attribute2"][1] = "value2";
+   * @return boolean result
+   */
+
+  public function createLdapEntry($ldap_entry) {
+
+    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
+    
+    if (!isset($ldap_entry['dn'])) {
+      return FALSE;
+    }
+    elseif (isset($test_data['entries'][$dn])) {
+      return FALSE; // entry already exists
+    }
+    else {
+      $test_data['entries'][$ldap_entry['dn']] = $ldap_entry;
+      variable_set('ldap_test_server__' . $this->sid, $test_data);
+      $this->refreshFakeData();
+      return TRUE;
+    }
+    
+  }
+  
+  function modifyLdapEntry($dn, $attributes) {
+
+    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
+    
+    if (!isset($test_data['entries'][$dn])) {
+      return FALSE;
+    }
+    else {
+      $ldap_entry = $test_data['entries'][$dn];
+      foreach ($attributes as $key => $cur_val) {
+        if ($cur_val == '') {
+          unset($ldap_entry['attr'][$key]);
+        }
+        elseif (is_array ($cur_val)) {
+          foreach ($cur_val as $mv_key => $mv_cur_val) {
+            if ($mv_cur_val == '') {
+              unset($ldap_entry['attr'][$key][$mv_key]);
+            }
+            else {
+              $ldap_entry['attr'][$key][$mv_key] = $mv_cur_val;
+            }
+          }
+          unset($ldap_entry['attr'][$key]['count']);
+          $ldap_entry['attr'][$key]['count'] = count($ldap_entry['attr'][$key]);
+        }
+      }
+      $test_data[$dn] = $ldap_entry;
+      variable_set('ldap_test_server__' . $this->sid, $test_data);
+      $this->refreshFakeData();
+      return TRUE;
+    }
+  }
+  
+    /**
+   * Perform an LDAP delete.
+   *
+   * @param string $dn
+   *
+   * @return boolean result per ldap_delete
+   */
+
+  public function delete($dn) {
+
+    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
+    if (isset($test_data['entries'][$dn])) {
+      unset($test_data['entries'][$dn]);
+      variable_set('ldap_test_server__' . $this->sid, $test_data);
+      $this->refreshFakeData();
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
+
+  }
+  
 
 }

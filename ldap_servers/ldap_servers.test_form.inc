@@ -151,9 +151,8 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   // $ldap_server = NULL;
   list($has_errors, $more_results) = ldap_servers_test_binding_credentials($ldap_server, $bindpw);
   $results = array_merge($results, $more_results);
-  if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+  if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
-
     $results = array_merge($results, $more_results);
     if (!$has_errors) {
       $mapping[] = "dn = " . $ldap_user['dn'];
@@ -178,6 +177,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   if (!$has_errors && @$values['testing_drupal_username']) {
     ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
+    dpm('ldap_user'); dpm($ldap_user);
     $results = array_merge($results, $more_results);
     $tokens = ($ldap_user && isset($ldap_user['attr'])) ? ldap_servers_token_tokenize_entry($ldap_user['attr'], 'all') : array();
     $_SESSION['ldap_server_test_data'] = array(

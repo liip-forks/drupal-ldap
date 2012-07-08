@@ -52,16 +52,16 @@ class FeedsDrupalUserLdapEntryFetcherResult extends FeedsFetcherResult {
         continue;
       }
 
-      if ($ldap_entry = ldap_servers_get_user_ldap_data($user)) {
-        unset($ldap_entry['mail']);
-        $ldap_entry['attr']['count'] = $ldap_entry['attr']['count'] + count($this->availableDrupalUserAttributes);
+      if ($ldap_user = ldap_servers_get_user_ldap_data($user)) {
+        unset($ldap_user['mail']);
+        $ldap_user['attr']['count'] = $ldap_user['attr']['count'] + count($this->availableDrupalUserAttributes);
         foreach ($this->availableDrupalUserAttributes as $attr_name => $attr_conf) {
-          $ldap_entry['attr'][] = $attr_conf['token'];
-          $ldap_entry['attr'][$attr_conf['token']]['count'] = 1;
-          $ldap_entry['attr'][$attr_conf['token']][0] = (string)$user->{$attr_name};
+          $ldap_user['attr'][] = $attr_conf['token'];
+          $ldap_user['attr'][$attr_conf['token']]['count'] = 1;
+          $ldap_user['attr'][$attr_conf['token']][0] = (string)$user->{$attr_name};
         }
 
-        $results[] = $ldap_entry;
+        $results[] = $ldap_user;
       }
     }
     $results['count'] = count($results);

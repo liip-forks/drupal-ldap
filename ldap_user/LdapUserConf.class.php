@@ -243,16 +243,14 @@ class LdapUserConf {
    * given a drupal account, synch to related ldap entry
    *
    * @param array $account.  Drupal user object
+   * @param array $user_edit.  Edit array for user_save.  generally null unless user account is being created or modified in same synching
    * @param string $synch_context.
-   * @param array $ldap_user_entry.  any overrides of ldap user entry attributes
+   * @param array $ldap_user.  current ldap data of user. see README.developers.txt for structure
    *
    * @return array of ldap_entry or LDAP_USER_PROVISION_LDAP_ENTRY_SYNCH_FAILED on fail.
    */
 
-  public function synchToLdapEntry($account, $synch_context, $ldap_user_entry = array()) {
-
-
-
+  public function synchToLdapEntry($account, $user_edit = NULL, $synch_context, $ldap_user = array()) {
 
   }
 
@@ -438,7 +436,7 @@ class LdapUserConf {
    * @return ldap entry in ldap extension array format.
    */
 
-  function drupalUserToLdapEntry($account, $ldap_server, $ldap_user_entry = array(), $params = array()) {
+  function drupalUserToLdapEntry($account, $ldap_server, $ldap_user = array(), $params = array()) {
 
     $watchdog_tokens = array(
       '%drupal_username' => $account->name,
@@ -448,7 +446,7 @@ class LdapUserConf {
      * 1. need to generate dn based on ldap_user configuration
      */
 
-    if (!isset($ldap_user_entry['dn'])) {
+    if (!isset($ldap_user['dn'])) {
       if (!isset($this->synchMapping[$ldap_server->sid]['dn'])) {
         watchdog('ldap_user', 'Failed to provision drupal account %drupal_username because no dn mapping is defined', $watchdog_tokens, WATCHDOG_ALERT);
         return FALSE;
@@ -475,7 +473,7 @@ class LdapUserConf {
         return FALSE;
       }
 
-      $ldap_user_entry['dn'] = $dn;
+      $ldap_user['dn'] = $dn;
     }
 
 
@@ -494,12 +492,12 @@ class LdapUserConf {
      */
 
     /**
-     * 4. call drupal_alter() to allow other modules to alter $ldap_user_entry
+     * 4. call drupal_alter() to allow other modules to alter $ldap_user
      */
 
-    drupal_alter('ldap_entry', $ldap_user_entry, $params);
+    drupal_alter('ldap_entry', $ldap_user, $params);
 
-    return $ldap_user_entry;
+    return $ldap_user;
 
   }
 
@@ -596,7 +594,7 @@ class LdapUserConf {
   /** populate $user edit array (used in hook_user_save, hook_user_update, etc)
    * ... should not assume all attribues are present in ldap entry
    *
-   * @param array ldap entry $user_ldap_entry
+   * @param array ldap entry $ldap_user
    * @param object $ldap_server
    * @param array $edit see hook_user_save, hook_user_update, etc
    * @param drupal account object $account
@@ -636,10 +634,11 @@ class LdapUserConf {
         $edit['signature'] = '';
       }
       // save 'init' data to know the origin of the ldap authentication provisioned account
+      $mail = isset($edit['mail']) ? $edit['mail'] : $ldap_user['mail'];
       $edit['data']['ldap_authentication']['init'] = array(
         'sid'  => $ldap_user['sid'],
         'dn'   => $ldap_user['dn'],
-        'mail' => $edit['mail'],
+        'mail' => $mail,
       );
     }
 
@@ -680,7 +679,7 @@ class LdapUserConf {
        // else {
           // And that we have a value for this attribute in the ldap entry.
         //  debug('token');
-          $value = ldap_servers_token_replace($ldap_user, $field_detail['ldap_attr']);
+          $value = ldap_servers_token_replace($ldap_user['attr'], $field_detail['ldap_attr']);
         //  if ($value === FALSE) {
         //    continue; // if attribute value doesn't exist, do not evaluate.
        //   }
