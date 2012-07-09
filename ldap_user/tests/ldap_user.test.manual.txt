@@ -12,6 +12,7 @@
 4. Enable ldap_user module and check watchdog logs
 5. Prepare user settings/entity for testing
   -- add field_lname, field_fname, field_dept, and field_display_name text fields to user
+  
 6. Configure ldap user for general synching with no explicit mappings
     A. Select enabled server
     B. Drupal Accoutn Provisioning: [x] On manual creation of Drupal user account...
@@ -49,4 +50,32 @@
        iv.    user object->ldap_user_current_dn should be the dn of the ldap entry
        v.     user object->mail and init should be correct, matching email
        vii.   user authmap should have an entry where module=ldap_authentication and authname=username
+       
+       
+       
+9. Test ldap entry provisioning
+    A. in ldap user settings (admin/config/people/ldap/user)
+      - uncheck BASIC PROVISIONING TO DRUPAL ACCOUNT SETTINGS settings
+      - enable an ldap server in BASIC PROVISIONING TO LDAP SETTINGS
+      - check both "LDAP Entry Provisioning Options"
+      - disable REST webservice
+      - in mappings table (alter to fit your LDAP)
+        -- [dn], 'to LDAP entry', 'user tokens', [x] on user creation, [x] on user update/save
+             user tokens should be an expression that evaluates to a dn such as:
+             "cn=[property.name],ou=people,dc=ldap,dc=mycompany,dc=com" or
+             "cn=[field.field_lname], [field.field_fname],ou=people,dc=ldap,dc=mycompany,dc=com"
+        -- [cn], 'to LDAP entry', 'Property: Username', [x] on user creation, [x] on user update/save
+        -- [displayname], 'to LDAP entry', user tokens, [x] on user creation, [x] on user update/save, [field.field_fname] [field.field_lname]
+        -- [guid], 'to LDAP entry', user tokens, [x] on user creation, mydrupalsite.com[property.uid]
+        -- [provisioned], 'to LDAP entry', user tokens, [x] on user creation, drupal_intranet (note this is a constant)
+           
+    B.  Create and approve new user, populating first and last name.
+        -- confirm that ldap entry exists with proper attributes
+        
+    C.  Change lastname and first name and save user
+        -- confirm that appropriate attributes were changed in ldap entry
+        
+    D.  Delete user in drupal.
+        -- confirm that ldap entry for user is removed.
+        
 

@@ -140,6 +140,8 @@ class LdapUserConfAdmin extends LdapUserConf {
         $this->ldapEntryProvisionServersOptions[$sid] = $ldap_server->name . ' (' . $ldap_server->address . ') Status: ' . $enabled;
       }
     }
+  //  dpm($this->ldapUserSynchMappings);
+   // print "<pre>"; print_r($this->ldapUserSynchMappings);
   }
 
   public function drupalForm() {

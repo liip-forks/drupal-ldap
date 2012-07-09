@@ -28,9 +28,18 @@ function ldap_servers_token_is_token($text) {
  * @return string text with tokens replaced
  */
 
-function ldap_servers_token_replace($ldap_entry, $text) {
+function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_entry') { // user_account
   $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);
-  $tokens = ldap_servers_token_tokenize_entry($ldap_entry, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
+  switch ($resource_type) {
+    case 'ldap_entry':
+    $tokens = ldap_servers_token_tokenize_entry($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
+    break;
+  
+    case 'user_account':
+    $tokens = ldap_servers_token_tokenize_user_account($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
+    break;  
+  }
+  
   foreach ($tokens as $key => $value) {
     $tokens[drupal_strtolower($key)] = $value;
   }
@@ -212,6 +221,59 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
 
   // include the dn.  it will not be handled correctly by previous loops
   $tokens[$pre . 'dn' . $post] = check_plain($ldap_entry['dn']);
+  return $tokens;
+}
+
+/**
+ * should return token/value pairs in array such as
+ *   'status' => 1
+ *   'uid' => 17
+ */
+
+function ldap_servers_token_tokenize_user_account($user_account, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
+  //debug('ldap_servers_token_tokenize_user_account,$user_account'); debug($user_account);
+  $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
+  $tokens = array();
+  
+  if ($token_keys == 'all') {
+    // add lowercase keyed entries to ldap array
+    foreach ((array)$user_account as $property_name => $value) {
+      if (is_scalar($value)) {
+        $tokens[$pre . 'property.' . $property_name . $post] = $value;
+        if ($property_name != drupal_strtolower($property_name)) {
+          $tokens[$pre . 'property.' . drupal_strtolower($property_name) . $post] = $value;
+        }
+      }
+      elseif (isset($user_account->{$attr_name}['und'][0]['value']) && is_scalar($user_account->{$attr_name}['und'][0]['value'])) {
+        $tokens[$pre . 'field.' . $property_name . $post] = $user_account->{$attr_name}['und'][0]['value'];
+        if ($property_name != drupal_strtolower($property_name)) {
+          $tokens[$pre . 'field.' . drupal_strtolower($property_name) . $post] = $value;
+        }
+      }
+    }
+  }
+  else {
+    foreach ($token_keys as $token_key) {
+      $parts = explode('.', $token_key);
+      $attr_type = $parts[0];
+      $attr_name = $parts[1];
+      switch ($attr_type) {
+        case 'field':
+          $value = is_scalar($user_account->{$attr_name}['und'][0]['value']) ? $user_account->{$attr_name}['und'][0]['value'] : '';
+        break;
+        
+        case 'property':
+          $value = is_scalar($user_account->{$attr_name}) ? $user_account->{$attr_name} : '';
+        break;
+      
+      }
+      $tokens[$pre . $token_key . $post] = check_plain($value);
+      if ($token_key != drupal_strtolower($token_key)) {
+        $tokens[$pre . drupal_strtolower($token_key) . $post] = check_plain($value);
+      }
+    }
+  }
+ // debug('final tokens'); debug($tokens);
   return $tokens;
 }
 

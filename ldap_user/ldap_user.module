@@ -179,8 +179,6 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
     '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
   );
 
-
-
   // 1. Drupal user properties
   // 1.a make sure empty array are present so array + function works
   foreach (array('property.status','property.timezone','property.signature') as $i => $property_id) {
@@ -258,6 +256,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
   //this is where  need to be added to arrays
   // temp_out dpm("sic=$sid, ldap_user_ldap_user_attrs_list_alter, ldapUserSynchMappings: "); // temp_out dpm($ldap_user_conf->ldapUserSynchMappings[$sid]);
   if (isset($ldap_user_conf->ldapUserSynchMappings[$sid])) {
+   // debug($ldap_user_conf->ldapUserSynchMappings[$sid]);
     foreach ($ldap_user_conf->ldapUserSynchMappings[$sid] as $target_attribute => $mapping) {
       //// temp_out dpm($target_attribute); // temp_out dpm($mapping);
       if (isset($mapping['direction']) && $mapping['direction'] == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER && isset($mapping['user_attr'])) {
@@ -280,6 +279,9 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
         }
         $available_user_attrs[$key]['config_module'] = 'ldap_user';
         $available_user_attrs[$key]['synch_module'] = 'ldap_user';
+      }
+      if ($mapping['user_attr'] == 'user_tokens') {
+        $available_user_attrs['user_attr'] = $mapping['user_tokens'];
       }
 
     }
@@ -380,12 +382,17 @@ function ldap_user_user_presave(&$user_edit, $account, $category) {
  *
  */
 function ldap_user_user_insert(&$user_edit, $account, $category) {
+ // debug('ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
   if ($category != 'ldap_user') { // avoid recursion
     $ldap_user_conf = ldap_user_conf();
     $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER;
 
     if ($account->status && in_array(LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE, $ldap_user_conf->ldapEntryProvisionEvents)) {
+    //  debug('calling ldap_user_conf->provisionLdapEntry'); debug($account->name);
       $results = $ldap_user_conf->provisionLdapEntry($account, $synch_context);
+    }
+    else {
+    //  debug('NOT calling ldap_user_conf->provisionLdapEntry'); debug($account);
     }
 
     $ldap_user_conf->synchToLdapEntry($account, $user_edit, $synch_context);

@@ -283,6 +283,19 @@ class LdapServer {
     }
   }
 
+
+  function dnExists($dn) {
+    $attributes = array();
+    foreach ($this->basedn as $basedn) {
+      if (empty($basedn)) continue;
+      $filter = '(distinguishedName=' . ldap_server_massage_text($dn, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ')';
+      $result = $this->search($basedn, $filter, $attributes);
+      if (!$result || !isset($result['count']) || !$result['count']) continue;
+      return TRUE;
+    }
+    return FALSE;
+  }
+  
   /**
    * Perform an LDAP delete.
    *

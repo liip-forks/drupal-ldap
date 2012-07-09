@@ -245,7 +245,7 @@ class LdapServerTestv2 extends LdapServer {
     if (!isset($ldap_entry['dn'])) {
       return FALSE;
     }
-    elseif (isset($test_data['entries'][$dn])) {
+    elseif (isset($test_data['entries'][$ldap_entry['dn']])) {
       return FALSE; // entry already exists
     }
     else {
