@@ -108,6 +108,9 @@ function ldap_user_test_form_submit($form, &$form_state) {
       if ($synch_context == LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER) {
         $discard = $ldap_user_conf->provisionDrupalAccount(NULL, $user_edit, $synch_context, NULL, FALSE);
         $results['provisionDrupalAccount method results']["context = $synch_context_description"]['user edit array on provision'] = $user_edit;
+        
+        $provision_result = $ldap_user_conf->provisionLdapEntry($user_object, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
+        $results['provisionLdapEntry method results']["context = $synch_context_description"] = $provision_result;
       }
       
       $user_edit = array('name' => $username);

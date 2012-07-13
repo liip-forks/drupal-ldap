@@ -140,7 +140,7 @@ class LdapServerTestv2 extends LdapServer {
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
     
-  //  debug("ldap test server search base_dn=$base_dn, filter=$filter"); debug($attributes);
+   // debug("ldap test server search base_dn=$base_dn, filter=$filter"); debug($attributes);
     $lcase_attribute = array();
     foreach ($attributes as $i => $attribute_name) {
       $lcase_attribute[] = drupal_strtolower($attribute_name);
@@ -171,7 +171,7 @@ class LdapServerTestv2 extends LdapServer {
   //  debug("filter attribute, $filter_attribute, filter value $filter_value");
     // need to perform feaux ldap search here with data in
     $results = array();
-  //  debug('this->entries'); debug($this->entries);
+   // debug('this->entries'); debug($this->entries);
     foreach ($this->entries as $dn => $entry) {
       $dn_lcase = drupal_strtolower($dn);
       // if not in basedn, skip
@@ -258,36 +258,49 @@ class LdapServerTestv2 extends LdapServer {
   }
   
   function modifyLdapEntry($dn, $attributes) {
-
-    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
     
+    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
+   // debug('modifyLdapEntry,dn='. $dn); debug($attributes); debug('test data'); debug($test_data['entries'][$dn]);
     if (!isset($test_data['entries'][$dn])) {
       return FALSE;
     }
-    else {
-      $ldap_entry = $test_data['entries'][$dn];
-      foreach ($attributes as $key => $cur_val) {
-        if ($cur_val == '') {
-          unset($ldap_entry['attr'][$key]);
-        }
-        elseif (is_array ($cur_val)) {
-          foreach ($cur_val as $mv_key => $mv_cur_val) {
-            if ($mv_cur_val == '') {
-              unset($ldap_entry['attr'][$key][$mv_key]);
+
+    $ldap_entry = $test_data['entries'][$dn];
+    foreach ($attributes as $key => $cur_val) {
+    //  debug("key=$key"); debug($cur_val);
+      if ($cur_val == '') {
+        unset($ldap_entry[$key]);
+      }
+      elseif (is_array($cur_val)) {
+        foreach ($cur_val as $mv_key => $mv_cur_val) {
+          if ($mv_cur_val == '') {
+            unset($ldap_entry[$key][$mv_key]);
+          }
+          else {
+            if (is_array($mv_cur_val)) {
+              $ldap_entry[$key][$mv_key] = $mv_cur_val;
             }
             else {
-              $ldap_entry['attr'][$key][$mv_key] = $mv_cur_val;
+              $ldap_entry[$key][$mv_key][] = $mv_cur_val;
             }
           }
-          unset($ldap_entry['attr'][$key]['count']);
-          $ldap_entry['attr'][$key]['count'] = count($ldap_entry['attr'][$key]);
         }
+        unset($ldap_entry[$key]['count']);
+        $ldap_entry[$key]['count'] = count($ldap_entry[$key]);
       }
-      $test_data[$dn] = $ldap_entry;
-      variable_set('ldap_test_server__' . $this->sid, $test_data);
-      $this->refreshFakeData();
-      return TRUE;
+      else {
+        $ldap_entry[$key][0] = $cur_val;
+        $ldap_entry[$key]['count'] = count($ldap_entry[$key]);
+      }
+     // debug('ldap_entry.'. $key); debug($ldap_entry[$key]);
     }
+    
+    $test_data['entries'][$dn] = $ldap_entry;
+   // debug('modifyLdapEntry:server test date before save'); debug($test_data['entries'][$dn]);
+    variable_set('ldap_test_server__' . $this->sid, $test_data);
+    $this->refreshFakeData();
+    return TRUE;
+    
   }
   
     /**

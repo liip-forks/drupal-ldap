@@ -59,8 +59,11 @@ single ldap entry from return of ldap_search()
 $ldap_entries and $ldap_*_entries 
 -----------
 multiple ldap entries result array as returned by ldap_search()
-  
-  
+
+--------------
+$user_attr_key
+key of form <attr_type>.<attr_name>[:<instance>] such as field.lname, property.mail, field.aliases:2 
+--------------
 
 ======================
 configuration objects

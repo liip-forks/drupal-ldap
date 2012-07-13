@@ -30,6 +30,7 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context = N
     $servers = ldap_servers_get_servers($sid, 'enabled');
   }
   foreach ($servers as $sid => $ldap_server)  {
+    //debug('user lookup,'. $drupal_username);
     if ($ldap_user = $ldap_server->user_lookup($drupal_username, $synch_context)) {
       $ldap_user['sid'] = $sid;
       return $ldap_user;

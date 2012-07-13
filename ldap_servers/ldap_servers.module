@@ -453,7 +453,14 @@ function ldap_servers_get_servers($sid = NULL, $type = NULL, $flatten = FALSE, $
   }
 }
 
-
+function ldap_servers_debug($variable) {
+  if (variable_get('ldap_simpletest', FALSE) && function_exists('dpm')) {
+    dpm($variable);
+  }
+  else {
+    debug($variable);
+  }
+}
 function ldap_servers_cache_clear() {
   $discard = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE);
 }

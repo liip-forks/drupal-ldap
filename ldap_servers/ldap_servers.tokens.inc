@@ -11,17 +11,46 @@
 //define('LDAP_SERVERS_TOKEN_MODIFIER_DEL', ';');
 
 /**
- * @todo this function does not account for tokens of form [cn]@mycompany.com
+ * @param string $attr_name such 'field_user_lname', 'name', 'mail', 'dn'
+ * @param string $attr_type such as 'field', 'property', etc.  NULL for ldap attributes
+ * @param string $attr_ordinal 0, 1, 2, etc.  not used in general
+ *
+ * @return string such as 'field.field_user_lname', 'samaccountname', etc.
  */
-function ldap_servers_token_is_token($text) {
-  /** token could be in a number of formats
-   * [sn]
-   * [field.field_lname]
-   * [cn]@mycompany.com
-   */
-  
-  return  (strpos($text, LDAP_SERVERS_TOKEN_PRE) === 0 && strpos($text, LDAP_SERVERS_TOKEN_POST) === strlen($text) - 1);
+function ldap_servers_make_token($attr_name, $attr_type = NULL, $ordinal = NULL) {
+  $inner_token = $attr_name;
+  if ($attr_type) {
+    $inner_token .= '.' . $attr_type;
+  }
+  if ($ordinal) {
+    $inner_token .= ':' . $ordinal;
+  }
+  $token = LDAP_SERVERS_TOKEN_PRE . $inner_token . LDAP_SERVERS_TOKEN_POST;
+  return $token;
 }
+
+/**
+ * @param $user_attr_key of form <attr_type>.<attr_name>[:<instance>]
+ *   such as field.lname, property.mail, field.aliases:2
+ *
+ * @return array array($attr_type, $attr_name, $attr_ordinal) such as array('field','field_user_lname', NULL)
+ */
+function ldap_servers_parse_user_attr_name($user_attr_key) {
+  $parts = explode('.', $user_attr_key);
+  $attr_type = $parts[0];
+  $attr_name = (isset($parts[1])) ? $parts[1] : FALSE;
+  $attr_ordinal = FALSE;
+  
+  if ($attr_name) {
+    $attr_name_parts = explode(':', $attr_name);
+    if (isset($attr_name_parts[1])) {
+      $attr_name = $attr_name_parts[0];
+      $attr_ordinal = $attr_name_parts[1];
+    }
+  }
+  return array($attr_type, $attr_name, $attr_ordinal);
+}
+
 /**
  * @param array $ldap_entry
  * @param string $text
@@ -29,6 +58,7 @@ function ldap_servers_token_is_token($text) {
  */
 
 function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_entry') { // user_account
+ // dpm("ldap_servers_token_replace:$text");
   $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);
   switch ($resource_type) {
     case 'ldap_entry':
@@ -36,7 +66,9 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
     break;
   
     case 'user_account':
+ //     dpm('desired tokens'); dpm($desired_tokens);
     $tokens = ldap_servers_token_tokenize_user_account($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
+  //  dpm('ldap_servers_token_replace, tokens'); dpm($tokens);
     break;  
   }
   
@@ -126,7 +158,7 @@ should return tokens such as:
 
  */
 function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
-//  debug('ldap_servers_token_tokenize_entry,ldap_entry'); debug($ldap_entry);
+ // debug('ldap_servers_token_tokenize_entry,ldap_entry'); debug($ldap_entry);
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
   
@@ -231,7 +263,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
  */
 
 function ldap_servers_token_tokenize_user_account($user_account, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
-  //debug('ldap_servers_token_tokenize_user_account,$user_account'); debug($user_account);
+  //dpm('ldap_servers_token_tokenize_user_account, $user_account'); dpm($user_account);
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
   
@@ -259,11 +291,11 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
       $attr_name = $parts[1];
       switch ($attr_type) {
         case 'field':
-          $value = is_scalar($user_account->{$attr_name}['und'][0]['value']) ? $user_account->{$attr_name}['und'][0]['value'] : '';
+          $value = @is_scalar($user_account->{$attr_name}['und'][0]['value']) ? $user_account->{$attr_name}['und'][0]['value'] : '';
         break;
         
         case 'property':
-          $value = is_scalar($user_account->{$attr_name}) ? $user_account->{$attr_name} : '';
+          $value = @is_scalar($user_account->{$attr_name}) ? $user_account->{$attr_name} : '';
         break;
       
       }

@@ -367,7 +367,7 @@ class LdapServer {
         }
       }
     }
-    $status =ldap_modify($this->connection, $dn, $attributes);
+    $status = ldap_modify($this->connection, $dn, $attributes);
 
     if (!$status) {
       watchdog(
@@ -671,6 +671,7 @@ class LdapServer {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
       $result = $this->search($basedn, $filter, $attributes);
+     // debug('user_lookup, result='); debug($result);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.
@@ -956,7 +957,8 @@ class LdapServer {
     }
     elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
       ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
-      return ldap_servers_token_replace($ldap_entry, $this->mail_template);
+    //  debug('call3'); debug($ldap_entry);
+      return ldap_servers_token_replace($ldap_entry, $this->mail_template, 'ldap_entry');
     }
     else {
       return FALSE;

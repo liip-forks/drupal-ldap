@@ -506,7 +506,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
             $property_success = ($user_object->{$property_name} == $test['property_results'][$property_desired_value]);
             $this->assertTrue($property_success, t("synchToDrupalAccount worked for property ($property_name) for " . $username), $this->ldapTestId);
             if (!$property_success) {
-              debug("property synch failed: actula value " . $user_object->{$property_name} .'!= desired value:' . $test['property_results'][$property_desired_value]);
+              debug("property synch failed: actual value " . $user_object->{$property_name} .'!= desired value:' . $test['property_results'][$property_desired_value]);
               debug($user_object);
             }
 
@@ -554,7 +554,7 @@ class LdapUserLdapProvisionTests extends LdapUserTestCasev2 {
       );
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->ldapTestId);
 
-    $this->ldapTestId = $this->module_name . ': test for provision to ldap';
+    $this->ldapTestId = $this->module_name . ': test for provision to ldap on drupal acct create';
   
     $sids = array('activedirectory');
     $this->prepTestData($sids, 'provision1'); // this will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc
@@ -564,9 +564,10 @@ class LdapUserLdapProvisionTests extends LdapUserTestCasev2 {
     
     
     // 9.B. Create and approve new user, populating first and last name.
+    $username = 'johnx95b';
     $user_edit = array(
-      'name' => 'johnx95b',
-      'mail' => 'johnx95b@example.com',
+      'name' => $username,
+      'mail' => $username . '@example.com',
       'pass' => user_password(),
       'status' => 1,
     );
@@ -579,17 +580,56 @@ class LdapUserLdapProvisionTests extends LdapUserTestCasev2 {
     
   //  debug('drupal_account'); debug($drupal_account);
     
-    $servers = ldap_servers_get_servers();
-    $desired_dn = 'cn=johnx95b,ou=people,dc=ldap,dc=mycompany,dc=com';
-  //  debug("dn=$desired_dn in activedirectory server"); debug($servers['activedirectory']->entries[$desired_dn]);
+    $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
+    $desired_dn = "cn=$username,ou=people,dc=activedirectory,dc=ldap,dc=pixotech,dc=com";
+   // debug("dn=$desired_dn in activedirectory server"); debug($servers['activedirectory']->entries[$desired_dn]);
+    $ldap_entry_success = (
+      isset($servers['activedirectory']->entries[$desired_dn]) &&
+      $servers['activedirectory']->entries[$desired_dn]['dn'] == $desired_dn &&
+      $servers['activedirectory']->entries[$desired_dn]['cn'][0] == $username &&
+      $servers['activedirectory']->entries[$desired_dn]['displayName'][0] == 'John Doe' &&
+      $servers['activedirectory']->entries[$desired_dn]['guid'][0] == 'ldap.pixotech.com.uid.2' &&
+      $servers['activedirectory']->entries[$desired_dn]['provisionSource'][0] == 'drupal.pixotech.com'
+    );
     
+    $this->assertTrue($ldap_entry_success, t("provision of ldap entry on user create succeeded for " . $username), $this->ldapTestId);
     //confirm that ldap entry exists with proper attributes
         
-    //  Change lastname and first name and save user
+    //  Change lastname and first name (in drupal) and save user (to test ldapSynch event handler)
     // confirm that appropriate attributes were changed in ldap entry
+    $user_acct = user_load_by_name('johnx95b');
+    $edit = array();
+    $edit['field_fname']['und'][0]['value'] = 'Johnny';
+    $edit['field_lname']['und'][0]['value'] = 'Rotten';     
+    $user_acct = user_save($user_acct, $edit);
+    $user_acct = user_load_by_name('johnx95b');
+    
+    $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
+ //   debug('user entry save'); debug($user_acct);
+    
+    $entry = $servers['activedirectory']->entries[$desired_dn];
+   // debug('servers entry'); debug($entry);
+   
+    $ldap_entry_success = (
+      isset($servers['activedirectory']->entries[$desired_dn])
+      && $entry['givenName'][0] == 'Johnny'
+      && $entry['displayName'][0] == 'Johnny Rotten' 
+      && $entry['sn'][0] == 'Rotten' 
+    );
+    // && $servers['activedirectory']->entries[$desired_dn]['displayName'][0] == 'Johnny Rotten' 
+       //   && $servers['activedirectory']->entries[$desired_dn]['sn'][0] == 'Rotten' 
+     // 
+      
+    $this->assertTrue($ldap_entry_success, t("provision of ldap entry on user create succeeded for " . $username), $this->ldapTestId);
         
     //Delete user in drupal.
     // confirm that ldap entry for user is removed.
+    
+    
+    // do a password reset of some sort
+    // try to add a drupal user that conflicts with an ldap user
+    // try a binary fields such as a user profile image
+    
     
   }
 
@@ -681,9 +721,9 @@ class LdapUserUITests extends LdapUserTestCasev2 {
   //  debug('ldap_user_conf variable'); debug(variable_get('ldap_user_conf',''));
     $this->assertTrue($ldap_user_conf->drupalAcctProvisionServers['activedirectory'] == 'activedirectory', t('Server field set correctly'), $this->ldapTestId);
     $this->assertTrue(
-      isset($ldap_user_conf->drupalAcctProvisionEvents[LDAP_USER_PROV_ON_LOGON]) &&
-      isset($ldap_user_conf->drupalAcctProvisionEvents[LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE]) &&
-      isset($ldap_user_conf->drupalAcctProvisionEvents[LDAP_USER_PROV_ON_ALL_USER_CREATION])
+      isset($ldap_user_conf->drupalAcctProvisionEvents[LDAP_USER_DRUPAL_USER_CREATE_ON_LOGON]) &&
+      isset($ldap_user_conf->drupalAcctProvisionEvents[LDAP_USER_DRUPAL_USER_CREATE_ON_MANUAL_ACCT_CREATE]) &&
+      isset($ldap_user_conf->drupalAcctProvisionEvents[LDAP_USER_DRUPAL_USER_CREATE_ON_ALL_USER_CREATION])
       , t('provision methods field set correctly'), $this->ldapTestId);
     $this->assertTrue($ldap_user_conf->userConflictResolve == LDAP_USER_CONFLICT_LOG, t('Account conflict field set correctly'), $this->ldapTestId);
     $this->assertTrue($ldap_user_conf->acctCreation == LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT, t('Account creation field set correctly'), $this->ldapTestId);

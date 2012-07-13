@@ -21,18 +21,20 @@ class LdapUserConfAdmin extends LdapUserConf {
       such as authorization, profile field synching, etc.');
 
     $values['drupalAccountProvisionEventsOptions'] = array(
-      LDAP_USER_PROV_ON_LOGON => t('On successful authentication with LDAP
+      LDAP_USER_DRUPAL_USER_CREATE_ON_LOGON => t('On successful authentication with LDAP
         credentials and no existing Drupal account, create "LDAP Associated" Drupal account.  (Requires LDAP Authentication module).'),
-      LDAP_USER_PROV_ON_MANUAL_ACCT_CREATE => t('On manual creation of Drupal
+      LDAP_USER_DRUPAL_USER_CREATE_ON_MANUAL_ACCT_CREATE => t('On manual creation of Drupal
         user accounts, make account "LDAP Associated" if corresponding LDAP entry exists.
         Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
-      LDAP_USER_PROV_ON_ALL_USER_CREATION => t('Anytime a Drupal user account
+      LDAP_USER_DRUPAL_USER_CREATE_ON_ALL_USER_CREATION => t('Anytime a Drupal user account
         is created, make account "LDAP Associated" if corresponding LDAP entry exists.
         (includes manual creation, feeds module, Shib, CAS, other provisioning modules, etc).
         Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
-      LDAP_USER_PROV_CANCEL_DRUPAL_USER_ON_LDAP_ENTRY_MISSING => t('Anytime the corresponding
+      LDAP_USER_DRUPAL_USER_UPDATE_ON_USER_AUTHENTICATE => t('Synch LDAP to Drupal on logon.'),
+      LDAP_USER_DRUPAL_USER_UPDATE_ON_USER_UPDATE => t('Synch LDAP to Drupal whenever Drupal account is updated.'),
+      LDAP_USER_DRUPAL_USER_CANCEL_ON_LDAP_ENTRY_MISSING => t('Anytime the corresponding
         LDAP entry for a user is gone, disable the Drupal Account.'),
-      LDAP_USER_PROV_DELETE_DRUPAL_USER_ON_LDAP_ENTRY_MISSING => t('Anytime the corresponding
+      LDAP_USER_DRUPAL_USER_DELETE_ON_LDAP_ENTRY_MISSING => t('Anytime the corresponding
         LDAP entry for a user is gone, delete the Drupal Account.'),
     );
 
@@ -40,13 +42,19 @@ class LdapUserConfAdmin extends LdapUserConf {
       be created for a Drupal User?');
 
     $values['ldapEntryProvisionEventsOptions'] = array(
-      LDAP_USER_LDAP_ENTRY_CREATION_ON_CREATE => t('When a Drupal Account has a status of approved.
+      LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_CREATE => t('Create LDAP entry when a Drupal Account is created.'),
+      LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_STATUS_IS_1 => t('Create LDAP entry when a Drupal Account has a status of approved.
         This could be when an account is initially created, when it is approved, or when confirmation
         via email sets enables an account.'),
-      LDAP_USER_LDAP_ENTRY_DELETION_ON_DELETE => t('When a Drupal Account that has a corresponding LDAP
-        entry is deleted, delete the corresponding LDAP entry.'),
-    );
+      LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_UPDATE => t('Create LDAP entry when user account updated if entry does not exist.'),
+      LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_AUTHENTICATE => t('Create LDAP entry when a when a user authenticates.'),
+      LDAP_USER_LDAP_ENTRY_UPDATE_ON_USER_UPDATE => t('Update LDAP entry when Drupal Account that has a corresponding LDAP
+        entry is updated.'),
+      LDAP_USER_LDAP_ENTRY_UPDATE_ON_USER_AUTHENTICATE => t('Update LDAP entry when a when a user authenticates.'),
+      LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE => t('Delete LDAP entry when a Drupal Account that has a corresponding LDAP
+        entry is deleted.'),
 
+    );
 
     /**
     *  Drupal Account Provisioning and Synching
@@ -436,6 +444,9 @@ the top of this form.
 
 /**
  * validate object, not form
+ *
+ * @todo validate that a user field exists, such as field.field_user_lname
+ * 
  */
   public function validate($values) {
     $errors = array();
@@ -683,7 +694,7 @@ the top of this form.
         ||
         (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap'])
         ){
-        $user_attr_options[$target_id] = substr($mapping['name'], 0, 25);
+        $user_attr_options[ldap_servers_make_token($target_id)] = substr($mapping['name'], 0, 25);
       }
     }
      $user_attr_options['user_tokens'] = '-- user tokens --';
