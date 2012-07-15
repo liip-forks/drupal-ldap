@@ -247,18 +247,14 @@ function ldap_authentication_show_reset_pwd($user = NULL) {
   if (current_path() == 'user/password' || $user->uid == 1 || !$auth_conf) {
     return TRUE;
    // always show at user/passwordurl. otherwise user 1 will not be able to reset password.
-   // LDAP_authen.login_forms.MM.user1, LDAP_authen.login_forms.EM.user1
   }
 
   if ($user->uid == 0) {
     // hide reset password for anonymous users if ldap only authentication, otherwise show
-    // LDAP_authen.login_forms.MM.anon, LDAP_authen.login_forms.EM.anon
     return ($auth_conf->authenticationMode != LDAP_AUTHENTICATION_EXCLUSIVE);
   }
   else {
     // authenticated user.  hide if ldap authenticated otherwise show.
-    // LDAP_authen.login_forms.EM.ldap, LDAP_authen.login_forms.EM.drupal,
-    // LDAP_authen.login_forms.MM.drupal, LDAP_authen.login_forms.MM.ldap
     return (!ldap_authentication_ldap_authenticated($user));
   }
 

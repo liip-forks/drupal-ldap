@@ -74,7 +74,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
 
   
     $sids = array('activedirectory');
-    $this->prepTestData($sids, 'default', 'default');
+    $this->prepTestData($sids, 'provision0', 'default');
 
 
     $this->ldapTestId = $this->module_name . ': construct ldap_user_conf object';
@@ -661,7 +661,7 @@ class LdapUserUITests extends LdapUserTestCasev2 {
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->ldapTestId);
 
     $sids = array('activedirectory');
-    $this->prepTestData($sids, 'default', 'default');
+    $this->prepTestData($sids, 'provision0', 'default');
 
 
     $this->privileged_user = $this->drupalCreateUser(array(
@@ -680,7 +680,7 @@ class LdapUserUITests extends LdapUserTestCasev2 {
     $wsKey = 'sdafjlksjadsdafjkksdafjsdfsdjfsdf';
     $wsUserIps = array('1.2.3.4');
     $edit = array(
-      'drupalAcctProvisionServers[' . $sid . ']' => 1,
+      'drupalAcctProvisionServer' => $sid,
       'drupalAcctProvisionEvents[' . LDAP_USER_CONFLICT_LOG . ']' => 1,
       'drupalAcctProvisionEvents[' . LDAP_USER_CONFLICT_RESOLVE . ']' => 1,
       'drupalAcctProvisionEvents[' . LDAP_USER_CONFLICT_RESOLVE_DEFAULT . ']' => 1,
@@ -719,7 +719,7 @@ class LdapUserUITests extends LdapUserTestCasev2 {
     $ldap_user_conf = ldap_user_conf('admin', TRUE);
    // debug('user conf object after save'); debug($ldap_user_conf);
   //  debug('ldap_user_conf variable'); debug(variable_get('ldap_user_conf',''));
-    $this->assertTrue($ldap_user_conf->drupalAcctProvisionServers['activedirectory'] == 'activedirectory', t('Server field set correctly'), $this->ldapTestId);
+    $this->assertTrue($ldap_user_conf->drupalAcctProvisionServer == 'activedirectory', t('Server field set correctly'), $this->ldapTestId);
     $this->assertTrue(
       isset($ldap_user_conf->drupalAcctProvisionEvents[LDAP_USER_DRUPAL_USER_CREATE_ON_LOGON]) &&
       isset($ldap_user_conf->drupalAcctProvisionEvents[LDAP_USER_DRUPAL_USER_CREATE_ON_MANUAL_ACCT_CREATE]) &&

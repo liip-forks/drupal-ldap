@@ -12,9 +12,9 @@ class LdapUserConfAdmin extends LdapUserConf {
 
   protected function setTranslatableProperties() {
 
-    $values['drupalAcctProvisionServersDescription'] = t('Check all LDAP server configurations to use
+    $values['drupalAcctProvisionServerDescription'] = t('Check ONE LDAP server configuration to use
       in provisioning Drupal users and their user fields.');
-    $values['ldapEntryProvisionServersDescription'] = t('Check all LDAP server configurations to create ldap entries on.');
+    $values['ldapEntryProvisionServerDescription'] = t('Check ONE LDAP server configuration to create ldap entries on.');
 
     $values['drupalAccountProvisionEventsDescription'] = t('"LDAP Associated" Drupal user accounts (1) have
       data mapping the account to an LDAP entry and (2) can leverage LDAP module functionality
@@ -86,9 +86,9 @@ class LdapUserConfAdmin extends LdapUserConf {
    * basic settings
    */
 
-  protected $drupalAcctProvisionServersDescription;
-  protected $drupalAcctProvisionServersOptions = array();
-  protected $ldapEntryProvisionServersOptions = array();
+  protected $drupalAcctProvisionServerDescription;
+  protected $drupalAcctProvisionServerOptions = array();
+  protected $ldapEntryProvisionServerOptions = array();
 
   protected $drupalAccountProvisionEventsDescription;
   protected $drupalAccountProvisionEventsOptions = array();
@@ -144,17 +144,19 @@ class LdapUserConfAdmin extends LdapUserConf {
     if ($servers = ldap_servers_get_servers(NULL, 'enabled')) {
       foreach ($servers as $sid => $ldap_server) {
         $enabled = ($ldap_server->status) ? 'Enabled' : 'Disabled';
-        $this->drupalAcctProvisionServersOptions[$sid] = $ldap_server->name . ' (' . $ldap_server->address . ') Status: ' . $enabled;
-        $this->ldapEntryProvisionServersOptions[$sid] = $ldap_server->name . ' (' . $ldap_server->address . ') Status: ' . $enabled;
+        $this->drupalAcctProvisionServerOptions[$sid] = $ldap_server->name . ' (' . $ldap_server->address . ') Status: ' . $enabled;
+        $this->ldapEntryProvisionServerOptions[$sid] = $ldap_server->name . ' (' . $ldap_server->address . ') Status: ' . $enabled;
       }
     }
+    $this->drupalAcctProvisionServerOptions[LDAP_USER_NO_SERVER_SID] = t('None');
+    $this->ldapEntryProvisionServerOptions[LDAP_USER_NO_SERVER_SID] = t('None');
   //  dpm($this->ldapUserSynchMappings);
    // print "<pre>"; print_r($this->ldapUserSynchMappings);
   }
 
   public function drupalForm() {
    // // temp_out dpm('this in drupal form'); // temp_out dpm($this->ldapUserSynchMappings['uiuc_ad']);
-    if (count($this->drupalAcctProvisionServersOptions) == 0) {
+    if (count($this->drupalAcctProvisionServerOptions) == 0) {
       $message = ldap_servers_no_enabled_servers_msg('configure LDAP User');
       $form['intro'] = array(
         '#type' => 'item',
@@ -177,13 +179,13 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#collapsed' => FALSE,
     );
 
-    $form['basic_to_drupal']['drupalAcctProvisionServers'] = array(
-      '#type' => 'checkboxes',
+    $form['basic_to_drupal']['drupalAcctProvisionServer'] = array(
+      '#type' => 'radios',
       '#title' => t('LDAP Servers Providing Provisioning Data'),
-      '#required' => FALSE,
-      '#default_value' => $this->drupalAcctProvisionServers,
-      '#options' => $this->drupalAcctProvisionServersOptions,
-      '#description' => $this->drupalAcctProvisionServersDescription
+      '#required' => 1,
+      '#default_value' => $this->drupalAcctProvisionServer,
+      '#options' => $this->drupalAcctProvisionServerOptions,
+      '#description' => $this->drupalAcctProvisionServerDescription
     );
 
     $form['basic_to_drupal']['drupalAcctProvisionEvents'] = array(
@@ -219,16 +221,16 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#type' => 'fieldset',
       '#title' => t('Basic Provisioning to LDAP Settings'),
       '#collapsible' => TRUE,
-      '#collapsed' => !(count(array_filter($this->ldapEntryProvisionServers))),
+      '#collapsed' => !($this->ldapEntryProvisionServer),
     );
 
-    $form['basic_to_ldap']['ldapEntryProvisionServers'] = array(
-      '#type' => 'checkboxes',
+    $form['basic_to_ldap']['ldapEntryProvisionServer'] = array(
+      '#type' => 'radios',
       '#title' => t('LDAP Servers to Provision LDAP Entries on'),
-      '#required' => FALSE,
-      '#default_value' => $this->ldapEntryProvisionServers,
-      '#options' => $this->ldapEntryProvisionServersOptions,
-      '#description' => $this->ldapEntryProvisionServersDescription,
+      '#required' => 1,
+      '#default_value' => $this->ldapEntryProvisionServer,
+      '#options' => $this->ldapEntryProvisionServerOptions,
+      '#description' => $this->ldapEntryProvisionServerDescription,
     );
 
     $form['basic_to_ldap']['ldapEntryProvisionEvents'] = array(
@@ -360,8 +362,8 @@ the top of this form.
     );
 
     foreach($this->provisionServers as $sid => $ldap_server) {
-      $enabled_for_drupal_user = in_array($sid, $this->drupalAcctProvisionServers) && $this->drupalAcctProvisionServers[$sid];
-      $enabled_for_ldap_entry = in_array($sid, $this->ldapEntryProvisionServers) && $this->ldapEntryProvisionServers[$sid];
+      $enabled_for_drupal_user = ($this->drupalAcctProvisionServer == $sid); // in_array($sid,// ) && $this->drupalAcctProvisionServer[$sid];
+      $enabled_for_ldap_entry =  ($this->ldapEntryProvisionServer == $sid); //) && $this->ldapEntryProvisionServer[$sid];
       
       $form['mappings__'. $sid] = array(
         '#type' => 'fieldset',
@@ -453,20 +455,20 @@ the top of this form.
     $warnings = array();
     $tokens = array();
     
-    $has_drupal_acct_prov_servers   = (count(array_filter($this->drupalAcctProvisionServers)) > 0);
+    $has_drupal_acct_prov_servers  = ($this->drupalAcctProvisionServer !== LDAP_USER_NO_SERVER_SID);
     $has_drupal_acct_prov_settings_options  = (count(array_filter($this->drupalAcctProvisionEvents)) > 0);
-   // dpm($has_drupal_acct_prov_servers); dpm($this->drupalAcctProvisionServers);
+   // dpm($has_drupal_acct_prov_servers); dpm($this->drupalAcctProvisionServer);
     if (!$has_drupal_acct_prov_servers && $has_drupal_acct_prov_settings_options) {
-      $warnings['drupalAcctProvisionServers'] =  t('No Servers are enabled to provide provisioning to Drupal, but Drupal Account Provisioning Options are selected.', $tokens); 
+      $warnings['drupalAcctProvisionServer'] =  t('No Servers are enabled to provide provisioning to Drupal, but Drupal Account Provisioning Options are selected.', $tokens); 
     }
     if ($has_drupal_acct_prov_servers && !$has_drupal_acct_prov_settings_options) {
       $warnings['drupalAcctProvisionEvents'] =  t('Servers are enabled to provide provisioning to Drupal, but no Drupal Account Provisioning Options are selected.  This will result in no synching happening.', $tokens); 
     }
 
-    $has_ldap_prov_servers = (count(array_filter($this->drupalAcctProvisionServers)) > 0);
+    $has_ldap_prov_servers = ($this->drupalAcctProvisionServer !== LDAP_USER_NO_SERVER_SID);
     $has_ldap_prov_settings_options = (count(array_filter($this->drupalAcctProvisionEvents)) > 0);
     if (!$has_ldap_prov_servers && $has_ldap_prov_settings_options) {
-      $warnings['ldapEntryProvisionServers'] =  t('No Servers are enabled to provide provisioning to ldap, but LDAP Entry Options are selected.', $tokens); 
+      $warnings['ldapEntryProvisionServer'] =  t('No Servers are enabled to provide provisioning to ldap, but LDAP Entry Options are selected.', $tokens); 
     }
     if ($has_ldap_prov_servers && !$has_ldap_prov_settings_options) {
       $warnings['ldapEntryProvisionEvents'] =  t('Servers are enabled to provide provisioning to ldap, but no LDAP Entry Options are selected.  This will result in no synching happening.', $tokens); 
@@ -562,9 +564,9 @@ the top of this form.
   }
 
   protected function populateFromDrupalForm($values, $storage) {
-    //// temp_out dpm('populateFromDrupalForm'); // temp_out dpm($values); // temp_out dpm($storage);
-    $this->drupalAcctProvisionServers = $values['drupalAcctProvisionServers'];
-    $this->ldapEntryProvisionServers = $values['ldapEntryProvisionServers'];
+   // dpm($values);  //// temp_out dpm('populateFromDrupalForm'); // temp_out dpm($values); // temp_out dpm($storage);
+    $this->drupalAcctProvisionServer = $values['drupalAcctProvisionServer'];
+    $this->ldapEntryProvisionServer = $values['ldapEntryProvisionServer'];
     $this->drupalAcctProvisionEvents = $values['drupalAcctProvisionEvents'];
     $this->ldapEntryProvisionEvents = $values['ldapEntryProvisionEvents'];
     $this->userConflictResolve  = ($values['userConflictResolve']) ? (int)$values['userConflictResolve'] : NULL;

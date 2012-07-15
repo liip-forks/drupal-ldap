@@ -13,12 +13,15 @@ synch_contexts are:
   LDAP_USER_SYNCH_CONTEXT_CRON
   LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER
   LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER
+  LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER
   
 The following events map to these synch contexts:
 
 LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
-  -- synchToDrupalAccount()   from hook_user_login in ldap_user module
+  -- synchToDrupalAccount()   from ldap_authentication_user_login_authenticate_validate function on logon.
+  -- provisionDrupalAccount() from ldap_authentication_user_login_authenticate_validate function on logon.
   -- synchToLdapEntry()       from hook_user_login in ldap_user module
+  -- provisionLdapEntry()     from hook_user_login in ldap_user module 
   
 LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
   -- provisionLdapEntry()     from hook_user_login in ldap_user module
@@ -35,8 +38,8 @@ LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE:
 
 ------------
 1.  Server Level: Does an ldap server configuration support provisioning
-$ldap_user_conf->drupalAcctProvisionServers = array(<sid1> => 1, <sid2> => 0);  // servers used for to drupal acct provisioning
-$ldap_user_conf->ldapEntryProvisionServers = array(<sid1> => 1, <sid2> => 0);  // servers used for provisioning to ldap
+$ldap_user_conf->drupalAcctProvisionServer = <sid> | LDAP_USER_NO_SERVER_SID;  // servers used for to drupal acct provisioning
+$ldap_user_conf->ldapEntryProvisionServer =  <sid> | LDAP_USER_NO_SERVER_SID;  // servers used for provisioning to ldap
 
 This is directly configured at config/people/ldap/user
 

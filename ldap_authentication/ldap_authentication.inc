@@ -427,6 +427,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       }
     }
   }
+  
 
 
   /**
@@ -438,6 +439,9 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
    	$account_exists = TRUE;
   }
   if (!$account_exists) {
+    if (!$auth_conf->ldapUser->contextEnabled(LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'provision')) {
+      //@todo throw error that provisioning of drupal accts is not enabled, and no account exists so no go here.
+    }
     if ($account_with_same_email = user_load_by_mail($ldap_user['mail'])) {
       /**
        * username does not exist but email does.  Since user_external_login_register does not deal with
@@ -464,15 +468,13 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
 
     $ldap_user['sid'] = $sid;
-
     $account = NULL;
     $user_edit = array('name' => $authname);
+    
     $account = $auth_conf->ldapUser->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, $ldap_user, TRUE);
     if ($account === FALSE) {
-      // need to throw error that account was not created
+      // need to throw error that account was not created so logging in is not happenning via ldap
     }
-
-
   }
   else {  // account already exists
     if ($ldap_authentication_authmap == FALSE) {
@@ -535,7 +537,6 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   * since user_external_login_register can't deal with user mail attribute and doesn't do much else, it is not
   * being used here.
   */
-
 
   /**
    * without doing the user_login_submit,

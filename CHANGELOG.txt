@@ -1,3 +1,5 @@
+Additional test coverage and improvements of ldap_user test form including executing actions.
+Restricted provision to ldap and provsion to drupal to one server configuration each
 Made $ldap_user and $ldap_user_entry use more consistent
 Missed some entries.  see git diffs.
 Mix of work on drupal to ldap provisioning, fixing simpletests, and reworking mapping UI.
