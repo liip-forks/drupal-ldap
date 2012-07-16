@@ -60,7 +60,7 @@
        
        
        
-9. Test ldap entry provisioning
+7. Test ldap entry provisioning
     A. in ldap user settings (admin/config/people/ldap/user)
       - uncheck BASIC PROVISIONING TO DRUPAL ACCOUNT SETTINGS settings
       - enable an ldap server in BASIC PROVISIONING TO LDAP SETTINGS

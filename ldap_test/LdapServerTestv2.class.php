@@ -315,9 +315,12 @@ class LdapServerTestv2 extends LdapServer {
 
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
     if (isset($test_data['entries'][$dn])) {
+     // debug("test data $dn"); debug($test_data['entries'][$dn]);
+     // debug('this entries[dn]'); debug($this->entries[$dn]);
       unset($test_data['entries'][$dn]);
+      unset($this->entries[$dn]);
       variable_set('ldap_test_server__' . $this->sid, $test_data);
-      $this->refreshFakeData();
+     // $this->refreshFakeData();
       return TRUE;
     }
     else {

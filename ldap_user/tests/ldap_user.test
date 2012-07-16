@@ -641,6 +641,11 @@ class LdapUserLdapProvisionTests extends LdapUserTestCasev2 {
     $this->assertTrue($ldap_entry_success, t("provision of ldap entry on user create succeeded for " . $username), $this->ldapTestId);
         
     //Delete user in drupal.
+    user_delete($user_acct->uid);
+    ldap_servers_flush_server_cache();
+   // $server = ldap_servers_get_servers('activedirectory', NULL, TRUE, TRUE);
+    $entry = $servers['activedirectory']->entries[$desired_dn];
+    //debug('entry after delete'); debug($entry);
     // confirm that ldap entry for user is removed.
     
     

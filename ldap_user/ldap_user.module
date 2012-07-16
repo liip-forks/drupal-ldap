@@ -486,7 +486,11 @@ function ldap_user_user_delete($account) {
   // drupal user account is about to be deleted.  @todo.  check if ldap account needs to be deleted also
   $ldap_user_conf = ldap_user_conf();
   if ($ldap_user_conf->contextEnabled(LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'delete_ldap_entry')) {
-    $ldap_user_conf->deleteCorrespondingLdapEntry($account);
+    //debug('context enabled');
+    $ldap_user_conf->deleteProvisionedLdapEntries($account);
+  }
+  else {
+   // debug('context NOT enabled');
   }
 
 }

@@ -466,7 +466,7 @@ function __construct() {
  /**
    * given a drupal account, provision an ldap entry if none exists.  if one exists do nothing
    *
-   * @param array $account drupal account array with minimum of name
+   * @param object $account drupal account array with minimum of name property
    * @param int $synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
    * @param array $ldap_user as prepopulated ldap entry.  usually not provided
    *
@@ -515,6 +515,35 @@ function __construct() {
           $result['proposed'] = $proposed_ldap_entry;
           $result['created'] = $ldap_entry_created;
           $result['ldap_server'] = $ldap_server;
+          
+          // need to store <sid>|<dn> in ldap_user_prov_entries field, which may contain more than one
+          list($user_account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name, 'name');
+          $ldap_user_prov_entry = $ldap_server->sid . '|' . $proposed_ldap_entry['dn'];
+          if (!isset($user_entity->ldap_user_prov_entries['und'])) {
+            $user_entity->ldap_user_prov_entries = array('und' => array());
+          }
+          $ldap_user_prov_entry_exists = FALSE;
+          foreach ($user_entity->ldap_user_prov_entries['und'] as $i => $field_value_instance) {
+            if ($field_value_instance == $ldap_user_prov_entry) {
+              $ldap_user_prov_entry_exists = TRUE;
+            }   
+          }
+          if (!$ldap_user_prov_entry_exists) {
+            $user_entity->ldap_user_prov_entries['und'][] = array(
+              'value' =>  $ldap_user_prov_entry,
+              'format' => NULL,
+              'save_value' => $ldap_user_prov_entry,
+            );
+            $edit = array(
+              'ldap_user_prov_entries' => $user_entity->ldap_user_prov_entries,
+            );
+           // $user_account = new stdClass();
+            $user_account = user_load($account->uid);
+           // debug($user_account); debug($edit);
+            $updated_user = user_save($user_account, $edit);
+           // debug('updated_user'); debug($updated_user);
+          }
+          
         }
       }
     }
@@ -545,27 +574,47 @@ function __construct() {
 
 
   /**
-   * given a drupal account, delete ldap entry
+   * given a drupal account, delete ldap entry that was provisioned based on it
+   *   normally this will be 0 or 1 entry, but the ldap_user_provisioned_ldap_entries
+   *   field attached to the user entity track each ldap entry provisioned
    *
    * @param string $username drupal account name
    * @param int synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
    *
    * @return TRUE or FALSE.  FALSE indicates failed or action not enabled in ldap user configuration
    */
-  public function deleteCorrespondingLdapEntry($account) {
+  public function deleteProvisionedLdapEntries($account) {
     // determine server that is associated with user
+    $boolean_result = FALSE;
     list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name);
-    $dn = $user_entity->ldap_user_current_dn['und'][0]['value'];
-    $sid = $user_entity->ldap_user_puid_sid['und'][0]['value'];
-    $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
+   // debug('deleteProvisionedLdapEntries'); debug($account);
+    $language = ($account->language) ? $account->language : 'und';
+    if (isset($account->ldap_user_prov_entries[$language][0])) {
+      foreach ($account->ldap_user_prov_entries[$language] as $i => $field_instance) {
+        $parts = explode('|', $field_instance['value']);
+        if (count($parts) == 2) {
+         // debug('parts'); debug($parts);
+          list($sid, $dn) = $parts;
+          $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
+          if (is_object($ldap_server) && $dn) {
+            //debug('dn'); debug($dn);
+            $boolean_result = $ldap_server->delete($dn);
+            $tokens = array('%sid' => $sid, '%dn' => $dn, '%username' => $account->name, '%uid' => $account->uid);
+            if ($boolean_result) {
+              watchdog('ldap_user', 'LDAP entry on server %sid deleted dn=%dn. username=%username, uid=%uid', $tokens, WATCHDOG_INFO);
+            }
+            else {
+              watchdog('ldap_user', 'LDAP entry on server %sid not deleted because error. username=%username, uid=%uid', $tokens, WATCHDOG_ERROR);
+            }
+          }
+          else {
+            $boolean_result = FALSE;
+          }
+        }
+      }
+    }
+    return $boolean_result;
 
-    if (is_object($ldap_server) && $dn) {
-      $result = $ldap_server->delete($dn);
-    }
-    else {
-      $result = FALSE;
-    }
-    return $result;
   }
 
 /** populate ldap entry array

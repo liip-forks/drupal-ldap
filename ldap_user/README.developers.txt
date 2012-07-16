@@ -26,6 +26,7 @@ LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER and :
   -- synchToLdapEntry()       from hook_user_insert in ldap_user module (if not provisioned)
   
 LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER
+  
 
 LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
   -- provisionDrupalAccount() from ldap_authentication_user_login_authenticate_validate function on logon.

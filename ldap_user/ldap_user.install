@@ -260,7 +260,69 @@ function ldap_user_user_entity_fields() {
           'type' => 'hidden',
         ),
       ));
+  
+  $field_name = 'ldap_user_prov_entries';
+  $fields[$field_name]['field'] = array(
+    'field_name' => $field_name,
+    'type' => 'text',
+    'entity_types' => array('user'),
+    'cadinality' => FIELD_CARDINALITY_UNLIMITED,
+    'translatable' => 0,
+    'locked' => 1,
+    'module' => 'text',
+    'no_ui' => 1,
+    'settings' => array(),
+    );
+
+  $fields[$field_name]['instance'] = array(
+      'field_name' => $field_name,
+      'entity_type' => 'user',
+      'bundle' => 'user',
+      'label' => 'LDAP Entries that have been provisioned from this Drupal user.',
+      'description' => 'This field should not be edited.',
+      'required' => 0,
+      'default_value' => NULL,
+      'settings' => array(
+        'text_processing' => 0,
+      ),
+      'widget' => array(
+        'type' => 'ldap_user_hidden',
+        'settings' => array(),
+        'module' => 'ldap_user',
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      'full' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      'teaser' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      ));
 
   return $fields;
+
+}
+
+/**
+ * attach ldap_user_prov_entries field to user entity to make deleting provisioned ldap entries plausible
+ */
+
+function ldap_user_update_7200() {
+
+  $field_info = field_info_field('ldap_user_prov_entries');
+  if (!$field_info) {
+    $field_confs = ldap_user_user_entity_fields();
+    $field_conf = $field_confs['ldap_user_prov_entries'];
+    field_create_field($field_conf['field']);
+    field_create_instance($field_conf['instance']);
+  }
+
+  return t('ldap_user_prov_entries field added to user entity.');
 
 }
