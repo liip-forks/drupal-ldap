@@ -286,10 +286,14 @@ function ldap_servers_theme() {
       if ($ldap_server->unique_persistent_attr) {
         $attributes[] = $ldap_server->unique_persistent_attr;
       }
-      ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_attr);
-      ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);
+      if ($ldap_server->mail_template) {
+        ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);
+      }
       $attributes[] = $ldap_server->user_attr;
-      ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_dn_expression);
+      if ($ldap_server->user_dn_expression) {
+        ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_dn_expression);
+      }
+      
           
       switch ($op) {
   
@@ -334,12 +338,13 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
       'field.ldap_user_current_dn',
       'property.name',
       'property.mail') as $i => $property_id) {
-      if (!isset($available_user_attrs[$property_id]) || !is_array($available_user_attrs[$property_id])) {
-        $available_user_attrs[$property_id] = array();
+      $property_token = '[' . $property_id . ']';
+      if (!isset($available_user_attrs[$property_token]) || !is_array($available_user_attrs[$property_token])) {
+        $available_user_attrs[$property_token] = array();
       }
     }
 
-    $available_user_attrs['field.ldap_user_puid_sid'] =  array(
+    $available_user_attrs['[field.ldap_user_puid_sid]'] =  array(
       'name' => t('Field: sid providing PUID'),
       'configurable_to_drupal' => 0,
       'configurable_to_ldap' => 0,
@@ -350,10 +355,10 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
       'contexts' => $all_contexts,
       'config_module' => 'ldap_server',
       'synch_module' => 'ldap_user',
-      ) + $available_user_attrs['field.ldap_user_puid_sid'];
+      ) + $available_user_attrs['[field.ldap_user_puid_sid]'];
 
 
-    $available_user_attrs['field.ldap_user_puid'] =  array(
+    $available_user_attrs['[field.ldap_user_puid]'] =  array(
       'name' => t('Field: PUID', $tokens),
       'configurable_to_drupal' => 0,
       'configurable_to_ldap' => 0,
@@ -365,10 +370,10 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
       'contexts' => $all_contexts,
       'config_module' => 'ldap_server',
       'synch_module' => 'ldap_user',
-      ) + $available_user_attrs['field.ldap_user_puid'];
+      ) + $available_user_attrs['[field.ldap_user_puid]'];
 
 
-    $available_user_attrs['field.ldap_user_puid_property'] =
+    $available_user_attrs['[field.ldap_user_puid_property]'] =
     array(
       'name' => t('Field: PUID Attribute', $tokens),
       'configurable_to_drupal' => 0,
@@ -380,9 +385,9 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
       'contexts' => $all_contexts,
       'config_module' => 'ldap_server',
       'synch_module' => 'ldap_user',
-      ) + $available_user_attrs['field.ldap_user_puid_property'];
+      ) + $available_user_attrs['[field.ldap_user_puid_property]'];
 
-    $available_user_attrs['field.ldap_user_current_dn'] =
+    $available_user_attrs['[field.ldap_user_current_dn]'] =
     array(
       'name' => t('Field: Most Recent DN', $tokens),
       'configurable_to_drupal' => 0,
@@ -394,10 +399,10 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
       'contexts' => $all_contexts,
       'config_module' => 'ldap_server',
       'synch_module' => 'ldap_user',
-      ) + $available_user_attrs['field.ldap_user_current_dn'];
+      ) + $available_user_attrs['[field.ldap_user_current_dn]'];
   }
 
-  $available_user_attrs['property.name'] =  array(
+  $available_user_attrs['[property.name]'] =  array(
     'name' => 'Property: Username',
     'source' => '[' . $ldap_server->user_attr . ']',
     'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
@@ -405,9 +410,9 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
     'contexts' => $all_contexts,
     'config_module' => ($ldap_user_conf->provisionsDrupalAccountsFromLdap) ? 'ldap_server' : 'ldap_user',
     'synch_module' => 'ldap_user',
-    ) + $available_user_attrs['property.name'];
+    ) + $available_user_attrs['[property.name]'];
 
-  $available_user_attrs['property.mail'] =  array(
+  $available_user_attrs['[property.mail]'] =  array(
     'name' => 'Property: Email',
     'source' => ($ldap_server->mail_template) ? $ldap_server->mail_template : '[' . $ldap_server->mail_attr . ']',
     'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
@@ -415,7 +420,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_
     'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER),
     'config_module' => ($ldap_user_conf->provisionsDrupalAccountsFromLdap) ? 'ldap_server' : 'ldap_user',
     'synch_module' => 'ldap_user',
-    ) + $available_user_attrs['property.mail'];
+    ) + $available_user_attrs['[property.mail]'];
 
 }
 

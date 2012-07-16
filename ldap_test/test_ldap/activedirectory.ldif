@@ -61,31 +61,6 @@ sAMAccountType: 805306368
 userPrincipalName: jkeats@pixotech.com
 objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
 mail: boygen@hotmail.com
-pixotechcomregistryuniqueid: e2eb4d760f81e80df1524cff71f720a0
-
-
-dn: CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
-sn: Keats
-l: London
-title: Mr.
-givenName: John
-cn: jkeats
-distinguishedName: CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
-whenCreated: 20051217194925.0Z
-whenChanged: 20060509145255.0Z
-displayName: John Keats
-memberOf: OU=Romantics,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
-memberOf: OU=Romantics Poetry,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
-department: English Literature
-name: jkeats
-objectGUID: 0105000000000005150000002760837c3c14e17f5g52937ab2070000
-objectSid: 0105000000000007150000002760837d3c14e17f5c52937ab2070000
-accountExpires: 9223372036854775807
-sAMAccountName: jkeats
-sAMAccountType: 805306368
-userPrincipalName: jkeats@pixotech.com
-objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
-mail: boygen@hotmail.com
 pixotechcomregistryuniqueid: e2eb4d760f81e89df1524cff71f720a0
 
 

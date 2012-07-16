@@ -12,24 +12,26 @@
 4. Enable ldap_user module and check watchdog logs
 5. Prepare user settings/entity for testing
   -- add field_lname, field_fname, field_dept, and field_display_name text fields to user
-  
-6. Configure ldap user for general synching with no explicit mappings
+ 
+ 
+6. Tests for LDAP User Provisioning and Synching from LDAP Entry 
+6.A. Setup: Configure LDAP User for Provisioning Drupal Account from LDAP Entry
     A. Select enabled server
     B. Drupal Accoutn Provisioning: [x] On manual creation of Drupal user account...
     C. Existing Drupal User Account Conflict: [x] Associate Drupal account with LDAP Entry
-    D. Application of Drupal Account settings to LDAP Authenticated Users: [x] Account Creationg Settings ... do not affect...
-    E. Basic Provisioning to LDAP Settings: leave empty
+    D. Application of Drupal Account settings to LDAP Authenticated Users: [x] Account Creating Settings ... do not affect...
+    E. Basic Provisioning to LDAP Settings: for server, select "none"
     F. Rest Webservice: leave disabled
     G. Server mappings section.
-       i. [givenname] -- to drupal user -> Field: First Name [x] on user creation
-       ii. [sn:0] -- to drupal user -> Field: Last Name [x] on user creation
-       iii. [givenname] [sn] -- to drupal user -> Field: Display Name [x] on user creation
-       iv. Physics -- to drupal user -> Field: Department [x] on user creation
+       i. [givenname] -- to drupal user -> Field: First Name [x] on user creation [x] on user logon
+       ii. [sn:0] -- to drupal user -> Field: Last Name [x] on user creation [x] on user logon
+       iii. [givenname] [sn] -- to drupal user -> Field: Display Name [x] on user creation [x] on user logon
+       iv. Physics -- to drupal user -> Field: Department [x] on user creation [x] on user logon
    
-7.  Test on drupal user create synching.
+6.B. Event: drupal user create provision/synching.  Test synch.  (no create test because Drupal user is created before this.)
     A. Create new user via admin/people/create
     B. field_lname, field_fname, field_dept, and field_display_name should be visible and populated
-    C. goto admin/config/people/ldap/user/test/<username> and hit the test button.  this will show the user object and entity
+    C. goto admin/config/people/ldap/user/test enter the username and hit the test button.  this will show the user object and entity
        if the devel module is enabled
        i.     user object->ldap_user_puid_sid should be the id of the server
        ii.    user object->ldap_user_puid should be the value of the puid attribute
@@ -37,12 +39,14 @@
        iv.    user object->ldap_user_current_dn should be the dn of the ldap entry
        v.     user object->mail and init should be correct, matching email
        vii.   user authmap should be empty.  this record is only generated when account created via ldap authentication
-       
-8.  Test on logon user create synching
-    A. Authenticate with a user not in drupal (be sure user is deleted before test)
+ 
+6.C. Event: user logon/authenticate.  Test create drupal account.
+    A.1. Change "Drupal Account Provisioning Options to only "on successful authentication"
+         and uncheck the mappings in table on "on user creation" and "on user update".
+    A.2. Authenticate with a user not in drupal (be sure user is deleted before test)
     B. view the user from the user list (admin/people/people) and make sure
          field_lname, field_fname, field_dept, and field_display_name should be visible and populated
-    B. goto admin/config/people/ldap/user/test/<username> and hit the test button.  this will show the user object and entity
+    C. goto admin/config/people/ldap/user/test/<username> and hit the test button.  this will show the user object and entity
        if the devel module is enabled
        i.     user object->ldap_user_puid_sid should be the id of the server
        ii.    user object->ldap_user_puid should be the value of the puid attribute
@@ -50,6 +54,9 @@
        iv.    user object->ldap_user_current_dn should be the dn of the ldap entry
        v.     user object->mail and init should be correct, matching email
        vii.   user authmap should have an entry where module=ldap_authentication and authname=username
+    D. Manually change last name of user and save.
+    E. Log user in again.
+    F. Last Name should revert to LDAP provided last name.
        
        
        

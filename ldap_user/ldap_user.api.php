@@ -8,7 +8,7 @@
  *   for ldap_user provisioning mapping form (admin/config/people/ldap/user)
  *
  * return array with elements of the form:
- * <field_type>.<field_name> => array(
+ * [<field_type>.<field_name>] => array(
  *   'name' => string for user friendly name for the UI,
  *   'source' => ldap attribute (even if target of synch.  this should be refactored at some point to avoid confusion)
  *   'configurable' =>

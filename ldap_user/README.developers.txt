@@ -17,16 +17,25 @@ synch_contexts are:
   
 The following events map to these synch contexts:
 
+LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER and :
+  -- provisionDrupalAccount() N.A. (since Drupal account is already created)
+  -- synchToDrupalAccount()   from hook_user_insert in ldap_user module (if not provisioned)
+                              See ldap_user.test.manual.txt 6.B.
+  
+  -- provisionLdapEntry()     from hook_user_insert in ldap_user module 
+  -- synchToLdapEntry()       from hook_user_insert in ldap_user module (if not provisioned)
+  
+LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER
+
 LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
-  -- synchToDrupalAccount()   from ldap_authentication_user_login_authenticate_validate function on logon.
   -- provisionDrupalAccount() from ldap_authentication_user_login_authenticate_validate function on logon.
+                              See ldap_user.test.manual.txt 6.C.
+  -- synchToDrupalAccount()   from ldap_authentication_user_login_authenticate_validate function on logon.
+                              See ldap_user.test.manual.txt 6.C.
+
+
   -- synchToLdapEntry()       from hook_user_login in ldap_user module
   -- provisionLdapEntry()     from hook_user_login in ldap_user module 
-  
-LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
-  -- provisionLdapEntry()     from hook_user_login in ldap_user module
-  -- synchToLdapEntry()       from hook_user_login in ldap_user module
-  -- synchToDrupalAccount()   from hook_user_presave() when $account->is_new
   
 LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER: 
   -- provisionLdapEntry()     from hook_user_update in ldap_user module
@@ -57,7 +66,6 @@ $this->drupalAcctProvisionEvents (see "LDAP Entry Provisioning Options"), contai
   LDAP_USER_DRUPAL_USER_DELETE_ON_LDAP_ENTRY_MISSING
 
 $this->ldapEntryProvisionEvents (see "Drupal Account Provisioning Options"), contains:
-  LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_CREATE
   LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_STATUS_IS_1
   LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE
   LDAP_USER_LDAP_ENTRY_UPDATE_ON_USER_UPDATE

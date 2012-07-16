@@ -666,12 +666,12 @@ class LdapServer {
     else {
       $attributes = ldap_servers_attributes_needed($op, $this->sid);
     }
-  //  debug('attributes needed'); debug($attributes);
+    
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
       $result = $this->search($basedn, $filter, $attributes);
-     // debug('user_lookup, result='); debug($result);
+     // debug("ldap_server: user_lookup, filter=$filter, basedn=$basedn, result="); debug('user_lookup:attributes needed'); debug($attributes); debug($result);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.

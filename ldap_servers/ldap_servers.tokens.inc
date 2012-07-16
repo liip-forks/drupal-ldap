@@ -36,6 +36,7 @@ function ldap_servers_make_token($attr_name, $attr_type = NULL, $ordinal = NULL)
  * @return array array($attr_type, $attr_name, $attr_ordinal) such as array('field','field_user_lname', NULL)
  */
 function ldap_servers_parse_user_attr_name($user_attr_key) {
+  $user_attr_key = trim($user_attr_key, LDAP_SERVERS_TOKEN_PRE . LDAP_SERVERS_TOKEN_POST); // make sure no [] are on attribute
   $parts = explode('.', $user_attr_key);
   $attr_type = $parts[0];
   $attr_name = (isset($parts[1])) ? $parts[1] : FALSE;
@@ -88,11 +89,13 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
  */
 function ldap_servers_token_extract_attributes(&$attributes,  $text) {
   $tokens = ldap_servers_token_tokens_needed_for_template($text);
+ // debug("text=$text, ldap_servers_token_extract_attributes, tokens"); debug($tokens);
   foreach ($tokens as $token) {
     $token = str_replace(array(LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST), array('', ''), $token);
     $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token);
     $attributes[] = $parts[0];
   }
+ // debug('ldap_servers_token_extract_attributes, attributes'); debug($tokens);
 }
 
 /**
@@ -102,6 +105,7 @@ function ldap_servers_token_extract_attributes(&$attributes,  $text) {
  */
 function ldap_servers_token_extract_attribute_name($token) {
   $attributes = array();
+  //debug('call to ldap_servers_token_extract_attribute_name');
   ldap_servers_token_extract_attributes($attributes,  $token); 
 //  $attr_name = trim($token, LDAP_SERVERS_TOKEN_PRE . LDAP_SERVERS_TOKEN_POST); // remove token brackets
 

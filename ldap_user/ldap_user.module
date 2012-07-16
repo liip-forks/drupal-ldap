@@ -18,7 +18,6 @@ define('LDAP_USER_DRUPAL_USER_CANCEL_ON_LDAP_ENTRY_MISSING', 4);
 define('LDAP_USER_DRUPAL_USER_DELETE_ON_LDAP_ENTRY_MISSING', 5);
 
 // configurable states where synch or provision to ldap entry could occur
-define('LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_CREATE', 1);
 define('LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_STATUS_IS_1', 2);
 define('LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_UPDATE', 3);
 define('LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_AUTHENTICATE', 4);
@@ -143,7 +142,7 @@ function ldap_user_conf($type = NULL, $reset = FALSE) {
  * implements hook_ldap_attributes_needed_alter().
  */
 function ldap_user_ldap_attributes_needed_alter(&$attributes, $synch_context, $ldap_server) {
-
+  // debug("ldap_user_ldap_attributes_needed_alter synch_context=$synch_context");
   //@todo need to load all ldap_user attributes used in synch mapping and add to list based on synch context.
  // // temp_out dpm("ldap_user_ldap_attributes_needed_alter"); // temp_out dpm($attributes); // temp_out dpm($ldap_server); // temp_out dpm($sych_context);
   
@@ -160,7 +159,9 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $synch_context, $l
         $attributes[] = $ldap_server->user_attr; 
         $attributes[] = $ldap_server->mail_attr;
         $attributes[] = $ldap_server->unique_persistent_attr;
-        ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);        
+        if ($ldap_server->mail_template) {
+          ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);  
+        }
       break;  
         
       case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
@@ -176,7 +177,7 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $synch_context, $l
     }
     
     $attributes_required_by_user_module_mappings = $ldap_user_conf->getRequiredAttributes($synch_context);
-    $attributes = array_merge(array_values($attributes_required_by_user_module_mappings), $attributes);
+    $attributes = array_unique(array_merge(array_values($attributes_required_by_user_module_mappings), $attributes));
    // debug('attributes2'); debug($attributes);
   }
 }
@@ -195,12 +196,13 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
   // 1. Drupal user properties
   // 1.a make sure empty array are present so array + function works
   foreach (array('property.status','property.timezone','property.signature') as $i => $property_id) {
-    if (!isset($available_user_attrs[$property_id]) || !is_array($available_user_attrs[$property_id])) {
-      $available_user_attrs[$property_id] = array();
+    $property_token = '[' . $property_id  .']';
+    if (!isset($available_user_attrs[$property_token]) || !is_array($available_user_attrs[$property_token])) {
+      $available_user_attrs[$property_token] = array();
     }
   }
   //@todo make these merges so they don't override saved values such as 'enabled'
-  $available_user_attrs['property.status'] = $available_user_attrs['property.status'] + array(
+  $available_user_attrs['[property.status]'] = $available_user_attrs['[property.status]'] + array(
     'name' => 'Property: Acount Status',
     'configurable_to_drupal' => 1,
     'configurable_to_ldap' => 1,
@@ -210,7 +212,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
     'synch_module' => 'ldap_user',
   );
 
-  $available_user_attrs['property.timezone'] = $available_user_attrs['property.timezone'] + array(
+  $available_user_attrs['[property.timezone]'] = $available_user_attrs['[property.timezone]'] + array(
     'name' => 'Property: User Timezone',
     'configurable_to_drupal' => 1,
     'configurable_to_ldap' => 1,
@@ -219,7 +221,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
     'synch_module' => 'ldap_user',
   );
 
-  $available_user_attrs['property.signature'] = $available_user_attrs['property.signature'] + array(
+  $available_user_attrs['[property.signature]'] = $available_user_attrs['[property.signature]'] + array(
     'name' => 'Property: User Signature',
     'configurable_to_drupal' => 1,
     'configurable_to_ldap' => 1,
@@ -231,7 +233,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
   // 2. Drupal user fields
   $user_fields = field_info_instances('user', 'user');
   foreach ($user_fields as $field_name => $field_instance) {
-    $field_id = "field.$field_name";
+    $field_id = "[field.$field_name]";
     if (!isset($available_user_attrs[$field_id]) || !is_array($available_user_attrs[$field_id])) {
       $available_user_attrs[$field_id] = array();
     }
@@ -251,26 +253,26 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
   }
 
   $configurable_to_drupal = (int)($ldap_user_conf->provisionsDrupalAccountsFromLdap) ? 0 : 1;
-  $available_user_attrs['property.name'] = array(
+  $available_user_attrs['[property.name]'] = array(
     'configurable_to_drupal' => $configurable_to_drupal,
     'configurable_to_ldap' => 1,
     );
 
-  $available_user_attrs['property.mail'] = array(
+  $available_user_attrs['[property.mail]'] = array(
     'configurable_to_drupal' => $configurable_to_drupal,
     'configurable_to_ldap' => 1,
     );
 
   if (!$ldap_user_conf->provisionsDrupalAccountsFromLdap) {
-    $available_user_attrs['property.mail']['config_module'] = 'ldap_user';
-    $available_user_attrs['property.name']['config_module'] = 'ldap_user';
+    $available_user_attrs['[property.mail]']['config_module'] = 'ldap_user';
+    $available_user_attrs['[property.name]']['config_module'] = 'ldap_user';
   }
 
   //this is where  need to be added to arrays
   // temp_out dpm("sic=$sid, ldap_user_ldap_user_attrs_list_alter, ldapUserSynchMappings: "); // temp_out dpm($ldap_user_conf->ldapUserSynchMappings[$sid]);
   if (isset($ldap_user_conf->ldapUserSynchMappings[$sid])) {
    // debug($ldap_user_conf->ldapUserSynchMappings[$sid]);
-    foreach ($ldap_user_conf->ldapUserSynchMappings[$sid] as $target_attribute => $mapping) {
+    foreach ($ldap_user_conf->ldapUserSynchMappings[$sid] as $target_token => $mapping) {
       //// temp_out dpm($target_attribute); // temp_out dpm($mapping);
       if (isset($mapping['direction']) && $mapping['direction'] == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER && isset($mapping['user_attr'])) {
         $key = $mapping['user_attr'];
@@ -385,25 +387,28 @@ function ldap_user_user_login(&$edit, $account) {
 
 /**
  * Implements hook_user_presave().
+ *
+ * @todo this is probably a hook to eliminate, otherwise the synch command is called multiple times
+ * stick to hook_user_update, hook_user_insert, hook_user_logon that are coupled with clear events.
 */
 function ldap_user_user_presave(&$user_edit, $account, $category) {
   if ($category != 'ldap_user') { // avoid recursion
     
-    $ldap_user_conf = ldap_user_conf();
+  //  $ldap_user_conf = ldap_user_conf();
   //  debug('ldap_user_user_presave');
-    $synch_context = $account->is_new ? LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER : LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER;
+  //  $synch_context = $account->is_new ? LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER : LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER;
     // Update the Drupal user object from the LDAP account.
     
-    $enabled = $ldap_user_conf->contextEnabled($synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'synch');
-    debug('ldap_user_user_presave,enabled='. $enabled);
-    if ($enabled) {
-      $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $synch_context);
-    }
+   // $enabled = $ldap_user_conf->contextEnabled($synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'synch');
+  //  debug('ldap_user_user_presave,enabled='. $enabled);
+  //  if ($enabled) {
+   //   $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $synch_context);
+  //  }
     // Make sure we've not removed the email address.
-    if (empty($user_edit['mail']) && !empty($account->mail)) {
-      // Use the original value.
-      $user_edit['mail'] = $account->mail;
-    }
+  //  if (empty($user_edit['mail']) && !empty($account->mail)) {
+   //   // Use the original value.
+   //   $user_edit['mail'] = $account->mail;
+  //  }
   }
 }
 
@@ -414,22 +419,26 @@ function ldap_user_user_presave(&$user_edit, $account, $category) {
 function ldap_user_user_insert(&$user_edit, $account, $category) {
   // @todo.  need to consider how these might duplicate other provision and synch calls in same login, etc.
   //         this is best done via ldap user dev notes 
-  debug('ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
+ // dpm($user_edit); dpm($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
   if ($category != 'ldap_user') { // avoid recursion
     $ldap_user_conf = ldap_user_conf();
     
-      // provision or synch, not both
+    /**
+     * in hook_user_insert, account is already created, so never call provisionDrupalAccount(), just
+     * synchToDrupalAccount(), even if action is 'provision'
+     */
+    $empty_user_edit = array();
     if ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'provision')) {
-      $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER);
+      $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
     }
     elseif ($account->status && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'provision')) {
-      $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER);
+      $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, NULL, TRUE);
     }
     elseif ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'synch')) {
-      $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER);
+      $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
     }
     elseif ($account->status && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'synch')) {
-      $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER);
+      $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, NULL, TRUE);
     }    
      // provision or synch, not both
     if ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'provision')) {

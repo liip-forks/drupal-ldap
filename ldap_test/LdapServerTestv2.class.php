@@ -49,7 +49,7 @@ class LdapServerTestv2 extends LdapServer {
     $this->refreshFakeData();
   }
 
-  private function refreshFakeData() {
+  public function refreshFakeData() {
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
     $this->methodResponses = (is_array($test_data) && isset($test_data['methodResponses'])) ? $test_data['methodResponses'] : array();
     $this->entries = (is_array($test_data) && isset($test_data['entries'])) ? $test_data['entries'] : array();
@@ -140,7 +140,7 @@ class LdapServerTestv2 extends LdapServer {
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
     
-   // debug("ldap test server search base_dn=$base_dn, filter=$filter"); debug($attributes);
+    //debug("ldap test server search base_dn=$base_dn, filter=$filter"); debug($attributes);
     $lcase_attribute = array();
     foreach ($attributes as $i => $attribute_name) {
       $lcase_attribute[] = drupal_strtolower($attribute_name);
@@ -171,7 +171,7 @@ class LdapServerTestv2 extends LdapServer {
   //  debug("filter attribute, $filter_attribute, filter value $filter_value");
     // need to perform feaux ldap search here with data in
     $results = array();
-   // debug('this->entries'); debug($this->entries);
+   // debug('this->entries[CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com]'); debug($this->entries['CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com']);
     foreach ($this->entries as $dn => $entry) {
       $dn_lcase = drupal_strtolower($dn);
       // if not in basedn, skip

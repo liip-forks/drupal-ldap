@@ -42,7 +42,7 @@ ou=IT,dc=myorg,dc=mytld,dc=edu|administrator
 
 function ldap_authorization_drupal_role_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_server, $ldap_user_conf) {
 
-  $available_user_attrs['property.role'] = array(
+  $available_user_attrs['[property.role]'] = array(
     'name' => 'Property: Drupal Roles',
     'source' => 'depends on configuration',
     'configurable_to_drupal' => 0,

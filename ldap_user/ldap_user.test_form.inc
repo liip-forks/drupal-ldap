@@ -42,7 +42,7 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
   $form['test_mode'] = array(
       '#type' => 'radios',
       '#title' => t('Testing Mode'),
-      '#required' => 1,
+      '#required' => 0,
       '#default_value' => isset( $_SESSION['ldap_user_test_form']['test_mode']) ?  $_SESSION['ldap_user_test_form']['test_mode'] : 'query',
       '#options' => array(
         'query' => t('Test Query.  Will not alter anything in drupal or LDAP'),
@@ -58,7 +58,7 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
   $form['action'] = array(
       '#type' => 'checkboxes',
       '#title' => t('Actions/Event Handlers to Test'),
-      '#required' => 1,
+      '#required' => 0,
       '#default_value' => $selected_actions,
       '#options' => $synch_context_options,
       '#states' => array(
@@ -142,7 +142,12 @@ function ldap_user_test_form_submit($form, &$form_state) {
           }
         }
         else {
-          $results['provisionDrupalAccount method results']["context = $synch_context_description"] = 'Not enabled.';
+          if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) {
+            $results['provisionDrupalAccount method results']["context = $synch_context_description"] = 'Not enabled.';
+          }
+          else {
+            $results['provisionLdapEntry method results']["context = $synch_context_description"] = 'Not enabled.';
+          }
         }
       }
     }

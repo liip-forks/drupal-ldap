@@ -42,7 +42,6 @@ class LdapUserConfAdmin extends LdapUserConf {
       be created for a Drupal User?');
 
     $values['ldapEntryProvisionEventsOptions'] = array(
-      LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_CREATE => t('Create LDAP entry when a Drupal Account is created.'),
       LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_STATUS_IS_1 => t('Create LDAP entry when a Drupal Account has a status of approved.
         This could be when an account is initially created, when it is approved, or when confirmation
         via email sets enables an account.'),
@@ -509,6 +508,7 @@ the top of this form.
           $row_descriptor = t("server %sid row mapping to ldap attribute %ldap_attr", $tokens);
           $tokens['!row_descriptor'] = $row_descriptor;
           $ldap_attr_in_token = array();
+          debug('calling ldap_servers_token_extract_attributes from validate, mapping='); debug($mapping['ldap_attr']);
           ldap_servers_token_extract_attributes($ldap_attr_in_token,  $mapping['ldap_attr']);
           
           if ($mapping['direction'] == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) {
@@ -696,7 +696,7 @@ the top of this form.
         ||
         (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap'])
         ){
-        $user_attr_options[ldap_servers_make_token($target_id)] = substr($mapping['name'], 0, 25);
+        $user_attr_options[$target_id] = substr($mapping['name'], 0, 25);
       }
     }
      $user_attr_options['user_tokens'] = '-- user tokens --';
@@ -725,9 +725,9 @@ the top of this form.
    // dpm('this->ldapUserSynchMappings');  dpm($this->ldapUserSynchMappings);
   //  dpm('this->synchMapping');  dpm($this->synchMapping);
     if (isset($this->ldapUserSynchMappings[$ldap_server->sid])) {
-      foreach ($this->ldapUserSynchMappings[$ldap_server->sid] as $target_attr_name => $mapping) {  // key could be ldap attribute name or user attribute name
+      foreach ($this->ldapUserSynchMappings[$ldap_server->sid] as $target_attr_token => $mapping) {  // key could be ldap attribute name or user attribute name
      //   dpm("target_attr_name=$target_attr_name");  dpm($mapping);
-        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($this->synchMapping[$ldap_server->sid][$target_attr_name], 'ldap_user')) {
+        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($this->synchMapping[$ldap_server->sid][$target_attr_token], 'ldap_user')) {
      //   dpm("addSynchFormRow - $target_id");  dpm($mapping);
           $this->addSynchFormRow($form, 'update', $mapping, $user_attr_options, $ldap_server, $enabled_for_drupal_user, $enabled_for_ldap_entry);
         }
