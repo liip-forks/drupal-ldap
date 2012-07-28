@@ -247,7 +247,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
         ) {
       $bind_success = ($ldap_server->bind() == LDAP_SUCCESS);
     }
-    elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+    elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON) {
       $bind_success = ($ldap_server->bind(NULL, NULL, TRUE) == LDAP_SUCCESS);
     }
     elseif ($sso_login) {
