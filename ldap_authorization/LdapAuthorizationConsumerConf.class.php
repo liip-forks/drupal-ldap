@@ -118,7 +118,7 @@ class LdapAuthorizationConsumerConf {
 
     $this->sid = $consumer_conf->sid;
     $this->consumerType = $consumer_conf->consumer_type;
-    $this->numericConsumerConfId = $consumer_conf->numeric_consumer_conf_id;
+    $this->numericConsumerConfId = isset($consumer_conf->numeric_consumer_conf_id)? $consumer_conf->numeric_consumer_conf_id : NULL;
     $this->status = ($consumer_conf->status) ? 1 : 0;
     $this->onlyApplyToLdapAuthenticated  = (bool)(@$consumer_conf->only_ldap_authenticated);
 
@@ -128,18 +128,17 @@ class LdapAuthorizationConsumerConf {
     $this->deriveFromAttr  = (bool)($consumer_conf->derive_from_attr);
     $this->deriveFromAttrAttr =  $this->linesToArray($consumer_conf->derive_from_attr_attr);
     $this->deriveFromAttrUseFirstAttr  = (bool)($consumer_conf->derive_from_attr_use_first_attr);
-    $this->deriveFromAttrNested  = (bool)($consumer_conf->derive_from_attr_nested);
+    $this->deriveFromAttrNested  = isset($consumer_conf->derive_from_attr_nested) ? (bool)($consumer_conf->derive_from_attr_nested) : FALSE;
 
     $this->deriveFromEntry  = (bool)(@$consumer_conf->derive_from_entry);
     $this->deriveFromEntryEntries = $this->linesToArray($consumer_conf->derive_from_entry_entries);
-    $this->deriveFromEntryEntriesAttr = $consumer_conf->derive_from_entry_entries_attr;
-
+    $this->deriveFromEntryEntriesAttr = isset($consumer_conf->derive_from_entry_entries_attr) ? $consumer_conf->derive_from_entry_entries_attr : NULL;
 
     $this->deriveFromEntryMembershipAttr = $consumer_conf->derive_from_entry_attr;
-    $this->deriveFromEntryAttrMatchingUserAttr = $consumer_conf->derive_from_entry_user_ldap_attr;
+    $this->deriveFromEntryAttrMatchingUserAttr = isset($consumer_conf->derive_from_entry_user_ldap_attr) ? $consumer_conf->derive_from_entry_user_ldap_attr : NULL;
     $this->deriveFromEntrySearchAll = (bool)($consumer_conf->derive_from_entry_search_all);
-    $this->deriveFromEntryUseFirstAttr  = (bool)($consumer_conf->derive_from_entry_use_first_attr);
-    $this->deriveFromEntryNested = $consumer_conf->derive_from_entry_nested;
+    $this->deriveFromEntryUseFirstAttr  = isset($consumer_conf->derive_from_entry_use_first_attr) ? (bool)($consumer_conf->derive_from_entry_use_first_attr) : FALSE;
+    $this->deriveFromEntryNested = isset($consumer_conf->derive_from_entry_nested) ? $consumer_conf->derive_from_entry_nested : NULL;
 
     $this->mappings = $this->pipeListToArray($consumer_conf->mappings, FALSE);
     $this->useMappingsAsFilter = (bool)(@$consumer_conf->use_filter);

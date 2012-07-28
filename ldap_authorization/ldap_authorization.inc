@@ -505,6 +505,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
         $user_ldap_entry,
         $consumer_conf->deriveFromEntryNested
       );
+      //  deriveFromEntryGroups($entries, $entries_attr
       if (count($derive_from_entry_authorizations)) {
         foreach ($derive_from_entry_authorizations as $i => $authorization) {
           if ($consumer_conf->deriveFromEntryUseFirstAttr) {
