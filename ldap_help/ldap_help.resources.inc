@@ -36,6 +36,7 @@ function ldap_help_main() {
   <li><a href="http://www.it.northwestern.edu/bin/docs/CentralAuthenticationServicesThroughLDAP.pdf">Northwestern University</li>
   <li><a href="http://www.netid.washington.edu/documentation/ldapConfig.aspx">University of Washington</a></li>
   <li><a href="https://wiki.uchicago.edu/display/idm/LDAP">University of Chicago</a></li>
+  <li><a href="https://www.icts.uiowa.edu/confluence/display/ICTSit/Drupal+LDAP+Integration+Against+Active+Directory">UIOWA</a></li>
   </ul>
 
   <h3>General Drupal Support Help</h3>

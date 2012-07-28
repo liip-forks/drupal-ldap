@@ -91,9 +91,14 @@ function ldap_user_test_form_validate($form, &$form_state) {
  */
 function ldap_user_test_form_submit($form, &$form_state) {
   $username = $form_state['values']['testing_drupal_username'];
+  
+  
   $selected_actions = $form_state['values']['action'];
   
+  
  if ($username && count($selected_actions) > 0) {
+  
+  
     $synch_context_options = ldap_user_synch_contexts_key_values();
 
     $user_object = user_load_by_name($username);

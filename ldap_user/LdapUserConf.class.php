@@ -8,16 +8,16 @@
 
 class LdapUserConf {
 
-  public $drupalAcctProvisionServer = LDAP_USER_NO_SERVER_SID;  // servers used for to drupal acct provisioning keyed on $sid => boolean
+ // public $drupalAcctProvisionServer = LDAP_USER_NO_SERVER_SID;  // servers used for to drupal acct provisioning keyed on $sid => boolean
   public $ldapEntryProvisionServer = LDAP_USER_NO_SERVER_SID;  // servers used for provisioning to ldap keyed on $sid => boolean
-  public $provisionServers = array(); // ldap server objects enabled for ldap user
+  public $provisionServers = array(); // ldap server objects enabled for ldap user keyed on direction => sid => object
   public $drupalAcctProvisionEvents = array(LDAP_USER_DRUPAL_USER_CREATE_ON_LOGON, LDAP_USER_DRUPAL_USER_CREATE_ON_MANUAL_ACCT_CREATE);
   public $ldapEntryProvisionEvents = array();
   public $userConflictResolve = LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
   public $acctCreation = LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT;
   public $inDatabase = FALSE;
   public $synchMapping = NULL; // array of field synching directions for each operation.  should include ldapUserSynchMappings
-  // keyed on property, ldap, or field token such as '[field.field_lname] with brackets in them.
+  // keyed on direction => sid => property, ldap, or field token such as '[field.field_lname] with brackets in them.
   public $ldapUserSynchMappings = NULL;  // synch mappings configured in ldap user module
   // keyed on property, ldap, or field token such as '[field.field_lname] with brackets in them.
   public $detailedWatchdog = FALSE;
@@ -90,12 +90,20 @@ function __construct() {
           $this->{$property} = $saved[$property];
         }
       }
-      if ($this->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID && !isset($this->provisionServers[$this->drupalAcctProvisionServer])) {
-        $this->provisionServers[$this->drupalAcctProvisionServer] = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);
+      if ($this->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID && !isset($this->provisionServers[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER][$this->drupalAcctProvisionServer])) {
+        $this->provisionServers[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER][$this->drupalAcctProvisionServer] = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);
       }
-      if ($this->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID && !isset($this->provisionServers[$this->ldapEntryProvisionServer])) {
-        $this->provisionServers[$this->ldapEntryProvisionServer] = ldap_servers_get_servers($this->ldapEntryProvisionServer, 'enabled', TRUE);
+      elseif (is_array($this->ldapUserSynchMappings[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER][$this->drupalAcctProvisionServer])) {
+        $this->provisionServers[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER][$this->drupalAcctProvisionServer] = ldap_servers_get_servers($this->drupalAcctProvisionServer, NULL, TRUE);
       }
+      if ($this->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID && !isset($this->provisionServers[LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY][$this->ldapEntryProvisionServer])) {
+        $this->provisionServers[LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY][$this->ldapEntryProvisionServer] = ldap_servers_get_servers($this->ldapEntryProvisionServer, 'enabled', TRUE);
+      }
+      elseif (isset($this->ldapUserSynchMappings[LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY][$this->ldapEntryProvisionServer])) {
+        $this->provisionServers[LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY][$this->ldapEntryProvisionServer] = ldap_servers_get_servers($this->ldapEntryProvisionServer, NULL, TRUE);
+      }
+        
+     // dpm('this->synchMapping'); dpm($this->synchMapping);
       ////dpm($this);
     // //dpm('loaded');//dpm($this);
     }
@@ -137,7 +145,12 @@ function __construct() {
   */
   private function getSynchMappings($sid) {
    ////dpm('this.getSynchMappings,$sid='. $sid);debug($this->ldapUserSynchMappings);
-    if (!empty($this->ldapUserSynchMappings[$sid]) &&
+    if (!empty($this->ldapUserSynchMappings[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER][$sid]) &&
+        ($mappings = $this->ldapUserSynchMappings[$sid]) &&
+        is_array($mappings)) {
+      return $mappings;
+    }
+    elseif (!empty($this->ldapUserSynchMappings[LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY][$sid]) &&
         ($mappings = $this->ldapUserSynchMappings[$sid]) &&
         is_array($mappings)) {
       return $mappings;
@@ -207,9 +220,16 @@ function __construct() {
      // $this->synchMapping = ldap_user_get_user_attrs();
       $ldap_servers = ldap_servers_get_servers(NULL, 'enabled', FALSE);
       $available_user_attrs = array();
-      foreach ($ldap_servers as $sid => $ldap_server) {
-        $available_user_attrs[$sid] = array();
-        drupal_alter('ldap_user_attrs_list', $available_user_attrs[$sid], $ldap_server, $this);
+      foreach($this->provisionServers as $direction => $ldap_servers) {
+        foreach ($ldap_servers as $sid => $ldap_server) {
+          $available_user_attrs[$direction][$sid] = array();
+          $params = array(
+            'ldap_server' => $ldap_server,
+            'ldap_user_conf' => $this,
+            'direction' => $direction,
+          );
+          drupal_alter('ldap_user_attrs_list', $available_user_attrs[$direction][$sid], $params);
+        }
       }
       $this->synchMapping = $available_user_attrs;
     // //dpm('available_user_attrs');dpm($available_user_attrs);
@@ -913,19 +933,10 @@ function __construct() {
    */
 
   public function isSynched($attr_token, $ldap_server, $synch_context, $direction) {
-  
     $result = (boolean)(
-      isset($this->synchMapping[$ldap_server->sid][$attr_token]['contexts']) &&
-      in_array($synch_context, $this->synchMapping[$ldap_server->sid][$attr_token]['contexts']) &&
-      isset($this->synchMapping[$ldap_server->sid][$attr_token]['direction']) &&
-      $this->synchMapping[$ldap_server->sid][$attr_token]['direction'] == $direction
+      isset($this->synchMapping[$direction][$ldap_server->sid][$attr_token]['contexts']) &&
+      in_array($synch_context, $this->synchMapping[$direction][$ldap_server->sid][$attr_token]['contexts'])
     );
-   // debug("synchMapping: feild=$field, direction=$direction, synch_context=$synch_context, result=$result");
-   // debug($this->synchMapping[$ldap_server->sid][$field]);
-   ////dpm("synchMapping in isSynched=$result, field=$field, synch_context=$synch_context direction=$direction, server:" . $ldap_server->sid);
-   ////dpm($ldap_server);
-   ////dpm("this->synchMapping[sid][field] in isSynched");//dpm($this->synchMapping[$ldap_server->sid][$field]);
-  ////dpm($result);
     return $result;
   }
 

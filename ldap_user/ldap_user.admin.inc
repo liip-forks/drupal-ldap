@@ -21,6 +21,7 @@ function ldap_user_admin_form($form, &$form_state) {
  * validate handler for the ldap_user_admin_form
  */
 function ldap_user_admin_form_validate($form, &$form_state) {
+ 
   $ldap_user_conf_admin = ldap_user_conf('admin');
   list($errors, $warnings) = $ldap_user_conf_admin->drupalFormValidate($form_state['values'], $form['#storage']);
   foreach ($errors as $error_name => $error_text) {

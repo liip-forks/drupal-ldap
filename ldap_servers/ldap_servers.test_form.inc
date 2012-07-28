@@ -90,11 +90,17 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
       dpm($_SESSION['ldap_server_test_data']['LDAP Entry']['attr']);
 
       $user = user_load_by_name($user_name);
-      dpm("drupal user object for: $user_name");
-      dpm($user);
-      $user_entity = entity_load_single('user', $user->uid);
-      dpm("drupal user entity for: $user_name");
-      dpm($user_entity);
+
+      if (is_object($user)) {
+        dpm("drupal user object for: $user_name");
+        dpm($user);
+        $user_entity = entity_load_single('user', $user->uid);
+        dpm("drupal user entity for: $user_name");
+        dpm($user_entity);
+      }
+      else {
+        dpm('No user object found');
+      }
 
     }
 

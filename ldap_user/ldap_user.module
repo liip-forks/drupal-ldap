@@ -186,7 +186,11 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $synch_context, $l
  * implements hook_ldap_user_attrs_list_alter()
  *
  */
-function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_server, $ldap_user_conf) {
+function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
+
+  $ldap_server = $params['ldap_server'];
+  $ldap_user_conf = $params['ldap_user_conf'];
+  $direction = $params['direction']; 
 
   $sid = $ldap_server->sid;
   $tokens = array(
@@ -252,14 +256,13 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
   //  dpm($field_id); dpm($available_user_attrs[$field_id]);
   }
 
-  $configurable_to_drupal = (int)($ldap_user_conf->provisionsDrupalAccountsFromLdap) ? 0 : 1;
   $available_user_attrs['[property.name]'] = array(
-    'configurable_to_drupal' => $configurable_to_drupal,
+    'configurable_to_drupal' => FALSE,
     'configurable_to_ldap' => 1,
     );
 
   $available_user_attrs['[property.mail]'] = array(
-    'configurable_to_drupal' => $configurable_to_drupal,
+    'configurable_to_drupal' => FALSE,
     'configurable_to_ldap' => 1,
     );
 
@@ -270,14 +273,14 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$ldap_ser
 
   //this is where  need to be added to arrays
   // temp_out dpm("sic=$sid, ldap_user_ldap_user_attrs_list_alter, ldapUserSynchMappings: "); // temp_out dpm($ldap_user_conf->ldapUserSynchMappings[$sid]);
-  if (isset($ldap_user_conf->ldapUserSynchMappings[$sid])) {
+  if (isset($ldap_user_conf->ldapUserSynchMappings[$direction][$sid])) {
    // debug($ldap_user_conf->ldapUserSynchMappings[$sid]);
-    foreach ($ldap_user_conf->ldapUserSynchMappings[$sid] as $target_token => $mapping) {
+    foreach ($ldap_user_conf->ldapUserSynchMappings[$direction][$sid] as $target_token => $mapping) {
       //// temp_out dpm($target_attribute); // temp_out dpm($mapping);
-      if (isset($mapping['direction']) && $mapping['direction'] == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER && isset($mapping['user_attr'])) {
+      if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER && isset($mapping['user_attr'])) {
         $key = $mapping['user_attr'];
       }
-      elseif (isset($mapping['direction']) && $mapping['direction'] == LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY && isset($mapping['ldap_attr'])) {
+      elseif ($direction == LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY && isset($mapping['ldap_attr'])) {
         $key = $mapping['ldap_attr'];
       }
       else {
@@ -654,7 +657,7 @@ function ldap_user_token_replace($token, $account, $entity = NULL) {
  *
  * @return token array suitable for t() functions of with lowercase keys as exemplified below
  */
-function ldap_user_token_tokenize_entry($account, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST, $user_entity = NULL) {
+function ldap_user_token_tokenize_entry($account, $token_keys, $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST, $user_entity = NULL) {
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
@@ -662,7 +665,6 @@ function ldap_user_token_tokenize_entry($account, $token_keys = 'all', $pre = LD
     list($discard, $user_entity) = ldap_user_load_user_acct_and_entity($account->uid, 'uid');
   }
 
-  $token_keys = ($token_keys == 'all') ? $this->synchMapping[$ldap_server->sid] : $token_keys;
   foreach ($token_keys as $token_key) {
     // target id is of form field.lname, property.mail, field.dept:0, etc.
     list($type, $attr_ordinal) = explode('.', $token_key);

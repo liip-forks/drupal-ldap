@@ -82,6 +82,6 @@ $this->ldapEntryProvisionEvents (see "Drupal Account Provisioning Options"), con
 $ldap_user_conf->isSynched($field, $ldap_server, $synch_context, $direction)
 
 This depends on: 
-$ldap_user_conf->synchMapping[$ldap_server->sid][$field]['contexts']
+$ldap_user_conf->synchMapping[$direction][$ldap_server->sid][$field]['contexts']
 which is populated by various ldap and possibly other modules. These are visible in the tables at config/people/ldap/user
 

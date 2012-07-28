@@ -239,15 +239,32 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     elseif ($detailed_watchdog_log) {
       watchdog('ldap_authentication',  '%username : Success at connecting to %sid', $watchdog_tokens, WATCHDOG_DEBUG);
     }
-// dpm('_ldap_authentication_user_login_authenticate_validate5');
-    // #2 BIND TO SERVER
+
+/**
+*
+LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT => t('Service Account Bind.  Use credentials in following section to
+bind to ldap.  This option is usually a best practice. Service account is entered in next section.'),
+
+LDAP_SERVERS_BIND_METHOD_USER => t('Bind with Users Credentials.  Use users\' entered credentials
+to bind to LDAP.  This is only useful for modules that work during user logon such
+as ldap authentication and ldap authorization.  This option is not a best practice in most cases.
+The users dn must be of the form "cn=[username],[base dn]" for this option to work.'),
+
+LDAP_SERVERS_BIND_METHOD_ANON_USER => t('Anonymous Bind for search, then Bind with Users Credentials.
+Searches for user DN then uses users\' entered credentials to bind to LDAP.  This is only useful for
+modules that work during user logon such as ldap authentication and ldap authorization.
+The users dn must be discovered by an anonymous search for this option to work.'),
+
+LDAP_SERVERS_BIND_METHOD_ANON => t('Anonymous Bind. Use no credentials to bind to ldap server.
+Will not work on most ldaps.'),
+**/
     $bind_success = FALSE;
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
         $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
         ) {
       $bind_success = ($ldap_server->bind() == LDAP_SUCCESS);
     }
-    elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+    elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON) {
       $bind_success = ($ldap_server->bind(NULL, NULL, TRUE) == LDAP_SUCCESS);
     }
     elseif ($sso_login) {
