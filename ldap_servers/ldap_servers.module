@@ -144,6 +144,13 @@ require_once('ldap_servers.functions.inc');
 require_once('ldap_servers.tokens.inc');
 
 /**
+ * Implements hook_init().
+ */
+function ldap_servers_init() {
+  drupal_add_css(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.css', 'module');
+}
+
+/**
  * Advertise the current ldap api version
  */
 function ldap_api_version() {
@@ -403,28 +410,30 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'config_module' => 'ldap_server',
       'synch_module' => 'ldap_user',
       ) + $available_user_attrs['[field.ldap_user_current_dn]'];
+  
+
+    $available_user_attrs['[property.name]'] =  array(
+      'name' => 'Property: Username',
+      'source' => '[' . $ldap_server->user_attr . ']',
+      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+      'enabled' => TRUE,
+      'contexts' => $all_contexts,
+      'config_module' => 'ldap_server',
+      'synch_module' => 'ldap_user',
+      ) + $available_user_attrs['[property.name]'];
+  
+    $available_user_attrs['[property.mail]'] =  array(
+      'name' => 'Property: Email',
+      'source' => ($ldap_server->mail_template) ? $ldap_server->mail_template : '[' . $ldap_server->mail_attr . ']',
+      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+      'enabled' => TRUE,
+      'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER),
+      'config_module' => 'ldap_server',
+      'synch_module' => 'ldap_user',
+    ) + $available_user_attrs['[property.mail]'];
   }
 
-  $available_user_attrs['[property.name]'] =  array(
-    'name' => 'Property: Username',
-    'source' => '[' . $ldap_server->user_attr . ']',
-    'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
-    'enabled' => TRUE,
-    'contexts' => $all_contexts,
-    'config_module' => ($ldap_user_conf->provisionsDrupalAccountsFromLdap) ? 'ldap_server' : 'ldap_user',
-    'synch_module' => 'ldap_user',
-    ) + $available_user_attrs['[property.name]'];
-
-  $available_user_attrs['[property.mail]'] =  array(
-    'name' => 'Property: Email',
-    'source' => ($ldap_server->mail_template) ? $ldap_server->mail_template : '[' . $ldap_server->mail_attr . ']',
-    'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
-    'enabled' => TRUE,
-    'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER),
-    'config_module' => ($ldap_user_conf->provisionsDrupalAccountsFromLdap) ? 'ldap_server' : 'ldap_user',
-    'synch_module' => 'ldap_user',
-    ) + $available_user_attrs['[property.mail]'];
-
+  
 }
 
 //@todo  Email Behavior and email update options need to be in ldap_user module, see: admin/config/people/ldap/authentication

@@ -13,13 +13,12 @@ function theme_ldap_user_conf_form($variables) {
   //dsm('theme_ldap_user_conf_form variables'); dsm($variables);
   $form = $variables['form'];
   $tables = array();
+
   foreach ($form as $key => $element) {
     $parts = explode('__', $key);
     if (count($parts) == 5 && isset($element['#row']) && isset($element['#col'])) {
       list($direction, $sid, $discard, $column_name, $i) = $parts;
       $sid = $form['#storage']['synch_mapping_fields'][$direction][$i]['sid'];
-      // dpm("sid=$sid, key=$key");
-
       $row = $element['#row'];
       $col = $element['#col'];
       $tables[$direction][$sid]['rows'][$row][$col] = array('data' => drupal_render($form[$key]), 'class' => array('module'),  'colspan' => 1);
@@ -30,40 +29,119 @@ function theme_ldap_user_conf_form($variables) {
   $submit = drupal_render($form['submit']);
   $output = drupal_render_children($form);
   $ldap_user_conf_admin = ldap_user_conf('admin');
+  global $base_url;
+ // $drupal_icon =  "<img src=\"$base_url/themes/seven/logo.png\" width=\"22\" height=\"25\" />";
+ // $ldap_icon = '<img src="' . $base_url . '/' .  drupal_get_path('module', 'ldap_servers') . '/ldapicon.png' . '"  />'; // width="19" height="14"
 
   foreach ($tables as $direction => $ldap_servers) {
     foreach ($ldap_servers as $sid => $table) {
       
-      $header = array(
-        array('data' => t('Remove'), 'rowspan' => 1),
-        array('data' => t('Source LDAP Attribute'), 'rowspan' => 1, 'colspan' => 2),
-        array('data' => t('Target User Attribute'), 'rowspan' => 1),
-        array('data' => t('LDAP Tokens'), 'rowspan' => 1),
-        array('data' => t('When Should Data Be Synchronized?'), 'colspan' => count($ldap_user_conf_admin->synchTypes), 'rowspan' => 1),
+      if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) {
+        $direction_text = 'todrupal';
+        $header = array(
+          array('data' => t('Remove'), 'rowspan' => 1, 'class' => 'mixedcase'),
+          array('data' => t('Source LDAP Tokens. (See http://drupal.org/node/1245736) ') ,
+                'class' => 'mixedcase',
+                'rowspan' => 1,
+                'colspan' => 2,
+                ),
+          array('data' => t('Target Drupal Attribute'),
+                'rowspan' => 1,
+                'class' => 'mixedcase',
+                ),
+          array('data' => t('When Should Data Be Synchronized?'), 'colspan' => count($ldap_user_conf_admin->synchTypes), 'rowspan' => 1, 'class' => 'mixedcase'),
+          
+        );
         
-      );
-    
-      $second_header = array(
-        array('data' => t(''), 'header' => TRUE),
-        array('data' => t(''), 'header' => TRUE),
-        array('data' => t('Convert From Binary'), 'header' => TRUE),
-        array('data' => t(''), 'header' => TRUE),
-        array('data' => 'e.g. "[sn], [givenName] might map to users display name.".
-        Select "token" in the LDAP Source column to enable.', 'header' => FALSE)
-      );
-    
-      foreach ($ldap_user_conf_admin->synchTypes as $col_id => $col_name) {
-        $second_header[] = array('data' => $col_name, 'header' => TRUE);
+        $second_header = array(
+          array('data' => t(''),
+                'header' => TRUE,
+                'class' => 'mixedcase',
+                ),
+          array('data' => t('e.g: "[sn]", "[mail:0]", "[ou:last]", "[sn], [givenName]" etc.
+                  Constants such as "17" or "imported" should not be enclosed in [].'),
+                'header' => TRUE,
+                'class' => 'mixedcase',
+                ),
+          array('data' => t('Convert From Binary?'),
+                'class' => 'mixedcase',
+                'header' => TRUE
+                ),
+          array('data' => "",
+                'header' => TRUE,
+                ),
+        );
+      
+        foreach ($ldap_user_conf_admin->synchTypes as $col_id => $col_name) {
+          $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase');
+        }
       }
- 
-      if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY) {
-        $second_header[1]['data'] =  t('Target LDAP Attribute such as [dn], [cn], etc.');
-        $second_header[4]['data'] = t('Source User tokens.  e.g. "[property.name], [field.field_lname].".
-        Select "token" in the Drupal User Source column to enable.');
+      else { // to ldap
+        $direction_text = 'toldap';
+        $header = array(
+          array(
+            'data' => t('Remove'),
+            'rowspan' => 1,
+            'class' => 'mixedcase'
+          ),
+          array(
+            'data' => t('Source Drupal User Attribute') ,
+            'class' => 'mixedcase',
+            'rowspan' => 1,
+            'colspan' => 3,
+          ),
+          array(
+            'data' => t('Target LDAP Token'),
+            'rowspan' => 1,
+            'class' => 'mixedcase',
+          ),
+          array(
+            'data' => t('When Should Data Be Synchronized?'),
+            'colspan' => count($ldap_user_conf_admin->synchTypes),
+            'rowspan' => 1,
+            'class' => 'mixedcase',
+          ),
+        );
+      
+        $second_header = array(
+          array(
+            'data' => t(''),
+            'header' => TRUE
+          ),
+          array(
+            'data' => t('(Select "user tokens" to use token field)'),
+            'header' => TRUE,
+            'class' => 'mixedcase'
+          ),
+          array(
+            'data' => t('Source Drupal User tokens such as: "[property.name]", "[field.field_fname] [field.field_lname]". Constants such as "from_drupal" or "18" should not be enclosed in []'),
+            'header' => TRUE,
+            'class' => 'mixedcase'
+          ),
+          array(
+            'data' => t('Convert From Binary'),
+            'header' => TRUE,
+            'class' => 'mixedcase'
+          ),
+          array(
+            'data' => t('Use singular token format such as [sn], [givenName], etc.'),
+            'header' => TRUE,
+            'class' => 'mixedcase'
+          ),
+        );
+        foreach ($ldap_user_conf_admin->synchTypes as $col_id => $col_name) {
+          $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase');
+        }
       }
-  
-  
+      
+      // #col is ignored, so sort table columns here
+      foreach ($table['rows'] as $row_id => $row) {
+        $discard = ksort($row);
+        $table['rows'][$row_id] = $row;
+      }
+
       $table['header'] = $header;
+      $table['attributes'] = array('class' => array('ldap-provision-' . $direction_text));
       array_unshift($table['rows'], $second_header);
       $table_themed = theme('table', $table);
       $rendered_table = theme('table', $table);

@@ -415,13 +415,13 @@ the top of this form.
     //dpm('drupalFormValidate'); dpm($values); dpm($storage);
     foreach ($values as $field => $value) {
       $parts = explode('__', $field);
-      // since synch mapping fields are in n-tuples, process entire n-tuple at once
-      if (count($parts) != 3 || $parts[0] !== 'sm' || $parts[1] != 'configurable_to_drupal') {
+      // since synch mapping fields are in n-tuples, process entire n-tuple at once (on field == configurable_to_drupal)
+    //  dpm('drupalFormValidate parts'); dpm($parts);
+      if (count($parts) != 5 || $parts[2] !== 'sm' || $parts[3] != 'configurable_to_drupal') {
         continue;
       }
-      list($discard, $column_name, $i) = $parts;
-      $action = $storage['synch_mapping_fields'][$i]['action'];
-      $sid = $storage['synch_mapping_fields'][$i]['sid'];
+      list($direction, $sid, $discard, $column_name, $i) = $parts;
+      $action = $storage['synch_mapping_fields'][$direction][$i]['action'];
       $tokens = array('%sid' => $sid);
       $row_mappings = array();
       foreach (array('remove', 'configurable_to_drupal', 'configurable_to_ldap', 'convert', 'direction', 'ldap_attr', 'user_attr', 'user_tokens') as $column_name) {
@@ -429,7 +429,7 @@ the top of this form.
         $row_mappings[$column_name] = isset($values[$input_name]) ? $values[$input_name] : NULL;
       }
       
-      $has_values = $row_mappings['direction'] ||  $row_mappings['ldap_attr'] || $row_mappings['user_attr'];
+      $has_values = $row_mappings['ldap_attr'] || $row_mappings['user_attr'];
       if ($has_values) {
         $tokens['%ldap_attr'] = $row_mappings['ldap_attr'];
         $row_descriptor = t("server %sid row mapping to ldap attribute %ldap_attr", $tokens);
@@ -438,7 +438,7 @@ the top of this form.
           $input_name = join('__', array('sm','direction', $i));
           $errors[$input_name] = t('No mapping direction given in !row_descriptor', $tokens);  
         }
-        if ($row_mappings['direction'] == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER && $row_mappings['user_attr'] == 'user_tokens') {
+        if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER && $row_mappings['user_attr'] == 'user_tokens') {
           $input_name = join('__', array('sm','user_attr', $i));
           //dpm($input_name);
           $errors[$input_name] =  t('User tokens not allowed when mapping to Drupal user.  Location: !row_descriptor', $tokens); 
@@ -511,8 +511,8 @@ the top of this form.
             }
             foreach ($values as $field => $value) {
               $parts = explode('__', $field);
-              if (count($parts) == 3 && $parts[1] == $attr_name && $value == $attr_value) {
-                $map_index[$attr_value] = $parts[2];
+              if (count($parts) == 5 && $parts[3] == $attr_name && $value == $attr_value) {
+                $map_index[$attr_value] = $parts[4];
               }
             }
           }
@@ -574,8 +574,7 @@ the top of this form.
       }
       if ($to_ldap_entries_mappings_exist && !isset($mappings['[dn]'])) {
         $errors['mappings__'. $sid] =  t('Mapping rows exist for provisioning to ldap, but no ldap attribute is targetted for [dn].
-          One row must map to [dn].  This row will look something like:
-          direction=to ldap entry, target=user tokens, with a user token like cn=[property.username],ou=users,dc=ldap,dc=mycompany,dc=com');
+          One row must map to [dn].  This row will have a user token like cn=[property.username],ou=users,dc=ldap,dc=mycompany,dc=com');
       }
     }
     return array($errors, $warnings);
@@ -661,7 +660,7 @@ the top of this form.
           'ldap_attr' => $row_mappings['ldap_attr'],
           'user_attr' => $row_mappings['user_attr'],
           'convert' => $row_mappings['convert'],
-          'direction' => $row_mappings['direction'],
+          'direction' => $direction,
           'user_tokens' => $row_mappings['user_tokens'],
           'config_module' => 'ldap_user',
           'synch_module' => 'ldap_user',
@@ -715,11 +714,11 @@ the top of this form.
    // if (!is_array($this->synchMapping) || !isset($this->synchMapping[$direction]) || count($this->synchMapping[$direction]) == 0) {
    //   return;
   //  }
-
-    $user_attr_options = array('0' => 'Select Target');
+    $text = ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) ? 'target' : 'source';
+    $user_attr_options = array('0' => t('Select') . ' ' .  $text);
   // dpm('addServerMappingFields:synchMapping['. $direction .']['. $ldap_server->sid .']'); dpm($this->synchMapping[$direction][$ldap_server->sid]);
     foreach ($this->synchMapping[$direction][$ldap_server->sid] as $target_id => $mapping) {
-      if (isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
+      if (!isset($mapping['name']) || isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
         continue;
       }
       if (
@@ -812,6 +811,98 @@ the top of this form.
  //   dpm("row=$row,action=$action, mapping="); dpm($mapping);
     $id_prefix = $direction .'__'. $ldap_server->sid . '__';
   //  $row = $this->synchFormRow;
+  
+    $id = $id_prefix . 'sm__remove__' . $row;
+    $form[$id] = array(
+      '#id' => $id,
+      '#row' => $row,
+      '#col' => 0,
+      '#type' => 'checkbox',
+      '#default_value' => NULL,
+      '#disabled' => ($action == 'add' || $action == 'nonconfigurable'),
+    );
+    
+    $id =  $id_prefix . 'sm__convert__' . $row;
+    $form[$id] = array(
+      '#id' => $id,
+      '#row' => $row,
+      '#col' => ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) ? 2 : 3,
+      '#type' => 'checkbox',
+      '#default_value' =>  isset($mapping['convert']) ? $mapping['convert'] : '',
+      '#disabled' => ($action == 'nonconfigurable'),
+      '#attributes' => array('class' => array('convert')),
+    );
+    
+    $id =  $id_prefix . 'sm__ldap_attr__'. $row;
+    $col = ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) ? 1 : 4;
+    if ($action == 'nonconfigurable') {
+      $form[$id] = array(
+        '#id' => $id,
+        '#row' => $row,
+        '#col' => $col,
+        '#type' => 'item',
+        '#markup' => isset($mapping['source']) ? $mapping['source'] : '?',
+        '#attributes' => array('class' => array('source')),
+      );
+    }
+    else {
+      $form[$id] = array(
+        '#id' => $id,
+        '#row' => $row,
+        '#col' => $col,
+        '#type' => 'textfield',
+        '#default_value' => isset($mapping['ldap_attr']) ? $mapping['ldap_attr'] : '',
+        '#size' => 20,
+        '#maxlength' => 255,
+        '#attributes' => array('class' => array('ldap-attr')),
+      );
+    }
+
+    $user_attr_input_id =  $id_prefix . 'sm__user_attr__'. $row;
+    $col = ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) ? 3 : 1;
+    if ($action == 'nonconfigurable') {
+      $form[$user_attr_input_id] = array(
+        '#id' => $user_attr_input_id,
+        '#row' => $row,
+        '#col' => $col,
+        '#type' => 'item',
+        '#markup' => isset($mapping['name']) ? $mapping['name'] : '?',
+      );
+    }
+    else {
+      $form[$user_attr_input_id] = array(
+        '#id' => $user_attr_input_id,
+        '#row' => $row,
+        '#col' => $col,
+        '#type' => 'select',
+        '#default_value' => isset($mapping['user_attr']) ? $mapping['user_attr'] : '',
+        '#options' => $user_attr_options,
+      );
+    }
+    
+    if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY) {
+      $id =  $id_prefix . 'sm__user_tokens__'. $row;
+      $form[$id] = array(
+        '#id' => $id,
+        '#row' => $row,
+        '#col' =>  2,
+        '#type' => 'textfield',
+        '#default_value' => isset($mapping['user_tokens']) ? $mapping['user_tokens'] : '',
+        '#size' => 40,
+        '#maxlength' => 255,
+        '#disabled' => ($action == 'nonconfigurable'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name="'. $user_attr_input_id .'"]' => array('value' => 'user_tokens'),
+          )
+        ),
+        '#attributes' => array('class' => array('tokens')),
+      );
+    }
+   
+
+
+    
     $form['#storage']['synch_mapping_fields'][$direction][$row] = array(
       'sid' => $ldap_server->sid,
       'action' => $action,
@@ -825,78 +916,9 @@ the top of this form.
       '#default_value' => ($action != 'nonconfigurable'),
     );
 
-    $id = $id_prefix . 'sm__remove__' . $row;
-    $form[$id] = array(
-      '#id' => $id, '#row' => $row, '#col' => 0,
-      '#type' => 'checkbox',
-      '#default_value' => NULL,
-      '#disabled' => ($action == 'add' || $action == 'nonconfigurable'),
-    );
 
-    $id =  $id_prefix . 'sm__ldap_attr__'. $row;
-    if ($action == 'nonconfigurable') {
-      $form[$id] = array(
-        '#id' => $id, '#row' => $row, '#col' => 1,
-        '#type' => 'item',
-        '#markup' => isset($mapping['source']) ? $mapping['source'] : '?',
-      );
-    }
-    else {
-      $form[$id] = array(
-        '#id' => $id, '#row' => $row, '#col' => 1,
-        '#type' => 'textfield',
-        '#default_value' => isset($mapping['ldap_attr']) ? $mapping['ldap_attr'] : '',
-        '#size' => 20,
-        '#maxlength' => 255,
-      );
-    }
+    $col = ($direction == LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY) ? 5 : 4;
 
-    $id =  $id_prefix . 'sm__convert__' . $row;
-    $form[$id] = array(
-      '#id' => $id, '#row' => $row, '#col' => 2,
-      '#type' => 'checkbox',
-      '#default_value' =>  isset($mapping['convert']) ? $mapping['convert'] : '',
-      '#disabled' => ($action == 'nonconfigurable'),
-    );
-
-    $user_attr_input_id =  $id_prefix . 'sm__user_attr__'. $row;
-    if ($action == 'nonconfigurable') {
-      $form[$user_attr_input_id] = array(
-        '#id' => $user_attr_input_id,
-        '#row' => $row,
-        '#col' => 4,
-        '#type' => 'item',
-        '#markup' => isset($mapping['name']) ? $mapping['name'] : '?',
-      );
-    }
-    else {
-      $form[$user_attr_input_id] = array(
-        '#id' => $user_attr_input_id,
-        '#row' => $row,
-        '#col' => 4,
-        '#type' => 'select',
-        '#default_value' => isset($mapping['user_attr']) ? $mapping['user_attr'] : '',
-        '#options' => $user_attr_options,
-      );
-    }
-
-    $col = 5;
-    $id =  $id_prefix . 'sm__user_tokens__'. $row;
-    $form[$id] = array(
-      '#id' => $id, '#row' => $row, '#col' => $col,
-      '#type' => 'textfield',
-      '#default_value' => isset($mapping['user_tokens']) ? $mapping['user_tokens'] : '',
-      '#size' => 40,
-      '#maxlength' => 255,
-      '#disabled' => ($action == 'nonconfigurable'),
-      '#states' => array(
-        'visible' => array(   // action to take.
-          ':input[name="'. $user_attr_input_id .'"]' => array('value' => 'user_tokens'),
-        )
-      ),
-    );
-    
-    $col = 5;
     foreach ($this->synchTypes as $synch_method => $synch_method_name) {
       $col++;
       $id =  $id_prefix . join('__', array('sm', $synch_method, $row));
@@ -907,6 +929,7 @@ the top of this form.
         '#row' => $row,
         '#col' => $col,
         '#disabled' => ($this->synchMethodNotViable($ldap_server, $synch_method, $mapping) || ($action == 'nonconfigurable')),
+        '#attributes' => array('class' => array('synch-method')),
       );
     }
 

@@ -191,12 +191,36 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
   $ldap_server = $params['ldap_server'];
   $ldap_user_conf = $params['ldap_user_conf'];
   $direction = $params['direction']; 
-
+  $all_contexts = ldap_user_synch_contexts();
   $sid = $ldap_server->sid;
   $tokens = array(
     '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
   );
-
+  
+  if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY) {
+    $available_user_attrs['[property.name]'] =  array(
+      'name' => 'Property: Username',
+      'source' => '',
+      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY,
+      'enabled' => TRUE,
+      'contexts' => $all_contexts,
+      'config_module' => 'ldap_user',
+      'synch_module' => 'ldap_user',
+      'configurable_to_ldap' => TRUE,
+      );
+    
+    $available_user_attrs['[property.mail]'] =  array(
+      'name' => 'Property: Email',
+      'source' => '',
+      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY,
+      'enabled' => TRUE,
+      'contexts' => $all_contexts,
+      'config_module' => 'ldap_user',
+      'synch_module' => 'ldap_user',
+      'configurable_to_ldap' => TRUE,
+    );
+  }
+    
   // 1. Drupal user properties
   // 1.a make sure empty array are present so array + function works
   foreach (array('property.status','property.timezone','property.signature') as $i => $property_id) {
@@ -256,15 +280,15 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
   //  dpm($field_id); dpm($available_user_attrs[$field_id]);
   }
 
-  $available_user_attrs['[property.name]'] = array(
-    'configurable_to_drupal' => FALSE,
-    'configurable_to_ldap' => 1,
-    );
-
-  $available_user_attrs['[property.mail]'] = array(
-    'configurable_to_drupal' => FALSE,
-    'configurable_to_ldap' => 1,
-    );
+  //$available_user_attrs['[property.name]'] = array(
+   // 'configurable_to_drupal' => FALSE,
+  //  'configurable_to_ldap' => 1,
+   // );
+//
+ // $available_user_attrs['[property.mail]'] = array(
+ //   'configurable_to_drupal' => FALSE,
+  //  'configurable_to_ldap' => 1,
+  //  );
 
   if (!$ldap_user_conf->provisionsDrupalAccountsFromLdap) {
     $available_user_attrs['[property.mail]']['config_module'] = 'ldap_user';
@@ -305,15 +329,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
     }
   }
 
-  // temp_out dpm('available_user_attrs'); // temp_out dpm($available_user_attrs);  // temp_out dpm("ldap_user_conf->ldapUserSynchMappings[sid]");  // temp_out dpm($ldap_user_conf->ldapUserSynchMappings[$sid]);
-
-  //    'notes' => 'configure at '. $server_edit_path,
-
- // // temp_out dpm('available_user_attrs'. $configurable_to_drupal); // temp_out dpm($available_user_attrs);// temp_out dpm("provisionsDrupalAccountsFromLdap=" . $provisionsDrupalAccountsFromLdap);
-  // 3. profile2 fields
-
-
-
+   // 3. profile2 fields
   // 4. $user->data array.   will need to be added manually.  perhaps better not to implement this at all?
 
 

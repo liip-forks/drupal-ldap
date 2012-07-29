@@ -175,8 +175,6 @@ class LdapServerAdmin extends LdapServer {
 
   public function drupalForm($op) {
 
-    drupal_add_css(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.css', 'module', 'all');
-
   //  $form['#validate'] = array('ldap_servers_admin_form_validate');
     $form['#prefix'] = <<<EOF
 <p>Setup an LDAP server configuration to be used by other modules such as LDAP Authentication,

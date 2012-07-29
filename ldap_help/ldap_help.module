@@ -7,14 +7,6 @@
  */
 
 
-
-/**
- * Implements hook_init().
- */
-function ldap_help_init() {
-  drupal_add_css(drupal_get_path('module', 'ldap_help') . '/ldap_help.css', 'module');
-}
-
 /**
  * Implements hook_menu().
  */
