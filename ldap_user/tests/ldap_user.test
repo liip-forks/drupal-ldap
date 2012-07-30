@@ -362,12 +362,13 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
       if ($test['disabled']) {
         continue;
       }
-      $direction = $test['property_mapping']['direction'];
+      $field_name = isset($test['field_name']) ? $test['field_name'] : FALSE;
+      $property_name = isset($test['property_name']) ? $test['property_name'] : FALSE;
+      $direction = ($property_name) ? $test['property_mapping']['direction'] : $test['field_mapping']['direction'];
       foreach ($test_contexts  as $i => $synch_context) {  // test for each context
         foreach (array(0, 1) as $flagged_for_synch) { // @todo add 0 back into arraytest with and without field flagged for synch to test for false positives
          // debug("test context: $context, flagged for synch:" . (int)$flagged_for_synch);
-          $field_name = isset($test['field_name']) ? $test['field_name'] : FALSE;
-          $property_name = isset($test['property_name']) ? $test['property_name'] : FALSE;
+
           
           // 1. set fake ldap values for field and property in fake ldap server
           // and clear out mappings and set to provision account with test field and prop[0] on provision
@@ -718,23 +719,23 @@ class LdapUserUITests extends LdapUserTestCasev2 {
       'wsUserIps' => join("\n", $wsUserIps),
       'wsKey' => $wsKey,
 
-      'sm__ldap_attr__7' => 'sn',
-      'sm__convert__7' => FALSE,
-      'sm__direction__7' => 1,
-      'sm__user_attr__7' => 'field.field_lname',
-      'sm__1__7' => TRUE,
-      'sm__2__7' => TRUE,
-      'sm__3__7' => TRUE,
-      'sm__4__7' => TRUE,
+      '1__activedirectory__sm__ldap_attr__7' => 'sn',
+      '1__activedirectory__sm__convert__7' => FALSE,
+      '1__activedirectory__sm__direction__7' => 1,
+      '1__activedirectory__sm__user_attr__7' => 'field.field_lname',
+      '1__activedirectory__sm__1__7' => TRUE,
+      '1__activedirectory__sm__2__7' => TRUE,
+      '1__activedirectory__sm__3__7' => TRUE,
+      '1__activedirectory__sm__4__7' => TRUE,
 
-      'sm__ldap_attr__8' => 'givenname',
-      'sm__convert__8' => FALSE,
-      'sm__direction__8' => 1,
-      'sm__user_attr__8' => 'field.field_fname',
-      'sm__1__8' => TRUE,
-      'sm__2__8' => TRUE,
-      'sm__3__8' => TRUE,
-      'sm__4__8' => TRUE,
+      '1__activedirectory__sm__ldap_attr__8' => 'givenname',
+      '1__activedirectory__sm__convert__8' => FALSE,
+      '1__activedirectory__sm__direction__8' => 1,
+      '1__activedirectory__sm__user_attr__8' => 'field.field_fname',
+      '1__activedirectory__sm__1__8' => TRUE,
+      '1__activedirectory__sm__2__8' => TRUE,
+      '1__activedirectory__sm__3__8' => TRUE,
+      '1__activedirectory__sm__4__8' => TRUE,
 
     );
 
@@ -770,7 +771,7 @@ class LdapUserUITests extends LdapUserTestCasev2 {
 
     $this->assertTrue($field_fname_set_correctly, t('Synch mapping for field.field_lname  field set correctly'), $this->ldapTestId);
      if (!$field_fname_set_correctly) {
-      debug('ldap_user_conf->synchMapping[sid][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[$direction][$sid]['field.field_lname']);
+      debug('ldap_user_conf->synchMapping[direction][sid][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[$direction][$sid]['field.field_lname']);
     }
 
     $this->assertTrue($ldap_user_conf->wsKey == $wsKey, t('wsKey field set correctly'), $this->ldapTestId);

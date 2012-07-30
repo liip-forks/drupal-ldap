@@ -8,7 +8,7 @@
 
 class LdapUserConf {
 
- // public $drupalAcctProvisionServer = LDAP_USER_NO_SERVER_SID;  // servers used for to drupal acct provisioning keyed on $sid => boolean
+  public $drupalAcctProvisionServer = LDAP_USER_NO_SERVER_SID;  // servers used for to drupal acct provisioning keyed on $sid => boolean
   public $ldapEntryProvisionServer = LDAP_USER_NO_SERVER_SID;  // servers used for provisioning to ldap keyed on $sid => boolean
   public $provisionServers = array(); // ldap server objects enabled for ldap user keyed on direction => sid => object
   public $drupalAcctProvisionEvents = array(LDAP_USER_DRUPAL_USER_CREATE_ON_LOGON, LDAP_USER_DRUPAL_USER_CREATE_ON_MANUAL_ACCT_CREATE);
@@ -146,12 +146,12 @@ function __construct() {
   private function getSynchMappings($sid) {
    ////dpm('this.getSynchMappings,$sid='. $sid);debug($this->ldapUserSynchMappings);
     if (!empty($this->ldapUserSynchMappings[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER][$sid]) &&
-        ($mappings = $this->ldapUserSynchMappings[$sid]) &&
+        ($mappings = $this->ldapUserSynchMappings[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER][$sid]) &&
         is_array($mappings)) {
       return $mappings;
     }
     elseif (!empty($this->ldapUserSynchMappings[LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY][$sid]) &&
-        ($mappings = $this->ldapUserSynchMappings[$sid]) &&
+        ($mappings = $this->ldapUserSynchMappings[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER][$sid]) &&
         is_array($mappings)) {
       return $mappings;
     }
