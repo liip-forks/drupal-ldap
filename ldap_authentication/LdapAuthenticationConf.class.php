@@ -131,12 +131,19 @@ class LdapAuthenticationConf {
    *
    * return boolean
    */
-  public function allowUser($name, $ldap_user_entry) {
+  public function allowUser($name, $ldap_user_entry, $account_exists = NULL) {
 
     /**
      * do one of the exclude attribute pairs match
      */
     $exclude = FALSE;
+    
+    // if user does not already exists and deferring to user settings AND user settings only allow 
+    $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
+    if (!$account_exists && $this->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP && $user_register == USER_REGISTER_ADMINISTRATORS_ONLY) {
+      return FALSE;
+    }
+    
     foreach ($this->excludeIfTextInDn as $test) {
       if (stripos($ldap_user_entry['dn'], $test) !== FALSE) {
         return FALSE;//  if a match, return FALSE;

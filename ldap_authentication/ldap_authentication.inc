@@ -317,7 +317,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     /**
     * #4 CHECK ALLOWED AND EXCLUDED LIST AND PHP FOR ALLOWED USERS
     */
-    $allow = $auth_conf->allowUser($authname, $ldap_user);
+    $allow = $auth_conf->allowUser($authname, $ldap_user, $account_exists);
     if (!$allow) {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED;
       break;  // regardless of how many servers, disallowed user fails
@@ -445,10 +445,15 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
      *       a little tweak to add user->data and mail etc as parameters would make it more useful
      *       for external authentication modules
      */
- 	ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
-
-
-    $account = ldap_create_drupal_account($authname, $accountname, $ldap_user['mail'], $ldap_user['dn'], $sid);
+    ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
+    
+    $status = 1; 
+    $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
+    if ($auth_conf->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP && $user_register == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
+      $status = 0; // if admin approval required, set status to 1.
+    }
+    $discard_edit = array();
+    $account = ldap_create_drupal_account($authname, $accountname, $ldap_user['mail'], $ldap_user['dn'], $sid, $status, $discard_edit);
     if ($account === FALSE) {
       // need to throw error that account was not created
     }

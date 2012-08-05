@@ -20,13 +20,15 @@ function ldap_server_module_load_include($type, $module, $name = NULL) {
  * as LDAP_CREATE_ACCOUNT_ALREADY_EXISTS, LDAP_CREATE_ERROR
  *
  */
-function ldap_create_drupal_account($authname, $accountname, $mail, $dn, $sid, $edit = array()) {
+//  $account = ldap_create_drupal_account($authname, $accountname, $ldap_user['mail'], $ldap_user['dn'], $sid, array(), $status);
+
+function ldap_create_drupal_account($authname, $accountname, $mail, $dn, $sid, $status, $edit) {
 
   $edit['name'] = $accountname;
   $edit['pass'] = user_password(20);
   $edit['mail'] = $mail;
   $edit['init'] = $mail;
-  $edit['status'] = 1;
+  $edit['status'] = $status;
   if (!isset($edit['signature'])) {
     $edit['signature'] = '';
   }
