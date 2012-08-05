@@ -13,17 +13,18 @@
  *
  * @param array $attributes
  *   array of attributes to be returned from ldap queries
- * @param enum $op
- *   context query will be run in such as 'user_update', 'user_insert', ...
- * @param mixed $server
- *   server id (sid) or server object.
+ *
+ * @param array $params context array with some or all of the following key/values
+ *   'sid' => drupal account object,
+ *   'synch_context' => LDAP_USER_SYNCH_CONTEXT_* constant,
+ *   'direction' => 
  *
  */
-function hook_ldap_attributes_needed_alter(&$attributes, $op, $server) {
+function hook_ldap_attributes_needed_alter(&$attributes, $params) {
 
   $attributes[] = 'dn';
-  if ($server) { // puid attributes are server specific
-    $ldap_server = (is_object($server)) ? $server : ldap_servers_get_servers($server, 'enabled', TRUE);
+  if ($params['sid']) { // puid attributes are server specific
+    $ldap_server = (is_object($params['sid'])) ? $params['sid'] : ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
 
     switch ($op) {
       case 'user_insert':
@@ -47,7 +48,6 @@ function hook_ldap_attributes_needed_alter(&$attributes, $op, $server) {
  * @param array $params context array with some or all of the following key/values
  *   'account' => drupal account object,
  *   'synch_context' => LDAP_USER_SYNCH_CONTEXT_* constant,
- *   'op' => 'create_ldap_user',
  *   'module' =>  module calling alter, e.g. 'ldap_user',
  *   'function' => function calling alter, e.g. 'provisionLdapEntry'
  *

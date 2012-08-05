@@ -112,24 +112,30 @@ function ldap_badattr($attr, $attr_name) {
 
 /**
  * get array of required attributes for an ldap query
+
+ * @param string $sid server id or ldap server object being used
+ * @param string $direction LDAP_USER_SYNCH_DIRECTION_* constant
+ * @param string $synch_context is LDAP_USER_SYNCH_CONTEXT_* constant
+ * @param boolean $reset cache
  *
- * @param string $op is operation being performed, user_update, user_insert, etc.
- * @param mixed $ldap_server server id or ldap server object being used
- *
- * @todo set $reset default to true.
  */
-function ldap_servers_attributes_needed($op, $ldap_server = NULL, $reset = TRUE) {
+function ldap_servers_attributes_needed($sid, $direction = LDAP_USER_SYNCH_DIRECTION_ALL, $synch_context = LDAP_USER_SYNCH_CONTEXT_ALL, $reset = TRUE) {
  // debug("call of ldap_servers_attributes_needed, op=$op,ldap_server="); debug($ldap_server);
  // dpm("call of ldap_servers_attributes_needed, op=$op,ldap_server="); dpm($ldap_server);
   static $attributes;
-  $sid = is_object($ldap_server) ? $ldap_server->sid : $ldap_server;
-  $static_cache_id = ($sid) ? $op . '__' . $sid : $op;
+  $sid = is_object($sid) ? $sid->sid : $sid;
+  $static_cache_id = ($sid) ? $synch_context . '__' . $sid : $synch_context;
   if (!is_array($attributes)) {
     $attributes = array();
   }
   if (!isset($attributes[$static_cache_id]) || $reset) {
   //  debug('call drupal_alter(ldap_attributes_needed),op='. $op);
-    drupal_alter('ldap_attributes_needed', $attributes[$static_cache_id], $op, $sid);
+    $params = array(
+      'sid' => $sid,
+      'direction' => $direction,
+      'synch_context' => $synch_context,
+    );
+    drupal_alter('ldap_attributes_needed', $attributes[$static_cache_id], $params);
     // attributes array needs to have no gaps of ldap_search(), ldap_read(), ldap_list() so apply array_values()
     $attributes[$static_cache_id] = array_values(array_unique($attributes[$static_cache_id]));
   }
@@ -208,7 +214,7 @@ function ldap_server_massage_text($value, $value_type, $context) {
           }
         }
         else {
-          debug("neither scalar nor array $value, $value_type, $context");
+         // debug("neither scalar nor array $value, $value_type, $context");
         }
       break;
 

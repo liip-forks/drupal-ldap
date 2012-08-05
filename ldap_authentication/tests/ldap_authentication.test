@@ -49,6 +49,13 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
     include(drupal_get_path('module', 'ldap_authentication') . '/tests/LdapServerTestData.' . $sid . '.inc');
     $this->testFunctions->prepTestServers($test_data['servers']);
     $this->testData = $test_data;
+    
+    // configure ldap_user
+    require_once(drupal_get_path('module', 'ldap_test') . '/LdapTestFunctionsv2.class.php');
+    $testFunctionv2 = new LdapTestFunctionsv2();
+    $testFunctionv2->configureLdapUser('ad_authentication');
+    
+    
     $authentication_conf = (is_array($testid)) ? $testid : $test_data['ldap_authentication'][$testid];
     $this->testFunctions->configureAuthentication($authentication_conf);
 

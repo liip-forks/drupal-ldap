@@ -277,17 +277,19 @@ function ldap_servers_theme() {
 }
 
 
-
   /**
    * implements hook_ldap_attributes_needed_alter()
    */
-  function ldap_servers_ldap_attributes_needed_alter(&$attributes, $op, $ldap_server) {
+  function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
     $attributes[] = 'dn';
-    if ($ldap_server) { // puid attributes are server specific
-      if (is_scalar($ldap_server)) {
-        $ldap_server = ldap_servers_get_servers($ldap_server, 'enabled', TRUE);
+    if ($params['sid']) { // puid attributes are server specific
+      if (is_scalar($params['sid'])) {
+        $ldap_server = ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
       }
-    
+      else {
+        $ldap_server = $params['sid'];
+      }
+      // debug('ldap_servers_ldap_attributes_needed_alter'); debug($ldap_server); debug($params);
       // mail, unique_persistent_attr, user_attr, mail_template, and user_dn_expression are needed for all functionality
       $attributes[] = $ldap_server->mail_attr;
       if ($ldap_server->unique_persistent_attr) {
@@ -302,7 +304,7 @@ function ldap_servers_theme() {
       }
       
           
-      switch ($op) {
+      switch ($params['synch_context']) {
   
         case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
         case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
@@ -495,9 +497,9 @@ function ldap_servers_fields() {
  * @param mixed $sid is a server id or array of server ids
  */
 
-function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $synch_context = NULL) {
+function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $direction = LDAP_USER_SYNCH_DIRECTION_ALL, $synch_context = LDAP_USER_SYNCH_CONTEXT_ALL) {
   ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
-  return _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context);
+  return _ldap_servers_get_user_ldap_data($drupal_user, $sid, $direction, $synch_context);
 }
 
 

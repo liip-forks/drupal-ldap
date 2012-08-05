@@ -41,6 +41,7 @@ define('LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT', 4);
 define('LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER', 1);
 define('LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY', 2);
 define('LDAP_USER_SYNCH_DIRECTION_NONE', 3);
+define('LDAP_USER_SYNCH_DIRECTION_ALL', 4);
 
 // SYNCH CONTEXTS are actions which may cause provisioning or synching of drupal accounts or ldap entries
 define('LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER', 1);
@@ -50,8 +51,10 @@ define('LDAP_USER_SYNCH_CONTEXT_CRON', 4);
 define('LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER', 5);
 define('LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER', 6);
 define('LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER', 7);
+define('LDAP_USER_SYNCH_CONTEXT_ALL', 7);
+define('LDAP_USER_SYNCH_CONTEXT_NONE', 8);
 
-define('LDAP_USER_NO_SERVER_SID', 'NULLNULL');
+define('LDAP_USER_NO_SERVER_SID', '{LDAP_USER.NO_SERVER_ID}'); // need to avoid conflicting with server ids
 
 define('LDAP_USER_TEST_FORM_PATH', 'admin/config/people/ldap/user/test');
 
@@ -141,19 +144,22 @@ function ldap_user_conf($type = NULL, $reset = FALSE) {
 /**
  * implements hook_ldap_attributes_needed_alter().
  */
-function ldap_user_ldap_attributes_needed_alter(&$attributes, $synch_context, $ldap_server) {
+function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
   // debug("ldap_user_ldap_attributes_needed_alter synch_context=$synch_context");
   //@todo need to load all ldap_user attributes used in synch mapping and add to list based on synch context.
  // // temp_out dpm("ldap_user_ldap_attributes_needed_alter"); // temp_out dpm($attributes); // temp_out dpm($ldap_server); // temp_out dpm($sych_context);
   
-  if ($ldap_server) { // puid attributes are server specific
-    if (is_scalar($ldap_server)) {
-      $ldap_server = ldap_servers_get_servers($ldap_server, 'enabled', TRUE);
+  if ($params['sid']) { // puid attributes are server specific
+    if (is_scalar($params['sid'])) {
+      $ldap_server = ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
+    }
+    else {
+      $ldap_server = $params['sid'];
     }
 
     $ldap_user_conf = ldap_user_conf();
     $attributes[] = 'dn';
-    switch ($synch_context) { // Add the attributes required by the user configuration when provisioning drupal users
+    switch ($params['synch_context']) { // Add the attributes required by the user configuration when provisioning drupal users
       case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
       case LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER:
         $attributes[] = $ldap_server->user_attr; 
@@ -176,7 +182,7 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $synch_context, $l
 
     }
     
-    $attributes_required_by_user_module_mappings = $ldap_user_conf->getRequiredAttributes($synch_context);
+    $attributes_required_by_user_module_mappings = $ldap_user_conf->getRequiredAttributes($params['direction'], $params['synch_context']);
     $attributes = array_unique(array_merge(array_values($attributes_required_by_user_module_mappings), $attributes));
    // debug('attributes2'); debug($attributes);
   }
@@ -394,7 +400,7 @@ function ldap_user_user_login(&$edit, $account) {
 
    // provision or synch to ldap, not both
   $result = array('status' => 'none');
-  if ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'provision')) {
+  if ($ldap_user_conf->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'provision')) {
     $provision_result = $ldap_user_conf->provisionLdapEntry($account, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
   }
   // don't synch if just provisioned

@@ -109,14 +109,27 @@ function ldap_user_test_form_submit($form, &$form_state) {
     else {
       $user_entity = NULL;
     }
+    $ldap_user_conf = ldap_user_conf();
+    
+    
 
-    $user_ldap_entry = ldap_servers_get_user_ldap_data($username, NULL, LDAP_TEST_QUERY_CONTEXT);
+    $test_servers = array();
+    if ($ldap_user_conf->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID) {
+      $test_servers[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] = $ldap_user_conf->drupalAcctProvisionServer;
+    }
+    if ($ldap_user_conf->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID) {
+      $test_servers[LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY] = $ldap_user_conf->ldapEntryProvisionServer;
+    }
     
     $results = array();
     $results['username'] = $username;
     $results['user object (before provisioning or synching)'] = $user_object;
     $results['user entity (before provisioning or synching)'] = $user_entity;
-    $results['related ldap entry (before provisioning or synching)'] = $user_ldap_entry;
+      
+    foreach ($test_servers as $direction => $sid) {
+      $user_ldap_entry = ldap_servers_get_user_ldap_data($username, NULL, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_TEST_QUERY_CONTEXT);
+      $results[$direction]['related ldap entry (before provisioning or synching)'] = $user_ldap_entry;
+    }
     
     if (is_object($user_object)) {
       $authmaps = db_query("SELECT aid, uid, module, authname FROM {authmap} WHERE uid = :uid", array(':uid' => $user_object->uid))->fetchAllAssoc('aid',  PDO::FETCH_ASSOC);
@@ -125,8 +138,6 @@ function ldap_user_test_form_submit($form, &$form_state) {
       $authmaps = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
     }
     $results['User Authmap'] = $authmaps;
-    
-    $ldap_user_conf = ldap_user_conf();
     $results['LDAP User Configuration Object'] = $ldap_user_conf;
   
     $save = ($form_state['values']['test_mode'] == 'execute');

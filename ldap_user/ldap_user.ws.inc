@@ -30,7 +30,7 @@ function ldap_user_ws($action, $drupal_user_name, $key) {
 
     $synch_context = $ldap_user_conf->wsActionsContexts[$action];
     $drupal_user = ($action == 'create') ? NULL : user_load_by_name($drupal_user_name);
-  //  $ldap_user = ldap_servers_get_user_ldap_data($drupal_user_name, NULL, $synch_context);
+  //  $ldap_user = ldap_servers_get_user_ldap_data($drupal_user_name, NULL, LDAP_USER_SYNCH_DIRECTION_ALL, $synch_context);
     $user_edit = array();
     $account = array();
 

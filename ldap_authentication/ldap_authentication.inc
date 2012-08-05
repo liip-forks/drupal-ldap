@@ -299,10 +299,10 @@ Will not work on most ldaps.'),
 // dpm('_ldap_authentication_user_login_authenticate_validate5b, ');
     // #3 DOES USER EXIST IN SERVER'S LDAP
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-      $ldap_user = $ldap_server->user_lookup($authname);
+      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
     }
     elseif ($sso_login) {
-      $ldap_user = $ldap_server->user_lookup($authname);
+      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%result'] = var_export($result, TRUE);
         watchdog('ldap_authentication', '%username : attempting single sign-on
@@ -311,7 +311,7 @@ Will not work on most ldaps.'),
       }
     }
     else {
-      $ldap_user = $ldap_server->user_lookup($authname);
+      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
     }
 // dpm('_ldap_authentication_user_login_authenticate_validate6');
     if (!$ldap_user) {
@@ -334,7 +334,9 @@ Will not work on most ldaps.'),
     /**
     * #4 CHECK ALLOWED AND EXCLUDED LIST AND PHP FOR ALLOWED USERS
     */
-    $allow = $auth_conf->allowUser($authname, $ldap_user);
+    
+    $allow = $auth_conf->allowUser($authname, $ldap_user, $account_exists);
+    
     if (!$allow) {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED;
       break;  // regardless of how many servers, disallowed user fails
@@ -372,7 +374,7 @@ Will not work on most ldaps.'),
     else {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_SUCCESS;
       if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-        $ldap_user = $ldap_server->user_lookup($authname); // after successful bind, lookup user again to get private attributes
+        $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER); // after successful bind, lookup user again to get private attributes
         $watchdog_tokens['%mail'] = $ldap_user['mail'];
       }
       if ($ldap_server->account_name_attr != '') {
@@ -493,10 +495,16 @@ Will not work on most ldaps.'),
 
     // $ldap_user['sid'] = $sid;
     $account = NULL;
-    $user_edit = array('name' => $authname);
+    $user_edit = array('name' => $authname, 'status' => 1);
+    $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
+    if ($auth_conf->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP && $user_register == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
+      $user_edit['status'] = 0; // if admin approval required, set status to 1.
+    }   
+    
     // don't pass in ldap user, because want to requery with correct attributes needed
     // this may be a case where efficiency dictates querying for all attributes
     $account = $auth_conf->ldapUser->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, TRUE);
+    debug("account after provisionDrupalAccount:$authname"); debug($account);
     if ($account === FALSE) {
       // need to throw error that account was not created so logging in is not happenning via ldap
     }

@@ -229,9 +229,9 @@ function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw) {
   return array($errors, $results);
 }
 
-function ldap_servers_test_user_mapping($drupal_username, &$ldap_server) {
+function ldap_servers_test_user_mapping($drupal_username, &$ldap_server, $direction = LDAP_USER_SYNCH_CONTEXT_ALL, $synch_context = LDAP_TEST_QUERY_CONTEXT) {
 
-  $ldap_user = $ldap_server->user_lookup($drupal_username, LDAP_TEST_QUERY_CONTEXT);
+  $ldap_user = $ldap_server->user_lookup($drupal_username, $direction, LDAP_TEST_QUERY_CONTEXT);
 
   $errors = FALSE;
   if (! $ldap_user ) {

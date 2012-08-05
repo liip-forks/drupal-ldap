@@ -6,9 +6,9 @@
  * collection of functions that don't belong in server object
  */
 
-function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context = NULL) {
+function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $direction, $synch_context) {
   //$drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
-  //debug("_ldap_servers_get_user_ldap_data, drupal_username=$drupal_username"); debug($sid);
+  debug("_ldap_servers_get_user_ldap_data, drupal_user sid=$sid"); debug($drupal_user);
 
   if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = db_query("SELECT authname FROM {authmap} WHERE uid = :uid AND module = 'ldap_authentication'", array(':uid' => $drupal_user->uid))->fetchColumn()) {
     $drupal_username = $authname;
@@ -16,29 +16,19 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $synch_context = N
   else {
     $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
   }
+  debug("_ldap_servers_get_user_ldap_data, drupal_username=$drupal_username"); 
+  $ldap_server = ldap_servers_get_servers($sid, 'enabled', TRUE);
 
-  if (is_array($sid)) {
-    $servers = array();
-    foreach ($sid as $i => $_sid) {
-      $server = ldap_servers_get_servers($_sid, 'enabled', TRUE, TRUE);
-      if (is_object($server)) {
-        $servers[$_sid] = $server;
-      }
-    }
+
+  if ($ldap_user = $ldap_server->user_lookup($drupal_username, $direction, $synch_context)) {
+    $ldap_user['sid'] = $sid;
+    $return = $ldap_user;
   }
   else {
-    $servers = ldap_servers_get_servers($sid, 'enabled');
+    $return = FALSE;
   }
-  foreach ($servers as $sid => $ldap_server)  {
-    //debug('user lookup,'. $drupal_username);
-    if ($ldap_user = $ldap_server->user_lookup($drupal_username, $synch_context)) {
-      $ldap_user['sid'] = $sid;
-      return $ldap_user;
-    }
-    else {
-      return FALSE;
-    }
-  }
+  debug('_ldap_servers_get_user_ldap_data,return='); debug($return);
+  return $return;
 }
 
 /**

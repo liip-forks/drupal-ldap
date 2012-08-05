@@ -359,40 +359,37 @@ the top of this form.
 '),
 
     );
-   // dpm('this->provisionServers');dpm($this->provisionServers);
-    foreach($this->provisionServers as $direction => $ldap_servers) {
-      foreach ($ldap_servers as $sid => $ldap_server) {
-       // dpm("add server mappings $direction $sid ");
-        if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) {
-          $enabled = ($this->drupalAcctProvisionServer == $sid);
-          $parent_fieldset = 'basic_to_drupal';
-        }
-        else {
-          $enabled = ($this->ldapEntryProvisionServer == $sid);
-          $parent_fieldset = 'basic_to_ldap';
-        }
-        
-        $form[$parent_fieldset]['mappings__'. $sid] = array(
-          '#type' => 'fieldset',
-          '#title' =>  t('%ldap_server LDAP Server Mappings', array('%ldap_server' => $ldap_server->name)),
-          '#collapsible' => TRUE,
-          '#collapsed' => FALSE, // !$enabled
-        );
-        if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) {
-          $form[$parent_fieldset]['mappings__'. $sid]['#description'] = t('Provisioning from LDAP to Drupal mapppings:');
-        }
-        else {
-          $form[$parent_fieldset]['mappings__'. $sid]['#description'] = t('Provisioning from Drupal to LDAP mapppings:');
-        }
+    foreach (array(LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY) as $direction) {
+      if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER && $this->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID) {
+        $sid = $this->drupalAcctProvisionServer;
+        $parent_fieldset = 'basic_to_drupal';
+        $description =  t('Provisioning from LDAP to Drupal mapppings:');
+        $enabled = TRUE;
+      }
+      elseif ($direction == LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY && $this->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID) {
+        $sid = $this->ldapEntryProvisionServer;
+        $parent_fieldset = 'basic_to_ldap';
+        $description =   t('Provisioning from Drupal to LDAP mapppings:');
+        $enabled = TRUE;
+      }
+      else { // nothing going on here
+        continue;
+      }
+      $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
 
-        $form[$parent_fieldset]['mappings__'. $sid]['table__'. $direction] = array(
+      $form[$parent_fieldset]['mappings__'. $sid] = array(
+        '#type' => 'fieldset',
+        '#title' =>  t('%ldap_server LDAP Server Mappings', array('%ldap_server' => $ldap_server->name)),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+        '#description' => $description,
+        'table__'. $direction => array(
           '#type' => 'markup',
           '#markup' => '[replace_with_table__' . $direction. ']',
-        );
-  
-        $this->addServerMappingFields($ldap_server, $form, $direction, $enabled);
-  
-      }
+        ),
+      );
+
+      $this->addServerMappingFields($ldap_server, $form, $direction, $enabled);
     }
 
     $form['submit'] = array(

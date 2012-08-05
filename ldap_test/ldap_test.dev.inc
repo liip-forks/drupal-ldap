@@ -93,7 +93,7 @@ function ldap_test_dev_prepTestData($sids,
 
     $test_functions->configureLdapServers($sids);
     if ($ldap_user_conf_id) {
-      $test_functions->configureLdapUser($ldap_user_conf_id, $sids);
+      $test_functions->configureLdapUser($ldap_user_conf_id);
     }
     if ($ldap_authentication_conf_id) {
       $test_functions->configureLdapAuthentication($ldap_authentication_conf_id, $sids);

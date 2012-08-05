@@ -647,24 +647,25 @@ class LdapServer {
    * @param $drupal_user_name
    *  drupal user name.
    *
-   * @param $op
-   *   provision, authenticate, etc. to help determine which attributes to return
+   * @param string or int $synch_context
+   *   This could be anything, particularly when used by other modules.  Other modules should use string like 'mymodule_mycontext'
+   *   LDAP_USER_SYNCH_CONTEXT_ALL signifies get all attributes needed by all other contexts/ops
    *
    * @return
    *   An array with users LDAP data or NULL if not found.
    */
-  function user_lookup($drupal_user_name, $op = LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER) {
+  function user_lookup($drupal_user_name, $direction = LDAP_USER_SYNCH_DIRECTION_ALL, $synch_context = LDAP_USER_SYNCH_CONTEXT_ALL) {
    // dpm("user_lookup, drupal_user_name=$drupal_user_name, op=$op");
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
     $ldap_username = $this->drupalToLdapNameTransform($drupal_user_name, $watchdog_tokens);
     if (!$ldap_username) {
       return FALSE;
     }
-    if ($op == LDAP_TEST_QUERY_CONTEXT) {
+    if ($synch_context == LDAP_TEST_QUERY_CONTEXT) {
       $attributes = array();
     }
     else {
-      $attributes = ldap_servers_attributes_needed($op, $this->sid);
+      $attributes = ldap_servers_attributes_needed($this->sid, $direction, $synch_context);
     }
     
     foreach ($this->basedn as $basedn) {

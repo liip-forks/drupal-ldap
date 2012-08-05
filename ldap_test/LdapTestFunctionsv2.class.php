@@ -138,16 +138,16 @@ class LdapTestFunctionsv2  {
     $ldapServerAdmin->save();
   }
 
-  function configureLdapUser($ldap_user_test_conf_id, $sids) {
+  function configureLdapUser($ldap_user_test_conf_id) {
     module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
 
     $ldapUserConfAdmin = new LdapUserConfAdmin();
     $options = $this->data['ldap_user'][$ldap_user_test_conf_id];
-    if (!isset($options['sids'])) { // if sids for provisioning have not been set, enable all available sids
-      foreach ($sids as $i => $sid) {
-        $options['sids'][$sid] = TRUE;
-      }
-    }
+   // if (!isset($options['sids'])) { // if sids for provisioning have not been set, enable all available sids
+    //  foreach ($sids as $i => $sid) {
+     //   $options['sids'][$sid] = TRUE;
+     // }
+   // }
     foreach ($ldapUserConfAdmin->saveable as $prop_name) {
       if (isset($options[$prop_name])) {
         $ldapUserConfAdmin->{$prop_name} = $options[$prop_name];
