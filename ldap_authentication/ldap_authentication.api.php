@@ -1,16 +1,19 @@
 <?php
 
 /**
- * hook_ldap_authentication_allowuser_results_alter().
+ * Allow a custom module to examine the user's ldap details
+ * and refuse authentication.  See also: http://drupal.org/node/1634930 
+ *  
+ *  @param array $ldap_user
+ *    See README.developers.txt for structure
+ *  @param string $name
+ *    The drupal account name or proposed drupal account name if none exists yet
+ *  @param boolean $hook_result
+ *    TRUE for allow, FALSE for deny.
+ *    If set to TRUE or FALSE, another module has already set this and function should
+ *    be careful about overriding this.
  *
- *  allow other modules to block successful authentication of user
- *
- * return array with elements of the form:
- *
- * where
- *  $ldap_user  see README.developers.txt for structure
- *  $name is the drupal account name or proposed drupal account name if none exists yet
- *  $hook_result = TRUE for allow, FALSE for deny
+ *  @return boolean &$hook_result passed by reference
  */
 
 function hook_ldap_authentication_allowuser_results_alter($ldap_user, $name, &$hook_result) {
