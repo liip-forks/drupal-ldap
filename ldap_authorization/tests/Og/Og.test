@@ -20,8 +20,7 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
   public $consumerType = 'og_group';
 
   function setUp($addl_modules = array()) {
-    parent::setUp(array('ldap_authorization_og', 'og_example'));
-
+    parent::setUp(); 
 
     if (ldap_authorization_og_og_version() != 1) {
       debug('LdapAuthorizationOg2Tests must be run with OG 7.x-1.x');
@@ -64,6 +63,10 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
    * just make sure install succeeds and
    */
   function testBasicFunctionsAndApi() {
+    // , 'og', 'og_example'
+    //debug("testBasicFunctionsAndApi ldap_authorization_og exists:" . module_exists('ldap_authorization_og'));
+  //  return;
+  
     if (ldap_authorization_og_og_version() != 1) {
       debug('LdapAuthorizationOg2Tests must be run with OG 7.x-1.x');
       return;
@@ -228,6 +231,7 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
       * functional tests should not need to done for all ldap consumer types.
       */
   function testAuthorizationsWithoutLogon() {
+    
     if (ldap_authorization_og_og_version() != 1) {
       debug('LdapAuthorizationOg2Tests must be run with OG 7.x-1.x');
       return;
@@ -251,7 +255,7 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
     $this->authorizationData = 'Og/ldap_authorization.inc';
     $this->authenticationData = 'Og/ldap_authentication.inc';
     $this->consumerType = 'og_group';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     $og_auth = new LdapAuthorizationConsumerOG('og_group');
     $this->assertTrue(is_object($og_auth),
@@ -320,6 +324,7 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
     * IV. Test authorizations granted on logon
     */
   function testAuthorizationsOnLogon() {
+
     if (ldap_authorization_og_og_version() != 1) {
       debug('LdapAuthorizationOg2Tests must be run with OG 7.x-1.x');
       return;
@@ -343,7 +348,7 @@ class LdapAuthorizationOgTests extends LdapAuthorizationTestCase {
     $this->authorizationData = 'Og/ldap_authorization.inc';
     $this->authenticationData = 'Og/ldap_authentication.inc';
     $this->consumerType = 'og_group';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     $og_auth = new LdapAuthorizationConsumerOG('og_group');
     $this->assertTrue(is_object($og_auth),

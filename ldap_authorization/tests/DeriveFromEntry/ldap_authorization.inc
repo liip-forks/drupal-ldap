@@ -19,7 +19,8 @@ $authorization['drupal_role'] = array(
   'deriveFromAttr' => 0,
   'deriveFromAttrAttr' => array(),
   'deriveFromAttrNested' => 0,
-
+  'deriveFromAttrNested' => 0,
+  
   'deriveFromEntry' => 1,
   'deriveFromEntryEntries' => array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu'),
   'deriveFromEntryEntriesAttr' => 'distinguishedname',
@@ -29,12 +30,12 @@ $authorization['drupal_role'] = array(
   'deriveFromEntryAttrMatchingUserAttr' => 'dn',
 
   'mappings' => array(
-    0 => array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'it'),
-    1 => array('cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'sysadmins'),
-    2 => array('cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'developers'),
-    3 => array('cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'staff'),
-    4 => array('cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'students'),
-    5 => array('cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'people'),
+    array('cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'it'),
+    array('cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'sysadmins'),
+    array('cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'developers'),
+    array('cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'staff'),
+    array('cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'students'),
+    array('cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu', 'people'),
   ),
 
   'useMappingsAsFilter' => 1,

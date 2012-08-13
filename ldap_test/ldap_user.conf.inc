@@ -40,7 +40,7 @@ $conf['default']  = array(
     )
   );
 
-$conf['ad_authentication']  = array(
+$conf['ad_authentication'] = array(
     'drupalAcctProvisionServer' => 'ldapauthen1',
     'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,
     'drupalAcctProvisionEvents' => array(
@@ -70,6 +70,32 @@ $conf['ad_authentication']  = array(
     )
   );
 
+  $conf['ad_authorization'] = array(
+    'drupalAcctProvisionServer' => 'ldapauthor1',
+    'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,
+    'drupalAcctProvisionEvents' => array(
+      LDAP_USER_DRUPAL_USER_CREATE_ON_LOGON,
+      LDAP_USER_DRUPAL_USER_CREATE_ON_MANUAL_ACCT_CREATE,
+      LDAP_USER_DRUPAL_USER_UPDATE_ON_USER_AUTHENTICATE,
+      ),
+    'ldapEntryProvisionEvents' => array(
+      ),
+    'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
+    'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
+    'wsEnabled'  => 0,
+    'wsActions'  => array('create' => 0,'synch' => 0,'disable' => 0,'delete' => 0),
+    'wsUserIps' => array('1.2.3.4'),
+    'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
+    'ldapUserSynchMappings' => array(
+      LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER => array(
+        'activedirectory' => array(),
+      ),
+      LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY => array(
+        'activedirectory' => array(),
+      ),
+    )
+  );
+  
   $conf['provision0']  = array(
     'drupalAcctProvisionServer' => 'activedirectory',
     'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,

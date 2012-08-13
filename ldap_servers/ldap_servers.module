@@ -281,26 +281,31 @@ function ldap_servers_theme() {
    * implements hook_ldap_attributes_needed_alter()
    */
   function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
-    $attributes[] = 'dn';
-    if ($params['sid']) { // puid attributes are server specific
+    
+    $attributes['dn'] = ldap_servers_set_attribute_map(@$attributes['dn'], 'ldap_dn', 'ldap_dn'); // force this data type
+
+    if ($params['sid'] && $params['sid'] && $params['sid'] != LDAP_USER_NO_SERVER_SID) { // puid attributes are server specific
       if (is_scalar($params['sid'])) {
         $ldap_server = ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
       }
       else {
         $ldap_server = $params['sid'];
       }
-      // debug('ldap_servers_ldap_attributes_needed_alter'); debug($ldap_server); debug($params);
       // mail, unique_persistent_attr, user_attr, mail_template, and user_dn_expression are needed for all functionality
-      $attributes[] = $ldap_server->mail_attr;
-      if ($ldap_server->unique_persistent_attr) {
-        $attributes[] = $ldap_server->unique_persistent_attr;
+      if (!isset($attributes[$ldap_server->mail_attr])) {
+        $attributes[$ldap_server->mail_attr] = ldap_servers_set_attribute_map();
+      }
+      if ($ldap_server->unique_persistent_attr && !isset($attributes[$ldap_server->unique_persistent_attr])) {
+        $attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map();
       }
       if ($ldap_server->mail_template) {
         ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);
       }
-      $attributes[] = $ldap_server->user_attr;
+      if (!isset($attributes[$ldap_server->user_attr])) {
+        $attributes[$ldap_server->user_attr] = ldap_servers_set_attribute_map();
+      }
       if ($ldap_server->user_dn_expression) {
-        ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_dn_expression);
+        ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_dn_expression, TRUE);
       }
       
           
@@ -327,7 +332,14 @@ function ldap_servers_theme() {
  */
 
 function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
-  $ldap_server = $params['ldap_server'];
+ // debug('ldap_servers_ldap_user_attrs_list_alter'); debug($available_user_attrs); debug($params);
+  
+  if (isset($params['ldap_server']) && $params['ldap_server']) {
+    $ldap_server = $params['ldap_server'];
+  }
+  else {
+    return; // without a server id, ldap_servers module has nothing to offer
+  }
   $ldap_user_conf  = $params['ldap_user_conf'];
   $direction = $params['direction'];
   
@@ -500,6 +512,38 @@ function ldap_servers_fields() {
 function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $direction = LDAP_USER_SYNCH_DIRECTION_ALL, $synch_context = LDAP_USER_SYNCH_CONTEXT_ALL) {
   ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
   return _ldap_servers_get_user_ldap_data($drupal_user, $sid, $direction, $synch_context);
+}
+
+/**
+ * @param array $attribute in form array('values' => array(), 'data_type' => NULL) as outlined in ldap_user/README.developers.txt
+ * @param enum string $data_type NULL, string, binary, ldap_dn, etc.
+ * @param array $values in form array(<ordinal> => <value> | NULL) where NULL indicates value is needed for provisioning or other operations.
+ *
+ * @return array $attribute with default values or passed in values for 'data_type' and 'values'
+ */
+
+function ldap_servers_set_attribute_map($attribute_map = NULL, $source_data_type = NULL, $target_data_type = NULL, $values = NULL) {
+  
+  $attribute_map = (is_array($attribute_map)) ? $attribute_map : array();
+
+  if (!isset($attribute_map['source_data_type']) || $source_data_type) { 
+   $attribute_map['source_data_type'] = ($source_data_type) ? $source_data_type : NULL;
+  }
+
+  if (!isset($attribute_map['target_data_type']) || $target_data_type) { 
+   $attribute_map['target_data_type'] = ($target_data_type) ? $target_data_type : NULL;
+  }
+  
+  if (!isset($attribute_map['values']) || !is_array($attribute_map['values'])) {
+   $attribute_map['values'] = array(0 => NULL);
+  }
+  
+  if (is_array($values)) { //merge into array overwriting ordinals
+    foreach ($values as $ordinal => $value) {
+      $attribute_map['values'][(int)$ordinal] = $value;
+    }
+  }
+  return $attribute_map;
 }
 
 

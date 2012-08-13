@@ -1,6 +1,6 @@
 
 ==========================================
-Summary of how synching and provisioning events are handled
+A. Summary of how synching and provisioning events are handled
 ==========================================
 
 -------------------
@@ -84,4 +84,26 @@ $ldap_user_conf->isSynched($field, $ldap_server, $synch_context, $direction)
 This depends on: 
 $ldap_user_conf->synchMapping[$direction][$ldap_server->sid][$field]['contexts']
 which is populated by various ldap and possibly other modules. These are visible in the tables at config/people/ldap/user
+
+
+==========================================
+B. Structure of "attributes" variables
+==========================================
+
+==========================================
+
+B. Structure of "_attributes" variables
+==========================================
+These may be ldap or drupal user attributes, but are always source attribute in provisioning.
+
+Functions using "attributes" variables:
+ldap_servers_token_extract_attributes(): $attributes
+hook_ldap_attributes_needed_alter(): $attributes
+LdapUserConf->getRequiredAttributes(): return value
+
+structure:
+$attributes[<attribute_name>]['values'][<ordinal>] = $value;
+$attributes[<attribute_name>]['data_type'] = NULL|'string','binary'|...
+$attributes[<attribute_name>]['values'] = array(); when value 
+$attributes[<attribute_name>]['data_type'] = NULL; when data type is not known.
 

@@ -70,7 +70,7 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
     $this->authorizationData = 'BasicTests/ldap_authorization.simple.inc';
     $this->authenticationData = 'BasicTests/ldap_authentication.inc';
     $this->consumerType = 'drupal_role';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     // test for same role mapped multiple times:  issue #1174332
     $edit = array(
@@ -103,7 +103,8 @@ function testFlags() {
   $this->authorizationData = 'BasicTests/ldap_authorization.flags.inc';
   $this->authenticationData = 'BasicTests/ldap_authentication.inc';
   $this->consumerType = 'drupal_role';
-  $this->prepTestData();
+  $this->prepTestData('ad_authorization');
+
 
   /**
    * test:  LDAP_authorz.Flags.enable
@@ -139,7 +140,7 @@ function testFlags() {
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
   $roles = isset($new_authorizations['drupal_role']) ? $new_authorizations['drupal_role'] : array();
   $this->assertTrue((count($roles) == 0), ' only apply to ldap authenticated grants no roles for non ldap user.', $this->ldapTestId . '.enable');
-  user_set_authmaps($jkool, array('authname_ldap_authentication' => 1));
+  user_set_authmaps($jkool, array('authname_ldap_authentication' => 'jkool'));
 
   /**
    * LDAP_authorz.Flags.applyOnLogon  (IV.B) - execute logon and check that roles are applied
@@ -156,7 +157,7 @@ function testFlags() {
   $consumer_conf_admin->onlyApplyToLdapAuthenticated = 0;
   $consumer_conf_admin->revokeLdapProvisioned = 1;
   $consumer_conf_admin->save();
-
+ // debug('consumer_conf_admin'); debug($consumer_conf_admin);
   // add an underserved, ldap granted drupal role
   $jkool = user_load($jkool->uid);
   $data = array(
@@ -173,9 +174,12 @@ function testFlags() {
   );
   $jkool = user_save($jkool, $data);
   $was_set = isset($jkool->roles[3]);
+  debug("was_set=$was_set . after user_save, jkool:"); debug($jkool);
   // apply correct authorizations.  should remove the administrator role.
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'set', $this->consumerType, 'logon');
+  
   $jkool = user_load($jkool->uid);
+  debug("after ldap_authorizations_user_authorizations, jkool:"); debug($jkool);
   $this->assertTrue(($was_set && !isset($jkool->roles[3])), ' revoke ldap granted roles when no longer deserved.', $this->ldapTestId . '.revokeRoles');
 
 
@@ -210,6 +214,7 @@ function testFlags() {
   $jkool = user_load($jkool->uid);
   $guest_role_recreated = in_array('guests', array_values(user_roles()));
   $roles_by_name = array_flip(user_roles());
+  debug('roles_by_name'); debug($roles_by_name);
   $jkool_granted_guest = isset($jkool->roles[$roles_by_name['guests']]);
   $this->assertTrue(($guest_role_deleted && $guest_role_recreated && $jkool_granted_guest), ' create consumers (e.g. roles)', $this->ldapTestId . '.createRoles');
 

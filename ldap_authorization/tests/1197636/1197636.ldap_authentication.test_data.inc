@@ -9,9 +9,9 @@ $variables['user_register'] = USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL;
 $variables['user_email_verification'] = 1;
 
 $authentication = array(
+  'sids' => array('ldapauthor1' => 'ldapauthor1'),
   'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
   'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
-  'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
   'ldapUserHelpLinkUrl' => '',
   'ldapUserHelpLinkText' => '',
   'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,

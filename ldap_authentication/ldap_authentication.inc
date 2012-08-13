@@ -130,7 +130,7 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
   * ldap authentication exclusively
   */
 function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
-  // dpm('_ldap_authentication_user_login_authenticate_validate');
+
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $authname = $form_state['values']['name']; // $name = $form_state['values']['name']; // patch 1599632
   $pass = $form_state['values']['pass'];
@@ -155,7 +155,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     form_set_error('name', 'Server Error: Failed to get valid ldap authentication configuration.' . $error);
     return FALSE;
   }
-  // dpm('_ldap_authentication_user_login_authenticate_validate2');
+
  // if already succeeded at authentication, see if LDAP Exclusive is set
   if (isset($form_state['uid']) && is_numeric($form_state['uid'])) {
     if ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_MIXED || $form_state['uid'] == 1) {
@@ -177,7 +177,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     watchdog('ldap_authentication',  'No LDAP servers configured.', array(), WATCHDOG_ERROR);
     form_set_error('name', 'Server Error:  No LDAP servers configured.');
   }
-// dpm('_ldap_authentication_user_login_authenticate_validate3');
+
   if ($detailed_watchdog_log) {
     watchdog('ldap_authentication', '%username : user_load_by_name(%username)', $watchdog_tokens, WATCHDOG_DEBUG);
   }
@@ -216,7 +216,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       watchdog('ldap_authentication', '%username : Existing Drupal User Account not found.  Continuing on to attempt ldap authentication', $watchdog_tokens, WATCHDOG_DEBUG);
     }
   }
-// dpm('_ldap_authentication_user_login_authenticate_validate4');
+
   foreach ($auth_conf->servers as $sid => $ldap_server) {
     $watchdog_tokens['%sid'] = $sid;
     $watchdog_tokens['%bind_method'] = $ldap_server->bind_method;
@@ -286,7 +286,7 @@ Will not work on most ldaps.'),
     else {
       watchdog('ldap_authentication', 'No bind method set in ldap_server->bind_method in _ldap_authentication_user_login_authenticate_validate.', $watchdog_tokens, WATCHDOG_ERROR);
     }
-// dpm('_ldap_authentication_user_login_authenticate_validate5a, bind success='. $bind_success);
+
     if (!$bind_success) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
@@ -296,7 +296,7 @@ Will not work on most ldaps.'),
       $authentication_result = ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_USER) ? LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS : LDAP_AUTHENTICATION_RESULT_FAIL_BIND;
       continue; // if bind fails, onto next server
     }
-// dpm('_ldap_authentication_user_login_authenticate_validate5b, ');
+
     // #3 DOES USER EXIST IN SERVER'S LDAP
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
       $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
@@ -313,7 +313,7 @@ Will not work on most ldaps.'),
     else {
       $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
     }
-// dpm('_ldap_authentication_user_login_authenticate_validate6');
+
     if (!$ldap_user) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
@@ -400,7 +400,7 @@ Will not work on most ldaps.'),
   if ($detailed_watchdog_log) {
     watchdog('ldap_authentication',  '%username : Authentication result id=%result auth_result=%auth_result (%err_text)', $watchdog_tokens, WATCHDOG_DEBUG);
   }
-// dpm('authentication_result='. $authentication_result);
+
   if ($authentication_result != LDAP_AUTHENTICATION_RESULT_SUCCESS) {
     $watchdog_tokens['%err_text'] =  _ldap_authentication_err_text($authentication_result);
   // fail scenario 1.  ldap auth exclusive and failed  throw error
@@ -447,25 +447,20 @@ Will not work on most ldaps.'),
     }
   }
   
-  // dpm('x');
-
   /**
    * case 1: previously drupal authenticated user authenticated successfully on ldap
    *
    */
   if (!$account_exists && ($account = user_load_by_name($accountname))) {
-    // dpm('account case 1');
  	  user_set_authmaps($account, array('authname_ldap_authentication' => $authname));
    	$account_exists = TRUE;
   }
   if (!$account_exists) {
-    // dpm('account exists: false');
     if (!$auth_conf->ldapUser->contextEnabled(LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'provision')) {
       //@todo throw error that provisioning of drupal accts is not enabled, and no account exists so no go here.
-      // dpm('context not enabled');
     }
     else {
-      // dpm('context enabled');
+
     }
     if ($account_with_same_email = user_load_by_mail($ldap_user['mail'])) {
       // dpm('account with same email');
@@ -497,20 +492,18 @@ Will not work on most ldaps.'),
     $account = NULL;
     $user_edit = array('name' => $authname, 'status' => 1);
     $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
-    if ($auth_conf->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP && $user_register == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
+    if ($auth_conf->ldapUser->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP && $user_register == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
       $user_edit['status'] = 0; // if admin approval required, set status to 1.
     }   
     
     // don't pass in ldap user, because want to requery with correct attributes needed
     // this may be a case where efficiency dictates querying for all attributes
     $account = $auth_conf->ldapUser->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, TRUE);
-    debug("account after provisionDrupalAccount:$authname"); debug($account);
     if ($account === FALSE) {
       // need to throw error that account was not created so logging in is not happenning via ldap
     }
   }
   else {  // account already exists
-    // dpm('account exists: true');
     if ($ldap_authentication_authmap == FALSE) {
       if ($auth_conf->ldapUser->loginConflictResolve == LDAP_USER_CONFLICT_LOG) {
         if ($account_with_same_email = user_load_by_mail($ldap_user['mail'])) {

@@ -70,7 +70,7 @@ function ldap_authorization_user_entity_fields() {
     'field_name' => 'ldap_authorizations',
     'type' => 'text',
     'entity_types' => array('user'),
-    'cadinality' => FIELD_CARDINALITY_UNLIMITED,
+    'cardinality' => FIELD_CARDINALITY_UNLIMITED,
     'translatable' => 0,
     'locked' => 1,
     'module' => 'text',

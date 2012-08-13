@@ -127,7 +127,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
     $results['user entity (before provisioning or synching)'] = $user_entity;
       
     foreach ($test_servers as $direction => $sid) {
-      $user_ldap_entry = ldap_servers_get_user_ldap_data($username, NULL, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_TEST_QUERY_CONTEXT);
+      $user_ldap_entry = ldap_servers_get_user_ldap_data($username, $sid, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_TEST_QUERY_CONTEXT);
       $results[$direction]['related ldap entry (before provisioning or synching)'] = $user_ldap_entry;
     }
     
@@ -153,7 +153,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
             $results['provisionDrupalAccount method results']["context = $synch_context_description"]['proposed'] = $user_edit;
           }
           else {
-            $provision_result = $ldap_user_conf->provisionLdapEntry($user_object, $synch_context, NULL, $test_query);
+            $provision_result = $ldap_user_conf->provisionLdapEntry($user_object, $synch_context, array(), $test_query);
             $results['provisionLdapEntry method results']["context = $synch_context_description"] = $provision_result;
           }
         }
@@ -178,7 +178,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
             $results['synchToDrupalAccount method results']["context = $synch_context_description"]['proposed'] = $user_edit;
           }
           else {
-            $provision_result = $ldap_user_conf->synchToLdapEntry($user_object, $user_edit, $synch_context, NULL, $test_query);
+            $provision_result = $ldap_user_conf->synchToLdapEntry($user_object, $user_edit, $synch_context, array(), $test_query);
             $results['synchToLdapEntry method results']["context = $synch_context_description"] = $provision_result;
           }
         }

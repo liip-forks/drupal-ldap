@@ -21,7 +21,7 @@ class LdapAuthorizationTestCaseTEMPLATE extends LdapAuthorizationTestCase {
     $this->ldapTestId = 'TEMPLATE test case';
     $this->useFeatureData = TRUE;
     $this->featureName = 'ldap_authorization_simpletest1';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     $edit = array(
       'name' => 'verykool',

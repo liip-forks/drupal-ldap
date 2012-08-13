@@ -31,7 +31,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
   public $consumerType = 'og_group';
 
   function setUp($addl_modules = array()) {
-    parent::setUp(array('ldap_authorization_og', 'og_example'));
+    parent::setUp();
 
     if (ldap_authorization_og_og_version() != 2) {
       debug('LdapAuthorizationOg2Tests must be run with OG 7.x-2.x');
@@ -290,7 +290,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     $this->authorizationData = 'Og/ldap_authorization_og2.inc';
     $this->authenticationData = 'Og/ldap_authentication.inc';
     $this->consumerType = 'og_group';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     $og_auth = new LdapAuthorizationConsumerOG('og_group');
     $this->assertTrue(is_object($og_auth),
@@ -393,7 +393,7 @@ class LdapAuthorizationOg2Tests extends LdapAuthorizationTestCase {
     $this->authorizationData = 'Og/ldap_authorization_og2.inc';
     $this->authenticationData = 'Og/ldap_authentication.inc';
     $this->consumerType = 'og_group';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     $og_auth = new LdapAuthorizationConsumerOG('og_group');
     $this->assertTrue(is_object($og_auth),

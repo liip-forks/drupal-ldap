@@ -37,17 +37,24 @@ function ldap_servers_uninstall() {
  */
 function ldap_servers_requirements($phase) {
   $requirements = array();
-  $requirements['ldap_extension_loaded']['title'] = t('LDAP Extension Loaded');
-  if (extension_loaded('ldap') && function_exists('ldap_search')) {
-    $requirements['ldap_extension_loaded']['value'] = t('Passed');
-    $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_OK;
-  }
-  else {
-    $requirements['ldap_extension_loaded']['value'] = t('Failed');
-    $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_ERROR;
-    $requirements['ldap_extension_loaded']['description'] = t('No LDAP Extension is loaded for PHP, so LDAP will not work properly.');
-  }
+  
+	if ($phase == 'install') {
+		$requirements['ldap_extension_loaded']['title'] = t('LDAP Extension Loaded');
+		if (extension_loaded('ldap')) {
+			$requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_OK;
+		}
+		else {
+			$requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_ERROR;
+			$requirements['ldap_extension_loaded']['description'] = t('No LDAP PHP Extension is loaded for PHP, so LDAP will not work properly.');
+		}
+	}
 
+	if ($phase == 'runtime' && !extension_loaded('ldap')) {
+		$requirements['ldap_extension_loaded']['title'] = t('LDAP Extension Loaded');
+		$requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_ERROR;
+		$requirements['ldap_extension_loaded']['description'] = t('No LDAP PHP Extension is loaded for PHP, so LDAP will not work properly.');
+	}
+	
   if ($phase != "install" && db_table_exists('ldapauth')) {
     $requirements['ldap_servers_ldap_integration']['title'] = t('LDAP Integration LDAP Auth to LDAP Servers Upgrade Concern');
     $requirements['ldap_servers_ldap_integration']['severity'] = REQUIREMENT_WARNING;
@@ -272,4 +279,15 @@ function ldap_servers_update_7106() {
   }
 
   return ($msg) ? $msg :  t('No database changes made.');
+}
+
+/**
+ *  remove allow_conflicting_drupal_accts from ldap_servers table
+ */
+function ldap_servers_update_7107() {
+  if (db_field_exists('ldap_servers', 'allow_conflicting_drupal_accts')) {
+		db_drop_field('ldap_servers', 'allow_conflicting_drupal_accts');
+		$msg = t('"allow_conflicting_drupal_accts" field removed from ldap_servers table');
+	}
+	return ($msg) ? $msg :  t('No database changes made.');
 }

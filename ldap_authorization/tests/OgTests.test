@@ -243,7 +243,7 @@ class LdapAuthorizationOgBasicTests extends LdapAuthorizationTestCase {
     $this->authorizationData = 'Derivations.ldap_authorization_og.inc';
     $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
     $this->consumerType = 'og_group';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     $og_auth = new LdapAuthorizationConsumerOG('og_group');
  //   debug('og_auth'); debug($og_auth);
@@ -334,7 +334,7 @@ class LdapAuthorizationOgBasicTests extends LdapAuthorizationTestCase {
     $this->authorizationData = 'Derivations.ldap_authorization_og.inc';
     $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
     $this->consumerType = 'og_group';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     $og_auth = new LdapAuthorizationConsumerOG('og_group');
     $this->assertTrue(is_object($og_auth),

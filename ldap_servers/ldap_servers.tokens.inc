@@ -55,28 +55,26 @@ function ldap_servers_parse_user_attr_name($user_attr_key) {
 /**
  * @param array $ldap_entry
  * @param string $text
- * @return string text with tokens replaced
+ * @return string $text with tokens replaced
  */
 
 function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_entry') { // user_account
- // dpm("ldap_servers_token_replace:$text");
+
   $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);
+ // dpm("ldap_servers_token_replace text=$text, desired tokens=");dpm($desired_tokens);
   switch ($resource_type) {
     case 'ldap_entry':
     $tokens = ldap_servers_token_tokenize_entry($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
     break;
   
     case 'user_account':
- //     dpm('desired tokens'); dpm($desired_tokens);
     $tokens = ldap_servers_token_tokenize_user_account($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
-  //  dpm('ldap_servers_token_replace, tokens'); dpm($tokens);
     break;  
   }
-  
+  //debug('ldap_servers_token_replace:tokens'); debug($tokens);
   foreach ($tokens as $key => $value) {
     $tokens[drupal_strtolower($key)] = $value;
   }
- // debug("ldap_servers_token_replace,$text"); debug($ldap_entry); debug($tokens);
   $result = str_replace(array_keys($tokens), array_values($tokens), $text);
   return $result;
 }
@@ -84,40 +82,56 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
 /**
  * @param array $attributes array of attributes passed by reference
  * @param string $text with tokens in it
+ * @param boolean $ignore_attr_count signifies if :1, :0, etc should be stripped off attribute.
  *
- * by reference return add ldap attribute names to $attributes
+ * by reference return add ldap attribute triplet array (<attr_name>, <ordinal>, <data_type>) to $attributes
  */
-function ldap_servers_token_extract_attributes(&$attributes,  $text) {
+function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
   $tokens = ldap_servers_token_tokens_needed_for_template($text);
- // debug("text=$text, ldap_servers_token_extract_attributes, tokens"); debug($tokens);
+//  dpm("ldap_servers_token_extract_attributes,text=$text, tokens needed="); dpm($tokens);
   foreach ($tokens as $token) {
     $token = str_replace(array(LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST), array('', ''), $token);
     $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token);
-    $attributes[] = $parts[0];
+    $ordinal = (isset($parts[1]) && $parts[1]) ? $parts[1] : 0;
+    $attr_name = $parts[0];
+    $source_data_type = NULL;
+  
+    $parts2 = explode(LDAP_SERVERS_TOKEN_MODIFIER_DEL, $attr_name);
+    if (count($parts2) > 1) {
+      $attr_name = $parts2[0];
+      $source_data_type = $parts2[1];
+    }
+   // dpm(@$attributes[$attr_name]);
+    $attribute_maps[$attr_name] = ldap_servers_set_attribute_map(@$attribute_maps[$attr_name], $source_data_type, NULL, array($ordinal => NULL));
+   // dpm($attributes[$attr_name]);
   }
- // debug('ldap_servers_token_extract_attributes, attributes'); debug($tokens);
+ // dpm('ldap_servers_token_extract_attributes, final:'); dpm($attributes);
+
 }
 
 /**
- * @param string $token or token expression with singular token in it, eg. [dn], [dn;binary], [titles:0] [cn]@mycompany.com
+ * @param string $token or token expression with singular token in it, eg. [dn], [dn;binary], [titles:0;binary] [cn]@mycompany.com
  *
- * @return token converted to dn, titles, etc.
+ * @return array with attrinutetoken converted to dn, title, etc.
  */
-function ldap_servers_token_extract_attribute_name($token) {
+function ldap_servers_token_extract_parts($token) {
   $attributes = array();
-  //debug('call to ldap_servers_token_extract_attribute_name');
-  ldap_servers_token_extract_attributes($attributes,  $token); 
-//  $attr_name = trim($token, LDAP_SERVERS_TOKEN_PRE . LDAP_SERVERS_TOKEN_POST); // remove token brackets
+  ldap_servers_token_extract_attributes($attributes, $token);
+ // dpm('ldap_servers_token_extract_parts'); dpm($attributes); dpm($token);
+  if (is_array($attributes)) {
+    $keys = array_keys($attributes);
+    $attr_name = $keys[0];
+    $attr_data = $attributes[$attr_name];
+    // list($ldap_attr_name, $ordinal, $data_type)
+    $ordinals = array_keys($attr_data['values']);
+    $ordinal = $ordinals[0];
+    return array($attr_name, $ordinal, $attr_data['source_data_type'], $attr_data['target_data_type']);
+  }
+  else {
+    return array(NULL, NULL, NULL);
+  }
 
-  //$parts = explode(LDAP_SERVERS_TOKEN_MODIFIER_DEL, $attr_name); //remove modifiers
- // $attr_name = $parts[0];
-
- // $parts = explode(LDAP_SERVERS_TOKEN_DEL, $attr_name); // remove ordinal
-//  $attr_name = $parts[0];
-
-  return (is_array($attributes) && isset($attributes[0])) ? $attributes[0] : NULL;
 }
-
 
 
 

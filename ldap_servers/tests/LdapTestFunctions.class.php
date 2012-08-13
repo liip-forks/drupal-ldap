@@ -13,9 +13,14 @@
 
 class LdapTestFunctions  {
 
-  function prepTestConfiguration($test_data, $feetures = FALSE) {
+  function prepTestConfiguration($test_data, $feetures = FALSE, $ldap_user_conf_id) {
     $this->prepTestServers($test_data['servers'], $feetures);
 
+    // configure ldap_user
+    require_once(drupal_get_path('module', 'ldap_test') . '/LdapTestFunctionsv2.class.php');
+    $testFunctionv2 = new LdapTestFunctionsv2();
+    $testFunctionv2->configureLdapUser($ldap_user_conf_id);
+      
     if (!$feetures && isset($test_data['authentication'])) {
       $this->configureAuthentication($test_data['authentication']);
     }

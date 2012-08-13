@@ -24,7 +24,7 @@ class LdapAuthorizationTestCase1197636 extends LdapAuthorizationTestCase {
     $this->serversData = '1197636/1197636.ldap_servers.test_data.inc';
     $this->authorizationData = '1197636/1197636.ldap_authorization.test_data.inc';
     $this->authenticationData = '1197636/1197636.ldap_authentication.test_data.inc';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     $edit = array(
       'name' => 'verykool',

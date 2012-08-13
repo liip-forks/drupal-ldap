@@ -7,28 +7,26 @@
  */
 
 function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $direction, $synch_context) {
-  //$drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
-  debug("_ldap_servers_get_user_ldap_data, drupal_user sid=$sid"); debug($drupal_user);
 
+  //debug("_ldap_servers_get_user_ldap_data, drupal_user sid=$sid, direction=$direction, synch_context=$synch_context"); debug($drupal_user);
   if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = db_query("SELECT authname FROM {authmap} WHERE uid = :uid AND module = 'ldap_authentication'", array(':uid' => $drupal_user->uid))->fetchColumn()) {
     $drupal_username = $authname;
   }
   else {
     $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
   }
-  debug("_ldap_servers_get_user_ldap_data, drupal_username=$drupal_username"); 
+  //return;
   $ldap_server = ldap_servers_get_servers($sid, 'enabled', TRUE);
 
-
+ // debug('_ldap_servers_get_user_ldap_data'); dpm($ldap_server);
   if ($ldap_user = $ldap_server->user_lookup($drupal_username, $direction, $synch_context)) {
     $ldap_user['sid'] = $sid;
-    $return = $ldap_user;
   }
   else {
-    $return = FALSE;
+    $ldap_user = FALSE;
   }
-  debug('_ldap_servers_get_user_ldap_data,return='); debug($return);
-  return $return;
+
+  return $ldap_user;
 }
 
 /**

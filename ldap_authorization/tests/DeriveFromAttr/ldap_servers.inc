@@ -6,7 +6,8 @@
  * simpltest authorization config
  */
 
-$servers['ldapauthor1']['properties']  = array(
+$servers['ldapauthor1']['properties'] = array(
+    'sid' => 'ldapauthor1',
     'name'  => 'Test LDAP Server for LDAP Authorization' ,
     'inDatabase' => TRUE,
     'status'  => 1,
@@ -25,6 +26,9 @@ $servers['ldapauthor1']['properties']  = array(
     'user_dn_expression' => 'user_dn_expression',
     'user_attr'  => 'sAMAccountName',
     'mail_attr'  => 'mail',
+    'mail_template'  => NULL,
+    'unique_persistent_attr' => 'pixotechcomregistryuniqueid',
+    'ldap_to_drupal_user' => FALSE,
     'ldapToDrupalUserPhp'  => NULL,
     'testingDrupalUsername'  => 'jdoe',
     'groupObjectClass' => 'group',

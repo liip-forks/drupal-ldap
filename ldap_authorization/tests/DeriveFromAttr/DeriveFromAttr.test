@@ -24,7 +24,7 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
     $this->authorizationData = 'DeriveFromAttr/ldap_authorization.inc';
     $this->authenticationData = 'DeriveFromAttr/ldap_authentication.inc';
     $this->consumerType = 'drupal_role';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     /**
      * test:  DeriveFromAttr.nomatch no matches on dn attribute.
@@ -177,14 +177,13 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
   }
 
   function testDeriveFromAttrNested() {
+    
     $this->ldapTestId =  'DeriveFromAttr.nested';
     $this->serversData = 'DeriveFromAttr/ldap_servers.nested.inc';
     $this->authorizationData = 'DeriveFromAttr/ldap_authorization.nested.inc';
-
     $this->authenticationData = 'DeriveFromAttr/ldap_authentication.inc';
     $this->consumerType = 'drupal_role';
-
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     /**
      * test:  DeriveFromAttr.nested.nomatch no user entry found.

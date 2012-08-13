@@ -129,15 +129,12 @@ function ldap_servers_attributes_needed($sid, $direction = LDAP_USER_SYNCH_DIREC
     $attributes = array();
   }
   if (!isset($attributes[$static_cache_id]) || $reset) {
-  //  debug('call drupal_alter(ldap_attributes_needed),op='. $op);
     $params = array(
       'sid' => $sid,
       'direction' => $direction,
       'synch_context' => $synch_context,
     );
     drupal_alter('ldap_attributes_needed', $attributes[$static_cache_id], $params);
-    // attributes array needs to have no gaps of ldap_search(), ldap_read(), ldap_list() so apply array_values()
-    $attributes[$static_cache_id] = array_values(array_unique($attributes[$static_cache_id]));
   }
   $return = $attributes[$static_cache_id];
   //debug('ldap_servers_attributes_needed return, op=' . ldap_user_synch_context_text($op));debug($return);
@@ -214,7 +211,7 @@ function ldap_server_massage_text($value, $value_type, $context) {
           }
         }
         else {
-         // debug("neither scalar nor array $value, $value_type, $context");
+         // neither scalar nor array $value
         }
       break;
 

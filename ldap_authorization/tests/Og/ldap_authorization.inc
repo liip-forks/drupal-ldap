@@ -30,32 +30,34 @@ $authorization['og_group'] = array(
   'deriveFromAttr' => 1,
   'deriveFromAttrAttr' =>  array('memberOf', 'mailcode'),
   'deriveFromAttrUseFirstAttr' => 0,
-
+  'deriveFromAttrNested' => 0,
+  
   'deriveFromEntry' => 0,
   'deriveFromEntryEntries' => array(),
-    'deriveFromEntryEntriesAttr' => NULL,
+  'deriveFromEntryEntriesAttr' => NULL,
   'deriveFromEntryMembershipAttr' => array(),
+  'deriveFromEntryNested' => 0,
 
   'mappings' => array(
-    0 => array('cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu',
+    array('cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu',
                'group-name=knitters,role-name=member',
                 ),
-    1 => array('cn=content approvers,ou=groups,dc=ad,dc=myuniversity,dc=edu',
+    array('cn=content approvers,ou=groups,dc=ad,dc=myuniversity,dc=edu',
                'gid=3,rid=2'
                ),
-    2 => array('guest accounts',
+    array('guest accounts',
                'gid=3,rid=2'
                ),
-    3 => array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
+    array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
                'group-name=knitters,role-name=prince'
                ),
-    4 => array('special guests',
+    array('special guests',
                'group-name=knitters,role-name=member'
                ),
-    5 => array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
+    array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
                'group-name=knitters,role-name=administrator member'
                ),
-    6 => array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
+    array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu',
                'gid=3,rid=3'
                ),
    ),

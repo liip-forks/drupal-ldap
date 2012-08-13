@@ -21,24 +21,33 @@
  *
  */
 function hook_ldap_attributes_needed_alter(&$attributes, $params) {
-
-  $attributes[] = 'dn';
+  
+  $attributes['dn'] = ldap_servers_set_attribute_map(@$attributes['dn'], NULL, 'ldap_dn') ;
   if ($params['sid']) { // puid attributes are server specific
     $ldap_server = (is_object($params['sid'])) ? $params['sid'] : ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
 
     switch ($op) {
       case 'user_insert':
       case 'user_update':
-        $attributes[] = $ldap_server->user_attr;
-        $attributes[] = $ldap_server->mail_attr;
+        if (!isset($attributes[$ldap_server->user_attr])) {
+          // don't provide attribute if it exists, unless you are adding data_type or value information
+          //   in that case, don't overwrite the whole array (see $ldap_server->mail_attr example below)
+          $attributes[$ldap_server->user_attr] = ldap_servers_set_attribute_map();
+        }
+        if (!isset($attributes[$ldap_server->mail_attr])) {
+          $attributes[$ldap_server->mail_attr] = ldap_servers_set_attribute_map(); // set default values for an attribute, force data_type
+        }
+
         ldap_servers_token_extract_attributes($attributes,  $ldap_server_obj->mail_template);
-        $attributes[] = $ldap_server->unique_persistent_attr;
+        $attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->unique_persistent_attr]);
+
       break;
 
     }
   }
 
 }
+
 
 /**
  * Perform alterations of $ldap_user variable.  

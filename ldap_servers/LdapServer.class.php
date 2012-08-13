@@ -41,7 +41,6 @@ class LdapServer {
   public $mail_template;
   public $unique_persistent_attr;
   public $unique_persistent_attr_binary = FALSE;
-  public $allow_conflicting_drupal_accts = FALSE;
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
   public $detailed_watchdog_log;
@@ -100,7 +99,6 @@ class LdapServer {
     'mail_template'  => 'mail_template',
     'unique_persistent_attr' => 'unique_persistent_attr',
     'unique_persistent_attr_binary' => 'unique_persistent_attr_binary',
-    'allow_conflicting_drupal_accts' => 'allow_conflicting_drupal_accts',
     'ldap_to_drupal_user'  => 'ldapToDrupalUserPhp',
     'testing_drupal_username'  => 'testingDrupalUsername',
     'group_object_category' => 'groupObjectClass',
@@ -662,17 +660,18 @@ class LdapServer {
       return FALSE;
     }
     if ($synch_context == LDAP_TEST_QUERY_CONTEXT) {
-      $attributes = array();
+      $attribute_maps = array();
     }
     else {
-      $attributes = ldap_servers_attributes_needed($this->sid, $direction, $synch_context);
+     // debug('ldap_servers_attributes_needed(this->sid, direction, synch_context)'); debug(array($this, $this->sid, $direction, $synch_context));
+      $attribute_maps = ldap_servers_attributes_needed($this->sid, $direction, $synch_context);
     }
     
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
-      $result = $this->search($basedn, $filter, $attributes);
-     // debug("ldap_server: user_lookup, filter=$filter, basedn=$basedn, result="); debug('user_lookup:attributes needed'); debug($attributes); debug($result);
+      $result = $this->search($basedn, $filter, array_keys($attribute_maps));
+     // debug("ldap_server: user_lookup, filter=$filter, basedn=$basedn, result="); debug('user_lookup:attributes needed'); debug($attribute_maps); debug($result);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.
@@ -743,6 +742,7 @@ class LdapServer {
    */
 
   public function deriveFromAttrGroups($derive_from_attribute_name, $user_ldap_entry, $nested) {
+   // dpm('deriveFromAttrGroups'); dpm(array($derive_from_attribute_name, $user_ldap_entry, $nested));
     $all_groups = array();
     $groups_by_level = array();
     $level = 0;
@@ -958,7 +958,6 @@ class LdapServer {
     }
     elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
       ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
-    //  debug('call3'); debug($ldap_entry);
       return ldap_servers_token_replace($ldap_entry, $this->mail_template, 'ldap_entry');
     }
     else {

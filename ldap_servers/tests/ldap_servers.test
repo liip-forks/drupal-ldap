@@ -152,7 +152,6 @@ class LdapServersTestCase extends DrupalWebTestCase {
         'account_name_attr' => array('sAMAccountName', 'blah'),
         'mail_attr' => array('mail', ''),
         'mail_template' => array('' , '[email]'),
-        'allow_conflicting_drupal_accts' => array(TRUE, FALSE),
         'unique_persistent_attr' => array('dn', 'uniqueregistryid'),
         'user_dn_expression' => array('cn=%cn,%basedn', 'cn=%username,%basedn'),
         'ldap_to_drupal_user' => array('code', 'different code'),

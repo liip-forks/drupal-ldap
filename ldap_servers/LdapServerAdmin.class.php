@@ -71,7 +71,6 @@ class LdapServerAdmin extends LdapServer {
     $this->mail_template = trim($values['mail_template']);
     $this->unique_persistent_attr = trim($values['unique_persistent_attr']);
     $this->unique_persistent_attr_binary = trim($values['unique_persistent_attr_binary']);
-    $this->allow_conflicting_drupal_accts = trim($values['allow_conflicting_drupal_accts']);
     $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
     $this->testingDrupalUsername = trim($values['testing_drupal_username']);
     $this->groupObjectClass = trim($values['group_object_category']);
@@ -788,23 +787,6 @@ public function drupalFormSubmit($op, $values) {
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
-
-      'allow_conflicting_drupal_accts' => array(
-        'form' => array(
-          'fieldset' => 'users',
-          '#type' => 'checkbox',
-          '#title' => t('Allow account conflicts'),
-          '#description' => t('[Not implemented yet.  This is in the user interface, but not the code]. If selected, a user or admin created account could pick the same username as an entry in your LDAP,
-            creating future conflicts. This option will affect any ldap modules that create accounts such as ldap authentication
-            or ldap provision.'),
-        ),
-        'schema' => array(
-          'type' => 'int',
-          'size' => 'tiny',
-          'not null' => FALSE,
-          'default' => 0,
         ),
       ),
 

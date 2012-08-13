@@ -7,6 +7,7 @@
  */
 
 $servers['ldapauthor1']['properties']  = array(
+    'sid' => 'ldapauthor1',
     'name'  => 'Test LDAP Server 1 for LDAP Authorization' ,
     'inDatabase' => TRUE,
     'status'  => 1,

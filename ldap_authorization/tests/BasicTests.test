@@ -65,7 +65,7 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
     $this->authorizationData = 'Derivations.ldap_authorization.DeriveFromEntry.inc';
     $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
     $this->consumerType = 'drupal_role';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     // test for same role mapped multiple times:  issue #1174332
     $edit = array(
@@ -126,7 +126,7 @@ function testFlags() {
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
   $roles = isset($new_authorizations['drupal_role']) ? $new_authorizations['drupal_role'] : array();
   $this->assertTrue((count($roles) == 0), ' only apply to ldap authenticated grants no roles for non ldap user.', $this->ldapTestId . '.enable');
-  user_set_authmaps($jkool, array('authname_ldap_authentication' => 1));
+  user_set_authmaps($jkool, array('authname_ldap_authentication' => 'jkool'));
 
   /**
    * LDAP_authorz.Flags.applyOnLogon  (IV.B) - execute logon and check that roles are applied

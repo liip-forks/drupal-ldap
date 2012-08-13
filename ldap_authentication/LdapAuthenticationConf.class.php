@@ -85,7 +85,13 @@ class LdapAuthenticationConf {
       }
       foreach ($this->sids as $sid => $is_enabled) {
         if ($is_enabled) {
-          $this->servers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
+          $server_object = ldap_servers_get_servers($sid, 'enabled', TRUE);
+          if (is_object($server_object)) {
+            $this->servers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
+          }
+          else {
+            watchdog('ldap_authentication', "Failed to instantiate object for enabled ldap server, sid=%sid", array('%sid' => $sid), WATCHDOG_ERROR);
+          }
         }
       }
 
@@ -121,10 +127,10 @@ class LdapAuthenticationConf {
      * do one of the exclude attribute pairs match
      */
     $exclude = FALSE;
-
+    $ldap_user_conf = ldap_user_conf();
     // if user does not already exists and deferring to user settings AND user settings only allow 
     $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
-    if (!$account_exists && $this->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP && $user_register == USER_REGISTER_ADMINISTRATORS_ONLY) {
+    if (!$account_exists && $ldap_user_conf->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP && $user_register == USER_REGISTER_ADMINISTRATORS_ONLY) {
       return FALSE;
     }
     

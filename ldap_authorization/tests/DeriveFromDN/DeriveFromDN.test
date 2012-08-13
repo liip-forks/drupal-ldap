@@ -25,7 +25,7 @@ class LdapAuthorizationDeriveEntry  extends LdapAuthorizationTestCase {
     $this->authorizationData = 'DeriveFromDN/ldap_authorization.inc';
     $this->authenticationData = 'DeriveFromDN/ldap_authentication.inc';
     $this->consumerType = 'drupal_role';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     /**
      * test:  DeriveFromDN.nomatch no matches on dn attribute.

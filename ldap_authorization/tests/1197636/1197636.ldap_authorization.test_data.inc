@@ -17,14 +17,17 @@ $authorization['drupal_role'] = array(
 
   'deriveFromAttr' =>  1,
   'deriveFromAttrAttr' =>  array('memberOf'),
+  'deriveFromAttrUseFirstAttr' => 0,
+  'deriveFromAttrNested' => 0,
 
   'deriveFromEntry' =>  0,
-  'deriveFromEntryEntries' =>  NULL,
+  'deriveFromEntryEntries' =>  array(),
   'deriveFromEntryEntriesAttr' => NULL,
   'deriveFromEntryMembershipAttr' =>  NULL,
-
+  'deriveFromEntryNested' => 0,
+  
   'mappings' => array(
-    0 => array('cn=netadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'netadmins'),
+    array('cn=netadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'netadmins'),
   ),
 
   'useMappingsAsFilter'  =>  1,

@@ -30,7 +30,7 @@ class LdapAuthorizationOtherAuthenticationTests  extends LdapAuthorizationTestCa
     $this->authenticationData = 'Other/ldap_authentication.inc';
     //set authentication data anyway even though module disabled to keep prepTestData() method simple
     $this->consumerType = 'drupal_role';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
     module_disable(array('ldap_authentication'));
     $this->ldapTestId = $this->module_name . ': test for integration with drupal authentication';
 
@@ -69,7 +69,7 @@ class LdapAuthorizationOtherAuthenticationTests  extends LdapAuthorizationTestCa
     $this->authorizationData = 'Derivations.ldap_authorization.DeriveFromDN.inc';
     $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
     $this->consumerType = 'drupal_role';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     $this->ldapTestId = $this->module_name . ': test for integration with drupal authentication';
 

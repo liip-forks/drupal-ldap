@@ -55,6 +55,12 @@ class LdapUserConfAdmin extends LdapUserConf {
 
     );
 
+    $values['manualAccountConflictOptions'] =  array(
+      LDAP_USER_MANUAL_ACCT_CONFLICT_REJECT => t('Reject manual creation of Drupal accounts that conflict with LDAP Accounts.'),
+      LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE => t('Associate manually created Drupal accounts with related LDAP Account if one exists.'),
+      LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM => t('Show option on user create form to determine how account conflict is resolved.'),
+    );
+    
     /**
     *  Drupal Account Provisioning and Synching
     */
@@ -171,6 +177,22 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#markup' => t('<h1>LDAP User Settings</h1>'),
     );
 
+    $form['manual_drupal_account_editing'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Manual Drupal Account Creation and Updates'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
+    
+    $form['manual_drupal_account_editing']['manualAccountConflict'] = array(
+      '#type' => 'radios',
+      '#options' => $this->manualAccountConflictOptions,
+      '#title' => t('How to resolve LDAP conflicts with manually  created Drupal accounts.'),
+      '#description' => t('This applies only to accounts created manually through admin/people/create
+        for which an LDAP entry can be found on the LDAP server selected in "LDAP Servers Providing Provisioning Data"'),
+      '#default_value' => $this->manualAccountConflict,
+    );
+        
     $form['basic_to_drupal'] = array(
       '#type' => 'fieldset',
       '#title' => t('Basic Provisioning to Drupal Account Settings'),
@@ -522,9 +544,9 @@ the top of this form.
             }
             $row_descriptor = t("server %sid row mapping to ldap attribute %ldap_attr", $tokens);
             $tokens['!row_descriptor'] = $row_descriptor;
-            $ldap_attr_in_token = array();
+            $ldap_attribute_maps_in_token = array();
            // debug('calling ldap_servers_token_extract_attributes from validate, mapping='); debug($mapping['ldap_attr']);
-            ldap_servers_token_extract_attributes($ldap_attr_in_token,  $mapping['ldap_attr']);
+            ldap_servers_token_extract_attributes($ldap_attribute_maps_in_token, $mapping['ldap_attr']);
             
             if ($mapping['direction'] == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) {
               $row_id = $map_index[$mapping['user_attr']];
@@ -543,7 +565,7 @@ the top of this form.
                   to ldap entries.', $tokens);            
               }
               
-              if (count($ldap_attr_in_token) != 1) {
+              if (count(array_keys($ldap_attribute_maps_in_token)) != 1) {
                 $token_field_id = join('__', array('sm','user_tokens', $row_id));
                 $errors[$token_field_id] =  t('When provisioning to ldap, ldap attribute column must be singular token such as [cn]. %ldap_attr is not.
                   Do not use compound tokens such as "[displayName] [sn]" or literals such as "physics". Location: !row_descriptor', $tokens);  
@@ -583,6 +605,7 @@ the top of this form.
     $this->ldapEntryProvisionServer = $values['ldapEntryProvisionServer'];
     $this->drupalAcctProvisionEvents = $values['drupalAcctProvisionEvents'];
     $this->ldapEntryProvisionEvents = $values['ldapEntryProvisionEvents'];
+    $this->manualAccountConflict = $values['manualAccountConflict'];
     $this->userConflictResolve  = ($values['userConflictResolve']) ? (int)$values['userConflictResolve'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;
     $this->wsKey  = ($values['wsKey']) ? $values['wsKey'] : NULL;

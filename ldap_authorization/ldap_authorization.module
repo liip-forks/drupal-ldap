@@ -131,7 +131,42 @@ function ldap_authorization_ldap_server_in_use($sid, $server_name) {
   return $use_warnings;
 }
 
-
+/**
+ * implements hook_ldap_attributes_needed_alter().
+ */
+function ldap_authorization_ldap_attributes_needed_alter(&$attribute_maps, $params) {
+ // dpm('ldap_authorization_ldap_attributes_needed_alter'); dpm($params);
+  if (isset($params['sid'])) { // puid attributes are server specific
+    if (is_scalar($params['sid'])) {
+      $ldap_server = ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
+    }
+    else {
+      $ldap_server = $params['sid'];
+    }
+  }
+  else {
+    return;
+  }
+  
+  if (isset($params['synch_context'])) {
+    //  'ldap_authorization__' . $consumer_type
+    $parts = explode('__', $params['synch_context']);
+    if (count($parts) == 2 && $parts[0] == 'ldap_authorization') {
+      $consumer_type = $parts[1];
+      $consumer_conf = ldap_authorization_get_consumer_conf($consumer_type);
+      if ($consumer_conf->deriveFromAttr && is_array($consumer_conf->deriveFromAttrAttr)) {
+        foreach ($consumer_conf->deriveFromAttrAttr as $attribute_name) {
+          $attribute_maps[$attribute_name] = ldap_servers_set_attribute_map(@$attribute_maps[$attribute_name]); //array($attribute_name, 0, NULL);
+        }
+      }
+     // dpm('ldap_authorization_ldap_attributes_needed_alter, consumer_conf'); dpm($consumer_conf); dpm($attribute_maps);
+    }
+  }
+  
+    
+  //  $attributes_required_by_user_module_mappings = $ldap_user_conf->getRequiredAttributes($params['direction'], $params['synch_context']);
+   // $attributes = array_unique(array_merge(array_values($attributes_required_by_user_module_mappings), $attributes));
+}
 
 /**
  * Implements hook_ldap_authorization_maps_alter().
@@ -298,6 +333,19 @@ function ldap_authorization_get_consumer_admin_object($consumer_type, $new = NUL
   $consumer_object = ldap_authorization_get_consumer_object($consumer_type);
   $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_object, $new);
   return $consumer_conf_admin;
+}
+
+function ldap_authorization_get_consumer_conf($consumer_type, $type = 'default', $new = NULL) {
+  $consumer_object = ldap_authorization_get_consumer_object($consumer_type);
+  if ($type == 'admin') {
+    ldap_server_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
+    $consumer_conf = new LdapAuthorizationConsumerConfAdmin($consumer_object, $new);
+  }
+  else {
+    ldap_server_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConf.class');
+    $consumer_conf = new LdapAuthorizationConsumerConf($consumer_object, $new);    
+  }
+  return $consumer_conf;
 }
 
 

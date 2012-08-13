@@ -25,7 +25,7 @@ class LdapAuthorizationDerivationsTests  extends LdapAuthorizationTestCase {
     $this->authorizationData = 'DeriveFromEntry/ldap_authorization.inc';
     $this->authenticationData = 'DeriveFromEntry/ldap_authentication.inc';
     $this->consumerType = 'drupal_role';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
     /**
      * test:  DeriveFromEntry.nomatch no matches on dn attribute.
@@ -75,7 +75,7 @@ class LdapAuthorizationDerivationsTests  extends LdapAuthorizationTestCase {
     $this->authorizationData = 'DeriveFromEntry/ldap_authorization.nested.inc';
     $this->authenticationData = 'DeriveFromEntry/ldap_authentication.inc';
     $this->consumerType = 'drupal_role';
-    $this->prepTestData();
+    $this->prepTestData('ad_authorization');
 
 
     /**

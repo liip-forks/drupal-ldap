@@ -177,7 +177,6 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
 		if (is_array($normalized) && isset($normalized[0][1]) && $normalized[0][1] !== FALSE ) {
 			$available_authorization_ids = $this->availableConsumerIDs($clear_cache);
       $available_authorization_ids = array_map('drupal_strtolower', $available_authorization_ids);
-     // debug($available_authorization_ids); debug($normalized[0]);
 			$pass = (in_array(drupal_strtolower($normalized[0]), $available_authorization_ids));
 		}
 
