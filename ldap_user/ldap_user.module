@@ -358,18 +358,14 @@ function ldap_user_help($path, $arg) {
   }
 }
 
-
-// user-profile-form
-//function ldap_user_form_user_profile_form_alter(&$form, $form_state) {
- // list($user, $user_entity) = ldap_user_load_user_acct_and_entity($form['#user']->name, 'username');
-  //dpm($user); dpm($user_entity);
-  //dpm('ldap_user_form_user_profile_form_alter'); dpm($form); dpm($form_state);
-//}
 /**
  * Implements hook_form_FORM_ID_alter(). for user_register_form
  */
 function ldap_user_form_user_register_form_alter(&$form, $form_state) {
   //dpm('ldap_user_form_user_register_form_alter'); dpm($form);
+  if (!user_access('administer users')) {
+    return;
+  }
   $ldap_user_conf = ldap_user_conf();
   
   $ldap_fieldset = array();
@@ -678,28 +674,6 @@ function ldap_user_field_widget_form(&$form, &$form_state, $field, $instance, $l
   }
 
   return $element;
-}
-
-
-
-/**
- * Implements hook_permission().
- */
-function ldap_user_permission() {
-  // We set up permisssions to manage entity types, manage all entities and the
-  // permissions for each individual entity
-  $permissions = array(
-    'administer ldap users' => array(
-      'title' => t('Create, Edit and Delete LDAP Provisioned Users'),
-      'description' => t('Create, Edit and Delete LDAP Provisioned Users'),
-    ),
-    'edit user ldap fields' => array(
-      'title' => t('Edit User LDAP Fields'),
-      'description' => t('Edit User LDAP Fields'),
-    ),
-  );
-
-  return $permissions;
 }
 
 
