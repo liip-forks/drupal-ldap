@@ -172,7 +172,7 @@ class LdapTestFunctionsv2  {
 
   function ldapUserIsAuthmapped($username) {
     $authmaps = user_get_authmaps($username);
-    return ($authmaps && in_array('ldap_authentication', array_keys($authmaps)));
+    return ($authmaps && in_array('ldap_user', array_keys($authmaps)));
   }
 
   function drupalLdapUpdateUser($edit = array(), $ldap_authenticated = FALSE, $user) {
@@ -182,7 +182,7 @@ class LdapTestFunctionsv2  {
     }
 
     if ($ldap_authenticated) {
-      user_set_authmaps($user, array('authname_ldap_authentication' => $user->name));
+      user_set_authmaps($user, array('authname_ldap_user' => $user->name));
     }
 
     return $user;

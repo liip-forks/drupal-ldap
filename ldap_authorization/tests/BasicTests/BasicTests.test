@@ -136,11 +136,11 @@ function testFlags() {
 
   // remove authmap for jkool then test
   $jkool = user_save($user, array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'));
-  user_set_authmaps($jkool, array('authname_ldap_authentication' => NULL));
+  user_set_authmaps($jkool, array('authname_ldap_user' => NULL));
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
   $roles = isset($new_authorizations['drupal_role']) ? $new_authorizations['drupal_role'] : array();
   $this->assertTrue((count($roles) == 0), ' only apply to ldap authenticated grants no roles for non ldap user.', $this->ldapTestId . '.enable');
-  user_set_authmaps($jkool, array('authname_ldap_authentication' => 'jkool'));
+  user_set_authmaps($jkool, array('authname_ldap_user' => 'jkool'));
 
   /**
    * LDAP_authorz.Flags.applyOnLogon  (IV.B) - execute logon and check that roles are applied

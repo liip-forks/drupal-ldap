@@ -86,3 +86,36 @@
         -- confirm that ldap entry for user is removed.
         
 
+8. Test admin/people/create form and LDAP Options.
+  8.1 Test validation of existing ldap user admin/people/create form
+    A. Setup.  Enable and configure Drupal to LDAP provisioning of users.
+        On MANUAL DRUPAL ACCOUNT CREATION AND UPDATES, select "Show option on user create form".
+    B. Attempt to create user at admin/people/create with a username that conflicts with existing ldap entry.
+       Check "create corresponding ldap entry" on form.
+    C. Success: On form submit, error should indicate ldap user exists.
+    
+  8.2 Test manual selection of ldap associate in admin/people/create form
+    A. Setup.  On admin/config/people/ldap/user, set Existing Drupal User Account Conflict to "Don't associate"
+       On MANUAL DRUPAL ACCOUNT CREATION AND UPDATES, select "Show option on user create form".
+    B. at admin/people/create select "Make this an ldap associated account".
+    C. Success: in ldap user,
+       fields: ldap_user_puid_sid, ldap_user_current_dn, ldap_user_puid, ldap_user_puid_property should be populated if in use
+       other synch and provision fields should not be synched
+       in the database in the authmaps table, a record should exist with module=ldap_user and authname=<username tested>
+    
+  8.3 Test manual selection of ldap associate AND "Create corresponding LDAP Entry" in admin/people/create form
+    A. Setup.  On admin/config/people/ldap/user, set Existing Drupal User Account Conflict to "Don't associate"
+       On MANUAL DRUPAL ACCOUNT CREATION AND UPDATES, select "Show option on user create form".
+       Configure provisioning to ldap on admin/config/people/ldap/user
+    B. Manually create user that is not in ldap already.
+       Select: "Make this an ldap associated account"
+       Check: "create corresponding ldap entry"
+       submit
+    C. Success:
+         ldap entry exists,
+         drupal user exists,
+         fields: ldap_user_puid_sid, ldap_user_current_dn, ldap_user_puid, ldap_user_puid_property should be populated if in use
+         in the database in the authmaps table, a record should exist with module=ldap_user and authname=<username tested>
+  8.4 Test manual selection of "Create corresponding LDAP Entry" and Do not make this an LDAP Associated account in admin/people/create form
+     -- is this even allowable?  What's the use case for this?
+    

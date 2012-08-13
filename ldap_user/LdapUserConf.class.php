@@ -118,8 +118,8 @@ function __construct() {
    ////dpm('this after setSynchMapping');//dpm($this->synchMapping);//dpm($this->ldapUserSynchMappings);
 
     $this->detailedWatchdog = variable_get('ldap_help_watchdog_detail', 0);
-
-    //dpm('this after construct');//dpm($this);
+   
+    //dpm('LdapUserConf.class.php after construct'); dpm($this);
   }
 
   function load() {
@@ -298,7 +298,7 @@ function __construct() {
    * @param enum 'synch', 'provision', 'delete_ldap_entry', 'delete_drupal_entry', 'cancel_drupal_entry'
    * @return boolean
    */
- 
+ // ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'provision')) 
   public function contextEnabled($synch_context, $direction, $action = 'synch') {
     
     $result = FALSE;
@@ -552,7 +552,7 @@ function __construct() {
   public function provisionLdapEntry($account = FALSE, $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, $ldap_user, $test_query = FALSE) {
     $watchdog_tokens = array();
     $result = array();
-
+   // dpm('provisionLdapEntry'. $this->ldapEntryProvisionServer);
     if ($this->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID) {
       $ldap_server = ldap_servers_get_servers($this->ldapEntryProvisionServer, NULL, TRUE);
       $params = array(
@@ -564,7 +564,7 @@ function __construct() {
       );
      
       $proposed_ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $params);
-    //  dpm('provisionLdapEntry:proposed_ldap_entry'); dpm($proposed_ldap_entry);
+      //dpm('provisionLdapEntry:proposed_ldap_entry'); dpm($proposed_ldap_entry);
       $existing_ldap_entry = $ldap_server->dnExists($proposed_ldap_entry['dn']);
       if ($existing_ldap_entry) {
         $result['status'] = 'conflict';
@@ -845,7 +845,7 @@ function __construct() {
         }
         else {
         // //dpm("user save success");//dpm($account);
-          user_set_authmaps($account, array('authname_ldap_authentication' => $user_edit['name']));
+          user_set_authmaps($account, array('authname_ldap_user' => $user_edit['name']));
         }
         return $account;
       }
@@ -857,7 +857,34 @@ function __construct() {
 
 
   }
-
+  
+  function ldapAssociateDrupalAccount($drupal_username) {
+    if ($this->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID) {
+      $synch_context = LDAP_USER_SYNCH_CONTEXT_LDAP_ASSOCIATE;
+      $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);  // $ldap_user['sid']
+      $account = user_load_by_name($drupal_username);
+      $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $this->drupalAcctProvisionServer, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, $synch_context);
+     // dpm('ldapAssociateDrupalAccount:ldap_user'); dpm($ldap_user);
+      $user_edit = array();
+      $params = array(
+        'account' => $account,
+        'user_edit' => $user_edit,
+        'synch_context' => $synch_context,
+        'module' => 'ldap_user',
+        'function' => 'ldapAssociateDrupalAccount',
+        'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+      );
+      drupal_alter('ldap_entry', $ldap_user, $params);
+      $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, $synch_context);
+     // dpm('ldapAssociateDrupalAccount:user_edit'); dpm($user_edit);
+      $account = user_save($account, $user_edit, 'ldap_user');
+    //  dpm('ldapAssociateDrupalAccount:account after user save'); dpm($account);
+      if ($account) {
+        user_set_authmaps($account, array('authname_ldap_user' => $drupal_username));
+      }
+    }
+  }
+  
   /** populate $user edit array (used in hook_user_save, hook_user_update, etc)
    * ... should not assume all attribues are present in ldap entry
    *
@@ -874,7 +901,6 @@ function __construct() {
     
     $mail_synched = $this->isSynched('[property.mail]', $ldap_server, $synch_context, $direction);
     if (!isset($edit['mail']) && $mail_synched) {
-      
       $derived_mail = $ldap_server->deriveEmailFromLdapEntry($ldap_user['attr']);
       if ($derived_mail) {
         $edit['mail'] = $derived_mail;

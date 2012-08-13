@@ -14,7 +14,9 @@ synch_contexts are:
   LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER
   LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER
   LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER
-  
+  LDAP_USER_SYNCH_CONTEXT_LDAP_ASSOCIATE   // existing drupal user is being ldap associated.  only synch ldap associatiation fields
+  LDAP_USER_SYNCH_CONTEXT_MANUAL_LDAP_CREATE  // existing drupal user is being ldap associated.  only synch ldap associatiation fields
+
 The following events map to these synch contexts:
 
 LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER and :
@@ -86,24 +88,4 @@ $ldap_user_conf->synchMapping[$direction][$ldap_server->sid][$field]['contexts']
 which is populated by various ldap and possibly other modules. These are visible in the tables at config/people/ldap/user
 
 
-==========================================
-B. Structure of "attributes" variables
-==========================================
-
-==========================================
-
-B. Structure of "_attributes" variables
-==========================================
-These may be ldap or drupal user attributes, but are always source attribute in provisioning.
-
-Functions using "attributes" variables:
-ldap_servers_token_extract_attributes(): $attributes
-hook_ldap_attributes_needed_alter(): $attributes
-LdapUserConf->getRequiredAttributes(): return value
-
-structure:
-$attributes[<attribute_name>]['values'][<ordinal>] = $value;
-$attributes[<attribute_name>]['data_type'] = NULL|'string','binary'|...
-$attributes[<attribute_name>]['values'] = array(); when value 
-$attributes[<attribute_name>]['data_type'] = NULL; when data type is not known.
 

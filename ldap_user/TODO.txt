@@ -1,9 +1,12 @@
 
-1.0 with ldap_user changes:
+LDAP User To dos
 
 -- need to move data in admin/config/people/ldap/user on update.
-
-
+-- need ldap_user_update() hook to change ldap_authentication to ldap_user in authmaps table.
+-- add in password provisioning options to ldap user
+-- implement binary field conversion
+-- add options on user edit form (user/1301/edit) to ldap associate
+-- make sure use case of deleting user leading to deletion of ldap user is implemented
 
 Mapping and mapping UI Tasks:
 - add validation
@@ -49,7 +52,7 @@ move data into ldap_user module structure
 - bring ldap_provision code into module
 - bring ldap_profile code into module
 - allow rules for each field [sych on intitail provision, synch on logon, synch on periodic update, push to ldap entry]
-- implement drupal user -> ldap entry synching
+- X implement drupal user -> ldap entry synching
 
 tests
 - make sure install creates fields

@@ -1,3 +1,5 @@
+
+
 need to change basedn in server definition to say base dn for users and group queries; or create a separate one.
 - create fields in $user for all data previously in $user->data
 - add to installs and uninstalls
@@ -8,9 +10,6 @@ need to change basedn in server definition to say base dn for users and group qu
 -- check on logon for puid when username changes
 ---- change username, keep existing user account
 
-
-resolve ui issues with "hidden" fields.
-have granularity of permissions for debugging for admins so fields are visisble.
 
 resolve uninstall, disable issues created by field dependencies, locked fields
 -- perhaps separate ldap_user_fields module to provide fields and allow other ldap modules to be disabled and uninstalled.

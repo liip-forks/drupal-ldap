@@ -281,7 +281,7 @@ function ldap_servers_theme() {
    * implements hook_ldap_attributes_needed_alter()
    */
   function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
-    
+
     $attributes['dn'] = ldap_servers_set_attribute_map(@$attributes['dn'], 'ldap_dn', 'ldap_dn'); // force this data type
 
     if ($params['sid'] && $params['sid'] && $params['sid'] != LDAP_USER_NO_SERVER_SID) { // puid attributes are server specific
@@ -298,16 +298,16 @@ function ldap_servers_theme() {
       if ($ldap_server->unique_persistent_attr && !isset($attributes[$ldap_server->unique_persistent_attr])) {
         $attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map();
       }
+      if ($ldap_server->user_dn_expression) {
+        ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_dn_expression, TRUE);
+      }
+      
       if ($ldap_server->mail_template) {
         ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);
       }
       if (!isset($attributes[$ldap_server->user_attr])) {
         $attributes[$ldap_server->user_attr] = ldap_servers_set_attribute_map();
-      }
-      if ($ldap_server->user_dn_expression) {
-        ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_dn_expression, TRUE);
-      }
-      
+      }     
           
       switch ($params['synch_context']) {
   
@@ -318,7 +318,8 @@ function ldap_servers_theme() {
         case LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER:
         case LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER:
         case LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
-         
+        case LDAP_USER_SYNCH_CONTEXT_LDAP_ASSOCIATE:
+        case LDAP_USER_SYNCH_CONTEXT_MANUAL_LDAP_CREATE:
         break;
   
       }

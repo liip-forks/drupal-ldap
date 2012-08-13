@@ -183,7 +183,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   }
 
   if(!($account = user_load_by_name($authname))) {
-    $uid = db_query("SELECT uid FROM {authmap} WHERE authname = :authname AND module = 'ldap_authentication'", array(':authname' => $authname))->fetchColumn();
+    $uid = db_query("SELECT uid FROM {authmap} WHERE authname = :authname AND module = 'ldap_user'", array(':authname' => $authname))->fetchColumn();
     $account = $uid ? user_load($uid) : FALSE;
   }
 
@@ -198,7 +198,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       $account_exists = TRUE;
       $user_data = $account->data;
       $authmaps = user_get_authmaps($authname); // $authmaps = user_get_authmaps($name); // patch 1599632
-      $ldap_authentication_authmap = isset($authmaps['ldap_authentication']);
+      $ldap_authentication_authmap = isset($authmaps['ldap_user']);
       $no_authmaps = (boolean)(count($authmaps));
       if ($detailed_watchdog_log) {
         watchdog('ldap_authentication',  '%username : Drupal User Account found.  Continuing on to attempt ldap authentication', $watchdog_tokens, WATCHDOG_DEBUG);
@@ -452,7 +452,7 @@ Will not work on most ldaps.'),
    *
    */
   if (!$account_exists && ($account = user_load_by_name($accountname))) {
- 	  user_set_authmaps($account, array('authname_ldap_authentication' => $authname));
+ 	  user_set_authmaps($account, array('authname_ldap_user' => $authname));
    	$account_exists = TRUE;
   }
   if (!$account_exists) {
@@ -515,9 +515,9 @@ Will not work on most ldaps.'),
       }
       else { // LDAP_authen.AC.disallow.ldap.drupal
       // add ldap_authentication authmap to user.  account name is fine here, though cn could be used
-        user_set_authmaps($account, array('authname_ldap_authentication' => $authname));
+        user_set_authmaps($account, array('authname_ldap_user' => $authname));
         if ($detailed_watchdog_log) {
-          watchdog('ldap_authentication', 'set authmap for %username authname_ldap_authentication', $watchdog_tokens, WATCHDOG_DEBUG);
+          watchdog('ldap_authentication', 'set authmap for %username authname_ldap_user', $watchdog_tokens, WATCHDOG_DEBUG);
         }
       }
     }

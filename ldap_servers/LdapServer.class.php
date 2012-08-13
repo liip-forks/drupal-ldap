@@ -327,9 +327,9 @@ class LdapServer {
       $this->connect();
       $this->bind();
     }
-    set_error_handler(array('LDAPInterface', 'void_error_handler'));
+   // set_error_handler(array('LDAPInterface', 'void_error_handler'));
     $result = @ldap_add($this->connection, $ldap_entry['dn'], $ldap_entry);
-    restore_error_handler();
+  //  restore_error_handler();
     return $result;
   }
 
