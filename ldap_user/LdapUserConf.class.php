@@ -19,6 +19,7 @@ class LdapUserConf {
   public $inDatabase = FALSE;
   public $manualAccountConflict = LDAP_USER_MANUAL_ACCT_CONFLICT_REJECT;
   public $setsLdapPassword = TRUE; // @todo default to FALSE and check for mapping to set to true
+  public $loginConflictResolve = FALSE;
   /**
    * array of field synch mappings provided by all modules (via hook_ldap_user_attrs_list_alter())
    * array of the form: array(
@@ -125,20 +126,12 @@ function __construct() {
   function load() {
 
     if ($saved = variable_get("ldap_user_conf", FALSE)) {
-    // dpm('saved'); dpm($saved);//dpm($this);
       $this->inDatabase = TRUE;
       foreach ($this->saveable as $property) {
         if (isset($saved[$property])) {
           $this->{$property} = $saved[$property];
         }
       }
-    //  debug('this->ldapUserSynchMappings:' . LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER . ',' . $this->drupalAcctProvisionServer);
-     // debug($this->ldapUserSynchMappings);
-  
-        
-     // dpm('this->synchMapping'); dpm($this->synchMapping);
-      ////dpm($this);
-    // //dpm('loaded');//dpm($this);
     }
     else {
       $this->inDatabase = FALSE;

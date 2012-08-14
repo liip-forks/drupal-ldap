@@ -42,10 +42,22 @@ function ldap_user_install() {
     variable_set("ldap_authentication_conf", $ldap_authentication_conf);
   }
   $ldap_user_conf->save();
+  _ldap_user_install_update_authmap();
 
 
 
+}
 
+function _ldap_user_install_update_authmap() {
+  db_update('authmap')
+  ->fields(
+    array(
+      'module' => 'ldap_user',
+    )
+  )
+  ->condition('module', 'ldap_authentication')
+  ->execute();
+  
 }
 
 /**
@@ -326,3 +338,12 @@ function ldap_user_update_7200() {
   return t('ldap_user_prov_entries field added to user entity.');
 
 }
+
+/**
+ * update authmap table, changing ldap_authentication to ldap_user
+ */
+
+function ldap_user_update_7201() {
+  _ldap_user_install_update_authmap();
+}
+  
