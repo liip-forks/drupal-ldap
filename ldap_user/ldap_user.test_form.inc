@@ -111,8 +111,6 @@ function ldap_user_test_form_submit($form, &$form_state) {
     }
     $ldap_user_conf = ldap_user_conf();
     
-    
-
     $test_servers = array();
     if ($ldap_user_conf->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID) {
       $test_servers[LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER] = $ldap_user_conf->drupalAcctProvisionServer;
@@ -136,6 +134,8 @@ function ldap_user_test_form_submit($form, &$form_state) {
     }
     else {
       $authmaps = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
+      $user_object = new stdClass(); // need for testing.
+      $user_object->name = $username;
     }
     $results['User Authmap'] = $authmaps;
     $results['LDAP User Configuration Object'] = $ldap_user_conf;

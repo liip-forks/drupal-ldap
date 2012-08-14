@@ -535,11 +535,10 @@ function ldap_servers_set_attribute_map($attribute_map = NULL, $source_data_type
    $attribute_map['target_data_type'] = ($target_data_type) ? $target_data_type : NULL;
   }
   
-  if (!isset($attribute_map['values']) || !is_array($attribute_map['values'])) {
+  if (!$values && (!isset($attribute_map['values']) || !is_array($attribute_map['values']))) {
    $attribute_map['values'] = array(0 => NULL);
   }
-  
-  if (is_array($values)) { //merge into array overwriting ordinals
+  elseif (is_array($values)) { //merge into array overwriting ordinals
     foreach ($values as $ordinal => $value) {
       $attribute_map['values'][(int)$ordinal] = $value;
     }

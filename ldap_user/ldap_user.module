@@ -233,6 +233,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       'synch_module' => 'ldap_user',
       'configurable_to_ldap' => TRUE,
     );
+    
   }
     
   // 1. Drupal user properties
@@ -296,7 +297,56 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
     $available_user_attrs['[property.mail]']['config_module'] = 'ldap_user';
     $available_user_attrs['[property.name]']['config_module'] = 'ldap_user';
   }
-
+  
+  if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY) {
+    $available_user_attrs['[password.random]'] =  array(
+      'name' => 'Pwd: Random',
+      'source' => '',
+      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY,
+      'enabled' => TRUE,
+      'contexts' => $all_contexts,
+      'config_module' => 'ldap_user',
+      'synch_module' => 'ldap_user',
+      'configurable_to_ldap' => TRUE,
+    );
+    
+    // only works in contexts where user password is available
+    $available_user_attrs['[password.user]'] =  array(
+      'name' => 'Pwd: User',
+      'source' => '',
+      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY,
+      'enabled' => TRUE,
+      'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, LDAP_USER_SYNCH_CONTEXT_LDAP_ASSOCIATE, LDAP_USER_SYNCH_CONTEXT_MANUAL_LDAP_CREATE ),
+      'config_module' => 'ldap_user',
+      'synch_module' => 'ldap_user',
+      'configurable_to_ldap' => TRUE,
+    );
+  
+    // use user password when available fall back to random pwd
+    $available_user_attrs['[password.user-random]'] =  array(
+      'name' => 'Pwd: User or Random',
+      'source' => '',
+      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY,
+      'enabled' => TRUE,
+      'contexts' => $all_contexts,
+      'config_module' => 'ldap_user',
+      'synch_module' => 'ldap_user',
+      'configurable_to_ldap' => TRUE,
+    );
+    
+    // use user password when available fall back to not supplying password
+    $available_user_attrs['[password.user-none]'] =  array(
+      'name' => 'Pwd: User or None',
+      'source' => '',
+      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY,
+      'enabled' => TRUE,
+      'contexts' => $all_contexts,
+      'config_module' => 'ldap_user',
+      'synch_module' => 'ldap_user',
+      'configurable_to_ldap' => TRUE,
+    );
+  }
+    
   //this is where need to be added to arrays
   if (is_array($ldap_user_conf->ldapUserSynchMappings) && isset($ldap_user_conf->ldapUserSynchMappings[$direction][$sid])) {
 
@@ -456,6 +506,9 @@ function ldap_user_form_register_form_submit($form, &$form_state) {
     if (!$ldap_user) {
       $drupal_account = new stdClass();
       $drupal_account->name = $values['name'];
+      if ($ldap_user_conf->setsLdapPassword) {
+        $drupal_account->password = $values['pass'];
+      }
       $ldap_user_conf->provisionLdapEntry($drupal_account, LDAP_USER_SYNCH_CONTEXT_MANUAL_LDAP_CREATE, array());
     }
   }
@@ -532,7 +585,7 @@ function ldap_user_user_presave(&$user_edit, $account, $category) {
 function ldap_user_user_insert(&$user_edit, $account, $category) {
   // @todo.  need to consider how these might duplicate other provision and synch calls in same login, etc.
   //         this is best done via ldap user dev notes 
- // dpm($user_edit); dpm($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
+  //dpm('ldap_user_user_insert'); dpm($user_edit); dpm($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
   if ($category != 'ldap_user') { // avoid recursion
     $ldap_user_conf = ldap_user_conf();
     

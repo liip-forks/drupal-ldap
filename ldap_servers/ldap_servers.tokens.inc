@@ -88,7 +88,6 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
  */
 function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
   $tokens = ldap_servers_token_tokens_needed_for_template($text);
-//  dpm("ldap_servers_token_extract_attributes,text=$text, tokens needed="); dpm($tokens);
   foreach ($tokens as $token) {
     $token = str_replace(array(LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST), array('', ''), $token);
     $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token);
@@ -101,12 +100,8 @@ function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
       $attr_name = $parts2[0];
       $source_data_type = $parts2[1];
     }
-   // dpm(@$attributes[$attr_name]);
     $attribute_maps[$attr_name] = ldap_servers_set_attribute_map(@$attribute_maps[$attr_name], $source_data_type, NULL, array($ordinal => NULL));
-   // dpm($attributes[$attr_name]);
   }
- // dpm('ldap_servers_token_extract_attributes, final:'); dpm($attributes);
-
 }
 
 /**
@@ -116,19 +111,17 @@ function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
  */
 function ldap_servers_token_extract_parts($token) {
   $attributes = array();
-  ldap_servers_token_extract_attributes($attributes, $token);
- // dpm('ldap_servers_token_extract_parts'); dpm($attributes); dpm($token);
+  ldap_servers_token_extract_attributes($attribute_maps, $token);
   if (is_array($attributes)) {
-    $keys = array_keys($attributes);
+    $keys = array_keys($attribute_maps);
     $attr_name = $keys[0];
-    $attr_data = $attributes[$attr_name];
-    // list($ldap_attr_name, $ordinal, $data_type)
+    $attr_data = $attribute_maps[$attr_name];
     $ordinals = array_keys($attr_data['values']);
     $ordinal = $ordinals[0];
     return array($attr_name, $ordinal, $attr_data['source_data_type'], $attr_data['target_data_type']);
   }
   else {
-    return array(NULL, NULL, NULL);
+    return array(NULL, NULL, NULL, NULL);
   }
 
 }
@@ -275,7 +268,16 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
 }
 
 /**
- * should return token/value pairs in array such as
+ *
+ * @param drupal user object $user_account
+ * @param array or 'all' $token_keys 'all' signifies return
+ *   all token/value pairs available; otherwise array lists
+ *   token keys (e.g. property.name ...NOT [property.name])
+ * @param string $pre prefix of token
+ * @param string $post suffix of token
+ *
+ * 
+ * @return should return token/value pairs in array such as
  *   'status' => 1
  *   'uid' => 17
  */
@@ -284,43 +286,66 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
   //dpm('ldap_servers_token_tokenize_user_account, $user_account'); dpm($user_account);
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
+  $user_entered_password_available = (property_exists($user_account, 'password') && $user_account->password);
   
   if ($token_keys == 'all') {
     // add lowercase keyed entries to ldap array
     foreach ((array)$user_account as $property_name => $value) {
-      if (is_scalar($value)) {
-        $tokens[$pre . 'property.' . $property_name . $post] = $value;
-        if ($property_name != drupal_strtolower($property_name)) {
-          $tokens[$pre . 'property.' . drupal_strtolower($property_name) . $post] = $value;
+      if (is_scalar($value) && $property_name != 'password') {
+        $token_keys[] = 'property.' . $property_name;
+        if (drupal_strtolower($property_name) != $property_name) {
+          $token_keys[] = 'property.' . drupal_strtolower($property_name);
         }
       }
       elseif (isset($user_account->{$attr_name}['und'][0]['value']) && is_scalar($user_account->{$attr_name}['und'][0]['value'])) {
-        $tokens[$pre . 'field.' . $property_name . $post] = $user_account->{$attr_name}['und'][0]['value'];
-        if ($property_name != drupal_strtolower($property_name)) {
-          $tokens[$pre . 'field.' . drupal_strtolower($property_name) . $post] = $value;
+        $token_keys[] = 'field.' . $property_name;
+        if (drupal_strtolower($property_name) != $property_name) {
+          $token_keys[] = 'field.' . drupal_strtolower($property_name);
         }
+      }
+      else {
+        // field or property with no value, so no token can be generated
+      }
+    }
+    $ldap_user_conf_admin = new LdapUserConfAdmin();
+    if ($ldap_user_conf->setsLdapPassword) {
+      $token_keys[] = 'password.random';
+      $token_keys[] = 'password.user-random';
+      $token_keys[] = 'password.user-none';
+      if ($user_entered_password_available) {
+        $token_keys[] = 'password.user';
       }
     }
   }
-  else {
-    foreach ($token_keys as $token_key) {
-      $parts = explode('.', $token_key);
-      $attr_type = $parts[0];
-      $attr_name = $parts[1];
-      switch ($attr_type) {
-        case 'field':
-          $value = @is_scalar($user_account->{$attr_name}['und'][0]['value']) ? $user_account->{$attr_name}['und'][0]['value'] : '';
-        break;
-        
-        case 'property':
-          $value = @is_scalar($user_account->{$attr_name}) ? $user_account->{$attr_name} : '';
-        break;
+
+  foreach ($token_keys as $token_key) {
+    $parts = explode('.', $token_key);
+    $attr_type = $parts[0];
+    $attr_name = $parts[1];
+    switch ($attr_type) {
+      case 'field':
+        $value = @is_scalar($user_account->{$attr_name}['und'][0]['value']) ? $user_account->{$attr_name}['und'][0]['value'] : '';
+      break;
       
-      }
-      $tokens[$pre . $token_key . $post] = check_plain($value);
-      if ($token_key != drupal_strtolower($token_key)) {
-        $tokens[$pre . drupal_strtolower($token_key) . $post] = check_plain($value);
-      }
+      case 'property':
+        $value = @is_scalar($user_account->{$attr_name}) ? $user_account->{$attr_name} : '';
+      break;
+
+      case 'password':
+        if ($user_entered_password_available && ($attr_name == 'user' || $attr_name == 'user-random' ||$attr_name == 'user-none')) {
+          $value = $user_account->password;
+        }
+        elseif ($attr_name == 'random' || $attr_name == 'user-random') {
+          $value = user_password();
+        }
+        else {
+          $value = NULL;
+        }
+      break;
+    }
+    $tokens[$pre . $token_key . $post] = check_plain($value);
+    if ($token_key != drupal_strtolower($token_key)) {
+      $tokens[$pre . drupal_strtolower($token_key) . $post] = check_plain($value);
     }
   }
  // debug('final tokens'); debug($tokens);
