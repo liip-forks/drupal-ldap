@@ -14,7 +14,7 @@ class LdapAuthenticationConf {
   // no need for LdapAuthenticationConf id as only one instance will exist per drupal install
 
   public $sids = array();  // server configuration ids being used for authentication
-  public $servers = array(); // ldap server object
+  public $enabledAuthenticationServers = array(); // ldap server object
   public $ldapUser = NULL; // ldap_user configuration object
   public $inDatabase = FALSE;
   public $authenticationMode = LDAP_AUTHENTICATION_MODE_DEFAULT;
@@ -65,10 +65,15 @@ class LdapAuthenticationConf {
     'cookieExpire',
   );
 
-  /** are any ldap servers that are enabled associated with ldap authentication **/
-  public function enabled_servers() {
-    return !(count(array_filter(array_values($this->sids))) == 0);
+   /** are any ldap servers that are enabled associated with ldap authentication **/
+  public function hasEnabledAuthenticationServers() {
+    return !(count($this->enabledAuthenticationServers) == 0);
   }
+  
+  public function enabled_servers() {
+    return $this->hasEnabledAuthenticationServers();
+  }
+   
   function __construct() {
     $this->load();
   }
@@ -83,18 +88,12 @@ class LdapAuthenticationConf {
           $this->{$property} = $saved[$property];
         }
       }
-      foreach ($this->sids as $sid => $is_enabled) {
-        if ($is_enabled) {
-          $server_object = ldap_servers_get_servers($sid, 'enabled', TRUE);
-          if (is_object($server_object)) {
-            $this->servers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
-          }
-          else {
-            watchdog('ldap_authentication', "Failed to instantiate object for enabled ldap server, sid=%sid", array('%sid' => $sid), WATCHDOG_ERROR);
-          }
-        }
+     $enabled_ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
+      foreach ($this->sids as $sid => $enabled) {
+        if ($enabled && isset($enabled_ldap_servers[$sid])) {
+          $this->enabledAuthenticationServers[$sid] = $enabled_ldap_servers[$sid];
+         }
       }
-
     }
     else {
       $this->inDatabase = FALSE;

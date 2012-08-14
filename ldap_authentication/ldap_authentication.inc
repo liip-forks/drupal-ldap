@@ -27,7 +27,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
   if (!$auth_conf = ldap_authentication_get_valid_conf()) {
     return;
   }
-  elseif (!$auth_conf->enabled_servers()) {
+  elseif (!$auth_conf->hasEnabledAuthenticationServers()) {
     return;
   }
 
@@ -173,7 +173,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     }
   }
 
-  if (!count($auth_conf->servers)) {
+  if (!$auth_conf->hasEnabledAuthenticationServers()) {
     watchdog('ldap_authentication',  'No LDAP servers configured.', array(), WATCHDOG_ERROR);
     form_set_error('name', 'Server Error:  No LDAP servers configured.');
   }
@@ -217,7 +217,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     }
   }
 
-  foreach ($auth_conf->servers as $sid => $ldap_server) {
+  foreach ($auth_conf->enabledAuthenticationServers as $sid => $ldap_server) {
     $watchdog_tokens['%sid'] = $sid;
     $watchdog_tokens['%bind_method'] = $ldap_server->bind_method;
     if ($detailed_watchdog_log) {
@@ -378,7 +378,7 @@ Will not work on most ldaps.'),
         $watchdog_tokens['%mail'] = $ldap_user['mail'];
       }
       if ($ldap_server->account_name_attr != '') {
-        $accountname = $ldap_user['attr'][$ldap_server->account_name_attr][0];
+        $accountname = $ldap_user['attr'][ldap_server_massage_text($ldap_server->account_name_attr, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)][0];
       }
       else {
       	$accountname = $authname;
@@ -435,8 +435,8 @@ Will not work on most ldaps.'),
    */
 
   $user_edit = array(); // array of attributes that are changing for existing users
-  if (!$account_exists) {
-    $ldap_server = $auth_conf->servers[$ldap_user['sid']];
+  if (!$account_exists && isset($auth_conf->enabledAuthenticationServers[$ldap_user['sid']])) {
+    $ldap_server = $auth_conf->enabledAuthenticationServers[$ldap_user['sid']];
     $puid = $ldap_server->derivePuidFromLdapEntry($ldap_user);
     if ($puid) {
       $account = $ldap_server->drupalUserFromPuid($puid);
