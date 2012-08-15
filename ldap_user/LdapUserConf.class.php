@@ -114,13 +114,9 @@ function __construct() {
       LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER => t('On User Logon'),
       LDAP_USER_SYNCH_CONTEXT_CRON => t('Via Cron Batch'),
     );
-   ////dpm('this before setSynchMapping');//dpm($this->ldapUserSynchMappings);
     $this->setSynchMapping(TRUE);
-   ////dpm('this after setSynchMapping');//dpm($this->synchMapping);//dpm($this->ldapUserSynchMappings);
-
     $this->detailedWatchdog = variable_get('ldap_help_watchdog_detail', 0);
    
-    //dpm('LdapUserConf.class.php after construct'); dpm($this);
   }
 
   function load() {
@@ -151,7 +147,6 @@ function __construct() {
       $this->createLDAPAccounts = FALSE;
       $this->createLDAPAccountsAdminApproval = FALSE;
     }
-   //dpm($this->ldapUserSynchMappings);
   }
 
   /**

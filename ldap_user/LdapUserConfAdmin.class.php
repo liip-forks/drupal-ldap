@@ -685,6 +685,7 @@ the top of this form.
           'config_module' => 'ldap_user',
           'synch_module' => 'ldap_user',
           'enabled' => 1,
+          'contexts' => array(),
           );
         foreach ($this->synchTypes as $synch_context => $synch_context_name) {
           $input_name = join('__', array($direction, $sid, 'sm', $synch_context, $i));
