@@ -119,7 +119,7 @@ function theme_ldap_user_conf_form($variables) {
             'class' => 'mixedcase'
           ),
           array(
-            'data' => t('Convert From Binary'),
+            'data' => t('Convert From Binary -- not implemented yet.'),
             'header' => TRUE,
             'class' => 'mixedcase'
           ),

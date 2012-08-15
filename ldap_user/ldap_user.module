@@ -48,6 +48,9 @@ define('LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY', 2);
 define('LDAP_USER_SYNCH_DIRECTION_NONE', 3);
 define('LDAP_USER_SYNCH_DIRECTION_ALL', 4);
 
+define('LDAP_USER_PROVISION_RESULT_NO_ERROR', 0);
+define('LDAP_USER_PROVISION_RESULT_NO_PWD', 1);
+
 // SYNCH CONTEXTS are actions which may cause provisioning or synching of drupal accounts or ldap entries
 define('LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER', 1);
 define('LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER', 2);

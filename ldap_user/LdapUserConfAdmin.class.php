@@ -410,6 +410,60 @@ the top of this form.
           '#markup' => '[replace_with_table__' . $direction. ']',
         ),
       );
+      
+      $password_notes = <<<EOT
+<ul>
+<li>Pwd: Random -- Uses a random Drupal generated password</li>
+<li>Pwd: User -- Uses password supplied on user forms. If none available
+will throw error/warning and not provision account.  User password will not be
+available in certain contexts such as when accounts are created via webservice
+or cron.</li>
+<li>Pwd: User or Random -- Uses password supplied on user forms.
+  If none available uses random password.</li>
+<li>Pwd: User or None -- Uses password supplied on user forms.
+  if none available does not provide a password, but still provisions account.
+  That is it will not set the password attribute at all rather than supply
+  an empty password.</li>
+</ul>
+EOT;
+
+      $source_drupal_token_notes = <<<EOT
+<p>Examples in form: Source Drupal User token => Target LDAP Token (notes)</p>
+<ul>
+<li>Source Drupal User token => Target LDAP Token</li>
+<li>cn=[property.name],ou=test,dc=ad,dc=mycollege,dc=edu => [dn] (example of token and constants)</li>
+<li>top => [objectclass:0] (example of constants mapped to multivalued attribute)</li>
+<li>person => [objectclass:1] (example of constants mapped to multivalued attribute)</li>
+<li>organizationalPerson => [objectclass:2] (example of constants mapped to multivalued attribute)</li>
+<li>user => [objectclass:3] (example of constants mapped to multivalued attribute)</li>
+<li>Drupal Provisioned LDAP Account => [description] (example of constant)</li>
+<li>[field.field_lname] => [sn]</li>
+
+</ul>
+EOT;
+
+      if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY) { // add some password notes
+        $form[$parent_fieldset]['password_notes'] = array(
+          '#type' => 'fieldset',
+          '#title' =>  t('Password Source Options'),
+          '#collapsible' => TRUE,
+          '#collapsed' => TRUE,
+          'directions' => array(
+            '#type' => 'markup',
+            '#markup' => $password_notes,
+          ),
+        );
+        $form[$parent_fieldset]['source_drupal_token_notes'] = array(
+          '#type' => 'fieldset',
+          '#title' =>  t('Source Drupal User Tokens and Corresponding Target LDAP Tokens'),
+          '#collapsible' => TRUE,
+          '#collapsed' => TRUE,
+          'directions' => array(
+            '#type' => 'markup',
+            '#markup' => $source_drupal_token_notes,
+          ),
+        );    
+      }
 
       $this->addServerMappingFields($ldap_server, $form, $direction, $enabled);
     }
@@ -667,13 +721,12 @@ the top of this form.
         $input_name = join('__', array($direction, $sid, 'sm', $column_name, $i));
         $row_mappings[$column_name] = isset($values[$input_name]) ? $values[$input_name] : NULL;
       }
-    //  // temp_out dpm("$field row mappings"); // temp_out dpm($row_mappings);
+
       if ($row_mappings['remove']) {
         continue;
       }
 
       $key = ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) ? $row_mappings['user_attr'] : $row_mappings['ldap_attr'];
-     // dpm("key=$key");
       if ($row_mappings['configurable_to_drupal'] && $row_mappings['ldap_attr'] && $row_mappings['user_attr']) {
         $mappings[$direction][$sid][$key] = array(
           'sid' => $sid,
@@ -689,24 +742,19 @@ the top of this form.
           );
         foreach ($this->synchTypes as $synch_context => $synch_context_name) {
           $input_name = join('__', array($direction, $sid, 'sm', $synch_context, $i));
-         // dpm($input_name);
-
           if (isset($values[$input_name]) && $values[$input_name]) {
             $mappings[$direction][$sid][$key]['contexts'][] = $synch_context;
           }
         }
-     //   dpm('final contexts'); dpm($mappings[$sid][$key]['contexts']);
       }
-     //  // temp_out dpm("final mappings"); // temp_out dpm($mappings[$sid][$key]);
     }
-   // debug('mappings in form submit'); debug($mappings);
+ 
     return $mappings;
   }
 
   public function drupalFormSubmit($values, $storage) {
-   //  // temp_out dpm('drupalFormSubmit'); // temp_out dpm($values);
     $this->populateFromDrupalForm($values, $storage);
-  //  // temp_out dpm('populateFromDrupalForm'); // temp_out dpm($this);
+
     try {
       $save_result = $this->save();
     }

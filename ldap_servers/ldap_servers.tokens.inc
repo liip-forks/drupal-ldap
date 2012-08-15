@@ -76,6 +76,7 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
     $tokens[drupal_strtolower($key)] = $value;
   }
   $result = str_replace(array_keys($tokens), array_values($tokens), $text);
+  //@todo should unresolved tokens such as [x] be removed?
   return $result;
 }
 
@@ -322,6 +323,8 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
     $parts = explode('.', $token_key);
     $attr_type = $parts[0];
     $attr_name = $parts[1];
+    $value = FALSE;
+    $skip = FALSE;
     switch ($attr_type) {
       case 'field':
         $value = @is_scalar($user_account->{$attr_name}['und'][0]['value']) ? $user_account->{$attr_name}['und'][0]['value'] : '';
@@ -339,13 +342,15 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
           $value = user_password();
         }
         else {
-          $value = NULL;
+          $skip = TRUE; // don't set token value because token is invalid
         }
       break;
     }
-    $tokens[$pre . $token_key . $post] = check_plain($value);
-    if ($token_key != drupal_strtolower($token_key)) {
-      $tokens[$pre . drupal_strtolower($token_key) . $post] = check_plain($value);
+    if (!$skip) {
+      $tokens[$pre . $token_key . $post] = check_plain($value);
+      if ($token_key != drupal_strtolower($token_key)) {
+        $tokens[$pre . drupal_strtolower($token_key) . $post] = check_plain($value);
+      }
     }
   }
  // debug('final tokens'); debug($tokens);

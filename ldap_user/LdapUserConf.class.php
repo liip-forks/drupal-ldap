@@ -377,9 +377,12 @@ function __construct() {
       );
      // dpm('synchToLdapEntry call to drupalUserToLdapEntry'); dpm($ldap_user);
 
-      $proposed_ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $params);
-      //debug('proposed_ldap_entry after drupalUserToLdapEntry'); debug($proposed_ldap_entry); 
-      if (is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn'])) {
+      list($proposed_ldap_entry, $error) = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $params);
+      
+      if ($error != LDAP_USER_PROVISION_RESULT_NO_ERROR) {
+        $result = FALSE;
+      }
+      elseif (is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn'])) {
         $existing_ldap_entry = $ldap_server->dnExists($proposed_ldap_entry['dn']);
         $attributes = array(); // this array represents attributes to be modified; not comprehensive list of attributes
         foreach ($proposed_ldap_entry as $attr_name => $attr_values) {
@@ -555,11 +558,18 @@ function __construct() {
       'include_count' => FALSE,
     );
    
-    $proposed_ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $params);
+    list($proposed_ldap_entry, $error) = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $params);
     $dn_derived = (is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn']) && $proposed_ldap_entry['dn']);
     $existing_ldap_entry = ($dn_derived) ? $ldap_server->dnExists($proposed_ldap_entry['dn']) : NULL;
     
-    if (!$dn_derived) {
+    if ($error == LDAP_USER_PROVISION_RESULT_NO_PWD) {
+      $result['status'] = 'fail';
+      $result['description'] = 'Can not provision ldap account without user provided password.';
+      $result['existing'] = $existing_ldap_entry;
+      $result['proposed'] = $proposed_ldap_entry;
+      $result['ldap_server'] = $ldap_server;        
+    }    
+    elseif (!$dn_derived) {
       $result['status'] = 'fail';
       $result['description'] = t('failed to derive dn and or mappings');
       return $result;
@@ -702,6 +712,9 @@ function __construct() {
   function drupalUserToLdapEntry($account, $ldap_server, $ldap_user_entry = array(), $params = array()) {
    // dpm('ldap_user_entry1'); dpm($ldap_user_entry);
    //dpm('call to drupalUserToLdapEntry, account:'); dpm($account); dpm('params'); dpm($params); dpm('ldap_user_entry');dpm($ldap_user_entry);
+    $provision = (isset($params['function']) && $params['function'] == 'provisionLdapEntry');
+    $result = LDAP_USER_PROVISION_RESULT_NO_ERROR;
+    
     $watchdog_tokens = array(
       '%drupal_username' => $account->name,
     );
@@ -709,22 +722,32 @@ function __construct() {
     $synch_context = isset($params['synch_context']) ? $params['synch_context'] : LDAP_USER_SYNCH_CONTEXT_ALL;
     $direction = isset($params['direction']) ? $params['direction'] : LDAP_USER_SYNCH_DIRECTION_ALL;
     $mappings = $this->getSynchMappings($ldap_server->sid, $direction, $synch_context);
-   // dpm('mappings'); dpm($mappings);
+
       // Loop over the mappings.
     foreach ($mappings as $field_key => $field_detail) {
       list($ldap_attr_name, $ordinal, $source_data_type, $target_data_type) = ldap_servers_token_extract_parts($field_key, TRUE);  //trim($field_key, '[]');
       $ordinal = (!$ordinal) ? 0 : $ordinal;
-     // dpm("field_key=$field_key, ldap_attr_name=$ldap_attr_name, ordinal=$ordinal,  source_data_type = $source_data_type");
-    //  dpm('ldap_user_entry[ldap_attr_name]'); dpm(@$ldap_user_entry[$ldap_attr_name]);
-      if (isset($ldap_user_entry[$ldap_attr_name]) && is_array($ldap_user_entry[$ldap_attr_name]) && isset($ldap_user_entry[$ldap_attr_name][$ordinal]) ) { // don't override values passed in;
-        continue;
+      if (isset($ldap_user_entry[$ldap_attr_name]) && is_array($ldap_user_entry[$ldap_attr_name]) && isset($ldap_user_entry[$ldap_attr_name][$ordinal]) ) { 
+        continue; // don't override values passed in;
       }
       
       $synched = $this->isSynched($field_key, $ldap_server, $params['synch_context'], LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY);
-     // dpm("synched=$synched");
+
       if ($synched) {
         $token = ($field_detail['user_attr'] == 'user_tokens') ? $field_detail['user_tokens'] : $field_detail['user_attr'];
         $value = ldap_servers_token_replace($account, $token, 'user_account');
+
+        if (substr($token, 0, 10) == '[password.' && (!$value || $value == $token)) { // deal with empty/unresolved password
+          if (!$provision) {
+            continue; //don't overwrite password on synch if no value provided
+          }
+          elseif ($token == '[password.user]') {
+            $result = LDAP_USER_PROVISION_RESULT_NO_PWD; // password.user signifies don't provision if no password available.
+          }
+          elseif ($provision && $token == '[password.user-none]') {
+            continue; // password.user-none signifies don't supply attribute to ldap
+          }
+        }
         if ($ldap_attr_name == 'dn') {
           $ldap_user_entry['dn'] = $value;
           $ldap_user_entry['distinguishedName'][0] = $value;
@@ -733,7 +756,6 @@ function __construct() {
           }         
         }
         else {
-           
           if (!isset($ldap_user_entry[$ldap_attr_name]) || !is_array($ldap_user_entry[$ldap_attr_name])) {
             $ldap_user_entry[$ldap_attr_name] = array();
           }
@@ -745,15 +767,14 @@ function __construct() {
         }
       }
     }
- // dpm('drupalUserToLdapEntry:ldap_user_entry'); dpm($ldap_user_entry);
-//dpm('ldap_user_entry3'); dpm($ldap_user_entry);
+
     /**
      * 4. call drupal_alter() to allow other modules to alter $ldap_user
      */
 
     drupal_alter('ldap_entry', $ldap_user_entry, $params);
  
-    return $ldap_user_entry;
+    return array($ldap_user_entry, $result);
 
   }
 
