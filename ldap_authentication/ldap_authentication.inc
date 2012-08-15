@@ -108,6 +108,9 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
       $form['account']['mail']['#disabled'] = TRUE;
       $form['account']['mail']['#description'] = t('This email address is automatically set and may not be changed.');
     }
+    elseif ($auth_conf->emailOption == LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW) {
+      // email field is functional
+    }
 
     if (!ldap_authentication_show_reset_pwd($form['#user'])) {
       $form['account']['current_pass']['#disabled'] = TRUE;
