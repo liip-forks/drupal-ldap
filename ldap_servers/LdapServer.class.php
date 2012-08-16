@@ -322,14 +322,24 @@ class LdapServer {
    * @return boolean result
    */
 
-  public function createLdapEntry($ldap_entry) {
+  public function createLdapEntry($ldap_entry, $dn = NULL) {
     if (!$this->connection) {
       $this->connect();
       $this->bind();
     }
+    if (isset($ldap_entry['dn'])) {
+      $dn = $ldap_entry['dn'];
+      unset($ldap_entry['dn']);
+    }
+    elseif(!$dn) {
+      return FALSE;
+    }
+   // dpm('createLdapEntry result:'. $dn); dpm($ldap_entry);
+    
    // set_error_handler(array('LDAPInterface', 'void_error_handler'));
-    $result = @ldap_add($this->connection, $ldap_entry['dn'], $ldap_entry);
+    $result = ldap_add($this->connection, $dn, $ldap_entry);
   //  restore_error_handler();
+ // dpm('createLdapEntry result:'); dpm($result);
     return $result;
   }
 
@@ -345,16 +355,44 @@ class LdapServer {
         $attributes["attribute2"][1] = "value2";
    */
 
-  function modifyLdapEntry($dn, $attributes) {
+  function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
+    //dpm("modifyLdapEntry, dn=$dn"); dpm($attributes);
+    if (!$old_attributes) {
+      $result = ldap_read($this->connection, $dn, 'objectClass=*');
+      $entries = ldap_get_entries($this->connection, $result);
+      if (is_array($entries) && $entries['count'] == 1) {
+        $old_attributes =  $entries[0];
+      }
+      
+    }
     foreach ($attributes as $key => $cur_val) {
-      if ($cur_val == '') {
-        unset($attributes[$key]);
-        $old_value = $this->retrieveAttribute($dn, $key);
-        if (isset($old_value)) {
-          ldap_mod_del($this->connection, $dn, array($key => $old_value));
+      
+      $old_value = FALSE;
+      $key_lcase = drupal_strtolower($key);
+      if (isset($old_attributes[$key_lcase])) {
+        if ($old_attributes[$key_lcase]['count'] == 1) {
+          $old_value = $old_attributes[$key_lcase][0];
+          $old_value_is_scalar = TRUE;
+        }
+        else {
+          unset($old_attributes[$key_lcase]['count']);
+          $old_value = $old_attributes[$key_lcase];
+          $old_value_is_scalar = FALSE;
         }
       }
-      if (is_array ($cur_val)) {
+
+     // dpm('old and current values'); dpm($old_value);dpm($cur_val);
+      if ($cur_val == '' && $old_value != '') {
+        unset($attributes[$key]);
+        ldap_mod_del($this->connection, $dn, array($key_lcase => $old_value));
+      }
+      if (is_array($cur_val) && is_array($old_value) && count(array_diff($cur_val, $old_value)) == 0) {
+        unset($attributes[$key]);
+      }
+      elseif ($old_value_is_scalar && !is_array($cur_val) && drupal_strtolower($old_value) == drupal_strtolower($cur_val)) {
+        unset($attributes[$key]); // don't change values that aren't changing to avoid false permission constraints
+      }
+      elseif (is_array($cur_val)) {
         foreach ($cur_val as $mv_key => $mv_cur_val) {
           if ($mv_cur_val == '') {
             unset($attributes[$key][$mv_key]);
@@ -365,13 +403,19 @@ class LdapServer {
         }
       }
     }
-    $status = ldap_modify($this->connection, $dn, $attributes);
+  //  dpm('modifyLdapEntry, attributes to modify'); dpm($attributes);
+    if (count($attributes) > 0) {
+      $status = ldap_modify($this->connection, $dn, $attributes);
+    }
+    else {
+      $status = TRUE; // since no changes, TRUE
+    }
 
     if (!$status) {
       watchdog(
       'ldap_servers',
       'Error: ldapModify() failed to modify ldap entry w/ DN "!dn" with values: !values',
-      array('!dn' => $userdn, '!value' => var_export($attributes, TRUE)),
+      array('!dn' => $dn, '!value' => var_export($attributes, TRUE)),
       WATCHDOG_ERROR
       );
     }

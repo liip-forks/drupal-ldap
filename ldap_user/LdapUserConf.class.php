@@ -358,7 +358,7 @@ function __construct() {
    */
 
   public function synchToLdapEntry($account, $user_edit = NULL, $synch_context, $ldap_user =  array(), $test_query = FALSE) {
-
+    //dpm("synchToLdapEntry, synch_context=$synch_context, test_query=". (int)$test_query); dpm($account);dpm($user_edit); 
     //ldap_servers_debug('synchToLdapEntry'); ldap_servers_debug($account); ldap_servers_debug($user_edit);
 
     $watchdog_tokens = array();
@@ -400,10 +400,10 @@ function __construct() {
         }
   //     //dpm('synchToLdapEntry:attributes passed to modifyLdapEntry, dn='. $proposed_ldap_entry['dn']);//dpm($attributes);
         if ($test_query) {
-          $proposed = $attributes;
-          $proposed['dn'] = $proposed_ldap_entry['dn'];
+          $proposed_ldap_entry = $attributes;
+          $proposed_ldap_entry['dn'] = $proposed_ldap_entry['dn'];
           $result = array(
-            'proposed' => $proposed,
+            'proposed' => $proposed_ldap_entry,
             'server' => $ldap_server,
           );
         }
@@ -427,7 +427,7 @@ function __construct() {
       '%dn' => isset($result['proposed']['dn']) ? $result['proposed']['dn'] : NULL,
       '%sid' => $this->ldapEntryProvisionServer,
       '%username' => $account->name,
-      '%uid' => $account->uid,
+      '%uid' => ($test_query || !property_exists($account, 'uid')) ? '' : $account->uid,
     );
 
     if ($result) {
@@ -534,6 +534,7 @@ function __construct() {
    */
 
   public function provisionLdapEntry($account, $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, $ldap_user, $test_query = FALSE) {
+    //dpm('provisionLdapEntry account'); dpm($account);
     $watchdog_tokens = array();
     $result = array(
       'status' => NULL,
@@ -543,6 +544,14 @@ function __construct() {
       'description' => NULL,
     );
 
+    list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name);
+   // dpm('provisionLdapEntry account2'); dpm($account);
+    if ($account == FALSE || $account->uid == 0) {
+      $result['status'] = 'fail';
+      $result['error_description'] = 'can not provision ldap user unless corresponding drupal account exists first.';
+      return $result;      
+    }
+        
     if ($this->ldapEntryProvisionServer == LDAP_USER_NO_SERVER_SID || !$this->ldapEntryProvisionServer) {
       $result['status'] = 'fail';
       $result['error_description'] = 'no provisioning server enabled';
@@ -588,6 +597,7 @@ function __construct() {
       $result['ldap_server'] = $ldap_server;        
     }
     elseif ($ldap_entry_created = $ldap_server->createLdapEntry($proposed_ldap_entry)) {
+      //dpm('successfully called createLdapEntry'); dpm($proposed_ldap_entry);
       $result['status'] = 'success';
       $result['description'] = 'ldap account created';
       $result['proposed'] = $proposed_ldap_entry;
@@ -595,7 +605,6 @@ function __construct() {
       $result['ldap_server'] = $ldap_server;
       
       // need to store <sid>|<dn> in ldap_user_prov_entries field, which may contain more than one
-      list($user_account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name, 'name');
       $ldap_user_prov_entry = $ldap_server->sid . '|' . $proposed_ldap_entry['dn'];
       if (!isset($user_entity->ldap_user_prov_entries['und'])) {
         $user_entity->ldap_user_prov_entries = array('und' => array());
@@ -615,8 +624,8 @@ function __construct() {
         $edit = array(
           'ldap_user_prov_entries' => $user_entity->ldap_user_prov_entries,
         );
-        $user_account = user_load($account->uid);
-        $updated_user = user_save($user_account, $edit);
+        $account = user_load($account->uid);
+        $account = user_save($account, $edit);
       }
         
     }
@@ -637,13 +646,13 @@ function __construct() {
     );
     if (!$test_query && isset($result['status'])) {
       if ($result['status'] == 'success') {
-        watchdog('ldap_user', 'LDAP entry on server %sid created dn=%dn.  %description. username=%username, uid=%uid', array(), WATCHDOG_INFO);
+        watchdog('ldap_user', 'LDAP entry on server %sid created dn=%dn.  %description. username=%username, uid=%uid', $tokens, WATCHDOG_INFO);
       }
       elseif($result['status'] == 'conflict') {
-        watchdog('ldap_user', 'LDAP entry on server %sid not created because of existing ldap entry. %description. username=%username, uid=%uid', array(), WATCHDOG_WARNING);
+        watchdog('ldap_user', 'LDAP entry on server %sid not created because of existing ldap entry. %description. username=%username, uid=%uid', $tokens, WATCHDOG_WARNING);
       }
       elseif($result['status'] == 'fail') {
-        watchdog('ldap_user', 'LDAP entry on server %sid not created because error.  %description. username=%username, uid=%uid', array(), WATCHDOG_ERROR);
+        watchdog('ldap_user', 'LDAP entry on server %sid not created because error.  %description. username=%username, uid=%uid', $tokens, WATCHDOG_ERROR);
       }
     }
     return $result;
