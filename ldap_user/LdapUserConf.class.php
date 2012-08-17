@@ -361,6 +361,10 @@ function __construct() {
     //dpm("synchToLdapEntry, synch_context=$synch_context, test_query=". (int)$test_query); dpm($account);dpm($user_edit); 
     //ldap_servers_debug('synchToLdapEntry'); ldap_servers_debug($account); ldap_servers_debug($user_edit);
 
+    if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
+      return FALSE; // do not provision or synch user 1
+    }
+    
     $watchdog_tokens = array();
     $result = FALSE;
     $proposed_ldap_entry = FALSE;
@@ -545,6 +549,13 @@ function __construct() {
     );
 
     list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name);
+    
+    if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
+      $result['status'] = 'fail';
+      $result['error_description'] = 'can not provision drupal user 1';
+      return $result; // do not provision or synch user 1
+    }
+  
    // dpm('provisionLdapEntry account2'); dpm($account);
     if ($account == FALSE || $account->uid == 0) {
       $result['status'] = 'fail';

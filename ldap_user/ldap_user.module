@@ -554,6 +554,10 @@ function ldap_user_provision($ldap_user, $user_edit = array()) {
  * Implements hook_user_login().
  */
 function ldap_user_user_login(&$edit, $account) {
+  
+  if ($account->uid == 1) {
+    return; // do not provision or synch user 1
+  }
   $ldap_user_conf = ldap_user_conf();
   $user_edit = array();
 
@@ -589,6 +593,10 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
   // @todo.  need to consider how these might duplicate other provision and synch calls in same login, etc.
   //         this is best done via ldap user dev notes 
   //dpm('ldap_user_user_insert'); dpm($user_edit); dpm($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
+
+  if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
+    return; // do not provision or synch user 1
+  }
   if ($category != 'ldap_user') { // avoid recursion
     $ldap_user_conf = ldap_user_conf();
     
@@ -631,6 +639,10 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
  * Implements hook_user_update().
  */
 function ldap_user_user_update(&$user_edit, $account, $category) {
+  
+  if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
+    return; // do not provision or synch user 1
+  }
   if ($category != 'ldap_user') { // avoid recursion
     $ldap_user_conf = ldap_user_conf();
 
