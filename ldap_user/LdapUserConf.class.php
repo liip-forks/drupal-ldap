@@ -531,10 +531,9 @@ function __construct() {
         'include_count' => FALSE,
         'synch_context' => $synch_context,
       );
-   //   dpm('synchToLdapEntry call to drupalUserToLdapEntry'); dpm($account); 
 
       list($proposed_ldap_entry, $error) = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $params);
-   //   dpm('proposed ldap entry'); dpm($proposed_ldap_entry);
+      
       if ($error != LDAP_USER_PROVISION_RESULT_NO_ERROR) {
         $result = FALSE;
       }
@@ -772,6 +771,9 @@ function __construct() {
     $provision = (isset($params['function']) && $params['function'] == 'provisionLdapEntry');
     $result = LDAP_USER_PROVISION_RESULT_NO_ERROR;
     
+    if (!is_object($account) || !is_object($ldap_server)) {
+      return array(NULL, LDAP_USER_PROVISION_RESULT_BAD_PARAMS);
+    }
     $watchdog_tokens = array(
       '%drupal_username' => $account->name,
     );

@@ -332,6 +332,7 @@ class LdapServer {
    */
 
   public function createLdapEntry($ldap_entry, $dn = NULL) {
+    // dpm("createLdapEntry, dn=$dn"); dpm($ldap_entry);
     if (!$this->connection) {
       $this->connect();
       $this->bind();
@@ -353,6 +354,46 @@ class LdapServer {
   }
 
 
+
+/**
+ * given 2 ldap entries, old and new, removed unchanged values to avoid security errors and incorrect date modifieds
+ *
+ * @param ldap entry array $new_entry in form <attribute> => <value>
+ * @param ldap entry array $old_entry in form <attribute> => array('count' => N, array(<value>,...<value>
+ *
+ * @return ldap array with no values that have NOT changed
+ */
+
+  static public function removeUnchangedAttributes($new_entry, $old_entry) {
+
+    foreach ($new_entry as $key => $new_val) {
+      $old_value = FALSE;
+      $key_lcase = drupal_strtolower($key);
+      if (isset($old_entry[$key_lcase])) {
+        if ($old_entry[$key_lcase]['count'] == 1) {
+          $old_value = $old_entry[$key_lcase][0];
+          $old_value_is_scalar = TRUE;
+        }
+        else {
+          unset($old_entry[$key_lcase]['count']);
+          $old_value = $old_entry[$key_lcase];
+          $old_value_is_scalar = FALSE;
+        }
+      }
+      
+      // identical multivalued attributes
+      if (is_array($new_val) && is_array($old_value) && count(array_diff($new_val, $old_value)) == 0) {
+        unset($new_entry[$key]);
+      }
+      elseif ($old_value_is_scalar && !is_array($new_val) && drupal_strtolower($old_value) == drupal_strtolower($new_val)) {
+        unset($new_entry[$key]); // don't change values that aren't changing to avoid false permission constraints
+      }
+    }
+    return $new_entry;
+  }
+  
+  
+
   /**
    * modify attributes of ldap entry
    *
@@ -365,46 +406,37 @@ class LdapServer {
    */
 
   function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
-    //dpm("modifyLdapEntry, dn=$dn"); dpm($attributes);
+
     if (!$old_attributes) {
       $result = ldap_read($this->connection, $dn, 'objectClass=*');
       $entries = ldap_get_entries($this->connection, $result);
       if (is_array($entries) && $entries['count'] == 1) {
         $old_attributes =  $entries[0];
       }
-      
     }
+    $attributes = $this->removeUnchangedAttributes($attributes, $old_attributes);
+
     foreach ($attributes as $key => $cur_val) {
-      
       $old_value = FALSE;
       $key_lcase = drupal_strtolower($key);
       if (isset($old_attributes[$key_lcase])) {
         if ($old_attributes[$key_lcase]['count'] == 1) {
           $old_value = $old_attributes[$key_lcase][0];
-          $old_value_is_scalar = TRUE;
         }
         else {
           unset($old_attributes[$key_lcase]['count']);
           $old_value = $old_attributes[$key_lcase];
-          $old_value_is_scalar = FALSE;
         }
       }
 
-     // dpm('old and current values'); dpm($old_value);dpm($cur_val);
-      if ($cur_val == '' && $old_value != '') {
+      if ($cur_val == '' && $old_value != '') { // remove enpty attributes
         unset($attributes[$key]);
         ldap_mod_del($this->connection, $dn, array($key_lcase => $old_value));
-      }
-      if (is_array($cur_val) && is_array($old_value) && count(array_diff($cur_val, $old_value)) == 0) {
-        unset($attributes[$key]);
-      }
-      elseif ($old_value_is_scalar && !is_array($cur_val) && drupal_strtolower($old_value) == drupal_strtolower($cur_val)) {
-        unset($attributes[$key]); // don't change values that aren't changing to avoid false permission constraints
       }
       elseif (is_array($cur_val)) {
         foreach ($cur_val as $mv_key => $mv_cur_val) {
           if ($mv_cur_val == '') {
-            unset($attributes[$key][$mv_key]);
+            unset($attributes[$key][$mv_key]); // remove empty values in multivalues attributes
           }
           else {
             $attributes[$key][$mv_key] = $mv_cur_val;

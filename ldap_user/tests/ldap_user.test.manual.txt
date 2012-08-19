@@ -60,7 +60,7 @@
        
        
        
-7. Test ldap entry provisioning
+7. General tests ldap entry provisioning
     A. in ldap user settings (admin/config/people/ldap/user)
       - uncheck BASIC PROVISIONING TO DRUPAL ACCOUNT SETTINGS settings
       - enable an ldap server in BASIC PROVISIONING TO LDAP SETTINGS
@@ -88,26 +88,25 @@
     E.  
   
        
-7.1 Test ldap entry provisioning workflow: User requests account, admin approves it, and user gets one time logon and sets password.
-  A. Setup:  at admin/config/people/accounts: select "Visitors, but administrator approval is required"
-             configure to ldap provisioning admin/config/people/ldap/user
-               -- [x] Create LDAP entry when a Drupal Account has a status of approved. only in "LDAP Entry Provisioning Options"
-               -- map required fields and make sure password is one of the fields
+7.1 Test ldap entry provisioning workflow: User requests account -> admin approves it -> and user gets one time logon and sets password
+  A. Setup (as admin):
+    -- at admin/config/people/accounts: select "Visitors, but administrator approval is required"
+    -- configure to ldap provisioning admin/config/people/ldap/user
+      -- [x] Create LDAP entry when a Drupal Account has a status of approved... in "LDAP Entry Provisioning Options"
+      -- [x] Update LDAP entry when Drupal Account that has a corresponding LDAP entry is updated...in "LDAP Entry Provisioning Options"
+      -- map required fields and make sure password is one of the fields
   B. Test
-     -- as anonymous user, create user at user/register.  account will be created with user entered password.
-     -- approve user at user/<uid>/edit
-     -- ldap entry should be created, but ldap entry password will be none or random.
-     -- click on user email link with reset e.g. user/reset/1524/..../.....
-     -- set password and whatever initial user profile or fields you want
-     -- check that ldap entry has correct password.
+     -- as anonymous user: create user at user/register.  account will be created with user entered password.
+     -- as admin: approve user at user/<uid>/edit
+     -- desired result: ldap entry should be created, but ldap entry password will be none or random.
+     -- as user: click on user email link with reset e.g. user/reset/1524/..../.....
+     -- as user: set password and whatever initial user profile or fields you want
+     -- desired result: check that ldap entry has correct password.
                
   
   
 7.2 Test ldap entry provisioning workflow: Admin creates account that has a status of 1, but user requests new password to get started.
-  A. Setup:  at admin/config/people/accounts: select "Administrators only"
-
-
-
+ 
 
 
 
