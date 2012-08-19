@@ -107,7 +107,11 @@ function __construct() {
     $this->load();
    ////dpm('filter');//dpm(array_filter(array_values($this->drupalAcctProvisionEvents)));
     $this->provisionsDrupalAccountsFromLdap = (count(array_filter(array_values($this->drupalAcctProvisionEvents))) > 0);
-    $this->provisionsLdapEntriesFromDrupalUsers = (count(array_filter(array_values($this->ldapEntryProvisionEvents))) > 0);
+    $this->provisionsLdapEntriesFromDrupalUsers = (
+      $this->ldapEntryProvisionServer
+      && $this->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID
+      && (count(array_filter(array_values($this->ldapEntryProvisionEvents))) > 0)
+      );
     $this->synchTypes = array(
       LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER => t('On User Creation'),
       LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER => t('On User Update/Save'),
