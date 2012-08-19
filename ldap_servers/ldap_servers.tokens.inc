@@ -287,8 +287,10 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
   //dpm('ldap_servers_token_tokenize_user_account, $user_account'); dpm($user_account);
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
-  $user_entered_password_available = (property_exists($user_account, 'password') && $user_account->password);
   
+  $user_entered_password_available = (boolean)ldap_user_ldap_provision_semaphore('get_user_pass', NULL);
+  // ldapUserPwd((property_exists($user_account, 'ldapUserPwd') && $user_account->ldapUserPwd));
+
   if ($token_keys == 'all') {
     // add lowercase keyed entries to ldap array
     foreach ((array)$user_account as $property_name => $value) {
@@ -336,7 +338,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
 
       case 'password':
         if ($user_entered_password_available && ($attr_name == 'user' || $attr_name == 'user-random' ||$attr_name == 'user-none')) {
-          $value = $user_account->password;
+          $value = ldap_user_ldap_provision_semaphore('get_user_pass', NULL);
         }
         elseif ($attr_name == 'random' || $attr_name == 'user-random') {
           $value = user_password();

@@ -604,10 +604,10 @@ class LdapUserLdapProvisionTests extends LdapUserTestCasev2 {
     
     $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
     $desired_dn = "cn=$username,ou=people,dc=activedirectory,dc=ldap,dc=pixotech,dc=com";
-   // debug("dn=$desired_dn in activedirectory server"); debug($servers['activedirectory']->entries[$desired_dn]);
+    debug("dn=$desired_dn in activedirectory server"); debug($servers['activedirectory']->entries[$desired_dn]);
     $ldap_entry_success = (
       isset($servers['activedirectory']->entries[$desired_dn]) &&
-      $servers['activedirectory']->entries[$desired_dn]['dn'] == $desired_dn &&
+      $servers['activedirectory']->entries[$desired_dn]['distinguishedName'][0] == $desired_dn &&
       $servers['activedirectory']->entries[$desired_dn]['cn'][0] == $username &&
       $servers['activedirectory']->entries[$desired_dn]['displayName'][0] == 'John Doe' &&
       $servers['activedirectory']->entries[$desired_dn]['guid'][0] == 'ldap.pixotech.com.uid.2' &&

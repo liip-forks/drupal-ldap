@@ -281,15 +281,24 @@ class LdapServer {
     }
   }
 
-
-  function dnExists($dn) {
+/**
+ * does dn exist for this server?
+ *
+ * @param string $dn
+ * @param enum $return = 'boolean' or 'ldap_entry'
+ *
+ * @param return ldap entry array
+ */
+  function dnExists($dn, $return = 'boolean') {
     $attributes = array();
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '(distinguishedName=' . ldap_server_massage_text($dn, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ')';
       $result = $this->search($basedn, $filter, $attributes);
-      if (!$result || !isset($result['count']) || !$result['count']) continue;
-      return TRUE;
+      if (!$result || !isset($result['count']) || !$result['count']) {
+        continue;
+      }
+      return ($return == 'boolean') ? TRUE : $result[0];
     }
     return FALSE;
   }

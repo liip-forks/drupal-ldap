@@ -238,26 +238,31 @@ class LdapServerTestv2 extends LdapServer {
    * @return boolean result
    */
 
-  public function createLdapEntry($ldap_entry) {
+  public function createLdapEntry($ldap_entry, $dn = NULL) {
 
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
     
-    if (!isset($ldap_entry['dn'])) {
+    if (isset($ldap_entry['dn'])) {
+      $dn = $ldap_entry['dn'];
+      unset($ldap_entry['dn']);
+    }
+    elseif(!$dn) {
       return FALSE;
     }
-    elseif (isset($test_data['entries'][$ldap_entry['dn']])) {
+    
+    if (isset($test_data['entries'][$dn])) {
       return FALSE; // entry already exists
     }
     else {
-      $test_data['entries'][$ldap_entry['dn']] = $ldap_entry;
+      $test_data['entries'][$dn] = $ldap_entry;
       variable_set('ldap_test_server__' . $this->sid, $test_data);
       $this->refreshFakeData();
       return TRUE;
     }
     
   }
-  
-  function modifyLdapEntry($dn, $attributes) {
+
+  function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
     
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
    // debug('modifyLdapEntry,dn='. $dn); debug($attributes); debug('test data'); debug($test_data['entries'][$dn]);

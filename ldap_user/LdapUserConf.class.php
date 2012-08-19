@@ -345,7 +345,155 @@ function __construct() {
     return $result;
   }
 
- 
+ /**
+   * given a drupal account, provision an ldap entry if none exists.  if one exists do nothing
+   *
+   * @param object $account drupal account object with minimum of name property
+   * @param int $synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
+   * @param array $ldap_user as prepopulated ldap entry.  usually not provided
+   *
+   * @return array of form:
+   *     array('status' => 'success', 'fail', or 'conflict'),
+   *     array('ldap_server' => ldap server object),
+   *     array('proposed' => proposed ldap entry),
+   *     array('existing' => existing ldap entry),
+   *     array('description' = > blah blah)
+   *
+   */
+
+  public function provisionLdapEntry($account, $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, $ldap_user, $test_query = FALSE) {
+    //dpm('provisionLdapEntry account'); dpm($account);
+    $watchdog_tokens = array();
+    $result = array(
+      'status' => NULL,
+      'ldap_server' => NULL,
+      'proposed' => NULL,
+      'existing' => NULL,
+      'description' => NULL,
+    );
+
+    list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name);
+    
+    if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
+      $result['status'] = 'fail';
+      $result['error_description'] = 'can not provision drupal user 1';
+      return $result; // do not provision or synch user 1
+    }
+  
+   // dpm('provisionLdapEntry account2'); dpm($account);
+    if ($account == FALSE || $account->uid == 0) {
+      $result['status'] = 'fail';
+      $result['error_description'] = 'can not provision ldap user unless corresponding drupal account exists first.';
+      return $result;      
+    }
+        
+    if ($this->ldapEntryProvisionServer == LDAP_USER_NO_SERVER_SID || !$this->ldapEntryProvisionServer) {
+      $result['status'] = 'fail';
+      $result['error_description'] = 'no provisioning server enabled';
+      return $result;
+    }
+    
+    $ldap_server = ldap_servers_get_servers($this->ldapEntryProvisionServer, NULL, TRUE);
+    $params = array(
+      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY,
+      'synch_context' => $synch_context,
+      'module' => 'ldap_user',
+      'function' => 'provisionLdapEntry',
+      'include_count' => FALSE,
+    );
+   
+    list($proposed_ldap_entry, $error) = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $params);
+    $dn_derived = (is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn']) && $proposed_ldap_entry['dn']);
+    $existing_ldap_entry = ($dn_derived) ? $ldap_server->dnExists($proposed_ldap_entry['dn']) : NULL;
+    
+    if ($error == LDAP_USER_PROVISION_RESULT_NO_PWD) {
+      $result['status'] = 'fail';
+      $result['description'] = 'Can not provision ldap account without user provided password.';
+      $result['existing'] = $existing_ldap_entry;
+      $result['proposed'] = $proposed_ldap_entry;
+      $result['ldap_server'] = $ldap_server;        
+    }    
+    elseif (!$dn_derived) {
+      $result['status'] = 'fail';
+      $result['description'] = t('failed to derive dn and or mappings');
+      return $result;
+    }
+    elseif ($existing_ldap_entry) {
+      $result['status'] = 'conflict';
+      $result['description'] = 'can not provision ldap entry because exists already';
+      $result['existing'] = $existing_ldap_entry;
+      $result['proposed'] = $proposed_ldap_entry;
+      $result['ldap_server'] = $ldap_server;
+    }
+    elseif ($test_query) {
+      $result['status'] = 'fail';
+      $result['description'] = 'not created because flagged as test query';
+      $result['proposed'] = $proposed_ldap_entry;
+      $result['ldap_server'] = $ldap_server;        
+    }
+    elseif ($ldap_entry_created = $ldap_server->createLdapEntry($proposed_ldap_entry)) {
+     // dpm('successfully called createLdapEntry'); dpm($proposed_ldap_entry);
+      $result['status'] = 'success';
+      $result['description'] = 'ldap account created';
+      $result['proposed'] = $proposed_ldap_entry;
+      $result['created'] = $ldap_entry_created;
+      $result['ldap_server'] = $ldap_server;
+      ldap_user_ldap_provision_semaphore('provision', 'user_action_mark' , $account->name);
+      // need to store <sid>|<dn> in ldap_user_prov_entries field, which may contain more than one
+      $ldap_user_prov_entry = $ldap_server->sid . '|' . $proposed_ldap_entry['dn'];
+      if (!isset($user_entity->ldap_user_prov_entries['und'])) {
+        $user_entity->ldap_user_prov_entries = array('und' => array());
+      }
+      $ldap_user_prov_entry_exists = FALSE;
+      foreach ($user_entity->ldap_user_prov_entries['und'] as $i => $field_value_instance) {
+        if ($field_value_instance == $ldap_user_prov_entry) {
+          $ldap_user_prov_entry_exists = TRUE;
+        }   
+      }
+      if (!$ldap_user_prov_entry_exists) {
+        $user_entity->ldap_user_prov_entries['und'][] = array(
+          'value' =>  $ldap_user_prov_entry,
+          'format' => NULL,
+          'save_value' => $ldap_user_prov_entry,
+        );
+        $edit = array(
+          'ldap_user_prov_entries' => $user_entity->ldap_user_prov_entries,
+        );
+        $account = user_load($account->uid);
+        $account = user_save($account, $edit);
+      }
+        
+    }
+    else {
+      $result['status'] = 'fail';
+      $result['proposed'] = $proposed_ldap_entry;
+      $result['created'] = $ldap_entry_created;
+      $result['ldap_server'] = $ldap_server;
+      $result['existing'] = NULL;
+    }
+
+    $tokens = array(
+      '%dn' => isset($result['proposed']['dn']) ? $result['proposed']['dn'] : NULL,
+      '%sid' => (isset($result['ldap_server']) && $result['ldap_server']) ? $result['ldap_server']->sid : LDAP_USER_NO_SERVER_SID,
+      '%username' => @$account->name,
+      '%uid' => @$account->uid,
+      '%description' => @$result['description'],
+    );
+    if (!$test_query && isset($result['status'])) {
+      if ($result['status'] == 'success') {
+        watchdog('ldap_user', 'LDAP entry on server %sid created dn=%dn.  %description. username=%username, uid=%uid', $tokens, WATCHDOG_INFO);
+      }
+      elseif($result['status'] == 'conflict') {
+        watchdog('ldap_user', 'LDAP entry on server %sid not created because of existing ldap entry. %description. username=%username, uid=%uid', $tokens, WATCHDOG_WARNING);
+      }
+      elseif($result['status'] == 'fail') {
+        watchdog('ldap_user', 'LDAP entry on server %sid not created because error.  %description. username=%username, uid=%uid', $tokens, WATCHDOG_ERROR);
+      }
+    }
+    return $result;
+  }
+
+
   /**
    * given a drupal account, synch to related ldap entry
    *
@@ -358,7 +506,7 @@ function __construct() {
    */
 
   public function synchToLdapEntry($account, $user_edit = NULL, $synch_context, $ldap_user =  array(), $test_query = FALSE) {
-    //dpm("synchToLdapEntry, synch_context=$synch_context, test_query=". (int)$test_query); dpm($account);dpm($user_edit); 
+//    dpm("synchToLdapEntry, synch_context=$synch_context, test_query=". (int)$test_query); dpm($account);dpm($user_edit); 
     //ldap_servers_debug('synchToLdapEntry'); ldap_servers_debug($account); ldap_servers_debug($user_edit);
 
     if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
@@ -379,10 +527,10 @@ function __construct() {
         'include_count' => FALSE,
         'synch_context' => $synch_context,
       );
-     // dpm('synchToLdapEntry call to drupalUserToLdapEntry'); dpm($ldap_user);
+   //   dpm('synchToLdapEntry call to drupalUserToLdapEntry'); dpm($account); 
 
       list($proposed_ldap_entry, $error) = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $params);
-      
+   //   dpm('proposed ldap entry'); dpm($proposed_ldap_entry);
       if ($error != LDAP_USER_PROVISION_RESULT_NO_ERROR) {
         $result = FALSE;
       }
@@ -412,7 +560,11 @@ function __construct() {
           );
         }
         else {
+         // dpm('modifyLdapEntry,dn=' . $proposed_ldap_entry['dn']);  dpm($attributes);
           $result = $ldap_server->modifyLdapEntry($proposed_ldap_entry['dn'], $attributes);
+          if ($result) {
+            ldap_user_ldap_provision_semaphore('synch', 'user_action_mark' , $account->name);
+          }
         }
       }
       else { // failed to get acceptable proposed ldap entry
@@ -521,155 +673,36 @@ function __construct() {
     }
   }
 
- /**
-   * given a drupal account, provision an ldap entry if none exists.  if one exists do nothing
+  /**
+   * given a drupal account, find the account that would or has been provisioned
    *
-   * @param object $account drupal account object with minimum of name property
-   * @param int $synch_context (see LDAP_USER_SYNCH_CONTEXT_* constants)
-   * @param array $ldap_user as prepopulated ldap entry.  usually not provided
+   * @param drupal user object $account
    *
-   * @return array of form:
-   *     array('status' => 'success', 'fail', or 'conflict'),
-   *     array('ldap_server' => ldap server object),
-   *     array('proposed' => proposed ldap entry),
-   *     array('existing' => existing ldap entry),
-   *     array('description' = > blah blah)
-   *
-   */
-
-  public function provisionLdapEntry($account, $synch_context = LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, $ldap_user, $test_query = FALSE) {
-    //dpm('provisionLdapEntry account'); dpm($account);
-    $watchdog_tokens = array();
-    $result = array(
-      'status' => NULL,
-      'ldap_server' => NULL,
-      'proposed' => NULL,
-      'existing' => NULL,
-      'description' => NULL,
-    );
-
-    list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name);
-    
-    if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
-      $result['status'] = 'fail';
-      $result['error_description'] = 'can not provision drupal user 1';
-      return $result; // do not provision or synch user 1
-    }
+   * @return FALSE or ldap entry
+   */ 
+  public function getProvisionRelatedLdapEntry($account, $synch_context = LDAP_USER_SYNCH_CONTEXT_ALL) {
   
-   // dpm('provisionLdapEntry account2'); dpm($account);
-    if ($account == FALSE || $account->uid == 0) {
-      $result['status'] = 'fail';
-      $result['error_description'] = 'can not provision ldap user unless corresponding drupal account exists first.';
-      return $result;      
+    if (!$sid = $this->ldapEntryProvisionServer) {
+      return FALSE;
     }
-        
-    if ($this->ldapEntryProvisionServer == LDAP_USER_NO_SERVER_SID || !$this->ldapEntryProvisionServer) {
-      $result['status'] = 'fail';
-      $result['error_description'] = 'no provisioning server enabled';
-      return $result;
-    }
-    
-    $ldap_server = ldap_servers_get_servers($this->ldapEntryProvisionServer, NULL, TRUE);
+    // $user_entity->ldap_user_prov_entries,
+    $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
     $params = array(
       'direction' => LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY,
       'synch_context' => $synch_context,
       'module' => 'ldap_user',
-      'function' => 'provisionLdapEntry',
+      'function' => 'getProvisionRelatedLdapEntry',
       'include_count' => FALSE,
-    );
-   
-    list($proposed_ldap_entry, $error) = $this->drupalUserToLdapEntry($account, $ldap_server, $ldap_user, $params);
-    $dn_derived = (is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn']) && $proposed_ldap_entry['dn']);
-    $existing_ldap_entry = ($dn_derived) ? $ldap_server->dnExists($proposed_ldap_entry['dn']) : NULL;
+      );
+    list($proposed_ldap_entry, $error) = $this->drupalUserToLdapEntry($account, $ldap_server, NULL, $params);
+
+    if (!(is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn']) && $proposed_ldap_entry['dn'])) {
+      return FALSE;
+    }
+    return $ldap_server->dnExists($proposed_ldap_entry['dn'], 'ldap_entry');
     
-    if ($error == LDAP_USER_PROVISION_RESULT_NO_PWD) {
-      $result['status'] = 'fail';
-      $result['description'] = 'Can not provision ldap account without user provided password.';
-      $result['existing'] = $existing_ldap_entry;
-      $result['proposed'] = $proposed_ldap_entry;
-      $result['ldap_server'] = $ldap_server;        
-    }    
-    elseif (!$dn_derived) {
-      $result['status'] = 'fail';
-      $result['description'] = t('failed to derive dn and or mappings');
-      return $result;
-    }
-    elseif ($existing_ldap_entry) {
-      $result['status'] = 'conflict';
-      $result['description'] = 'can not provision ldap entry because exists already';
-      $result['existing'] = $existing_ldap_entry;
-      $result['proposed'] = $proposed_ldap_entry;
-      $result['ldap_server'] = $ldap_server;
-    }
-    elseif ($test_query) {
-      $result['status'] = 'fail';
-      $result['description'] = 'not created because flagged as test query';
-      $result['proposed'] = $proposed_ldap_entry;
-      $result['ldap_server'] = $ldap_server;        
-    }
-    elseif ($ldap_entry_created = $ldap_server->createLdapEntry($proposed_ldap_entry)) {
-      //dpm('successfully called createLdapEntry'); dpm($proposed_ldap_entry);
-      $result['status'] = 'success';
-      $result['description'] = 'ldap account created';
-      $result['proposed'] = $proposed_ldap_entry;
-      $result['created'] = $ldap_entry_created;
-      $result['ldap_server'] = $ldap_server;
-      
-      // need to store <sid>|<dn> in ldap_user_prov_entries field, which may contain more than one
-      $ldap_user_prov_entry = $ldap_server->sid . '|' . $proposed_ldap_entry['dn'];
-      if (!isset($user_entity->ldap_user_prov_entries['und'])) {
-        $user_entity->ldap_user_prov_entries = array('und' => array());
-      }
-      $ldap_user_prov_entry_exists = FALSE;
-      foreach ($user_entity->ldap_user_prov_entries['und'] as $i => $field_value_instance) {
-        if ($field_value_instance == $ldap_user_prov_entry) {
-          $ldap_user_prov_entry_exists = TRUE;
-        }   
-      }
-      if (!$ldap_user_prov_entry_exists) {
-        $user_entity->ldap_user_prov_entries['und'][] = array(
-          'value' =>  $ldap_user_prov_entry,
-          'format' => NULL,
-          'save_value' => $ldap_user_prov_entry,
-        );
-        $edit = array(
-          'ldap_user_prov_entries' => $user_entity->ldap_user_prov_entries,
-        );
-        $account = user_load($account->uid);
-        $account = user_save($account, $edit);
-      }
-        
-    }
-    else {
-      $result['status'] = 'fail';
-      $result['proposed'] = $proposed_ldap_entry;
-      $result['created'] = $ldap_entry_created;
-      $result['ldap_server'] = $ldap_server;
-      $result['existing'] = NULL;
-    }
-
-    $tokens = array(
-      '%dn' => isset($result['proposed']['dn']) ? $result['proposed']['dn'] : NULL,
-      '%sid' => (isset($result['ldap_server']) && $result['ldap_server']) ? $result['ldap_server']->sid : LDAP_USER_NO_SERVER_SID,
-      '%username' => @$account->name,
-      '%uid' => @$account->uid,
-      '%description' => @$result['description'],
-    );
-    if (!$test_query && isset($result['status'])) {
-      if ($result['status'] == 'success') {
-        watchdog('ldap_user', 'LDAP entry on server %sid created dn=%dn.  %description. username=%username, uid=%uid', $tokens, WATCHDOG_INFO);
-      }
-      elseif($result['status'] == 'conflict') {
-        watchdog('ldap_user', 'LDAP entry on server %sid not created because of existing ldap entry. %description. username=%username, uid=%uid', $tokens, WATCHDOG_WARNING);
-      }
-      elseif($result['status'] == 'fail') {
-        watchdog('ldap_user', 'LDAP entry on server %sid not created because error.  %description. username=%username, uid=%uid', $tokens, WATCHDOG_ERROR);
-      }
-    }
-    return $result;
   }
-
-
+ 
   /**
    * given a drupal account, delete ldap entry that was provisioned based on it
    *   normally this will be 0 or 1 entry, but the ldap_user_provisioned_ldap_entries
@@ -751,7 +784,12 @@ function __construct() {
         continue; // don't override values passed in;
       }
       
-      $synched = $this->isSynched($field_key, $ldap_server, $params['synch_context'], LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY);
+      if ($params['synch_context'] != LDAP_USER_SYNCH_CONTEXT_ALL) {
+        $synched = $this->isSynched($field_key, $ldap_server, $params['synch_context'], LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY);
+      }
+      else {
+        $synched = TRUE;
+      }
 
       if ($synched) {
         $token = ($field_detail['user_attr'] == 'user_tokens') ? $field_detail['user_tokens'] : $field_detail['user_attr'];

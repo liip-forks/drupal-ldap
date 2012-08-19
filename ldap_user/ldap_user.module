@@ -111,6 +111,13 @@ function ldap_user_menu() {
 }
 
 /**
+ * Implements hook_init().
+ */
+function ldap_user_init() {
+  ldap_user_ldap_provision_semaphore('set_page_load', NULL, NULL);
+}
+
+/**
  * Implements hook_theme().
  */
 function ldap_user_theme() {
@@ -411,11 +418,33 @@ function ldap_user_help($path, $arg) {
   }
 }
 
+function ldap_user_form_alter(&$form, $form_state, $form_id) {
+ // dpm($form_id); dpm($form); dpm($form_state);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter(). for user_register_form
+ */
+function ldap_user_form_user_profile_form_alter(&$form, $form_state) {
+    array_unshift($form['#submit'], 'ldap_user_form_user_profile_form_submit1');
+    $form['#submit'][] = 'ldap_user_form_user_profile_form_submit2';
+}
+
+function ldap_user_form_user_profile_form_submit1(&$form, &$form_state) {
+//  dpm('ldap_user_form_user_profile_form_submit1'); dpm($form_state['values']); dpm($form);
+  if (isset($form_state['values']['pass']) && $form_state['values']['pass']) {
+    ldap_user_ldap_provision_semaphore('set_user_pass', NULL, $form_state['values']['pass']);
+  }
+}
+
+function ldap_user_form_user_profile_form_submit2(&$form, &$form_state) {
+
+}
 /**
  * Implements hook_form_FORM_ID_alter(). for user_register_form
  */
 function ldap_user_form_user_register_form_alter(&$form, $form_state) {
-  //dpm('ldap_user_form_user_register_form_alter'); dpm($form);
+ // dpm('ldap_user_form_user_register_form_alter'); dpm($form); dpm($form_state);
   if (!user_access('administer users')) {
     return;
   }
@@ -458,7 +487,10 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
   
   $form['#validate'][] = 'ldap_user_form_register_form_validate';
   $form['#submit'][] = 'ldap_user_form_register_form_submit';
-  
+
+  array_unshift($form['#submit'], 'ldap_user_form_register_form_submit1');
+  $form['#submit'][] = 'ldap_user_form_register_form_submit2';
+    
 }
 
 
@@ -493,33 +525,23 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
   }
 }
 
-function ldap_user_form_register_form_submit($form, &$form_state) {
- // dpm('ldap_user_form_register_form_submit'); dpm($form_state['values']);
-  $values = $form_state['values'];
-  $create_ldap_entry = (@$values['ldap_user_create_ldap_acct']);
-  $ldap_associate_account = (@$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE);
-  $drupal_username = $form_state['values']['name'];
-  //dpm("ldap_user_form_register_form_submit=$create_ldap_entry,ldap_associate_account=$ldap_associate_account, drupal_username=$drupal_username");
-  if ($create_ldap_entry || $ldap_associate_account) {
-    $ldap_user_conf = ldap_user_conf();
-    $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->ldapEntryProvisionServer, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_SYNCH_CONTEXT_MANUAL_LDAP_CREATE); 
+
+
+function ldap_user_form_register_form_submit1($form, &$form_state) {
+ // dpm('ldap_user_form_register_form_submit1'); dpm($form); dpm($form_state);
+  if (isset($form_state['values']['pass']) && $form_state['values']['pass']) {
+    ldap_user_ldap_provision_semaphore('set_user_pass', NULL, $form_state['values']['pass']);
   }
-  //dpm('ldap_user_form_register_form_submit:ldap_user'); dpm($ldap_user);
-  if ($create_ldap_entry) {
-    if (!$ldap_user) {
-      $drupal_account = new stdClass();
-      $drupal_account->name = $values['name'];
-      if ($ldap_user_conf->setsLdapPassword) {
-        $drupal_account->password = $values['pass'];
-      }
-      $ldap_user_conf->provisionLdapEntry($drupal_account, LDAP_USER_SYNCH_CONTEXT_MANUAL_LDAP_CREATE, array());
-    }
-  }
-  if ($ldap_associate_account) {
-    $ldap_user_conf->ldapAssociateDrupalAccount($drupal_username);
-    // need to ldap associate account, but not do any synching or provisioning.  that is handled by other event handlers.
-  }
+
+
+}
+
+/** called after user_register_form_submit **/
+function ldap_user_form_register_form_submit2($form, &$form_state) {
   
+  if (@$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE) {
+    $ldap_user_conf->ldapAssociateDrupalAccount($form_state['values']['name']);
+  }
   
 }
 
@@ -550,6 +572,75 @@ function ldap_user_provision($ldap_user, $user_edit = array()) {
 }
 
 
+
+
+/**
+ * function to protect unencrypted user password from:
+ *   other modules
+ *   multiple page requests
+ *   serialization of user password in user object
+ *   multiple synch or provisions to ldap in a single page request (...and potentially recursion)
+ *
+ *   @param enum string $action 'synch' | 'provision' | 'set_page_load_key' | NULL
+ *   @param enum string $op
+ *     'set_user_pass'  |
+ *     'get_user_pass'  |
+ *     'user_action_query' |
+ *     'user_action_mark'
+ *   @value mixed value associate with $op.
+ */
+
+
+function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL) {
+  static $ldap_accts; 
+  static $page_load_key;
+  static $current_user_pass;
+  static $intialized;
+
+  if ($action == 'set_page_load') {//  correct calling functions should be ldap_user_init) {
+    $page_load_key = user_password(); // get something random
+    $ldap_accts  = array();
+    $current_user_pass = NULL;
+    $intialized = TRUE;
+    return;
+  }
+  elseif (!$intialized) {
+    watchdog('ldap_user', 'ldap_user_ldap_provision_semaphore used without initialization', array(), WATCHDOG_ERROR);
+  }
+ 
+   // mark that the given drupal user has had ldap entry synched or provisioned on this page load. 
+  if ($op == 'user_action_mark') {
+    if ($action && $value) {
+      $ldap_accts[$action][$value] = TRUE;
+    }
+    return;
+  }
+  
+  // has the given drupal user had ldap entry synched or provisioned on this page load.
+  if ($op == 'user_action_query') {
+    if ($action && $value && isset($ldap_accts[$action][$value])) {
+      return  $ldap_accts[$action][$value];
+    }
+    else {
+      return FALSE;
+    }  
+  }
+  
+  if ($action == 'set_user_pass') {
+    $current_user_pass = $value;
+  }
+  elseif ($action == 'get_user_pass') {
+    if ($current_user_pass) { // and viable calling function is ldap_servers_token_tokenize_user_account
+      return $current_user_pass;
+    }
+    else {
+      return FALSE;
+    }
+  }
+  
+}
+
+
 /**
  * Implements hook_user_login().
  */
@@ -560,78 +651,80 @@ function ldap_user_user_login(&$edit, $account) {
   }
   $ldap_user_conf = ldap_user_conf();
   $user_edit = array();
-
+  $ldap_entry_exists = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
    // provision or synch to ldap, not both
-  $result = array('status' => 'none');
-  if ($ldap_user_conf->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'provision')) {
+  $provision_result = array('status' => 'none');
+  
+  if (
+      ldap_user_ldap_provision_semaphore('provision', 'user_action_query', $account->name) === FALSE
+      && !$ldap_entry_exists
+      && $ldap_user_conf->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID
+      && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'provision')
+      ) {
     $provision_result = $ldap_user_conf->provisionLdapEntry($account, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, array());
   }
   // don't synch if just provisioned
-  if ($result['status'] != 'success' && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'synch')) {
+  if (
+    ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->name) === FALSE
+    && $provision_result['status'] != 'success'
+    && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'synch')
+    ) {
     $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
   }
   
 }
 
-/**
- * Implements hook_user_presave().
- *
- * @todo this is probably a hook to eliminate, otherwise the synch command is called multiple times
- * stick to hook_user_update, hook_user_insert, hook_user_logon that are coupled with clear events.
-*/
-function ldap_user_user_presave(&$user_edit, $account, $category) {
-  if ($category != 'ldap_user') { // avoid recursion
-    
-  }
-}
 
 /**
  * Implements hook_user_insert().
  *
  */
 function ldap_user_user_insert(&$user_edit, $account, $category) {
-  // @todo.  need to consider how these might duplicate other provision and synch calls in same login, etc.
-  //         this is best done via ldap user dev notes 
+
   //dpm('ldap_user_user_insert'); dpm($user_edit); dpm($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
 
-  if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
+  if ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1)) {
     return; // do not provision or synch user 1
   }
-  if ($category != 'ldap_user') { // avoid recursion
-    $ldap_user_conf = ldap_user_conf();
-    
-    /**
-     * in hook_user_insert, account is already created, so never call provisionDrupalAccount(), just
-     * synchToDrupalAccount(), even if action is 'provision'
-     */
-    $empty_user_edit = array();
-    if ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'provision')) {
-      $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
-    }
-    elseif ($account->status && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'provision')) {
-      $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, NULL, TRUE);
-    }
-    elseif ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'synch')) {
-      $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
-    }
-    elseif ($account->status && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'synch')) {
-      $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, NULL, TRUE);
-    }    
-     // provision or synch, not both
-    if ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'provision')) {
-      $discard = $ldap_user_conf->provisionLdapEntry($account, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, array());
-    }
-    elseif ($account->status && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'provision')) {
-      $discard = $ldap_user_conf->provisionLdapEntry($account, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, array());
-    }
-    elseif ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'synch')) {
-      $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER);
-    }
-    elseif ($account->status && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'synch')) {
-      $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER);
-    } 
-  }
   
+  $ldap_user_conf = ldap_user_conf();
+  /**
+   * in hook_user_insert, account is already created, so never call provisionDrupalAccount(), just
+   * synchToDrupalAccount(), even if action is 'provision'
+   */
+  $empty_user_edit = array();
+  if ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'provision')) {
+    $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
+  }
+  elseif ($account->status && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'provision')) {
+    $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, NULL, TRUE);
+  }
+  elseif ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'synch')) {
+    $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
+  }
+  elseif ($account->status && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'synch')) {
+    $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, NULL, TRUE);
+  }
+    
+    
+  $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'user_action_query' , $account->name);
+  $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->name);
+
+   // provision or synch, not both
+  $ldap_provision_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
+  if ($already_provisioned_to_ldap === FALSE && !$ldap_provision_entry && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'provision')) {
+    $discard = $ldap_user_conf->provisionLdapEntry($account, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, array());
+  }
+  elseif ($already_provisioned_to_ldap === FALSE  && !$ldap_provision_entry && $account->status && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'provision')) {
+    $discard = $ldap_user_conf->provisionLdapEntry($account, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, array());
+  }
+  elseif ($already_synched_to_ldap === FALSE && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'synch')) {
+    $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER);
+  }
+  elseif ($already_synched_to_ldap  === FALSE && $account->status && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'synch')) {
+    $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER);
+  } 
+
 }
 
 
@@ -639,24 +732,27 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
  * Implements hook_user_update().
  */
 function ldap_user_user_update(&$user_edit, $account, $category) {
-  
-  if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
+//  dpm('ldap_user_user_update'); dpm($user_edit); dpm($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
+
+
+  if ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1)) {
     return; // do not provision or synch user 1
   }
-  if ($category != 'ldap_user') { // avoid recursion
-    $ldap_user_conf = ldap_user_conf();
 
-    $provision_result = array('status' => 'none');
-    if ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'provision')) { //{
-      $provision_result = $ldap_user_conf->provisionLdapEntry($account, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, array());
-    }
-    // synch if not just provisioned and  enabled
-    if ($provision_result['status'] != 'success') {
-      if ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'synch')) {
-        $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER);
-      }
+  $ldap_user_conf = ldap_user_conf();
+
+  $provision_result = array('status' => 'none');
+  $ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER);
+  if (!$ldap_entry && $ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'provision')) { //{
+    $provision_result = $ldap_user_conf->provisionLdapEntry($account, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, array());
+  }
+  // synch if not just provisioned and enabled
+  if ($provision_result['status'] != 'success') {
+    if ($ldap_user_conf->contextEnabled(LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'synch')) {
+      $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER);
     }
   }
+  
 }
 
 
@@ -666,12 +762,10 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
 function ldap_user_user_delete($account) {
   // drupal user account is about to be deleted.  @todo.  check if ldap account needs to be deleted also
   $ldap_user_conf = ldap_user_conf();
-  if ($ldap_user_conf->contextEnabled(LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'delete_ldap_entry')) {
-    //debug('context enabled');
+  if ($ldap_user_conf->contextEnabled(LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE, LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY, 'delete_ldap_entry') &&
+      $ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account)
+      ) {
     $ldap_user_conf->deleteProvisionedLdapEntries($account);
-  }
-  else {
-   // debug('context NOT enabled');
   }
 
 }
