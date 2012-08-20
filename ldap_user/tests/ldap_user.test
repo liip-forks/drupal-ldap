@@ -172,11 +172,36 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     $jkeats_uid = $jkeats->uid;
     $this->assertTrue($jkeats->mail == 'boygen@hotmail.com', t('synchToDrupalAccount worked for property (mail) for jkeats'), $this->ldapTestId);
 
-   // return TRUE;
-     // test account exists with correct username, mail, fname, puid, puidfield, dn
-  //  debug('jkeats after user synchToDrupalAccount'); debug($jkeats);
 
-
+    /** test for username change and provisioning with puid conflict
+     jkeats drupal user already exists and has correct puid
+     change samaccountname value (puid field) of jkeats ldap entry and attempt to provision account with new username (jkeatsbrawn)
+     return should be old drupal account (same uid)
+    **/
+    
+    $this->testFunctions->setFakeServerUserAttribute('activedirectory', 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com', 'samaccountname', 'jkeats-brawn', 0);
+    $account = NULL;
+    $user_edit = array('name' => 'jkeats-brawn');
+    $this->ldapTestId = $this->module_name . ': provisionDrupalAccount function test with existing user with same puid';
+    $jkeatsbrawn = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);    
+    
+    $this->testFunctions->setFakeServerUserAttribute('activedirectory', 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com', 'samaccountname', 'jkeats', 0);
+    $pass = (is_object($jkeatsbrawn) && is_object($jkeats) && $jkeats->uid == $jkeatsbrawn->uid);
+    $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and synched instead of creating a conflicted drupal account.'), $this->ldapTestId);
+    if (!$pass) {
+      debug('jkeats'); debug($jkeats); debug('jkeatsbrawn'); debug($jkeatsbrawn);
+    }
+    $authmaps = user_get_authmaps('jkeats-brawn');
+    $pass = $authmaps['ldap_user'] == 'jkeats-brawn';
+    $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and fixed authmap.'), $this->ldapTestId);
+    
+    $pass = is_object($jkeatsbrawn) && $jkeatsbrawn->name == 'jkeats-brawn';
+    $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and fixed username.'), $this->ldapTestId);
+    
+    $user_edit = array('name' => 'jkeats');
+    $jkeats = user_save($jkeatsbrawn, $user_edit, 'ldap_user');
+    
+    
     // delete and recreate test account to make sure account is in correct state
     $ldap_user_conf->deleteDrupalAccount('jkeats', LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER);
     $this->assertFalse(user_load($jkeats_uid, TRUE), t('deleteDrupalAccount deleted jkeats successfully'), $this->ldapTestId);

@@ -440,12 +440,14 @@ Will not work on most ldaps.'),
   $user_edit = array(); // array of attributes that are changing for existing users
   if (!$account_exists && isset($auth_conf->enabledAuthenticationServers[$ldap_user['sid']])) {
     $ldap_server = $auth_conf->enabledAuthenticationServers[$ldap_user['sid']];
-    $puid = $ldap_server->derivePuidFromLdapEntry($ldap_user);
+    $puid = $ldap_server->derivePuidFromLdapEntry($ldap_user['attr']);
     if ($puid) {
       $account = $ldap_server->drupalUserFromPuid($puid);
       if ($account) {
         $account_exists = TRUE;
         $user_edit['name'] = $name;
+        $account = user_save($account, $user_edit, 'ldap_user');
+        user_set_authmaps($account, array("authname_ldap_user" => $name));
       }
     }
   }

@@ -53,16 +53,33 @@ class LdapServer {
    */
 
   public function drupalUserFromPuid($puid) {
+    
+   // list($account, $user_entity) = ldap_user_load_user_acct_and_entity('jkeats');
+    //debug('drupalUserFromPuid:account and user entity'); debug($account); debug($user_entity);
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'user')
     ->fieldCondition('ldap_user_puid_sid', 'value', $this->sid, '=')
     ->fieldCondition('ldap_user_puid', 'value', $puid, '=')
     ->fieldCondition('ldap_user_puid_property', 'value', $this->unique_persistent_attr, '=')
     ->addMetaData('account', user_load(1)); // run the query as user 1
-
+// ->entityCondition('bundle', 'user')
     $result = $query->execute();
+   // debug("drupalUserFromPuid: puid=$puid, sid=". $this->sid . "attr=" . $this->unique_persistent_attr); debug($result);
     if (isset($result['user'])) {
-      $user = entity_load('user', array_keys($result['user']));
+      $uids = array_keys($result['user']);
+      if (count($uids) == 1) {
+        $user = entity_load('user', array_keys($result['user']));
+        return $user[$uids[0]];
+      }
+      else {
+        $uids = join(',',$uids);
+        $tokens = array('%uids' => $uids, '%puid' => $puid, '%sid' =>  $this->sid, '%ldap_user_puid_property' =>  $this->unique_persistent_attr);
+        watchdog('ldap_server', 'multiple users (uids: %uids) with same puid (puid=%puid, sid=%sid, ldap_user_puid_property=%ldap_user_puid_property)', $tokens, WATCHDOG_ERROR);
+        return FALSE;
+      }
+    }
+    else {
+      return FALSE;
     }
 
   }
@@ -1021,7 +1038,11 @@ class LdapServer {
     return FALSE;
   }
 
-
+ /**
+   * @param ldap entry array $ldap_entry
+   *
+   * @return string user's username value
+   */
   public function deriveUsernameFromLdapEntry($ldap_entry) {
 
     if ($this->account_name_attr != '') {
@@ -1036,7 +1057,11 @@ class LdapServer {
   }
 
 
-
+  /**
+   * @param ldap entry array $ldap_entry
+   *
+   * @return string user's mail value
+   */
   public function deriveEmailFromLdapEntry($ldap_entry) {
     if ($this->mail_attr) { // not using template
       return @$ldap_entry[$this->mail_attr][0];
@@ -1050,15 +1075,21 @@ class LdapServer {
     }
   }
 
-  public function derivePuidFromLdapEntry($user_ldap_entry) {
-    // dpm('derivePuidFromLdapEntry'); dpm($this->unique_persistent_attr); dpm($user_ldap_entry);
+
+  /**
+   * @param ldap entry array $ldap_entry
+   *
+   * @return string user's PUID or permanent user id (within ldap)
+   */
+  public function derivePuidFromLdapEntry($ldap_entry) {
+  
     if ($this->unique_persistent_attr
-        && isset($user_ldap_entry[$this->unique_persistent_attr][0])
-        && is_scalar($user_ldap_entry[$this->unique_persistent_attr][0])
+        && isset($ldap_entry[$this->unique_persistent_attr][0])
+        && is_scalar($ldap_entry[$this->unique_persistent_attr][0])
         ) {
 
       //@todo this should go through whatever standard detokenizing function ldap_server module has
-      return $user_ldap_entry[$this->unique_persistent_attr][0];
+      return $ldap_entry[$this->unique_persistent_attr][0];
     }
     else {
       return FALSE;

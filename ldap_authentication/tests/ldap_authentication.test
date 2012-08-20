@@ -481,7 +481,21 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowTestPhp = '';
     $authenticationConf->save();
+  
+  
+  /**
+   * need to test username changes with PUID
+   *   - given a user exists
+   *   - change samaccountname in ldap server
+   *   - have user logon
+   *   - make sure old user and new user have same puid
+   *
+   */
+  
+  
   /***  multiple options used in whitelist **/
+
+
 
    /**
     * LDAP_authen.WL.allow[match].exclude[match] -- desired result: authenticate fail

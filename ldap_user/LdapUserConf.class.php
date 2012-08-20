@@ -648,7 +648,8 @@ function __construct() {
     if ($save) {
      // $account = new stdClass();
       $account = user_load($drupal_user->uid);
-      return user_save($account, $user_edit, 'ldap_user');
+      $result = user_save($account, $user_edit, 'ldap_user');
+      return $result;
     }
     else {
       return TRUE;
@@ -906,28 +907,42 @@ function __construct() {
         'function' => 'provisionDrupalAccount',
         'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
       );
+      
       drupal_alter('ldap_entry', $ldap_user, $params);
-      $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, $synch_context);
+      // look for existing drupal account with same puid.  if so update username and attempt to synch in current context
+      $puid = $ldap_server->derivePuidFromLdapEntry($ldap_user['attr']);
+      $account2 = ($puid) ? $ldap_server->drupalUserFromPuid($puid) : FALSE;
 
-      if ($save) {
-        $account = user_save(NULL, $user_edit, 'ldap_user');
-        if (!$account) {
-          drupal_set_message(t('User account creation failed because of system problems.'), 'error');
-       //   debug(t('User account creation failed because of system problems.'));
+      if ($account2) { // account exists
+        // 1. correct username and authmap
+        $account = user_save($account2, $user_edit, 'ldap_user');
+        user_set_authmaps($account, array("authname_ldap_user" => $user_edit['name']));
+        // 2. attempt synch if appropriate for current context
+        if ($account && $this->contextEnabled($synch_context, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'synch')) {
+          $account = $this->synchToDrupalAccount($account, $user_edit, $synch_context, NULL, TRUE);
         }
-        else {
-        // //dpm("user save success");//dpm($account);
-          user_set_authmaps($account, array('authname_ldap_user' => $user_edit['name']));
-        }
-        return $account;
+        $result = ($account) ? $account : $account2;
+        return $result;
       }
-      return TRUE;
+      else {
+      
+        $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, $synch_context);
+  
+        if ($save) {
+          $account = user_save(NULL, $user_edit, 'ldap_user');
+          if (!$account) {
+            drupal_set_message(t('User account creation failed because of system problems.'), 'error');
+         //   debug(t('User account creation failed because of system problems.'));
+          }
+          else {
+          // //dpm("user save success");//dpm($account);
+            user_set_authmaps($account, array('authname_ldap_user' => $user_edit['name']));
+          }
+          return $account;
+        }
+        return TRUE;
+      }
     }
-    else {
-
-    }
-
-
   }
   
   function ldapAssociateDrupalAccount($drupal_username) {
