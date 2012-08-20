@@ -543,17 +543,14 @@ Will not work on most ldaps.'),
     }
 
     if (count($user_edit)) {
-      $changed = '';
-      foreach ($user_edit as $k => $v) {
-        $changed .= "$k changed to $v, ";
-        $watchdog_tokens["%$k"] = $v;
-      }
-      $watchdog_tokens = array('%username' => $account->name, '%$changed' => $changed);
+      $watchdog_tokens['%username'] = $account->name;
+      $watchdog_tokens['%changed'] = $changed;
       if (!$updated_account = user_save($account, $user_edit)) {
         watchdog('ldap_authentication', 'Failed to make changes to user %username updated %changed.', $watchdog_tokens,  WATCHDOG_ERROR);
       }
       elseif ($auth_conf->emailUpdate == LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY ) {
         if (isset($user_edit['mail'])) {
+          $watchdog_tokens['%mail'] = $user_edit['mail'];
           drupal_set_message(t('Your e-mail has been updated to match your current account (%mail).', $watchdog_tokens), 'status');
         }
         if (isset($user_edit['name'])) {
