@@ -554,11 +554,11 @@ Will not work on most ldaps.'),
       }
       elseif ($auth_conf->emailUpdate == LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY ) {
         if (isset($user_edit['mail'])) {
-          drupal_set_message(t('Your e-mail has been updated to match your current account (%mail).', $message_tokens), 'status');
+          drupal_set_message(t('Your e-mail has been updated to match your current account (%mail).', $watchdog_tokens), 'status');
         }
         if (isset($user_edit['name'])) {
           $watchdog_tokens['%new_username'] = $user_edit['name'];
-          drupal_set_message(t('Your old account username %username has been updated to %new_username.', $message_tokens), 'status');
+          drupal_set_message(t('Your old account username %username has been updated to %new_username.', $watchdog_tokens), 'status');
         }
       }
     }
