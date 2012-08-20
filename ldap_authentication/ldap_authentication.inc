@@ -489,8 +489,8 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
         watchdog('ldap_authentication', 'User e-mail for %username update from %old to %new failed because of system problems.', $watchdog_tokens,  WATCHDOG_ERROR);
       }
       elseif ($auth_conf->emailUpdate == LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY ) {
-          $message_tokens = array('@mail' => $ldap_user['mail']);
-          drupal_set_message(t('Your e-mail has been updated to match your LDAP account (@mail).', $message_tokens), 'status');
+          $watchdog_tokens['@mail'] = $ldap_user['mail'];
+          drupal_set_message(t('Your e-mail has been updated to match your LDAP account (@mail).', $watchdog_tokens), 'status');
       }
     }
   }
