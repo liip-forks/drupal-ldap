@@ -7,6 +7,7 @@
  */
 
 module_load_include('php', 'ldap_user', 'LdapUserConf.class');
+module_load_include('inc', 'user', 'user.pages');
 
 class LdapUserConfAdmin extends LdapUserConf {
 
@@ -54,7 +55,12 @@ class LdapUserConfAdmin extends LdapUserConf {
         entry is deleted.'),
 
     );
-
+    
+    $values['orphanedDrupalAcctBehaviorDescription'] = t('These actions will only occur if the query to server is successful
+      and does not return a user entry.  If the ldap server is down, all LDAP associated users will not be deleted.  When
+      initially using this option, its best to simply check email and delete the accounts by hand.  When you are happy with the
+      behavior, switch to one of the automated options.');
+    
     $values['manualAccountConflictOptions'] =  array(
       LDAP_USER_MANUAL_ACCT_CONFLICT_REJECT => t('Reject manual creation of Drupal accounts that conflict with LDAP Accounts.'),
       LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE => t('Associate manually created Drupal accounts with related LDAP Account if one exists.'),
@@ -237,7 +243,33 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#options' => $this->acctCreationOptions,
       '#description' => t($this->acctCreationDescription),
     );
-
+    
+    $account_options = array();
+    $account_options['ldap_user_orphan_do_not_check'] = t('Do not check for orphaned Drupal accounts.)');
+    $account_options['ldap_user_orphan_email'] = t('Perform no action, but email list of orphaned accounts. (All the other options will send email summaries also.)');
+    foreach (user_cancel_methods() as $option_name => $option) {
+      $account_options[$option_name] = $option['#title'];
+    }
+   
+    $form['basic_to_drupal']['orphanedDrupalAcctBehavior'] = array(
+      '#type' => 'radios',
+      '#title' => t('[Not Implemented] Action to perform an LDAP associated Drupal account that no longer has a corresponding LDAP entry'),
+      '#required' => 0,
+      '#default_value' => $this->orphanedDrupalAcctBehavior,
+      '#options' => $account_options,
+      '#description' => t($this->orphanedDrupalAcctBehaviorDescription),
+    );   
+    
+    
+  $form['basic_to_drupal']['orphanedCheckQty'] = array(
+    '#type' => 'textfield',
+    '#size' => 10,
+    '#title' => t('[Not Implemented] Number of users to check each cron run.'),
+    '#description' => t(''),
+    '#default_value' => $this->orphanedCheckQty,
+    '#required' => FALSE,
+  );
+  
     $form['basic_to_ldap'] = array(
       '#type' => 'fieldset',
       '#title' => t('Basic Provisioning to LDAP Settings'),
@@ -659,6 +691,9 @@ EOT;
     $this->ldapEntryProvisionServer = $values['ldapEntryProvisionServer'];
     $this->drupalAcctProvisionEvents = $values['drupalAcctProvisionEvents'];
     $this->ldapEntryProvisionEvents = $values['ldapEntryProvisionEvents'];
+    $this->orphanedDrupalAcctBehavior = $values['orphanedDrupalAcctBehavior'];
+    $this->orphanedCheckQty = $values['orphanedCheckQty'];
+    
     $this->manualAccountConflict = $values['manualAccountConflict'];
     $this->userConflictResolve  = ($values['userConflictResolve']) ? (int)$values['userConflictResolve'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;

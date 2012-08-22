@@ -316,6 +316,50 @@ function ldap_user_user_entity_fields() {
           'type' => 'hidden',
         ),
       ));
+  
+  $field_name = 'ldap_user_last_checked';
+  $fields[$field_name]['field'] = array(
+    'field_name' => $field_name,
+    'type' => 'number_integer',
+    'entity_types' => array('user'),
+    'cardinality' => 1,
+    'translatable' => 0,
+    'locked' => 1,
+    'module' => 'number',
+    'no_ui' => 1,
+    'settings' => array(),
+    );
+
+  $fields[$field_name]['instance'] = array(
+      'field_name' => $field_name,
+      'entity_type' => 'user',
+      'bundle' => 'user',
+      'label' => 'Unix timestamp of when Drupal user was compard to ldap entry.  This could be for purposes of synching, deleteing drupal account, etc.',
+      'description' => 'This field should not be edited.',
+      'required' => 0,
+      'default_value' => NULL,
+      'settings' => array(
+      ),
+      'widget' => array(
+        'type' => 'ldap_user_hidden',
+        'settings' => array(),
+        'module' => 'ldap_user',
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      'full' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      'teaser' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      ));
+
 
   return $fields;
 
@@ -346,4 +390,24 @@ function ldap_user_update_7200() {
 function ldap_user_update_7201() {
   _ldap_user_install_update_authmap();
 }
+
+
+/**
+ * attach ldap_user_last_checked field to user entity to track reconciliation of ldap and drupal accounts
+ */
+
+function ldap_user_update_7202() {
+
+  $field_info = field_info_field('ldap_user_last_checked');
+  if (!$field_info) {
+    $field_confs = ldap_user_user_entity_fields();
+    $field_conf = $field_confs['ldap_user_last_checked'];
+    field_create_field($field_conf['field']);
+    field_create_instance($field_conf['instance']);
+  }
+
+  return t('ldap_user_last_checked field added to user entity.');
+
+}
+
   

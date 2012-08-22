@@ -65,7 +65,11 @@ class LdapUserConf {
   public $detailedWatchdog = FALSE;
   public $provisionsDrupalAccountsFromLdap = FALSE;
   public $provisionsLdapEntriesFromDrupalUsers = FALSE;
-
+  
+  // what should be done with ldap provisioned accounts that no longer have associated drupal accounts.
+  public $orphanedDrupalAcctBehavior = 'ldap_user_orphan_email';
+  public $orphanedCheckQty = 100;
+  
   public $wsKey = NULL;
   public $wsEnabled = 0;
   public $wsUserIps = array();
@@ -93,6 +97,8 @@ class LdapUserConf {
     'ldapEntryProvisionServer',
     'drupalAcctProvisionEvents',
     'ldapEntryProvisionEvents',
+    'orphanedDrupalAcctBehavior',
+    'orphanedCheckQty',
     'userConflictResolve',
     'manualAccountConflict',
     'acctCreation',
@@ -932,10 +938,8 @@ function __construct() {
           $account = user_save(NULL, $user_edit, 'ldap_user');
           if (!$account) {
             drupal_set_message(t('User account creation failed because of system problems.'), 'error');
-         //   debug(t('User account creation failed because of system problems.'));
           }
           else {
-          // //dpm("user save success");//dpm($account);
             user_set_authmaps($account, array('authname_ldap_user' => $user_edit['name']));
           }
           return $account;

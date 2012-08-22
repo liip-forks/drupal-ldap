@@ -71,7 +71,6 @@ define('LDAP_USER_TEST_FORM_PATH', 'admin/config/people/ldap/user/test');
 
 define('LDAP_USER_WS_USER_PATH', 'ldap/user/ws');
 
-
 /**
  * Implements hook_menu().
  */
@@ -127,6 +126,17 @@ function ldap_user_theme() {
     'file' => 'ldap_user.theme.inc'
     ),
   );
+}
+
+/**
+ * Implements hook_cron().
+ */
+function ldap_user_cron() {
+  $ldap_user_conf = ldap_user_conf();
+  if ($ldap_user_conf->orphanedDrupalAcctBehavior != 'ldap_user_orphan_do_not_check') {
+    module_load_include('inc', 'ldap_user', 'ldap_user.cron');
+    _ldap_user_orphans($ldap_user_conf);
+  }
 }
 
 function ldap_user_conf_cache_clear() {
