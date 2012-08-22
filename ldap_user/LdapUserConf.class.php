@@ -335,6 +335,7 @@ function __construct() {
           LDAP_USER_DRUPAL_USER_UPDATE_ON_USER_AUTHENTICATE,
         );
       }
+
       //dpm($configurations);//dpm($this->drupalAcctProvisionEvents);
       $result = count(array_intersect($configurations, array_keys(array_filter($this->drupalAcctProvisionEvents))));
      // if (!$result) {

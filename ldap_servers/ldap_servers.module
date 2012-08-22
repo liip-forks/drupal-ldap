@@ -442,13 +442,12 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'source' => ($ldap_server->mail_template) ? $ldap_server->mail_template : '[' . $ldap_server->mail_attr . ']',
       'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
-      'contexts' => array(LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER),
+      'contexts' =>  $all_contexts,
       'config_module' => 'ldap_server',
       'synch_module' => 'ldap_user',
     ) + $available_user_attrs['[property.mail]'];
   }
 
-  
 }
 
 //@todo  Email Behavior and email update options need to be in ldap_user module, see: admin/config/people/ldap/authentication

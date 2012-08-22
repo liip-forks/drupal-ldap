@@ -309,8 +309,9 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
     $form['derive_from_entry']['derive_from_entry_preamble'] = array(
         '#type' => 'item',
-        '#markup' => t('Use this strategy if your LDAP has entries for groups and strategy II.B. is not applicable.') .
-          t(' See ') . l('http://drupal.org/node/1499172' , 'http://drupal.org/node/1499172') . t(' for additional documentation.'),
+        '#markup' =>   '<em>' . t('This strategy is still buggy, particularly for openLDAP. See http://drupal.org/node/1412076 and http://drupal.org/node/1066608') .
+         '</em><br/>' .  t('Use this strategy if your LDAP has entries for groups and strategy II.B. is not applicable.') 
+      . t(' See ') . l('http://drupal.org/node/1499172' , 'http://drupal.org/node/1499172') . t(' for additional documentation.'),
     );
 
     $form['derive_from_entry']['derive_from_entry'] = array(
