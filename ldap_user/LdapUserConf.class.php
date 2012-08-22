@@ -335,16 +335,6 @@ function __construct() {
           LDAP_USER_DRUPAL_USER_UPDATE_ON_USER_AUTHENTICATE,
         );
       }
-      elseif ($action == 'delete_drupal_entry') {
-        $configurations = array(
-          LDAP_USER_DRUPAL_USER_DELETE_ON_LDAP_ENTRY_MISSING,
-        );
-      }
-      elseif ($action == 'cancel_drupal_entry') {
-        $configurations = array(
-          LDAP_USER_DRUPAL_USER_CANCEL_ON_LDAP_ENTRY_MISSING,
-        );
-      }
       //dpm($configurations);//dpm($this->drupalAcctProvisionEvents);
       $result = count(array_intersect($configurations, array_keys(array_filter($this->drupalAcctProvisionEvents))));
      // if (!$result) {
@@ -709,7 +699,7 @@ function __construct() {
     if (!(is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn']) && $proposed_ldap_entry['dn'])) {
       return FALSE;
     }
-    return $ldap_server->dnExists($proposed_ldap_entry['dn'], 'ldap_entry');
+    return $ldap_server->dnExists($proposed_ldap_entry['dn'], 'ldap_entry', array());
     
   }
  
@@ -821,10 +811,10 @@ function __construct() {
         }
         if ($ldap_attr_name == 'dn') {
           $ldap_user_entry['dn'] = $value;
-          $ldap_user_entry['distinguishedName'][0] = $value;
-          if ($include_count) {
-             $ldap_user_entry['distinguishedName']['count'] = 1;
-          }         
+         // $ldap_user_entry['distinguishedName'][0] = $value;
+         // if ($include_count) {
+            // $ldap_user_entry['distinguishedName']['count'] = 1;
+         // }         
         }
         else {
           if (!isset($ldap_user_entry[$ldap_attr_name]) || !is_array($ldap_user_entry[$ldap_attr_name])) {

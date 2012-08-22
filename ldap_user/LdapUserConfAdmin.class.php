@@ -33,10 +33,6 @@ class LdapUserConfAdmin extends LdapUserConf {
         Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
       LDAP_USER_DRUPAL_USER_UPDATE_ON_USER_AUTHENTICATE => t('Synch LDAP to Drupal on logon.'),
       LDAP_USER_DRUPAL_USER_UPDATE_ON_USER_UPDATE => t('Synch LDAP to Drupal whenever Drupal account is updated.'),
-      LDAP_USER_DRUPAL_USER_CANCEL_ON_LDAP_ENTRY_MISSING => t('Anytime the corresponding
-        LDAP entry for a user is gone, disable the Drupal Account.'),
-      LDAP_USER_DRUPAL_USER_DELETE_ON_LDAP_ENTRY_MISSING => t('Anytime the corresponding
-        LDAP entry for a user is gone, delete the Drupal Account.'),
     );
 
     $values['ldapEntryProvisionEventsDescription'] = t('When should a corresponding LDAP Entry

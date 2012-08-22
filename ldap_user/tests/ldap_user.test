@@ -632,7 +632,6 @@ class LdapUserLdapProvisionTests extends LdapUserTestCasev2 {
     debug("dn=$desired_dn in activedirectory server"); debug($servers['activedirectory']->entries[$desired_dn]);
     $ldap_entry_success = (
       isset($servers['activedirectory']->entries[$desired_dn]) &&
-      $servers['activedirectory']->entries[$desired_dn]['distinguishedName'][0] == $desired_dn &&
       $servers['activedirectory']->entries[$desired_dn]['cn'][0] == $username &&
       $servers['activedirectory']->entries[$desired_dn]['displayName'][0] == 'John Doe' &&
       $servers['activedirectory']->entries[$desired_dn]['guid'][0] == 'ldap.pixotech.com.uid.2' &&

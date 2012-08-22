@@ -22,7 +22,7 @@ function _ldap_user_orphans($ldap_user_conf) {
   $result = $query->execute();
   
   
-  // loop through all $qty and generate single ldap query for each 50 entries only returning distinguishedName
+  // loop through all $qty and generate single ldap query for each 50 entries only returning dn
   $ldap_entries = array();
   $drupal_users = array();
   $orphans = array();

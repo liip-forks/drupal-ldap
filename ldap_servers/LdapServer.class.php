@@ -306,18 +306,24 @@ class LdapServer {
  *
  * @param return ldap entry array
  */
-  function dnExists($dn, $return = 'boolean') {
-    $attributes = array();
-    foreach ($this->basedn as $basedn) {
-      if (empty($basedn)) continue;
-      $filter = '(distinguishedName=' . ldap_server_massage_text($dn, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ')';
-      $result = $this->search($basedn, $filter, $attributes);
-      if (!$result || !isset($result['count']) || !$result['count']) {
-        continue;
-      }
-      return ($return == 'boolean') ? TRUE : $result[0];
+  function dnExists($dn, $return = 'boolean', $attributes = array('objectclass')) {
+
+    $params = array(
+      'base_dn' => $dn,
+      'attributes' => $attributes,
+      'attrsonly' => TRUE,
+      'filter' => '(objectclass=*)',
+      'sizelimit' => 0,
+      'timelimit' => 0,
+      'deref' => NULL,
+    );
+    $result = $this->ldapQuery(LDAP_SCOPE_BASE, $params);
+    if ($result && (ldap_count_entries($this->connection, $result) !== FALSE)) {
+       return ($return == 'boolean') ? TRUE : $result[0];
     }
-    return FALSE;
+    else {
+       return FALSE;
+    }
   }
   
   /**
