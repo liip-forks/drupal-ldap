@@ -108,11 +108,19 @@ class LdapUserConf {
     'wsUserIps',
     'wsActions',
   );
+  
+  // events that can create drupal users
+  private $drupalAcctProvisionAvailableEvents = array(
+    LDAP_USER_DRUPAL_USER_CREATE_ON_LOGON,
+    LDAP_USER_DRUPAL_USER_CREATE_VIA_API,
+  );
 
-function __construct() {
+
+          
+  function __construct() {
     $this->load();
    ////dpm('filter');//dpm(array_filter(array_values($this->drupalAcctProvisionEvents)));
-    $this->provisionsDrupalAccountsFromLdap = (count(array_filter(array_values($this->drupalAcctProvisionEvents))) > 0);
+    $this->provisionsDrupalAccountsFromLdap = (count(array_intersect($this->drupalAcctProvisionAvailableEvents, array_filter(array_values($this->drupalAcctProvisionEvents)))) > 0);
     $this->provisionsLdapEntriesFromDrupalUsers = (
       $this->ldapEntryProvisionServer
       && $this->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID

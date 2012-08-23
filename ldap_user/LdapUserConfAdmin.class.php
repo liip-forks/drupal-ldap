@@ -213,7 +213,7 @@ class LdapUserConfAdmin extends LdapUserConf {
 
     $form['basic_to_drupal']['drupalAcctProvisionEvents'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('Drupal Account Provisioning Options'),
+      '#title' => t('Drupal Account Provisioning Events'),
       '#required' => FALSE,
       '#default_value' => $this->drupalAcctProvisionEvents,
       '#options' => $this->drupalAccountProvisionEventsOptions,
@@ -840,45 +840,31 @@ EOT;
         continue;
       }
       if ( !$this->isMappingConfigurable($mapping, 'ldap_user')) { // is configurable by ldap_user module (not direction to ldap_user)
-      //  dpm("non configurable addSynchFormRow - $target_id");  dpm($mapping);
         $this->addSynchFormRow($form, 'nonconfigurable', $direction, $mapping, $user_attr_options, $ldap_server, $enabled, $row);
         $row++;
       }
-      else {
-      //  dpm("configurable addSynchFormRow - $target_id");  dpm($mapping);
-      }
     }
 
-
-
     // 2. existing configurable mappings rows
-   // dpm('this->ldapUserSynchMappings');  dpm($this->ldapUserSynchMappings);
-   // dpm('this->synchMapping');  dpm($this->synchMapping);
     if (isset($this->ldapUserSynchMappings[$direction][$ldap_server->sid])) {
       foreach ($this->ldapUserSynchMappings[$direction][$ldap_server->sid] as $target_attr_token => $mapping) {  // key could be ldap attribute name or user attribute name
-       // dpm("target_attr_name=$target_attr_token");  dpm($mapping);
         if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($this->synchMapping[$direction][$ldap_server->sid][$target_attr_token], 'ldap_user')) {
-     //   dpm("addSynchFormRow - $target_id");  dpm($mapping);
           $this->addSynchFormRow($form, 'update', $direction, $mapping, $user_attr_options, $ldap_server, $enabled, $row);
           $row++;
         }
       }
     }
-      // temp_out dpm('form'); // temp_out dpm($form);
 
-
- //   dpm('form pre add'); dpm($form);
     // 3. leave 4 rows for adding more mappings
     for ($i=0; $i<4; $i++) {
       $this->addSynchFormRow($form, 'add', $direction, NULL, $user_attr_options, $ldap_server, $enabled, $row);
       $row++;
     }
-  //  dpm('form post add'); dpm($form);
 
   }
 
 
-    private function isMappingConfigurable($mapping = NULL, $module = 'ldap_user') {
+  private function isMappingConfigurable($mapping = NULL, $module = 'ldap_user') {
       $configurable = (
         (
           (!isset($mapping['configurable_to_drupal']) && !isset($mapping['configurable_to_ldap'])) ||
@@ -908,10 +894,9 @@ EOT;
    * @return by reference to $form
    */
   private function addSynchFormRow(&$form, $action, $direction, $mapping, $user_attr_options, $ldap_server, $enabled, $row) {
- //   dpm("row=$row,action=$action, mapping="); dpm($mapping);
+
     $id_prefix = $direction .'__'. $ldap_server->sid . '__';
-  //  $row = $this->synchFormRow;
-  
+
     $id = $id_prefix . 'sm__remove__' . $row;
     $form[$id] = array(
       '#id' => $id,
