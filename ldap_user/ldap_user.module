@@ -194,9 +194,6 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
           ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);  
         }
       break;  
-        
-
-
     }
     
     $attributes_required_by_user_module_mappings = $ldap_user_conf->getRequiredAttributes($params['direction'], $params['ldap_context']);
@@ -689,7 +686,7 @@ function ldap_user_user_login(&$edit, $account) {
  */
 function ldap_user_user_insert(&$user_edit, $account, $category) {
 
-  //dpm('ldap_user_user_insert'); dpm($user_edit); dpm($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
+ // dpm('ldap_user_user_insert'); dpm($user_edit); dpm($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
 
   if ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1)) {
     return; // do not provision or synch user 1
@@ -703,14 +700,16 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
   $empty_user_edit = array();
 
   if ($account->status && $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE)) {
+
     $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, NULL, TRUE);
   }
 
   if ($ldap_user_conf->provisionsLdapEntriesFromDrupalUsers) {
+    
     $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'user_action_query' , $account->name);
     $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->name);
     $prov_enabled = $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE);
-    
+
     if ($prov_enabled && (!$already_provisioned_to_ldap || !$already_synched_to_ldap)) {
       $ldap_provision_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
       if ($already_provisioned_to_ldap === FALSE && !$ldap_provision_entry) {

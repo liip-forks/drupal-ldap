@@ -61,7 +61,7 @@ drush field-create user field_user_display_name,text,text_textfield --entity_typ
     A. Create new user via admin/people/create
     B. field_lname, field_fname, field_dept, and field_display_name should be visible and populated
     C. goto admin/config/people/ldap/user/test enter the username and hit the test button.  this will show the user object and entity
-       if the devel module is enabled
+       if the devel module is enabled. In "user object (before provisioning or synching)"
        i.     user object->ldap_user_puid_sid should be the id of the server
        ii.    user object->ldap_user_puid should be the value of the puid attribute
        iii.   user object->ldap_user_puid_property  should be the name of the puid attribute

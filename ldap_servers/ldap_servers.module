@@ -364,7 +364,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'notes' => 'not configurable',
       'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
-      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
       'config_module' => 'ldap_server',
       'prov_module' => 'ldap_user',
     ) + $available_user_attrs['[field.ldap_user_puid_sid]'];
@@ -378,7 +378,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'convert' => $ldap_server->unique_persistent_attr_binary,
       'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
-      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
       'config_module' => 'ldap_server',
       'prov_module' => 'ldap_user',
     ) + $available_user_attrs['[field.ldap_user_puid]'];
@@ -392,7 +392,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'notes' => 'configure at '. $server_edit_path,
       'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
-      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
       'config_module' => 'ldap_server',
       'prov_module' => 'ldap_user',
     ) + $available_user_attrs['[field.ldap_user_puid_property]'];
