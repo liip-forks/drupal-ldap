@@ -146,7 +146,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     }
 
     $consumer_sid = $consumer->consumerConf->deriveFromEntrySearchAll ? NULL : $consumer->consumerConf->sid;
-    $ldap_user = ldap_servers_get_user_ldap_data($user, $consumer_sid, LDAP_USER_SYNCH_DIRECTION_NONE, 'ldap_authorization__' . $consumer_type);
+    $ldap_user = ldap_servers_get_user_ldap_data($user, $consumer_sid, LDAP_USER_PROV_DIRECTION_NONE, 'ldap_authorization__' . $consumer_type);
 
     if (!$ldap_user) {
       $notifications[$consumer_type][] = LDAP_AUTHORIZATION_USER_LDAP_NOT_FOUND;

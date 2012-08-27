@@ -35,8 +35,8 @@ function theme_ldap_user_conf_form($variables) {
 
   foreach ($tables as $direction => $ldap_servers) {
     foreach ($ldap_servers as $sid => $table) {
-      
-      if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) {
+ 
+      if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
         $direction_text = 'todrupal';
         $header = array(
           array('data' => t('Remove'), 'rowspan' => 1, 'class' => 'mixedcase'),
@@ -49,7 +49,7 @@ function theme_ldap_user_conf_form($variables) {
                 'rowspan' => 1,
                 'class' => 'mixedcase',
                 ),
-          array('data' => t('When Should Data Be Synchronized?'), 'colspan' => count($ldap_user_conf_admin->synchTypes), 'rowspan' => 1, 'class' => 'mixedcase'),
+          array('data' => t('When Should Attribute Be Synchronized to LDAP?'), 'colspan' => count($ldap_user_conf_admin->provisionsDrupalSynchEvents), 'rowspan' => 1, 'class' => 'mixedcase'),
           
         );
         
@@ -72,7 +72,7 @@ function theme_ldap_user_conf_form($variables) {
                 ),
         );
       
-        foreach ($ldap_user_conf_admin->synchTypes as $col_id => $col_name) {
+        foreach ($ldap_user_conf_admin->provisionsDrupalSynchEvents as $col_id => $col_name) {
           $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase');
         }
       }
@@ -96,13 +96,13 @@ function theme_ldap_user_conf_form($variables) {
             'class' => 'mixedcase',
           ),
           array(
-            'data' => t('When Should Data Be Synchronized?'),
-            'colspan' => count($ldap_user_conf_admin->synchTypes),
+            'data' => t('When Should Attribute Be Synchronized to Drupal?'),
+            'colspan' => count($ldap_user_conf_admin->provisionsLdapSynchEvents),
             'rowspan' => 1,
             'class' => 'mixedcase',
           ),
         );
-      
+
         $second_header = array(
           array(
             'data' => t(''),
@@ -129,11 +129,11 @@ function theme_ldap_user_conf_form($variables) {
             'class' => 'mixedcase'
           ),
         );
-        foreach ($ldap_user_conf_admin->synchTypes as $col_id => $col_name) {
+        foreach ($ldap_user_conf_admin->provisionsLdapSynchEvents as $col_id => $col_name) {
           $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase');
         }
       }
-      
+
       // #col is ignored, so sort table columns here
       foreach ($table['rows'] as $row_id => $row) {
         $discard = ksort($row);

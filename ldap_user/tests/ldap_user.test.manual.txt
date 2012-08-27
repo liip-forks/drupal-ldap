@@ -90,7 +90,7 @@
        
 7.1 Test ldap entry provisioning workflow: User requests account -> admin approves it -> and user gets one time logon and sets password
   A. Setup (as admin):
-    -- at admin/config/people/accounts: select "Visitors, but administrator approval is required"
+    -- at admin/config/people/accounts: select "Visitors" and check "Require e-mail verification"
     -- configure to ldap provisioning admin/config/people/ldap/user
       -- [x] Create LDAP entry when a Drupal Account has a status of approved... in "LDAP Entry Provisioning Options"
       -- [x] Update LDAP entry when Drupal Account that has a corresponding LDAP entry is updated...in "LDAP Entry Provisioning Options"

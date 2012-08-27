@@ -28,7 +28,6 @@ function ldap_test_dev_provision() {
   dpm('ldap_user_conf'); dpm($ldap_user_conf);
 
   // test basic ldap user functions
-  $synch_context = LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER;
 
   if ($user = user_load_by_name('jkeats')) {
     user_delete($user->uid);
@@ -36,7 +35,7 @@ function ldap_test_dev_provision() {
 
   $account = NULL;
   $user_edit = array('name' => 'jkeats');
-  $jkeats = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER, NULL, TRUE);
+  $jkeats = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
   dpm('jkeats user afterprovisionDrupalAccount'); dpm($jkeats);
 
   $jkeats = user_load_by_name('jkeats');

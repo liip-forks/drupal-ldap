@@ -302,10 +302,10 @@ Will not work on most ldaps.'),
 
     // #3 DOES USER EXIST IN SERVER'S LDAP
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
+      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_PROV_DIRECTION_ALL, LDAP_USER_EVENT_ALL);
     }
     elseif ($sso_login) {
-      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
+      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_PROV_DIRECTION_ALL, LDAP_USER_EVENT_ALL);
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%result'] = var_export($result, TRUE);
         watchdog('ldap_authentication', '%username : attempting single sign-on
@@ -314,7 +314,7 @@ Will not work on most ldaps.'),
       }
     }
     else {
-      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER);
+      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_PROV_DIRECTION_ALL, LDAP_USER_EVENT_ALL);
     }
 
     if (!$ldap_user) {
@@ -377,7 +377,7 @@ Will not work on most ldaps.'),
     else {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_SUCCESS;
       if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-        $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_SYNCH_DIRECTION_ALL, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER); // after successful bind, lookup user again to get private attributes
+        $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_PROV_DIRECTION_ALL, LDAP_USER_EVENT_ALL); // after successful bind, lookup user again to get private attributes
         $watchdog_tokens['%mail'] = $ldap_user['mail'];
       }
       if ($ldap_server->account_name_attr != '') {
@@ -461,7 +461,7 @@ Will not work on most ldaps.'),
    	$account_exists = TRUE;
   }
   if (!$account_exists) {
-    if (!$auth_conf->ldapUser->contextEnabled(LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER, 'provision')) {
+    if (!$auth_conf->ldapUser->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE)) {
       //@todo throw error that provisioning of drupal accts is not enabled, and no account exists so no go here.
     }
     else {
@@ -503,7 +503,7 @@ Will not work on most ldaps.'),
     
     // don't pass in ldap user, because want to requery with correct attributes needed
     // this may be a case where efficiency dictates querying for all attributes
-    $account = $auth_conf->ldapUser->provisionDrupalAccount($account, $user_edit, LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER, NULL, TRUE);
+    $account = $auth_conf->ldapUser->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
     if ($account === FALSE) {
       // need to throw error that account was not created so logging in is not happenning via ldap
     }

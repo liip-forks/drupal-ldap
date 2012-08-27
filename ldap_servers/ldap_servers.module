@@ -309,20 +309,6 @@ function ldap_servers_theme() {
         $attributes[$ldap_server->user_attr] = ldap_servers_set_attribute_map();
       }     
           
-      switch ($params['synch_context']) {
-  
-        case LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER:
-        case LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER:
-        case LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
-        case LDAP_USER_SYNCH_CONTEXT_CRON:
-        case LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER:
-        case LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER:
-        case LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
-        case LDAP_USER_SYNCH_CONTEXT_LDAP_ASSOCIATE:
-        case LDAP_USER_SYNCH_CONTEXT_MANUAL_LDAP_CREATE:
-        break;
-  
-      }
     }
 
   }
@@ -333,7 +319,7 @@ function ldap_servers_theme() {
  */
 
 function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
- // debug('ldap_servers_ldap_user_attrs_list_alter'); debug($available_user_attrs); debug($params);
+  //debug('ldap_servers_ldap_user_attrs_list_alter'); debug($available_user_attrs); debug($params);
   
   if (isset($params['ldap_server']) && $params['ldap_server']) {
     $ldap_server = $params['ldap_server'];
@@ -349,11 +335,9 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
     '!sid' => $ldap_server->sid,
   );
 
-  $all_contexts = ldap_user_synch_contexts();
-
   $server_edit_path = 'admin/config/people/ldap/servers/edit/' . $ldap_server->sid;
 
-  if ($direction == LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER) {
+  if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
     
     /** these 4 user fields indentify where in ldap and which ldap server they are associated with.
      they are required for a Drupal account to be "ldap associated" regardless of if any other
@@ -378,11 +362,11 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'configurable_to_ldap' => 1,
       'source' => t('!sid', $tokens),
       'notes' => 'not configurable',
-      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+      'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
-      'contexts' => $all_contexts,
+      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
       'config_module' => 'ldap_server',
-      'synch_module' => 'ldap_user',
+      'prov_module' => 'ldap_user',
     ) + $available_user_attrs['[field.ldap_user_puid_sid]'];
 
     $available_user_attrs['[field.ldap_user_puid]'] =  array(
@@ -392,11 +376,11 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'source' => '[' . $ldap_server->unique_persistent_attr . ']',
       'notes' => 'configure at '. $server_edit_path,
       'convert' => $ldap_server->unique_persistent_attr_binary,
-      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+      'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
-      'contexts' => $all_contexts,
+      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
       'config_module' => 'ldap_server',
-      'synch_module' => 'ldap_user',
+      'prov_module' => 'ldap_user',
     ) + $available_user_attrs['[field.ldap_user_puid]'];
 
     $available_user_attrs['[field.ldap_user_puid_property]'] =
@@ -406,11 +390,11 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'configurable_to_ldap' => 1,
       'source' =>  $ldap_server->unique_persistent_attr ,
       'notes' => 'configure at '. $server_edit_path,
-      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+      'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
-      'contexts' => $all_contexts,
+      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
       'config_module' => 'ldap_server',
-      'synch_module' => 'ldap_user',
+      'prov_module' => 'ldap_user',
     ) + $available_user_attrs['[field.ldap_user_puid_property]'];
 
     $available_user_attrs['[field.ldap_user_current_dn]'] =
@@ -420,11 +404,11 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'configurable_to_ldap' => 0,
       'source' => '[dn]',
       'notes' => 'not configurable',
-      'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+      'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
-      'contexts' => $all_contexts,
+      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
       'config_module' => 'ldap_server',
-      'synch_module' => 'ldap_user',
+      'prov_module' => 'ldap_user',
     ) + $available_user_attrs['[field.ldap_user_current_dn]'];
   
     if ($ldap_user_conf->provisionsDrupalAccountsFromLdap) {
@@ -434,11 +418,11 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       $available_user_attrs['[property.name]'] = array(
         'name' => 'Property: Username',
         'source' => '[' . $ldap_server->user_attr . ']',
-        'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
-        'contexts' => $all_contexts,
+        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
         'config_module' => 'ldap_server',
-        'synch_module' => 'ldap_user',
+        'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[property.name]'];
 
       if (!isset($available_user_attrs['[property.mail]']) || !is_array($available_user_attrs['[property.mail]'])) {
@@ -447,20 +431,17 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       $available_user_attrs['[property.mail]'] =  array(
         'name' => 'Property: Email',
         'source' => ($ldap_server->mail_template) ? $ldap_server->mail_template : '[' . $ldap_server->mail_attr . ']',
-        'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
-        'contexts' =>  $all_contexts,
+        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
         'config_module' => 'ldap_server',
-        'synch_module' => 'ldap_user',
+        'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[property.mail]'];
     }
   }
+ // debug('available_user_attrs2'); debug($available_user_attrs);
 
 }
-
-//@todo  Email Behavior and email update options need to be in ldap_user module, see: admin/config/people/ldap/authentication
-// this will determine if mail is needed in LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER and LDAP_USER_SYNCH_CONTEXT_CRON
-
 
 /**
  * flush server static cache
@@ -517,9 +498,9 @@ function ldap_servers_fields() {
  * @param mixed $sid is a server id or array of server ids
  */
 
-function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $direction = LDAP_USER_SYNCH_DIRECTION_ALL, $synch_context = LDAP_USER_SYNCH_CONTEXT_ALL) {
+function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $direction = LDAP_USER_PROV_DIRECTION_ALL, $prov_event = LDAP_USER_EVENT_ALL) {
   ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
-  return _ldap_servers_get_user_ldap_data($drupal_user, $sid, $direction, $synch_context);
+  return _ldap_servers_get_user_ldap_data($drupal_user, $sid, $direction, $prov_event);
 }
 
 /**

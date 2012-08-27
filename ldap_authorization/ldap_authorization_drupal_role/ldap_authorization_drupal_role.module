@@ -46,13 +46,13 @@ function ldap_authorization_drupal_role_ldap_user_attrs_list_alter(&$available_u
     'name' => 'Property: Drupal Roles',
     'source' => 'depends on configuration',
     'configurable_to_drupal' => 0,
-    'configurable_to_ldap' => 1,
+    'configurable_to_ldap' => 0,
     'notes' => t('configure at:') . 'admin/config/people/ldap/authorization',
-    'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER,
+    'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
     'enabled' => TRUE,
     'config_module' => 'ldap_authorization_drupal_role',
-    'contexts' => array(),
-    'synch_module' => 'ldap_authorization_drupal_role',
+    'prov_events' => array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+    'prov_module' => 'ldap_authorization_drupal_role',
   );
 
 }

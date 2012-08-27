@@ -16,7 +16,7 @@
  *
  * @param array $params context array with some or all of the following key/values
  *   'sid' => drupal account object,
- *   'synch_context' => LDAP_USER_SYNCH_CONTEXT_* constant,
+ *   'ldap_context' => ,
  *   'direction' => 
  *
  */
@@ -56,7 +56,7 @@ function hook_ldap_attributes_needed_alter(&$attributes, $params) {
  * @param array $ldap_user see README.developers.txt for structure
  * @param array $params context array with some or all of the following key/values
  *   'account' => drupal account object,
- *   'synch_context' => LDAP_USER_SYNCH_CONTEXT_* constant,
+ *   'ldap_context' => ,
  *   'module' =>  module calling alter, e.g. 'ldap_user',
  *   'function' => function calling alter, e.g. 'provisionLdapEntry'
  *

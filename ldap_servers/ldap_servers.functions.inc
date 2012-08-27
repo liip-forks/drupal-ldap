@@ -114,17 +114,17 @@ function ldap_badattr($attr, $attr_name) {
  * get array of required attributes for an ldap query
 
  * @param string $sid server id or ldap server object being used
- * @param string $direction LDAP_USER_SYNCH_DIRECTION_* constant
- * @param string $synch_context is LDAP_USER_SYNCH_CONTEXT_* constant
+ * @param string $direction LDAP_USER_PROV_DIRECTION_* constant
+ * @param string $ldap_context 
  * @param boolean $reset cache
  *
  */
-function ldap_servers_attributes_needed($sid, $direction = LDAP_USER_SYNCH_DIRECTION_ALL, $synch_context = LDAP_USER_SYNCH_CONTEXT_ALL, $reset = TRUE) {
+function ldap_servers_attributes_needed($sid, $direction = LDAP_USER_PROV_DIRECTION_ALL, $ldap_context = 'all', $reset = TRUE) {
  // debug("call of ldap_servers_attributes_needed, op=$op,ldap_server="); debug($ldap_server);
  // dpm("call of ldap_servers_attributes_needed, op=$op,ldap_server="); dpm($ldap_server);
   static $attributes;
   $sid = is_object($sid) ? $sid->sid : $sid;
-  $static_cache_id = ($sid) ? $synch_context . '__' . $sid : $synch_context;
+  $static_cache_id = ($sid) ? $ldap_context . '__' . $sid : $ldap_context;
   if (!is_array($attributes)) {
     $attributes = array();
   }
@@ -132,12 +132,12 @@ function ldap_servers_attributes_needed($sid, $direction = LDAP_USER_SYNCH_DIREC
     $params = array(
       'sid' => $sid,
       'direction' => $direction,
-      'synch_context' => $synch_context,
+      'ldap_context' => $ldap_context,
     );
     drupal_alter('ldap_attributes_needed', $attributes[$static_cache_id], $params);
   }
   $return = $attributes[$static_cache_id];
-  //debug('ldap_servers_attributes_needed return, op=' . ldap_user_synch_context_text($op));debug($return);
+
   return $return;
 }
 

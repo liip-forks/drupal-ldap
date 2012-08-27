@@ -265,12 +265,20 @@ class LdapServerTestv2 extends LdapServer {
   function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
     
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
-   // debug('modifyLdapEntry,dn='. $dn); debug($attributes); debug('test data'); debug($test_data['entries'][$dn]);
+    //debug('test server modifyLdapEntry,dn='. $dn); debug($attributes); debug('test data'); debug($test_data['entries'][$dn]);
     if (!isset($test_data['entries'][$dn])) {
       return FALSE;
     }
-
     $ldap_entry = $test_data['entries'][$dn];
+    
+   // if (!$old_attributes) {
+   //   if (is_array($entries) && $entries['count'] == 1) {
+    //    $old_attributes =  $ldap_entry;
+   //   }
+  //  }
+    
+   // $attributes = $this->removeUnchangedAttributes($attributes, $old_attributes);
+
     foreach ($attributes as $key => $cur_val) {
     //  debug("key=$key"); debug($cur_val);
       if ($cur_val == '') {
@@ -301,7 +309,7 @@ class LdapServerTestv2 extends LdapServer {
     }
     
     $test_data['entries'][$dn] = $ldap_entry;
-   // debug('modifyLdapEntry:server test date before save'); debug($test_data['entries'][$dn]);
+   // debug('modifyLdapEntry:server test data before save'); debug($test_data['entries'][$dn]);
     variable_set('ldap_test_server__' . $this->sid, $test_data);
     $this->refreshFakeData();
     return TRUE;

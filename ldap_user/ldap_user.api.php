@@ -16,10 +16,13 @@
  *   'configurable_to_ldap' =>  0 | 1, is this configurable?
  *   'user_tokens' => <user_tokens>
  *   'convert' => 1 | 0 convert from binary to string for storage and comparison purposes
- *   'direction' => LDAP_USER_SYNCH_DIRECTION_TO_DRUPAL_USER or LDAP_USER_SYNCH_DIRECTION_TO_LDAP_ENTRY leave empty if configurable
+ *   'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY leave empty if configurable
  *   'config_module' => module providing synching configuration.
- *   'synch_module' => module providing actual synching of attributes.
- *   'contexts' => array of context constants for when syching should take place
+ *   'prov_module' => module providing actual synching of attributes.
+ *   'prov_events' => array( of LDAP_USER_EVENT_* constants indicating during which synch actions field should be synched)
+ *         - four permutations available
+ *            to ldap:   LDAP_USER_EVENT_CREATE_LDAP_ENTRY,  LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY,
+ *            to drupal: LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER     
  *   )
  *
  * where
@@ -36,7 +39,7 @@ function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
  /** search for _ldap_user_attrs_list_alter for good examples
   * the general trick to implementing this hook is:
   *   make sure to specify config and synch module
-  *   if its configurable by ldap_user module, don't specify convert, user_tokens, direction, or contexts.  these will be set by UI and stored values
+  *   if its configurable by ldap_user module, don't specify convert, user_tokens, direction.  these will be set by UI and stored values
   *   be sure to merge with existing values as ldap_user configured values will already exist in $available_user_attrs
   */
 
@@ -55,10 +58,10 @@ function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
  *   Array, the ldap user object relating to the drupal user
  * @param object $ldap_server
  *   The LdapServer object from which the ldap entry was fetched
- * @param int $synch_context
- *   The synch context, refer to the constants in ldap_user for more info
+ * @param int $prov_event
+ *   
  *
 */
-function hook_ldap_user_edit_user_alter(&$edit, &$ldap_user, $ldap_server, $synch_context) {
+function hook_ldap_user_edit_user_alter(&$edit, &$ldap_user, $ldap_server, $prov_event) {
   $edit['myfield'] = $ldap_server->getAttributeValue($ldap_user, 'myfield');
 }

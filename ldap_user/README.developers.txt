@@ -1,89 +1,93 @@
 
+provisioning = creating or synching ... to drupal or to ldap
+
 ==========================================
-A. Summary of how synching and provisioning events are handled
+Rough Summary of provisioning configuration and controls
 ==========================================
 
--------------------
-0.  Event Handlers for Provisioning
+1. configured triggers (admin/config/people/ldap/user) or configuration of other modules
+determine when provisioning happens.
 
-synch_contexts are:
-  LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER
-  LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER
-  LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER
-  LDAP_USER_SYNCH_CONTEXT_CRON
-  LDAP_USER_SYNCH_CONTEXT_DELETE_DRUPAL_USER
-  LDAP_USER_SYNCH_CONTEXT_DISABLE_DRUPAL_USER
-  LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER
-  LDAP_USER_SYNCH_CONTEXT_LDAP_ASSOCIATE   // existing drupal user is being ldap associated.  only synch ldap associatiation fields
-  LDAP_USER_SYNCH_CONTEXT_MANUAL_LDAP_CREATE  // existing drupal user is being ldap associated.  only synch ldap associatiation fields
+// configurable drupal acct provision triggers
+LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE
+LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE
+LDAP_USER_DRUPAL_USER_PROV_VIA_API
 
-The following events map to these synch contexts:
-
-LDAP_USER_SYNCH_CONTEXT_INSERT_DRUPAL_USER and :
-  -- provisionDrupalAccount() N.A. (since Drupal account is already created)
-  -- synchToDrupalAccount()   from hook_user_insert in ldap_user module (if not provisioned)
-                              See ldap_user.test.manual.txt 6.B.
-  
-  -- provisionLdapEntry()     from hook_user_insert in ldap_user module 
-  -- synchToLdapEntry()       from hook_user_insert in ldap_user module (if not provisioned)
-  
-LDAP_USER_SYNCH_CONTEXT_ENABLE_DRUPAL_USER
-  
-
-LDAP_USER_SYNCH_CONTEXT_AUTHENTICATE_DRUPAL_USER:
-  -- provisionDrupalAccount() from ldap_authentication_user_login_authenticate_validate function on logon.
-                              See ldap_user.test.manual.txt 6.C.
-  -- synchToDrupalAccount()   from ldap_authentication_user_login_authenticate_validate function on logon.
-                              See ldap_user.test.manual.txt 6.C.
+// configurable ldap entry provision triggers 
+LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE
+LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE
+LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE
 
 
-  -- synchToLdapEntry()       from hook_user_login in ldap_user module
-  -- provisionLdapEntry()     from hook_user_login in ldap_user module 
-  
-LDAP_USER_SYNCH_CONTEXT_UPDATE_DRUPAL_USER: 
-  -- provisionLdapEntry()     from hook_user_update in ldap_user module
-  -- synchToLdapEntry()       from hook_user_update in ldap_user module
+2. hook_user_* functions will check if appropriate triggers are enabled and initiate calls to ldapUserConf methods:
 
-LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE:   
-  -- deleteCorrespondingLdapEntry()  from hook_user_delete in ldap_user module
+ldapUserConf::provisionDrupalAccount()
+ldapUserConf::synchToDrupalAccount()
+ldapUserConf::ldapAssociateDrupalAccount()
+ldapUserConf::deleteDrupalAccount()
 
+ldapUserConf::provisionLdapEntry()
+ldapUserConf::synchToLdapEntry()
+ldapUserConf::deleteProvisionedLdapEntries()
+
+3. to get mappings and determine which attributes are needed "ldap_contexts" and "prov_events" are passed into 
+ldap_servers_get_user_ldap_data()
+ldapUserConf::drupalUserToLdapEntry()
+
+
+4.  Should provisioning happen?
 
 ------------
-1.  Server Level: Does an ldap server configuration support provisioning
-$ldap_user_conf->drupalAcctProvisionServer = <sid> | LDAP_USER_NO_SERVER_SID;  // servers used for to drupal acct provisioning
-$ldap_user_conf->ldapEntryProvisionServer =  <sid> | LDAP_USER_NO_SERVER_SID;  // servers used for provisioning to ldap
+4.A.  Server Level: Does an ldap server configuration support provisioning?
+ldapUserConf::drupalAcctProvisionServer = <sid> | LDAP_USER_NO_SERVER_SID;  // servers used for to drupal acct provisioning
+ldapUserConf::ldapEntryProvisionServer =  <sid> | LDAP_USER_NO_SERVER_SID;  // servers used for provisioning to ldap
 
 This is directly configured at config/people/ldap/user
 
 ------------
-2.  Context Level: Does provisioning occur for a given synch context?
-$ldap_user_conf->contextEnabled($synch_context, [synch|provision|delete_ldap_entry])
+4.B.  Trigger Level: Does provisioning occur for a given trigger?
+ldapUserConf::provisionEnabled($direction, $provision_trigger)
     
 This method is based on the configuration of two sets of checkboxes at config/people/ldap/user
 
-$this->drupalAcctProvisionEvents (see "LDAP Entry Provisioning Options"), contains:
-  LDAP_USER_DRUPAL_USER_CREATE_ON_LOGON
-  LDAP_USER_DRUPAL_USER_CREATE_ON_MANUAL_ACCT_CREATE;
-  LDAP_USER_DRUPAL_USER_CREATE_ON_ALL_USER_CREATION;
+ldapUserConf::drupalAcctProvisionTriggers (see "LDAP Entry Provisioning Options"), contains:
+  LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE
+  LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE
 
-$this->ldapEntryProvisionEvents (see "Drupal Account Provisioning Options"), contains:
-  LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_STATUS_IS_1
+ldapUserConf::ldapEntryProvisionTriggers (see "Drupal Account Provisioning Options"), contains:
+  LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE
   LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE
-  LDAP_USER_LDAP_ENTRY_UPDATE_ON_USER_UPDATE
-  LDAP_USER_LDAP_ENTRY_UPDATE_ON_USER_AUTHENTICATE
-  LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_UPDATE
-  LDAP_USER_LDAP_ENTRY_CREATE_ON_USER_AUTHENTICATE
+  LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE
 
+configurable elsewhere or no implemented:
+  LDAP_USER_DRUPAL_USER_PROV_VIA_API
+  
 
+@todo.  A hook to allow other modules to intervene here 
 
 ------------
-3.  Field Level: Does provisioning occur for a given field and ldap server for a given synch context?
+4.C  Field Level: Does provisioning occur for a given field and ldap server for a given "prov_event" and "ldap _context"?
 
-$ldap_user_conf->isSynched($field, $ldap_server, $synch_context, $direction)
+ldapUserConf::isSynched($field, $ldap_server, $prov_event, $direction)
 
 This depends on: 
-$ldap_user_conf->synchMapping[$direction][$ldap_server->sid][$field]['contexts']
-which is populated by various ldap and possibly other modules. These are visible in the tables at config/people/ldap/user
+ldapUserConf::synchMapping[$direction][$ldap_server->sid][$field]['prov_events']
+which is populated by various ldap and possibly other modules.
 
+"ldap_contexts" (any module can provide its own context which is just a string)
+  ldap_user_insert_drupal_user
+  ldap_user_update_drupal_user
+  ldap_authentication_authenticate
+  ldap_user_delete_drupal_user
+  ldap_user_disable_drupal_user
+  all
+
+"prov_events"
+  LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER
+  LDAP_USER_EVENT_CREATE_DRUPAL_USER
+  LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY
+  LDAP_USER_EVENT_CREATE_LDAP_ENTRY
+  LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT
+  LDAP_USER_EVENT_ALL
 
 

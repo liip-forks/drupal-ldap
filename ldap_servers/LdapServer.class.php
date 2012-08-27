@@ -304,7 +304,7 @@ class LdapServer {
  * @param string $dn
  * @param enum $return = 'boolean' or 'ldap_entry'
  *
- * @param return ldap entry array
+ * @param return FALSE or ldap entry array
  */
   function dnExists($dn, $return = 'boolean', $attributes = array('objectclass')) {
 
@@ -367,10 +367,31 @@ class LdapServer {
     elseif(!$dn) {
       return FALSE;
     }
-   // dpm('createLdapEntry result:'. $dn); dpm($ldap_entry);
     
+    /**
+    $i = 67;
+    $cn = "ed-drupal-user-" . $i;
+    $dn = "cn=ed-drupal-jbarclay68,ou=test,ou=webs,ou=education,ou=urbana,dc=ad,dc=uillinois,dc=edu";
+    // displayname and givenname are null
+    $ldap_entry = array(
+              "displayName" => "",
+              "givenname" => "",
+              "cn" => "ed-drupal-jbarclay68",
+              "samaccountname" =>  "ed-drupal-jbarclay68",
+              "objectclass" => array(
+                "top", "person", "organizationalPerson", "user",
+              ),
+              "description" => "test user",
+              'mail' => "ed-drupal-jbarclay68@johnbarclay.com",
+              'givenName' => 'Drupal',
+              'sn' => 'User',
+              'distinguishedName' => "cn=ed-drupal-jbarclay68,ou=test,ou=webs,ou=education,ou=urbana,dc=ad,dc=uillinois,dc=edu",
+            );
+      **/      
+   // dpm('createLdapEntry result:'. $dn); dpm($this->connection); dpm($ldap_entry);
    // set_error_handler(array('LDAPInterface', 'void_error_handler'));
-    $result = ldap_add($this->connection, $dn, $ldap_entry);
+   //@todo need good try catch here with good watchdog for debugging.
+    $result = ldap_add($this->connection, $dn, $ldap_entry); 
   //  restore_error_handler();
  // dpm('createLdapEntry result:'); dpm($result);
     return $result;
@@ -703,7 +724,7 @@ class LdapServer {
         }
         elseif ($this->hasError()) {
           watchdog('ldap_server', 'ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query',
-            array('%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']),
+            array('%message' => $this->errorMsg('ldap'), '%query' =>@$params['query_display']),
             WATCHDOG_ERROR);
         }
         break;
@@ -753,26 +774,26 @@ class LdapServer {
    * @param $drupal_user_name
    *  drupal user name.
    *
-   * @param string or int $synch_context
-   *   This could be anything, particularly when used by other modules.  Other modules should use string like 'mymodule_mycontext'
-   *   LDAP_USER_SYNCH_CONTEXT_ALL signifies get all attributes needed by all other contexts/ops
+   * @param string or int $prov_event
+   *   This could be anything, particularly when used by other modules.  Other modules should use string like 'mymodule_myevent'
+   *   LDAP_USER_EVENT_ALL signifies get all attributes needed by all other contexts/ops
    *
    * @return
    *   An array with users LDAP data or NULL if not found.
    */
-  function user_lookup($drupal_user_name, $direction = LDAP_USER_SYNCH_DIRECTION_ALL, $synch_context = LDAP_USER_SYNCH_CONTEXT_ALL) {
+  function user_lookup($drupal_user_name, $direction = LDAP_USER_PROV_DIRECTION_ALL, $prov_event = LDAP_USER_EVENT_ALL) {
    // dpm("user_lookup, drupal_user_name=$drupal_user_name, op=$op");
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
     $ldap_username = $this->drupalToLdapNameTransform($drupal_user_name, $watchdog_tokens);
     if (!$ldap_username) {
       return FALSE;
     }
-    if ($synch_context == LDAP_TEST_QUERY_CONTEXT) {
+    if ($prov_event == LDAP_USER_EVENT_ALL) {
       $attribute_maps = array();
     }
     else {
-     // debug('ldap_servers_attributes_needed(this->sid, direction, synch_context)'); debug(array($this, $this->sid, $direction, $synch_context));
-      $attribute_maps = ldap_servers_attributes_needed($this->sid, $direction, $synch_context);
+     // debug('ldap_servers_attributes_needed(this->sid, direction, prov_event)'); debug(array($this, $this->sid, $direction, $prov_event));
+      $attribute_maps = ldap_servers_attributes_needed($this->sid, $direction, $prov_event);
     }
     
     foreach ($this->basedn as $basedn) {
@@ -1062,7 +1083,22 @@ class LdapServer {
     }
   }
 
-
+ /**
+   * @param string $dn ldap dn
+   *
+   * @return mixed string user's username value of FALSE
+   */
+  public function deriveUsernameFromDn($dn) {
+    
+    if (!$ldap_entry = dnExists($dn, 'ldap_entry', array())) {
+      return FALSE;
+    }
+    else {
+      return $this->deriveUsernameFromLdapEntry($ldap_entry);
+    }
+  
+  }
+  
   /**
    * @param ldap entry array $ldap_entry
    *
