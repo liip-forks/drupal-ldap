@@ -623,6 +623,7 @@ class LdapUserConf {
      // $account = new stdClass();
       $account = user_load($drupal_user->uid);
       $result = user_save($account, $user_edit, 'ldap_user');
+       
       return $result;
     }
     else {
@@ -877,7 +878,7 @@ class LdapUserConf {
       // look for existing drupal account with same puid.  if so update username and attempt to synch in current context
       $puid = $ldap_server->derivePuidFromLdapEntry($ldap_user['attr']);
       $account2 = ($puid) ? $ldap_server->drupalUserFromPuid($puid) : FALSE;
-      //826 dpm('provisionDrupalAccount: ldap_user'); dpm($ldap_user);  dpm('params'); dpm($params); dpm('account2'); dpm($account2);
+
       if ($account2) { // synch drupal account, since drupal account exists
         // 1. correct username and authmap
         $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
@@ -885,13 +886,11 @@ class LdapUserConf {
         user_set_authmaps($account, array("authname_ldap_user" => $user_edit['name']));
         // 2. attempt synch if appropriate for current context
         if ($account) {
-          $account = $this->synchToDrupalAccount($account, $user_edit, TRUE);
+          $account = $this->synchToDrupalAccount($account, $user_edit, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user, TRUE);
         }
-        $result = ($account) ? $account : $account2;
         return $result;
       }
       else { // create drupal account
-      
         $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_CREATE_DRUPAL_USER);
          //826 dpm('provisionDrupalAccount: user_edit'); dpm($user_edit); 
         if ($save) {

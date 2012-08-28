@@ -40,7 +40,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     $this->ldapTestId = $this->module_name . ': test for functions not changing';
     $api_functions = array(
       'ldap_user_conf' => array(2, 0),
-      'ldap_user_synch_to_drupal' => array(3, 2),
+      'ldap_user_synch_to_drupal' => array(3, 1),
       'ldap_user_provision_to_drupal' => array(2, 1),
       'ldap_user_ldap_provision_semaphore' => array(3, 2),
     );
