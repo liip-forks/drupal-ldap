@@ -888,7 +888,7 @@ class LdapUserConf {
         if ($account) {
           $account = $this->synchToDrupalAccount($account, $user_edit, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user, TRUE);
         }
-        return $result;
+        return $account;
       }
       else { // create drupal account
         $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_CREATE_DRUPAL_USER);

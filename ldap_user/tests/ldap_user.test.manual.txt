@@ -42,7 +42,7 @@ drush field-create user field_user_fname,text,text_textfield --entity_type=user
 drush field-create user field_user_display_name,text,text_textfield --entity_type=user  
 
 ================================================================
-Tests for LDAP Entry to Drupal User Provisioning
+Tests for LDAP Entry ==> Drupal User Provisioning
 ================================================================
 6.A. Setup: Configure LDAP User for Provisioning Drupal Account from LDAP Entry (admin/config/people/ldap/user)
     A. LDAP Servers Providing Provisioning Data: Select enabled server
@@ -93,10 +93,10 @@ Tests for LDAP Entry to Drupal User Provisioning
     E. Results after save should be Dept and Display Name were changed; First name and Last Name reverted to LDAP provided first and last name.
     F. Change First Name, Last Name,  Display Name, and Department in database manually.
     E. Log user in again.
-    F. FAILED: Last Name should revert to LDAP provided last name.
+    F. Results after save should be Dept and Display Name were changed; First name and Last Name reverted to LDAP provided first and last name.
        
  ==============================================
- Tests for provision to LDAP
+ Tests for provisioning from Drupal User => LDAP Entry
  ==============================================
        
 7. General tests ldap entry provisioning
