@@ -19,7 +19,7 @@ LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE
 LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE
 
 
-2. hook_user_* functions will check if appropriate triggers are enabled and initiate calls to ldapUserConf methods:
+2. hook_user_* functions (and elsewere such as ldap_authentication) will check if appropriate triggers are enabled and initiate calls to ldapUserConf methods:
 
 ldapUserConf::provisionDrupalAccount()
 ldapUserConf::synchToDrupalAccount()
@@ -66,21 +66,13 @@ configurable elsewhere or no implemented:
 @todo.  A hook to allow other modules to intervene here 
 
 ------------
-4.C  Field Level: Does provisioning occur for a given field and ldap server for a given "prov_event" and "ldap _context"?
+4.C  Field Level: Does provisioning occur for a given field and ldap server for a given "prov_event"?
 
 ldapUserConf::isSynched($field, $ldap_server, $prov_event, $direction)
 
 This depends on: 
 ldapUserConf::synchMapping[$direction][$ldap_server->sid][$field]['prov_events']
 which is populated by various ldap and possibly other modules.
-
-"ldap_contexts" (any module can provide its own context which is just a string)
-  ldap_user_insert_drupal_user
-  ldap_user_update_drupal_user
-  ldap_authentication_authenticate
-  ldap_user_delete_drupal_user
-  ldap_user_disable_drupal_user
-  all
 
 "prov_events"
   LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER
