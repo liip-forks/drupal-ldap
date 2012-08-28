@@ -757,7 +757,7 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
   
   // check for provisioning to drupal and override synched user fields/props
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
-    $ldap_user = ldap_servers_get_user_ldap_data($user_edit['name'], $ldap_user_conf->drupalAcctProvisionServer, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
+    $ldap_user = ldap_servers_get_user_ldap_data($account->name, $ldap_user_conf->drupalAcctProvisionServer, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
     $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE); 
     $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
     $account = user_save($account, $user_edit, 'ldap_user');
