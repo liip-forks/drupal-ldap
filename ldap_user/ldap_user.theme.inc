@@ -49,7 +49,7 @@ function theme_ldap_user_conf_form($variables) {
                 'rowspan' => 1,
                 'class' => 'mixedcase',
                 ),
-          array('data' => t('When Should Attribute Be Synchronized to LDAP?'), 'colspan' => count($ldap_user_conf_admin->provisionsDrupalSynchEvents), 'rowspan' => 1, 'class' => 'mixedcase'),
+          array('data' => t('When Should Attribute Be Synchronized to LDAP?'), 'colspan' => count($ldap_user_conf_admin->provisionsDrupalEvents), 'rowspan' => 1, 'class' => 'mixedcase'),
           
         );
         
@@ -72,7 +72,7 @@ function theme_ldap_user_conf_form($variables) {
                 ),
         );
       
-        foreach ($ldap_user_conf_admin->provisionsDrupalSynchEvents as $col_id => $col_name) {
+        foreach ($ldap_user_conf_admin->provisionsDrupalEvents as $col_id => $col_name) {
           $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase');
         }
       }
@@ -97,7 +97,7 @@ function theme_ldap_user_conf_form($variables) {
           ),
           array(
             'data' => t('When Should Attribute Be Synchronized to Drupal?'),
-            'colspan' => count($ldap_user_conf_admin->provisionsLdapSynchEvents),
+            'colspan' => count($ldap_user_conf_admin->provisionsLdapEvents),
             'rowspan' => 1,
             'class' => 'mixedcase',
           ),
@@ -129,7 +129,7 @@ function theme_ldap_user_conf_form($variables) {
             'class' => 'mixedcase'
           ),
         );
-        foreach ($ldap_user_conf_admin->provisionsLdapSynchEvents as $col_id => $col_name) {
+        foreach ($ldap_user_conf_admin->provisionsLdapEvents as $col_id => $col_name) {
           $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase');
         }
       }

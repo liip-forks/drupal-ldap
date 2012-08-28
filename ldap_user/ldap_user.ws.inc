@@ -105,7 +105,7 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
 
     case 'synch':
       if ($direction = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
-        $saved_account = $ldap_user_conf->synchToDrupalAccount($drupal_user, $user_edit, $ldap_user, TRUE);
+        $saved_account = $ldap_user_conf->synchToDrupalAccount($drupal_user, $user_edit, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user, TRUE);
         $text = ($saved_account) ? 'Updated Account ' . $drupal_user_name : 'Failed to Update Account ' . $drupal_user_name;
         return ldap_user_ws_out(array((boolean)($saved_account), $text));
       }

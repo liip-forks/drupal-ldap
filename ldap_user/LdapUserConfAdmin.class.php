@@ -705,7 +705,7 @@ EOT;
           'prov_module' => 'ldap_user',
           'enabled' => 1,
           );
-        $synchEvents = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? $this->provisionsDrupalSynchEvents : $this->provisionsLdapSynchEvents;
+        $synchEvents = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
         foreach ($synchEvents as $prov_event => $discard) {
           $input_name = join('__', array($direction, $sid, 'sm', $prov_event, $i));
           if (isset($values[$input_name]) && $values[$input_name]) {
@@ -938,7 +938,7 @@ EOT;
 
 
     $col = ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) ? 5 : 4;
-    $synchEvents = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? $this->provisionsDrupalSynchEvents : $this->provisionsLdapSynchEvents;
+    $synchEvents = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
 
     foreach ($synchEvents as $prov_event => $prov_event_name) {
       $col++;

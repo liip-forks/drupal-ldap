@@ -147,7 +147,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
       foreach (array(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) as $direction) {
         if ($ldap_user_conf->provisionEnabled($direction, $synch_trigger)) {
           if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
-            $discard = $ldap_user_conf->provisionDrupalAccount(NULL, $user_edit, NULL, $save);
+            $discard = $ldap_user_conf->provisionDrupalAccount(NULL, $user_edit, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, NULL, $save);
             $results['provisionDrupalAccount method results']["context = $synch_trigger_description"]['proposed'] = $user_edit;
           }
           else {

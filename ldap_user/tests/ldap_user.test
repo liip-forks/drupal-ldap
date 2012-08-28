@@ -40,7 +40,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     $this->ldapTestId = $this->module_name . ': test for functions not changing';
     $api_functions = array(
       'ldap_user_conf' => array(2, 0),
-      'ldap_user_synch_to_drupal' => array(2, 1),
+      'ldap_user_synch_to_drupal' => array(3, 2),
       'ldap_user_provision_to_drupal' => array(2, 1),
       'ldap_user_ldap_provision_semaphore' => array(3, 2),
     );
@@ -165,7 +165,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     
     $this->testFunctions->setFakeServerUserAttribute('activedirectory', 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com', 'mail', 'boygen@yahoo.com', 0);
 
-    $user = $ldap_user_conf->synchToDrupalAccount($account, $user_edit, NULL, TRUE);
+    $user = $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, NULL, TRUE);
 
     $jkeats = user_load_by_name('jkeats');
     $jkeats_uid = $jkeats->uid;
@@ -534,7 +534,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
           
           // 8. execute synch
           $user_edit = array();
-          $ldap_user_conf->synchToDrupalAccount($user_object, $user_edit, NULL, TRUE);
+          $ldap_user_conf->synchToDrupalAccount($user_object, $user_edit, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, NULL, TRUE);
   
 
           list($user_object, $user_entity) = ldap_user_load_user_acct_and_entity($username); 

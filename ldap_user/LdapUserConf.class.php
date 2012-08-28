@@ -80,8 +80,8 @@ class LdapUserConf {
   public $wsEnabled = 0;
   public $wsUserIps = array();
 
-  public $provisionsLdapSynchEvents = array();
-  public $provisionsDrupalSynchEvents = array();
+  public $provisionsLdapEvents = array();
+  public $provisionsDrupalEvents = array();
 
   public $saveable = array(
     'drupalAcctProvisionServer',
@@ -109,17 +109,17 @@ class LdapUserConf {
   function __construct() {
     $this->load();
 
-    $this->provisionsLdapSynchEvents = array(
+    $this->provisionsLdapEvents = array(
       LDAP_USER_EVENT_CREATE_LDAP_ENTRY => t('On LDAP Entry Creation'),
       LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY => t('On Synch to LDAP Entry'),
       );
     
-    $this->provisionsDrupalSynchEvents = array(
+    $this->provisionsDrupalEvents = array(
       LDAP_USER_EVENT_CREATE_DRUPAL_USER => t('On Drupal User Creation'),
       LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER => t('On Synch to Drupal User'),
       );
-  
-    $this->provisionsDrupalAccountsFromLdap = (count(array_intersect($this->drupalAcctProvisionAvailableEvents, array_filter(array_values($this->drupalAcctProvisionTriggers)))) > 0);
+
+    $this->provisionsDrupalAccountsFromLdap = (count(array_filter(array_values($this->drupalAcctProvisionTriggers))) > 0);
     $this->provisionsLdapEntriesFromDrupalUsers = (
       $this->ldapEntryProvisionServer
       && $this->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID
@@ -589,7 +589,7 @@ class LdapUserConf {
    *   $user_edit data returned by reference
    *
    */
-  public function synchToDrupalAccount($drupal_user, &$user_edit, $ldap_user = NULL, $save = FALSE) {
+  public function synchToDrupalAccount($drupal_user, &$user_edit, $prov_event = LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user = NULL,  $save = FALSE) {
   //  dpm('synchToDrupalAccount');
     $debug = array(
       'account' => $drupal_user,
@@ -607,7 +607,7 @@ class LdapUserConf {
     }
 
     if (!$ldap_user && $this->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID) {
-      $ldap_user = ldap_servers_get_user_ldap_data($drupal_user->name, $this->drupalAcctProvisionServer, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
+      $ldap_user = ldap_servers_get_user_ldap_data($drupal_user->name, $this->drupalAcctProvisionServer, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_event);
     }
 
     if (!$ldap_user) {
@@ -616,7 +616,7 @@ class LdapUserConf {
  
     if ($this->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID) {
       $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, NULL, TRUE);
-      $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
+      $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_event);
     }
 
     if ($save) {

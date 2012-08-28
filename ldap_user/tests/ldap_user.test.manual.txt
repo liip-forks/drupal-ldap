@@ -58,9 +58,10 @@ drush field-create user field_user_display_name,text,text_textfield --entity_typ
        iv. Physics -- to drupal user -> Field: Department [x] on drupal user creation [x] on synch...
    
 6.B. Event: Drupal user create provision/synching.
-    A. Create new user via admin/people/create
+    A. Create new user via admin/people/create [drush user-create jdoe --mail=test@test.com --password="sdfw3452352se"]
     B. field_lname, field_fname, field_dept, and field_display_name should be visible and populated
     C. goto admin/config/people/ldap/user/test enter the username and hit the test button.  this will show the user object and entity
+       [drush user-information jdoe --full]
        if the devel module is enabled. In "user object (before provisioning or synching)"
        i.     user object->ldap_user_puid_sid should be the id of the server
        ii.    user object->ldap_user_puid should be the value of the puid attribute
@@ -70,8 +71,8 @@ drush field-create user field_user_display_name,text,text_textfield --entity_typ
        vii.   user authmap should be empty.  this record is only generated when account created via ldap authentication
  
 6.C. Event: user logon/authenticate.  Test create drupal account.
+    enable ldap authentication, mixed mode
     A.1. Change "Drupal Account Provisioning Options to only "on successful authentication"
-         and uncheck the mappings in table on "on user creation" and "on user update".
     A.2. Authenticate with a user not in drupal (be sure user is deleted before test)
     B. view the user from the user list (admin/people/people) and make sure
          field_lname, field_fname, field_dept, and field_display_name should be visible and populated
@@ -85,7 +86,7 @@ drush field-create user field_user_display_name,text,text_textfield --entity_typ
        vii.   user authmap should have an entry where module=ldap_authentication and authname=username
     D. Manually change last name of user and save.
     E. Log user in again.
-    F. Last Name should revert to LDAP provided last name.
+    F. FAILED: Last Name should revert to LDAP provided last name.
        
        
        
