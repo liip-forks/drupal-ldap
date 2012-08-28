@@ -54,8 +54,8 @@ Tests for LDAP Entry to Drupal User Provisioning
     G. Server mappings section. Provisioning from LDAP to Drupal mapppings. (Source LDAP Tokens will vary from ldap to ldap)
        i. [givenname] -- to drupal user -> Field: First Name [x] on drupal user creation [x] on synch...
        ii. [sn:0] -- to drupal user -> Field: Last Name [x] on drupal user creation [x] on synch...
-       iii. [givenname] [sn] -- to drupal user -> Field: Display Name [x] on drupal user creation [x] on synch...
-       iv. Physics -- to drupal user -> Field: Department [x] on drupal user creation [x] on synch...
+       iii. [givenname] [sn] -- to drupal user -> Field: Display Name [x] on drupal user creation [ ] on synch...
+       iv. Physics -- to drupal user -> Field: Department [x] on drupal user creation [ ] on synch...
    
 6.B. Event: Drupal user create provision/synching.
     A. Create new user via admin/people/create [drush user-create jdoe --mail=test@test.com --password="sdfw3452352se"]
@@ -69,13 +69,17 @@ Tests for LDAP Entry to Drupal User Provisioning
        iv.    user object->ldap_user_current_dn should be the dn of the ldap entry
        v.     user object->mail and init should be correct, matching email
        vii.   user authmap should be empty.  this record is only generated when account created via ldap authentication
+       [drush -y sql-query "SELECT * FROM authmap WHERE authname = 'jdoe'"]
+    D. Now edit the the First Name, Last Name,  Display Name, and Department for that user /user/[uid]/edit. and Save.
+    E. Results after save should be Dept and Display Name were changed; First name and Last Name reverted to LDAP provided first and last name.
  
 6.C. Event: user logon/authenticate.  Test create drupal account.
     enable ldap authentication, mixed mode
-    A.1. Change "Drupal Account Provisioning Options to only "on successful authentication"
+    A.1. Change "Drupal Account Provisioning Events" to only "...on successful authentication" (admin/config/people/ldap/user)
     A.2. Authenticate with a user not in drupal (be sure user is deleted before test)
     B. view the user from the user list (admin/people/people) and make sure
          field_lname, field_fname, field_dept, and field_display_name should be visible and populated
+         or use [drush user-information jdoe --full]
     C. goto admin/config/people/ldap/user/test/<username> and hit the test button.  this will show the user object and entity
        if the devel module is enabled
        i.     user object->ldap_user_puid_sid should be the id of the server
@@ -84,7 +88,10 @@ Tests for LDAP Entry to Drupal User Provisioning
        iv.    user object->ldap_user_current_dn should be the dn of the ldap entry
        v.     user object->mail and init should be correct, matching email
        vii.   user authmap should have an entry where module=ldap_authentication and authname=username
-    D. Manually change last name of user and save.
+       [drush -y sql-query "SELECT * FROM authmap WHERE authname = 'jdoe'"]
+    D. Now edit the the First Name, Last Name,  Display Name, and Department for that user /user/[uid]/edit. and Save.
+    E. Results after save should be Dept and Display Name were changed; First name and Last Name reverted to LDAP provided first and last name.
+    F. Change First Name, Last Name,  Display Name, and Department in database manually.
     E. Log user in again.
     F. FAILED: Last Name should revert to LDAP provided last name.
        

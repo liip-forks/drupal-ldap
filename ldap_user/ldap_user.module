@@ -655,6 +655,7 @@ function ldap_user_user_login(&$edit, $account) {
    // provision or synch to ldap, not both
   $provision_result = array('status' => 'none');
   
+   // provision to ldap
   // if ($account->access == 0 && $account->login != 0) {} check for first time user 
   if (
       $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers
@@ -666,14 +667,23 @@ function ldap_user_user_login(&$edit, $account) {
     $provision_result = $ldap_user_conf->provisionLdapEntry($account, $context, array());
   }
   // don't synch if just provisioned
-  elseif (
+  if (
     $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers
     && ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->name) === FALSE
     && $provision_result['status'] != 'success'
     && $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE)
     ) {
-    
     $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit);
+  }
+  
+  // provision to drupal.  synch is here.  create is in ldap authentication, because
+
+  // check for provisioning to drupal and override synched user fields/props
+  if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
+    $ldap_user = ldap_servers_get_user_ldap_data($account->name, $ldap_user_conf->drupalAcctProvisionServer, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
+    $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE); 
+    $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
+    $account = user_save($account, $user_edit, 'ldap_user');
   }
 
   
