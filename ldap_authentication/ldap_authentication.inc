@@ -302,10 +302,10 @@ Will not work on most ldaps.'),
 
     // #3 DOES USER EXIST IN SERVER'S LDAP
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_PROV_DIRECTION_ALL, LDAP_USER_EVENT_ALL);
+      $ldap_user = $ldap_server->user_lookup($authname);
     }
     elseif ($sso_login) {
-      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_PROV_DIRECTION_ALL, LDAP_USER_EVENT_ALL);
+      $ldap_user = $ldap_server->user_lookup($authname);
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%result'] = var_export($result, TRUE);
         watchdog('ldap_authentication', '%username : attempting single sign-on
@@ -314,7 +314,7 @@ Will not work on most ldaps.'),
       }
     }
     else {
-      $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_PROV_DIRECTION_ALL, LDAP_USER_EVENT_ALL);
+      $ldap_user = $ldap_server->user_lookup($authname);
     }
 
     if (!$ldap_user) {
@@ -377,7 +377,7 @@ Will not work on most ldaps.'),
     else {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_SUCCESS;
       if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-        $ldap_user = $ldap_server->user_lookup($authname, LDAP_USER_PROV_DIRECTION_ALL, LDAP_USER_EVENT_ALL); // after successful bind, lookup user again to get private attributes
+        $ldap_user = $ldap_server->user_lookup($authname); // after successful bind, lookup user again to get private attributes
         $watchdog_tokens['%mail'] = $ldap_user['mail'];
       }
       if ($ldap_server->account_name_attr != '') {
@@ -387,12 +387,18 @@ Will not work on most ldaps.'),
       	$accountname = $authname;
       }
       $watchdog_tokens['%account_name_attr'] = $accountname;
+      if ($ldap_server->account_name_attr != '') {
+        $accountname = $ldap_user['attr'][ldap_server_massage_text($ldap_server->account_name_attr, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)][0];
+      }
+      else {
+      	$accountname = $authname;
+      }
+      $watchdog_tokens['%account_name_attr'] = $accountname;
+      if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
+          $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+          $ldap_server->disconnect();
+      }
       break; //success
-    }
-
-    if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
-        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-        $ldap_server->disconnect();
     }
 
   }  // end loop through servers
@@ -461,12 +467,8 @@ Will not work on most ldaps.'),
    	$account_exists = TRUE;
   }
   if (!$account_exists) {
-    if (!$auth_conf->ldapUser->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE)) {
-      //@todo throw error that provisioning of drupal accts is not enabled, and no account exists so no go here.
-    }
-    else {
 
-    }
+
     if ($account_with_same_email = user_load_by_mail($ldap_user['mail'])) {
       // dpm('account with same email');
       /**
@@ -478,8 +480,13 @@ Will not work on most ldaps.'),
         (%mail) conflict with a drupal user %duplicate_name', $watchdog_tokens, WATCHDOG_ERROR);
       drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
       return FALSE;
-
     }
+    
+    if (!$auth_conf->ldapUser->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE)) {
+      watchdog('ldap_user', 'Drupal account for %authname does not exists and provisioning of Drupal accounts on authentication is not enabled', array('%authname' => $accountname));
+      return FALSE;
+    }
+    
     /**
      *
      * new ldap_authentication provisioned account could let user_external_login_register create the account and set authmaps, but would need

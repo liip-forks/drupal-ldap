@@ -66,7 +66,7 @@ configurable elsewhere or no implemented:
 @todo.  A hook to allow other modules to intervene here 
 
 ------------
-4.C  Field Level: Does provisioning occur for a given field and ldap server for a given "prov_event"?
+4.C  Field Level: Does provisioning occur for a given field and ldap server for a given "prov_event" and "ldap _context"?
 
 ldapUserConf::isSynched($field, $ldap_server, $prov_event, $direction)
 
@@ -74,12 +74,20 @@ This depends on:
 ldapUserConf::synchMapping[$direction][$ldap_server->sid][$field]['prov_events']
 which is populated by various ldap and possibly other modules.
 
+"ldap_contexts" (any module can provide its own context which is just a string)
+  ldap_user_insert_drupal_user
+  ldap_user_update_drupal_user
+  ldap_authentication_authenticate
+  ldap_user_delete_drupal_user
+  ldap_user_disable_drupal_user
+  all
+
 "prov_events"
   LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER
   LDAP_USER_EVENT_CREATE_DRUPAL_USER
   LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY
   LDAP_USER_EVENT_CREATE_LDAP_ENTRY
   LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT
-  LDAP_USER_EVENT_ALL
+
 
 

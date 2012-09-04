@@ -6,8 +6,8 @@
  * collection of functions that don't belong in server object
  */
 
-function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $direction, $prov_event) {
-
+function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $ldap_context) {
+  
   //debug("_ldap_servers_get_user_ldap_data, drupal_user sid=$sid, direction=$direction, prov_event=$prov_event"); debug($drupal_user);
   if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = db_query("SELECT authname FROM {authmap} WHERE uid = :uid AND module = 'ldap_user'", array(':uid' => $drupal_user->uid))->fetchColumn()) {
     $drupal_username = $authname;
@@ -15,11 +15,20 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $direction, $prov_
   else {
     $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
   }
-  //return;
+  
+  //dpm("sid=$sid");
   $ldap_server = ldap_servers_get_servers($sid, 'enabled', TRUE);
-
- // debug('_ldap_servers_get_user_ldap_data'); dpm($ldap_server);
-  if ($ldap_user = $ldap_server->user_lookup($drupal_username, $direction, $prov_event)) {
+  if ($ldap_server === FALSE) {
+    watchdog('ldap_servers', 'Failed to load server object %sid in _ldap_servers_get_user_ldap_data', array('%sid' => $sid), WATCHDOG_ERROR);
+    return FALSE;
+  }
+  
+  $ldap_user = $ldap_server->user_lookup($drupal_username, $ldap_context);
+  
+  //debug("_ldap_servers_get_user_ldap_data,sid=$sid, drupal_username=$drupal_username, ldap_context=$ldap_context,ldap_server="); debug($ldap_server);
+ // debug("ldap_user"); debug($ldap_user);
+  
+  if ($ldap_user) {
     $ldap_user['sid'] = $sid;
   }
   else {

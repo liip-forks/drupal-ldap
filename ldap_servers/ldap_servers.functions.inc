@@ -119,7 +119,7 @@ function ldap_badattr($attr, $attr_name) {
  * @param boolean $reset cache
  *
  */
-function ldap_servers_attributes_needed($sid, $direction = LDAP_USER_PROV_DIRECTION_ALL, $ldap_context = 'all', $reset = TRUE) {
+function ldap_servers_attributes_needed($sid, $ldap_context = 'all', $reset = TRUE) {
  // debug("call of ldap_servers_attributes_needed, op=$op,ldap_server="); debug($ldap_server);
  // dpm("call of ldap_servers_attributes_needed, op=$op,ldap_server="); dpm($ldap_server);
   static $attributes;
@@ -131,7 +131,6 @@ function ldap_servers_attributes_needed($sid, $direction = LDAP_USER_PROV_DIRECT
   if (!isset($attributes[$static_cache_id]) || $reset) {
     $params = array(
       'sid' => $sid,
-      'direction' => $direction,
       'ldap_context' => $ldap_context,
     );
     drupal_alter('ldap_attributes_needed', $attributes[$static_cache_id], $params);

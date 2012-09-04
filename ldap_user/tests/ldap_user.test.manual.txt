@@ -99,26 +99,28 @@ Tests for LDAP Entry ==> Drupal User Provisioning
  Tests for provisioning from Drupal User => LDAP Entry
  ==============================================
        
-7. General tests ldap entry provisioning
-    A. in ldap user settings (admin/config/people/ldap/user)
-      - uncheck BASIC PROVISIONING TO DRUPAL ACCOUNT SETTINGS settings
+7. General tests for ldap entry provisioning
+    A. Setup (as admin) in ldap user settings (admin/config/people/ldap/user)
+      - select "None" in "LDAP Servers Providing Provisioning Data"
       - enable an ldap server in BASIC PROVISIONING TO LDAP SETTINGS
-      - check both "LDAP Entry Provisioning Options"
+      - check all "LDAP Entry Provisioning Events"
       - disable REST webservice
       - in mappings table (alter to fit your LDAP)
-        -- [dn], 'to LDAP entry', 'user tokens', [x] on user creation, [x] on user update/save
-             user tokens should be an expression that evaluates to a dn such as:
-             "cn=[property.name],ou=people,dc=ldap,dc=mycompany,dc=com" or
-             "cn=[field.field_lname], [field.field_fname],ou=people,dc=ldap,dc=mycompany,dc=com"
-        -- [cn], 'to LDAP entry', 'Property: Username', [x] on user creation, [x] on user update/save
-        -- [displayname], 'to LDAP entry', user tokens, [x] on user creation, [x] on user update/save, [field.field_fname] [field.field_lname]
-        -- [guid], 'to LDAP entry', user tokens, [x] on user creation, mydrupalsite.com[property.uid]
-        -- [provisioned], 'to LDAP entry', user tokens, [x] on user creation, drupal_intranet (note this is a constant)
+        -- Source Drupal User Attribute or token                        |  Target LDAP Token   | on creation | on update     
+        -- "cn=[property.name],ou=people,dc=ldap,dc=mycompany,dc=com"            [dn]                 [x]          [x] 
+        -- 'Property: Username                                                   [cn]                 [x]          [x] 
+        -- mydrupalsite.com[property.uid]                                        [guid]               [x]          [x]
+        -- [field.field_fname] [field.field_lname]                            [displayname]           [x]          [x]
+        -- [field.field_lname]                                                    [sn]                [x]          [ ]
+        -- [field.field_fname]                                                 [givenname]            [x]          [ ]
            
     B.  Create and approve new user, populating first and last name.
-        -- confirm that ldap entry exists with proper attributes
+        -- confirm that ldap entry exists with proper attributes from mapping
+        -- confirm that drupal user has no ldap authmap (unless was there before)
+        -- confirm there is no ldap_user_puid_sid, ldap_user_puid, ldap_user_puid_property, ldap_user_current_dn; these are for prov in other direction
+        -- confirm that user->ldap_user_prov_entries has a value of the form: <sid>|<dn> to indicate ldap account was provisioned based on this drupal user.
         
-    C.  Change lastname and first name and save user
+    C.  Change lastname, first name, and display name and save user
         -- confirm that appropriate attributes were changed in ldap entry
         
     D.  Delete user in drupal.

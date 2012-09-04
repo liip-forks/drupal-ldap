@@ -148,7 +148,7 @@ $conf['ad_authentication'] = array(
               'config_module' => 'ldap_user',
               'synch_module' => 'ldap_user',
               'enabled' => 1,
-              'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY),
+              'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
             ),
             '[displayName]' => array(
               'sid' => 'activedirectory',

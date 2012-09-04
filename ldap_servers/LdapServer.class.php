@@ -298,6 +298,13 @@ class LdapServer {
     }
   }
 
+  public function connectAndBindIfNotAlready() {
+    if (! $this->connection) {
+      $this->connect();
+      $this->bind();
+    } 
+  }
+  
 /**
  * does dn exist for this server?
  *
@@ -317,13 +324,19 @@ class LdapServer {
       'timelimit' => 0,
       'deref' => NULL,
     );
+    debug("dnExists:dn=$dn, params="); debug($params); debug("server"); debug($this);
     $result = $this->ldapQuery(LDAP_SCOPE_BASE, $params);
-    if ($result && (ldap_count_entries($this->connection, $result) !== FALSE)) {
+    debug("dnExists:dn=$dn, result:"); debug($result);
+    if ($result && ($this->countEntries($result) !== FALSE)) {
        return ($return == 'boolean') ? TRUE : $result[0];
     }
     else {
        return FALSE;
     }
+  }
+  
+  public function countEntries($ldap_result) {
+    return ldap_count_entries($this->connection, $ldap_result);
   }
   
   /**
@@ -436,7 +449,9 @@ class LdapServer {
     return $new_entry;
   }
   
-  
+     
+    
+
 
   /**
    * modify attributes of ldap entry
@@ -450,7 +465,10 @@ class LdapServer {
    */
 
   function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
-
+    
+    dpm("modifyLdapEntry,dn=$dn, attributes="); dpm($attributes);
+    $this->connectAndBindIfNotAlready();
+    
     if (!$old_attributes) {
       $result = ldap_read($this->connection, $dn, 'objectClass=*');
       $entries = ldap_get_entries($this->connection, $result);
@@ -587,7 +605,7 @@ class LdapServer {
     }
     else {
       $result = $this->ldapQuery($scope, $ldap_query_params);
-      if ($result && (ldap_count_entries($this->connection, $result) !== FALSE) ) {
+      if ($result && ($this->countEntries($result) !== FALSE) ) {
         $entries = ldap_get_entries($this->connection, $result);
         drupal_alter('ldap_server_search_results', $entries, $ldap_query_params);
         return (is_array($entries)) ? $entries : FALSE;
@@ -651,7 +669,7 @@ class LdapServer {
 
       if ($page >= $this->searchPageStart) {
         $skipped_page = FALSE;
-        if ($result && (ldap_count_entries($this->connection, $result) !== FALSE) ) {
+        if ($result && ($this->countEntries($result) !== FALSE) ) {
           $page_entries = ldap_get_entries($this->connection, $result);
           unset($page_entries['count']);
           $has_page_results = (is_array($page_entries) && count($page_entries) > 0);
@@ -781,26 +799,26 @@ class LdapServer {
    * @return
    *   An array with users LDAP data or NULL if not found.
    */
-  function user_lookup($drupal_user_name, $direction = LDAP_USER_PROV_DIRECTION_ALL, $prov_event = LDAP_USER_EVENT_ALL) {
+  function user_lookup($drupal_user_name, $ldap_context = NULL) {
    // dpm("user_lookup, drupal_user_name=$drupal_user_name, op=$op");
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
     $ldap_username = $this->drupalToLdapNameTransform($drupal_user_name, $watchdog_tokens);
     if (!$ldap_username) {
       return FALSE;
     }
-    if ($prov_event == LDAP_USER_EVENT_ALL) {
+    if (!$ldap_context) {
       $attribute_maps = array();
     }
     else {
      // debug('ldap_servers_attributes_needed(this->sid, direction, prov_event)'); debug(array($this, $this->sid, $direction, $prov_event));
-      $attribute_maps = ldap_servers_attributes_needed($this->sid, $direction, $prov_event);
+      $attribute_maps = ldap_servers_attributes_needed($this->sid, $ldap_context);
     }
     
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
       $result = $this->search($basedn, $filter, array_keys($attribute_maps));
-     // debug("ldap_server: user_lookup, filter=$filter, basedn=$basedn, result="); debug('user_lookup:attributes needed'); debug($attribute_maps); debug($result);
+      debug("ldap_server: user_lookup, filter=$filter, basedn=$basedn, result="); debug($result); debug('user_lookup:attributes needed'); debug($attribute_maps); 
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.
@@ -876,7 +894,7 @@ class LdapServer {
     $groups_by_level = array();
     $level = 0;
     foreach ($user_ldap_entry['attr'] as $user_attr_name => $user_attr_values) {
-      if (strcasecmp($derive_from_attribute_name, $user_attr_name) != 0) {
+      if (strcasecmp($derive_from_attribute_name, $user_attr_name) !== 0) {
         continue;
       }
       // patch 1050944
@@ -921,7 +939,7 @@ class LdapServer {
           }
           else {
             foreach ($entry as $attr_name => $values) {
-              if (strcasecmp($derive_from_attribute_name, $attr_name) != 0) {
+              if (strcasecmp($derive_from_attribute_name, $attr_name) !== 0) {
                 continue;
               }
               $attr_values = $entry[$attr_name];

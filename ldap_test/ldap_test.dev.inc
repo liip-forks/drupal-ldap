@@ -25,7 +25,7 @@ function ldap_test_dev_provision() {
   //dpm('test_functions'); dpm($test_functions);
 
   $ldap_user_conf = ldap_user_conf('admin', TRUE);
-  dpm('ldap_user_conf'); dpm($ldap_user_conf);
+  //dpm('ldap_user_conf'); dpm($ldap_user_conf);
 
   // test basic ldap user functions
 
@@ -36,7 +36,7 @@ function ldap_test_dev_provision() {
   $account = NULL;
   $user_edit = array('name' => 'jkeats');
   $jkeats = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
-  dpm('jkeats user afterprovisionDrupalAccount'); dpm($jkeats);
+//  dpm('jkeats user afterprovisionDrupalAccount'); dpm($jkeats);
 
   $jkeats = user_load_by_name('jkeats');
 

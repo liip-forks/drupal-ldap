@@ -920,9 +920,6 @@ EOT;
       );
     }
    
-
-
-    
     $form['#storage']['synch_mapping_fields'][$direction][$row] = array(
       'sid' => $ldap_server->sid,
       'action' => $action,

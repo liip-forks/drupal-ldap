@@ -24,7 +24,6 @@ define('LDAP_USER_EVENT_CREATE_DRUPAL_USER', 2);
 define('LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY', 3);
 define('LDAP_USER_EVENT_CREATE_LDAP_ENTRY', 4);
 define('LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT', 5);
-define('LDAP_USER_EVENT_ALL', 8);
 
 // results of ldap entry provisioning
 define('LDAP_USER_PROVISION_LDAP_ENTRY_EXISTS', 1);
@@ -196,7 +195,9 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
       break;  
     }
     
-    $attributes_required_by_user_module_mappings = $ldap_user_conf->getRequiredAttributes($params['direction'], $params['ldap_context']);
+    $ldap_context = empty($params['ldap_context']) ? NULL : $params['ldap_context'];
+    $direction = empty($params['direction']) ? $ldap_user_conf->ldapContextToProvDirection($ldap_context) : $params['direction'];
+    $attributes_required_by_user_module_mappings = $ldap_user_conf->getRequiredAttributes($direction, $ldap_context);
     $attributes = array_merge($attributes_required_by_user_module_mappings, $attributes);
 
   }
@@ -494,7 +495,7 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
   // if corresponding ldap account doesn't exist and provision not selected and make ldap associated is selected, throw error
   if (!@$values['ldap_user_create_ldap_acct'] && @$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE) {
     $ldap_user_conf = ldap_user_conf();
-    $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->ldapEntryProvisionServer, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT); 
+    $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->ldapEntryProvisionServer, 'ldap_user_prov_to_drupal'); 
     if (!$ldap_user) {
      // dpm($ldap_user);
       form_set_error('ldap_user_association', t('User %name does not have a corresponding LDAP Entry (dn).
@@ -505,7 +506,7 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
   // if trying to provision and ldap account and one already exists, throw error.
   if (@$values['ldap_user_create_ldap_acct']) {
     $ldap_user_conf = ldap_user_conf();
-    $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->ldapEntryProvisionServer, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_EVENT_CREATE_LDAP_ENTRY); 
+    $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->ldapEntryProvisionServer, 'ldap_user_prov_to_ldap'); 
     if ($ldap_user) {
       $tokens = array('%dn' => $ldap_user['dn'], '%name' => $drupal_username);
       form_set_error('ldap_user_create_ldap_acct', t('User %name already has a corresponding LDAP Entry (%dn).
@@ -567,7 +568,7 @@ function ldap_user_provision_to_drupal($ldap_user, $user_edit = array()) {
 /**
  * function to:
  *   -- protect unencrypted user password from other modules
- *   -- avoid multiple provision and synch in same page request (...and potentially recursion)
+ *   -- avoid multiple provision and synch in same page request to ldap (...and potentially recursion)
  *
  *   @param enum string $action 'synch' | 'provision' | 'set_page_load_key' | NULL
  *   @param enum string $op
@@ -579,7 +580,7 @@ function ldap_user_provision_to_drupal($ldap_user, $user_edit = array()) {
  */
 
 
-function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL) {
+function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL, $reset = FALSE) {
   
   $calling_function = FALSE;
   if (function_exists('debug_backtrace') && $backtrace = debug_backtrace()) { //   {
@@ -590,7 +591,14 @@ function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL) {
   static $page_load_key;
   static $current_user_pass;
   static $intialized;
-
+  
+  if ($reset) {
+    $ldap_accts = NULL;
+    $page_load_key = NULL;
+    $current_user_pass = NULL;
+    $intialized = NULL;
+  }
+  
   if ($action == 'set_page_load') {//  correct calling functions should be ldap_user_init) {
     $page_load_key = user_password(); // get something random
     $ldap_accts  = array();
@@ -598,7 +606,7 @@ function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL) {
     $intialized = TRUE;
     return;
   }
-  elseif (!$intialized) {
+  elseif (!$intialized && !$reset) {
     watchdog('ldap_user', 'ldap_user_ldap_provision_semaphore used without initialization', array(), WATCHDOG_ERROR);
   }
  
@@ -613,7 +621,7 @@ function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL) {
   // has the given drupal user had ldap entry synched or provisioned on this page load.
   if ($op == 'user_action_query') {
     if ($action && $value && isset($ldap_accts[$action][$value])) {
-      return  $ldap_accts[$action][$value];
+      return $ldap_accts[$action][$value];
     }
     else {
       return FALSE;
@@ -664,7 +672,7 @@ function ldap_user_user_login(&$edit, $account) {
       && $ldap_user_conf->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID
       && $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE)
       ) {
-    $provision_result = $ldap_user_conf->provisionLdapEntry($account, $context, array());
+    $provision_result = $ldap_user_conf->provisionLdapEntry($account);
   }
   // don't synch if just provisioned
   if (
@@ -679,10 +687,13 @@ function ldap_user_user_login(&$edit, $account) {
   // provision to drupal.  synch is here.  create is in ldap authentication, because
 
   // check for provisioning to drupal and override synched user fields/props
+ 
+  $prov_enabled = $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE);
+   debug("ldap_user_user_login: prov_enabled=$prov_enabled, provisionsDrupalAccountsFromLdap=" . $ldap_user_conf->provisionsDrupalAccountsFromLdap);
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
-    $ldap_user = ldap_servers_get_user_ldap_data($account->name, $ldap_user_conf->drupalAcctProvisionServer, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
+    $ldap_user = ldap_servers_get_user_ldap_data($account->name, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
     $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE); 
-    $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
+    $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
     $account = user_save($account, $user_edit, 'ldap_user');
   }
 
@@ -696,10 +707,16 @@ function ldap_user_user_login(&$edit, $account) {
  */
 function ldap_user_user_insert(&$user_edit, $account, $category) {
 
- // dpm('ldap_user_user_insert'); dpm($user_edit); dpm($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
+ // debug('ldap_user_user_insert'); debug($user_edit); debug($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
 
   if ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1)) {
     return; // do not provision or synch user 1
+  }
+
+  $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'user_action_query' , $account->name);
+  $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->name);
+  if ($already_synched_to_ldap || $already_synched_to_ldap) {
+    return;
   }
   
   $ldap_user_conf = ldap_user_conf();
@@ -708,22 +725,19 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
    * synchToDrupalAccount(), even if action is 'provision'
    */
   $empty_user_edit = array();
-
   if ($account->status && $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE)) {
-
     $ldap_user_conf->synchToDrupalAccount($account, $empty_user_edit, LDAP_USER_EVENT_CREATE_DRUPAL_USER, NULL, TRUE);
   }
 
   if ($ldap_user_conf->provisionsLdapEntriesFromDrupalUsers) {
-    
-    $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'user_action_query' , $account->name);
-    $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->name);
     $prov_enabled = $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE);
-
-    if ($prov_enabled && (!$already_provisioned_to_ldap || !$already_synched_to_ldap)) {
+    if ($prov_enabled) {
       $ldap_provision_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
-      if ($already_provisioned_to_ldap === FALSE && !$ldap_provision_entry) {
-        $discard = $ldap_user_conf->provisionLdapEntry($account, array());
+     // debug("ldap_provision_entry from getProvisionRelatedLdapEntry ="); debug($ldap_provision_entry);
+      if (!$ldap_provision_entry) {
+     //    debug('ldap_user_user_insert:5');
+        $discard = $ldap_user_conf->provisionLdapEntry($account);
+     //   debug('ldap_test_server__' . $ldap_user_conf->ldapEntryProvisionServer); debug(variable_get('ldap_test_server__' .  $ldap_user_conf->ldapEntryProvisionServer, array()));
       }
       elseif ($ldap_provision_entry) {
         $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit);
@@ -742,34 +756,56 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
  */
 
 function ldap_user_user_update(&$user_edit, $account, $category) {
- // dpm("ldap_user_user_update, category=$category"); dpm($user_edit); dpm($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
+ //debug("ldap_user_user_update, category=$category"); debug($user_edit); debug($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
 
   if ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1)) {
     return; // do not provision or synch user 1
   }
-
+  
+  $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'user_action_query' , $account->name);
+  $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->name);
+  debug("ldap_user_user_update, category=$category, already_provisioned_to_ldap=$already_provisioned_to_ldap, already_synched_to_ldap=$already_synched_to_ldap");
+  
+  if ($already_provisioned_to_ldap || $already_synched_to_ldap) {
+    return;
+  }
+  
   $ldap_user_conf = ldap_user_conf();
-  if ($ldap_user_conf->provisionsLdapEntriesFromDrupalUsers) {
-    $provision_result = array('status' => 'none');
-    $ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
+  // check for provisioning to LDAP; this will normally occur on hook_user_insert or other event when drupal user is created.
+//  debug('ldap_user_user_update:starta=' . $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers  . ",b=".
+ //        $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE));
+  if ($ldap_user_conf->provisionsLdapEntriesFromDrupalUsers &&
+      $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE)) {
 
-    if (!$ldap_entry && $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE)) { //{
-       $provision_result = $ldap_user_conf->provisionLdapEntry($account, array());
+    $provision_result = array('status' => 'none');
+    // debug('ldap_user_user_update:start2');
+    // always check if provisioing to ldap has already occurred this page load
+    $ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
+   // dpm("account=" . $account->name . ", ldap_entry"); dpm($ldap_entry);
+    if (!$ldap_entry) { //{
+     // debug('ldap_user_user_update:provisionLdapEntry');
+      $provision_result = $ldap_user_conf->provisionLdapEntry($account);
     }
 
     // synch if not just provisioned and enabled
-    if ($provision_result['status'] != 'success') {
-      if ($ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE)) {
+    
+    if ($provision_result['status'] != 'success' ) {
+      // always check if provisioing to ldap has already occurred this page load
+      $provision_enabled = $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE);
+      $ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
+    //  debug("ldap_user_user_update: already_synched_to_ldap=$already_synched_to_ldap, provision_enabled=$provision_enabled ldap_entry=$ldap_entry");
+      if ($provision_enabled && $ldap_entry) {
+        // debug('ldap_user_user_update:synchToLdapEntry');
         $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit);
       }
     }
   }
-  
+
   // check for provisioning to drupal and override synched user fields/props
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
-    $ldap_user = ldap_servers_get_user_ldap_data($account->name, $ldap_user_conf->drupalAcctProvisionServer, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
+    $ldap_user = ldap_servers_get_user_ldap_data($account->name, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
     $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE); 
-    $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER);
+    $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
     $account = user_save($account, $user_edit, 'ldap_user');
   }
   
@@ -871,6 +907,17 @@ function ldap_user_synch_triggers_key_values() {
     LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE => 'LDAP_ENTRY_DELETE_ON_USER_DELETE',
   );
   
+}
+
+function ldap_user_all_events() {
+  return array(
+    LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER,
+    LDAP_USER_EVENT_CREATE_DRUPAL_USER,
+    LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY,
+    LDAP_USER_EVENT_CREATE_LDAP_ENTRY,
+    LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT,
+  );
+
 }
 
 /**

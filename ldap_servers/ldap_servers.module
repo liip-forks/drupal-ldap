@@ -498,9 +498,9 @@ function ldap_servers_fields() {
  * @param mixed $sid is a server id or array of server ids
  */
 
-function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $direction = LDAP_USER_PROV_DIRECTION_ALL, $prov_event = LDAP_USER_EVENT_ALL) {
+function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_context = NULL) {
   ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
-  return _ldap_servers_get_user_ldap_data($drupal_user, $sid, $direction, $prov_event);
+  return _ldap_servers_get_user_ldap_data($drupal_user, $sid, $ldap_context);
 }
 
 /**

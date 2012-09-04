@@ -183,7 +183,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   if (!$has_errors && @$values['testing_drupal_username']) {
     ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
-    dpm('ldap_user'); dpm($ldap_user);
+  //  dpm('ldap_user'); dpm($ldap_user);
     $results = array_merge($results, $more_results);
     $tokens = ($ldap_user && isset($ldap_user['attr'])) ? ldap_servers_token_tokenize_entry($ldap_user['attr'], 'all') : array();
     $_SESSION['ldap_server_test_data'] = array(
@@ -229,9 +229,9 @@ function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw) {
   return array($errors, $results);
 }
 
-function ldap_servers_test_user_mapping($drupal_username, &$ldap_server, $direction = LDAP_USER_PROV_DIRECTION_ALL, $prov_event = LDAP_USER_EVENT_ALL) {
-
-  $ldap_user = $ldap_server->user_lookup($drupal_username, $direction, LDAP_USER_EVENT_ALL);
+function ldap_servers_test_user_mapping($drupal_username, &$ldap_server, $direction = LDAP_USER_PROV_DIRECTION_ALL, $ldap_context = NULL) {
+  dpm("this needs to be reworked");
+  $ldap_user = $ldap_server->user_lookup($drupal_username, $ldap_context);
 
   $errors = FALSE;
   if (! $ldap_user ) {

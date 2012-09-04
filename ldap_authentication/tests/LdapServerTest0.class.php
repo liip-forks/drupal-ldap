@@ -164,7 +164,7 @@ class LdapServerTest0 extends LdapServer {
       // should be leftmost string in:
       // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       $pos = strpos($dn, $base_dn);
-      if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) == FALSE) {
+      if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) !== 0) {
         continue; // not in basedn
       }
       else {
@@ -204,7 +204,7 @@ class LdapServerTest0 extends LdapServer {
       // should be leftmost string in:
       // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       $pos = strpos($dn, $base_dn);
-      if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) == FALSE) {
+      if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) !== 0) {
         continue; // not in basedn
       }
       else {

@@ -163,9 +163,6 @@ function ldap_authorization_ldap_attributes_needed_alter(&$attribute_maps, $para
     }
   }
   
-    
-  //  $attributes_required_by_user_module_mappings = $ldap_user_conf->getRequiredAttributes($params['direction'], $params['ldap_context']);
-   // $attributes = array_unique(array_merge(array_values($attributes_required_by_user_module_mappings), $attributes));
 }
 
 /**

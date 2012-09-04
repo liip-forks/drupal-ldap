@@ -88,14 +88,11 @@ function ldap_user_test_form_validate($form, &$form_state) {
  * Submit hook for the LDAP server form.
  */
 function ldap_user_test_form_submit($form, &$form_state) {
+  
   $username = $form_state['values']['testing_drupal_username'];
-  
-  
   $selected_actions = $form_state['values']['action'];
   
-  
  if ($username && count($selected_actions) > 0) {
-  
   
     $synch_trigger_options = ldap_user_synch_triggers_key_values();
 
@@ -107,6 +104,8 @@ function ldap_user_test_form_submit($form, &$form_state) {
     else {
       $user_entity = NULL;
     }
+    dpm($user_object); dpm($user_entity);
+    
     $ldap_user_conf = ldap_user_conf();
     
     $test_servers = array();
@@ -122,11 +121,10 @@ function ldap_user_test_form_submit($form, &$form_state) {
     $results['user object (before provisioning or synching)'] = $user_object;
     $results['user entity (before provisioning or synching)'] = $user_entity;
       
-    foreach ($test_servers as $direction => $sid) {
-      $user_ldap_entry = ldap_servers_get_user_ldap_data($username, $sid, LDAP_USER_PROV_DIRECTION_ALL, LDAP_USER_EVENT_ALL);
-      $results[$direction]['related ldap entry (before provisioning or synching)'] = $user_ldap_entry;
-    }
-    
+
+    $user_ldap_entry = ldap_servers_get_user_ldap_data($username);
+    $results['related ldap entry (before provisioning or synching)'] = $user_ldap_entry;
+
     if (is_object($user_object)) {
       $authmaps = db_query("SELECT aid, uid, module, authname FROM {authmap} WHERE uid = :uid", array(':uid' => $user_object->uid))->fetchAllAssoc('aid',  PDO::FETCH_ASSOC);
     }
@@ -151,7 +149,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
             $results['provisionDrupalAccount method results']["context = $synch_trigger_description"]['proposed'] = $user_edit;
           }
           else {
-            $provision_result = $ldap_user_conf->provisionLdapEntry($user_object, array(), $test_query);
+            $provision_result = $ldap_user_conf->provisionLdapEntry($user_object, NULL, $test_query);
             $results['provisionLdapEntry method results']["context = $synch_trigger_description"] = $provision_result;
           }
         }

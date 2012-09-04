@@ -171,15 +171,19 @@ class LdapServerTestv2 extends LdapServer {
   //  debug("filter attribute, $filter_attribute, filter value $filter_value");
     // need to perform feaux ldap search here with data in
     $results = array();
-   // debug('this->entries[CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com]'); debug($this->entries['CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com']);
+   //debug('this->entries');
     foreach ($this->entries as $dn => $entry) {
       $dn_lcase = drupal_strtolower($dn);
+       
       // if not in basedn, skip
       // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       // should be leftmost string in:
       // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
-      $pos = strpos($dn_lcase, $base_dn);
-      if ($pos === FALSE || strcasecmp($base_dn, substr($dn_lcase, 0, $pos + 1)) == FALSE) {
+      //$pos = strpos($dn_lcase, $base_dn);
+      $substring = strrev(substr(strrev($dn_lcase), 0, strlen($base_dn)));
+      $cascmp =  strcasecmp($base_dn, $substring);
+      //debug("dn_lcase=$dn_lcase, base_dn=$base_dn,pos=$pos,substring=$substring,cascmp=$cascmp");
+      if ($cascmp !== 0) {
         continue; // not in basedn
       }
       // if doesn't filter attribute has no data, continue
@@ -190,12 +194,13 @@ class LdapServerTestv2 extends LdapServer {
           break;
         }
       }
+     // debug("filter value=$filter_value, attr_value_to_compare="); debug($attr_value_to_compare);
       if (!$attr_value_to_compare || drupal_strtolower($attr_value_to_compare[0]) != $filter_value) {
         continue;
       }
 
       // match!
-   //   debug("match"); debug($attr_value); debug($attributes);
+     // debug("match"); debug($attr_value); debug($attributes);
       $entry['dn'] = $dn;
       if ($attributes) {
         $selected_data = array();
@@ -214,6 +219,35 @@ class LdapServerTestv2 extends LdapServer {
     return $results;
   }
 
+/**
+ * does dn exist for this server?
+ *
+ * @param string $dn
+ * @param enum $return = 'boolean' or 'ldap_entry'
+ *
+ * @param return FALSE or ldap entry array
+ */
+  function dnExists($find_dn, $return = 'boolean', $attributes = array('objectclass')) {
+    $this->refreshFakeData();
+    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
+    debug("testserver:dnExists test variable entry keys: "); debug(join(', ', array_keys($test_data['entries'])));
+   // debug("testserver:dnExists,find_dn=$find_dn"); debug(array_keys($this->entries));
+    foreach ($this->entries as $entry_dn => $entry) {
+      $match = (strcasecmp($entry_dn, $find_dn) == 0);
+      
+      if ($match) {
+      //  debug("testserver:dnExists,match=$match, entry_dn=$entry_dn, find_dn=$find_dn"); debug($entry);
+        return ($return == 'boolean') ? TRUE : $entry;
+      }
+    }
+   // debug("testserver:dnExists, no match"); 
+    return FALSE; // not match found in loop
+    
+  }
+  
+  public function countEntries($ldap_result) {
+    return ldap_count_entries($this->connection, $ldap_result);
+  }
 
   public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServerTestv2') {
 
@@ -239,31 +273,34 @@ class LdapServerTestv2 extends LdapServer {
    */
 
   public function createLdapEntry($ldap_entry, $dn = NULL) {
-
+    $result = FALSE;
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
     
     if (isset($ldap_entry['dn'])) {
       $dn = $ldap_entry['dn'];
       unset($ldap_entry['dn']);
     }
-    elseif(!$dn) {
-      return FALSE;
-    }
+
+   // debug("createLdapEntry dn=$dn"); debug($ldap_entry);
+   // debug('server test data before save'); debug($test_data['entries']);
     
-    if (isset($test_data['entries'][$dn])) {
-      return FALSE; // entry already exists
-    }
-    else {
+    if ($dn && !isset($test_data['entries'][$dn])) {
       $test_data['entries'][$dn] = $ldap_entry;
       variable_set('ldap_test_server__' . $this->sid, $test_data);
       $this->refreshFakeData();
-      return TRUE;
+      $result = TRUE;
+      
     }
+    $test_data2 = variable_get('ldap_test_server__' . $this->sid, array());
+  //  debug('server test data after save'); debug($test_data2['entries']);
+    return $result;
     
   }
 
-  function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
-    
+  function modifyLdapEntry($dn, $attributes = NULL, $old_attributes = FALSE) {
+    if (!$attributes) {
+      $attributes = array();
+    }
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
     //debug('test server modifyLdapEntry,dn='. $dn); debug($attributes); debug('test data'); debug($test_data['entries'][$dn]);
     if (!isset($test_data['entries'][$dn])) {
@@ -309,7 +346,7 @@ class LdapServerTestv2 extends LdapServer {
     }
     
     $test_data['entries'][$dn] = $ldap_entry;
-   // debug('modifyLdapEntry:server test data before save'); debug($test_data['entries'][$dn]);
+    debug("modifyLdapEntry:server test data before save $dn"); debug($test_data['entries'][$dn]);
     variable_set('ldap_test_server__' . $this->sid, $test_data);
     $this->refreshFakeData();
     return TRUE;
