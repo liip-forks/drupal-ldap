@@ -324,9 +324,9 @@ class LdapServer {
       'timelimit' => 0,
       'deref' => NULL,
     );
-    debug("dnExists:dn=$dn, params="); debug($params); debug("server"); debug($this);
+ 
     $result = $this->ldapQuery(LDAP_SCOPE_BASE, $params);
-    debug("dnExists:dn=$dn, result:"); debug($result);
+   
     if ($result && ($this->countEntries($result) !== FALSE)) {
        return ($return == 'boolean') ? TRUE : $result[0];
     }
@@ -818,7 +818,7 @@ class LdapServer {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
       $result = $this->search($basedn, $filter, array_keys($attribute_maps));
-      debug("ldap_server: user_lookup, filter=$filter, basedn=$basedn, result="); debug($result); debug('user_lookup:attributes needed'); debug($attribute_maps); 
+     // debug("ldap_server: user_lookup, filter=$filter, basedn=$basedn, result="); debug($result); debug('user_lookup:attributes needed'); debug($attribute_maps); 
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.

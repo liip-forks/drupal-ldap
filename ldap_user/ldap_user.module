@@ -689,7 +689,7 @@ function ldap_user_user_login(&$edit, $account) {
   // check for provisioning to drupal and override synched user fields/props
  
   $prov_enabled = $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE);
-   debug("ldap_user_user_login: prov_enabled=$prov_enabled, provisionsDrupalAccountsFromLdap=" . $ldap_user_conf->provisionsDrupalAccountsFromLdap);
+
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
     $ldap_user = ldap_servers_get_user_ldap_data($account->name, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
     $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE); 
@@ -764,8 +764,7 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
   
   $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'user_action_query' , $account->name);
   $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->name);
-  debug("ldap_user_user_update, category=$category, already_provisioned_to_ldap=$already_provisioned_to_ldap, already_synched_to_ldap=$already_synched_to_ldap");
-  
+
   if ($already_provisioned_to_ldap || $already_synched_to_ldap) {
     return;
   }

@@ -226,13 +226,13 @@ class LdapUserConf {
    * 
   */
   public function getRequiredAttributes($direction = LDAP_USER_PROV_DIRECTION_ALL, $ldap_context = NULL) {
-    debug("getRequiredAttributes, ldap_context=$ldap_context, direction=$direction, server=" . $this->drupalAcctProvisionServer);
+
     $attributes_map = array();
     if ($this->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID) {
       $prov_events = $this->ldapContextToProvEvents($ldap_context);
-      debug("getRequiredAttributes:prov_events"); debug($prov_events);
+
       $attributes_map = $this->getSynchMappings($this->drupalAcctProvisionServer, $direction, $prov_events);
-      debug("getRequiredAttributes:attributes_map"); debug($attributes_map);
+
       foreach ($attributes_map as $detail) {
         // Make sure the mapping is relevant to this context.
         //dpm('getRequiredAttributes'); dpm($prov_events); dpm($detail['prov_events']);
@@ -246,7 +246,7 @@ class LdapUserConf {
         }
       }
     }
-    debug("getRequiredAttributes:final attributes_map"); debug($attributes_map);
+
     return $attributes_map;
   }
 
@@ -882,15 +882,15 @@ class LdapUserConf {
         }
       
       }
-       debug("field_key=$field_key, ldap_attr_name=$ldap_attr_name, token=$token, value=$value");
+      
     }
 
     /**
      * 4. call drupal_alter() to allow other modules to alter $ldap_user
      */
-    debug("drupalUserToLdapEntry ldap_user_entry 1"); debug($ldap_user_entry);
+   
     drupal_alter('ldap_entry', $ldap_user_entry, $params);
-    debug("drupalUserToLdapEntry ldap_user_entry 2"); debug($ldap_user_entry);
+
     return array($ldap_user_entry, $result);
 
   }
@@ -913,7 +913,6 @@ class LdapUserConf {
 
   public function provisionDrupalAccount($account = FALSE, &$user_edit, $ldap_user = NULL, $save = TRUE) {
     
-    debug("provisionDrupalAccount: params"); debug(array($account, $user_edit, $ldap_user, $save));
     $watchdog_tokens = array();
     /**
      * @todo
@@ -929,13 +928,13 @@ class LdapUserConf {
     if (!$ldap_user && !isset($user_edit['name'])) {
        return FALSE;
     }
-    debug("provisionDrupalAccount:1");
+
     if (!$ldap_user) {
       $watchdog_tokens['%username'] = $user_edit['name'];
       if ($this->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID) {
-        debug("provisionDrupalAccount:1A1,->drupalAcctProvisionServer". $this->drupalAcctProvisionServer);
+
         $ldap_user = ldap_servers_get_user_ldap_data($user_edit['name'], $this->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
-        debug("provisionDrupalAccount:1A2: ldap_user"); debug($ldap_user);
+
       }
       if (!$ldap_user) {
         debug("provisionDrupalAccount:1B");
@@ -945,12 +944,12 @@ class LdapUserConf {
         return FALSE;
       }
     }
-    debug("provisionDrupalAccount:2");
+
     if (!isset($user_edit['name']) && isset($account->name)) {
       $user_edit['name'] = $account->name;
       $watchdog_tokens['%username'] = $user_edit['name'];
     }
-    debug("provisionDrupalAccount:3");
+
     if ($this->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID) {
       $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);  // $ldap_user['sid']
       $params = array(
@@ -961,7 +960,7 @@ class LdapUserConf {
         'function' => 'provisionDrupalAccount',
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       );
-      debug("provisionDrupalAccount:4");
+
       drupal_alter('ldap_entry', $ldap_user, $params);
       // look for existing drupal account with same puid.  if so update username and attempt to synch in current context
       $puid = $ldap_server->derivePuidFromLdapEntry($ldap_user['attr']);
@@ -973,18 +972,15 @@ class LdapUserConf {
         $account = user_save($account2, $user_edit, 'ldap_user');
         user_set_authmaps($account, array("authname_ldap_user" => $user_edit['name']));
         // 2. attempt synch if appropriate for current context
-        debug("provisionDrupalAccount:5");
         if ($account) {
           $account = $this->synchToDrupalAccount($account, $user_edit, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user, TRUE);
         }
         return $account;
       }
       else { // create drupal account
-         debug("provisionDrupalAccount:6");
         $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_CREATE_DRUPAL_USER));
          //826 dpm('provisionDrupalAccount: user_edit'); dpm($user_edit); 
         if ($save) {
-          debug("provisionDrupalAccount:7");
           $account = user_save(NULL, $user_edit, 'ldap_user');
           if (!$account) {
             drupal_set_message(t('User account creation failed because of system problems.'), 'error');

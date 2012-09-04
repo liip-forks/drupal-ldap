@@ -21,7 +21,7 @@ $test_data['servers']['ldapauthen1']['properties']  = array(
     'name'  => 'Test LDAP Server 1 for LDAP Authentication' ,
     'inDatabase' => TRUE,
     'status'  => 1,
-    'type'  => 'ad',
+    'ldap_type'  => 'ad',
     'address'  => 'ad.myuniversity.edu',
     'port'  => 389,
     'tls'  => FALSE,
@@ -33,12 +33,16 @@ $test_data['servers']['ldapauthen1']['properties']  = array(
       ),
     'binddn'  => 'cn=service-account,dc=ad,dc=myuniversity,dc=edu',
     'bindpw' => 'goodpwd',
-    'user_dn_expression' => 'user_dn_expression',
+    'user_dn_expression' => NULL,
     'user_attr'  => 'sAMAccountName',
     'mail_attr'  => 'mail',
+    'mail_template'  => NULL,
+    'ldap_to_drupal_user' => FALSE,
     'ldapToDrupalUserPhp'  => NULL,
     'testingDrupalUsername'  => 'jdoe',
     'groupObjectClass' => 'group',
+    'search_pagination' => 0,
+    'searchPageSize' => NULL,
 
   );
 

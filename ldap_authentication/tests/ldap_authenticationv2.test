@@ -6,12 +6,12 @@
  * ldap_authentication simpletests
  *
  */
-require_once(drupal_get_path('module', 'ldap_servers') . '/tests/LdapTestFunctions.class.php');
+module_load_include('php', 'ldap_test', 'LdapTestCasev2.class');
 
-class LdapAuthenticationTestCase extends DrupalWebTestCase {
+class LdapAuthenticationTestCase extends LdapTestCasev2 {
   public static function getInfo() {
     return array(
-      'name' => 'LDAP Authentication Tests',
+      'name' => 'LDAP Authentication Tests v2',
       'description' => 'Test ldap authentication.',
       'group' => 'LDAP Authentication'
     );
@@ -24,53 +24,6 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role')); // don't need any real servers, configured, just ldap_servers code base
-    variable_set('ldap_simpletest', 1);
-    variable_set('ldap_help_watchdog_detail', 0);
-  }
-
-
-  function tearDown() {
-    parent::tearDown();
-    variable_del('ldap_help_watchdog_detail');
-    variable_del('ldap_simpletest');
-  }
-
-
-  /**
-   * prepTestData create an ldap_authorization configuration and stores fake ldap server configuration.
-   *
-   * @param string $testid the name of the test.  used to determine which configuration file to include
-   * @return object consumer configuration object (class = LdapAuthorizationConsumerConfAdmin)
-   *
-   */
-  function prepTestData($sid, $testid) {
-    $this->testFunctions = new LdapTestFunctions();
-
-    include(drupal_get_path('module', 'ldap_authentication') . '/tests/LdapServerTestData.' . $sid . '.inc');
-    $this->testFunctions->prepTestServers($test_data['servers']);
-    $this->testData = $test_data;
-    
-    // configure ldap_user
-    require_once(drupal_get_path('module', 'ldap_test') . '/LdapTestFunctionsv2.class.php');
-    $testFunctionv2 = new LdapTestFunctionsv2();
-    $testFunctionv2->configureLdapUser('ad_authentication');
-    
-    
-    $authentication_conf = (is_array($testid)) ? $testid : $test_data['ldap_authentication'][$testid];
-    $this->testFunctions->configureAuthentication($authentication_conf);
-
-
-
-     // set up authorization conf.  needed for some tests.
-    $consumer_conf = $test_data['ldap_authorization_conf']['consumer_conf'];
-    $consumer_obj = ldap_authorization_get_consumer_object($consumer_conf['consumerType']);
-    $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj, TRUE);
-    foreach ($consumer_conf as $property_name => $property_value) {
-      $consumer_conf_admin->{$property_name} = $property_value;
-    }
-    $consumer_conf_admin->save();
-
-
   }
 
   public function AttemptLogon($dn, $goodpwd = TRUE) {
@@ -93,9 +46,9 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
   /**
    * difficult to test install and uninstall since setUp does module enabling and installing.
    */
-  function testInstall() {
-    $sid = 'ldapauthen1';
-    include(drupal_get_path('module', 'ldap_authentication') . '/tests/LdapServerTestData.' . $sid . '.inc');
+  function testInstallv2() {
+   // $sid = 'ldapauthen1';
+   // include(drupal_get_path('module', 'ldap_authentication') . '/tests/LdapServerTestData.' . $sid . '.inc');
     $testid = $this->module_name . ': setup success';
     // just to give warning if setup doesn't succeed.  may want to take these out at some point.
 
@@ -114,11 +67,13 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
  */
 
 
-  function testMixedModeUserLogon() {
+  function testMixedModeUserLogonv2() {
 
     $sid = 'ldapauthen1';
     $testid = 'MixedModeUserLogon';
-    $this->prepTestData($sid, $testid);
+    $sids = array($sid);
+    $this->prepTestData($sids, 'ad_authentication', 'default', $testid, 'ldapauthen1');
+    
     $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
 
@@ -204,7 +159,6 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
     $this->drupalGet('user/logout');
     ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
     
-
     /** LDAP_authen.MM.ULT.existingacct.badpwd - result: Drupal logon error message. **/
     $edit = array(
       'name' => 'jkool',
@@ -231,11 +185,12 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 /**
  *  LDAP Authentication Exclusive Mode User Logon Test (ids = LDAP_authen.EM.ULT.*)
  */
-  function testExclusiveModeUserLogon() {
+  function testExclusiveModeUserLogonv2() {
 
     $sid = 'ldapauthen1';
     $testid = 'ExclusiveModeUserLogon';
-    $this->prepTestData($sid, $testid);
+    $sids = array($sid);
+    $this->prepTestData($sids, 'ad_authentication', 'default', $testid, 'ldapauthen1');
     $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
 
@@ -347,13 +302,14 @@ class LdapAuthenticationTestCase extends DrupalWebTestCase {
 
 
 
-  function testAuthenticationWhitelistTests() {
+  function testAuthenticationWhitelistTestsv2() {
     require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
 
     $sid = 'ldapauthen1';
     $this->sid = $sid;
     $testid = 'WL1';
-    $this->prepTestData($sid, $testid);
+    $sids = array($sid);
+    $this->prepTestData($sids, 'ad_authentication', 'default', $testid, 'ldapauthen1');
     $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
 

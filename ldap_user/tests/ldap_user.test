@@ -440,7 +440,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
         
         $ldap_user_conf->save();
         $ldap_user_conf = ldap_user_conf('admin', TRUE);
-        debug("ldap_user_conf in prep field_token=$field_token"); debug($ldap_user_conf->synchMapping); debug($ldap_user_conf->ldapUserSynchMappings);
+       // debug("ldap_user_conf in prep field_token=$field_token"); debug($ldap_user_conf->synchMapping); debug($ldap_user_conf->ldapUserSynchMappings);
         ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
         ldap_servers_flush_server_cache();
         

@@ -81,7 +81,9 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
   if (!$type) {
     $type = 'all';
   }
-
+  
+  //two flavors of mock servers exist.  ultimately v2 will be used in all simpletests
+  // which stores its fake date in ldif format.
   if (variable_get('ldap_simpletest', 0) == 2) {
     ldap_server_module_load_include('php', 'ldap_test', 'LdapServerTestv2.class');
     $servers['all'] = LdapServerTestv2::getLdapServerObjects('all', NULL, 'LdapServer', $reset );

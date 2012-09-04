@@ -136,7 +136,7 @@ class LdapServerTest extends LdapServer {
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
 
     $filter = trim(str_replace(array("\n", "  "),array('',''), $filter)); // for test matching simplicity remove line breaks and tab spacing
-   // debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");
+    //debug('search ldapservertest v0');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");
     $my_debug = ($base_dn == 'ou=guest accounts,dc=ad,dc=myuniversity,dc=edu' && $filter == "(sAMAccountName=wilmaf)");
   //  if ($my_debug) {debug('search');  debug("base_dn: $base_dn"); debug("filter:<pre>$filter</pre>");}
 
@@ -151,7 +151,6 @@ class LdapServerTest extends LdapServer {
 
     // return prepolulated search results in test data array if present
     if (isset($this->searchResults[$filter][$base_dn])) {
-    //  if ($my_debug) {debug('set search results'); debug($this->searchResults[$filter][$base_dn]);}
       return $this->searchResults[$filter][$base_dn];
     }
 
@@ -159,61 +158,43 @@ class LdapServerTest extends LdapServer {
     $filter = strtolower(trim($filter,"()"));
 
     list($filter_attribute, $filter_value) = explode('=', $filter);
-  //  $filter_value = ldap_pear_unescape_filter_value($filter_value);
+    $filter_attribute = drupal_strtolower($filter_attribute);
     // need to perform feaux ldap search here with data in
     $results = array();
    // debug('test users'); debug($this->testUsers); debug("filter_attribute=$filter_attribute, filter_value=$filter_value");
     foreach ($this->testUsers as $dn => $user_data) {
-      $my_debug2 = ($my_debug && $dn == 'cn=Flintstone\\, Wilma,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu');
-     // if ($my_debug2) {debug('test user ' . $dn); debug($user_data);}
       $user_data_lcase = array();
       foreach ($user_data['attr'] as $attr => $values) {
         $user_data_lcase['attr'][strtolower($attr)] = $values;
       }
-
       $dn = strtolower($dn);
-      // if not in basedn, skip
-      // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
-      // should be leftmost string in:
-      // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
-      $pos = stripos($dn, $base_dn);
-      if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) !== 0) {
-//         if ($my_debug2) {debug("dn=$dn not in base_dn=$base_dn");}
+      $substring = strrev(substr(strrev($dn), 0, strlen($base_dn)));
+      if (strcasecmp($base_dn, $substring) !== 0) {
         continue; // not in basedn
       }
-      else {
-      }
-
-      // check for mixed case and lowercase attribute's existance
-      // trying to mimic ldap implementation
+   
       if (isset($user_data['attr'][$filter_attribute])) {
         $contained_values = $user_data['attr'][$filter_attribute];
-        // if ($my_debug2) { debug('mixed case match success');}
       }
-      elseif (isset($user_data_lcase['attr'][ldap_server_massage_text($filter_attribute, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)])) {
-        $contained_values = $user_data_lcase['attr'][ldap_server_massage_text($filter_attribute, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)];
-       //  if ($my_debug2) { debug('lower case match success');}
+      elseif (isset($user_data_lcase['attr'][$filter_attribute])) {
+        $contained_values = $user_data_lcase['attr'][$filter_attribute];
       }
       else {
-       // if ($my_debug2) {debug('match fail');}
         continue;
       }
-      //debug("contained_values"); debug($contained_values);
+
       unset($contained_values['count']);
       if (!in_array($filter_value, array_values($contained_values))) {
-     //   if ($my_debug2) { debug("match to value $filter_attribute=$filter_value failed");}
         continue;
       }
-
-
 
       // loop through all attributes, if any don't match continue
       $user_data_lcase['attr']['dn'] = $dn;
       if ($attributes) {
         $selected_user_data = array();
         foreach ($attributes as $i => $attr_name) {
-          $key = ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY);
-          $selected_user_data[$key] = (isset($user_data_lcase['attr'][$key])) ? $user_data_lcase['attr'][$key] : NULL;
+          $attr_name = strtolower($attr_name);
+          $selected_user_data[$attr_name] = (isset($user_data_lcase['attr'][$attr_name])) ? $user_data_lcase['attr'][$attr_name] : NULL;
         }
         $results[] = $selected_user_data;
       }
@@ -228,12 +209,12 @@ class LdapServerTest extends LdapServer {
       // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
       // should be leftmost string in:
       // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
-      $pos = strpos($dn, $base_dn);
-      if ($pos === FALSE || strcasecmp($base_dn, substr($dn, 0, $pos + 1)) !== 0) {
+      $dn = strtolower($dn);
+      $substring = strrev(substr(strrev($dn), 0, strlen($base_dn)));
+      if (strcasecmp($base_dn, $substring) !== 0) {
         continue; // not in basedn
       }
-      else {
-      }
+
 
       // if doesn't filter attribute has no data, continue
       if (!isset($group_data['attr'][$filter_attribute])) {

@@ -140,7 +140,7 @@ class LdapServerTestv2 extends LdapServer {
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
     
-    //debug("ldap test server search base_dn=$base_dn, filter=$filter"); debug($attributes);
+   // debug("ldap test v2 server search base_dn=$base_dn, filter=$filter"); debug($attributes);
     $lcase_attribute = array();
     foreach ($attributes as $i => $attribute_name) {
       $lcase_attribute[] = drupal_strtolower($attribute_name);
@@ -230,7 +230,7 @@ class LdapServerTestv2 extends LdapServer {
   function dnExists($find_dn, $return = 'boolean', $attributes = array('objectclass')) {
     $this->refreshFakeData();
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
-    debug("testserver:dnExists test variable entry keys: "); debug(join(', ', array_keys($test_data['entries'])));
+   // debug("testserver:dnExists test variable entry keys: "); debug(join(', ', array_keys($test_data['entries'])));
    // debug("testserver:dnExists,find_dn=$find_dn"); debug(array_keys($this->entries));
     foreach ($this->entries as $entry_dn => $entry) {
       $match = (strcasecmp($entry_dn, $find_dn) == 0);
@@ -346,7 +346,7 @@ class LdapServerTestv2 extends LdapServer {
     }
     
     $test_data['entries'][$dn] = $ldap_entry;
-    debug("modifyLdapEntry:server test data before save $dn"); debug($test_data['entries'][$dn]);
+  //  debug("modifyLdapEntry:server test data before save $dn"); debug($test_data['entries'][$dn]);
     variable_set('ldap_test_server__' . $this->sid, $test_data);
     $this->refreshFakeData();
     return TRUE;

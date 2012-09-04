@@ -1,0 +1,58 @@
+
+
+dn: dc=ad,dc=myuniversity,dc=edu
+dc: ad
+description: ldap authentication test ldap.
+objectClass: dcObject
+objectClass: organization
+o: ldap authentication test ldap.
+
+
+dn: ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
+ou: campus accounts
+description: campus accounts
+objectclass: organizationalunit
+
+
+dn: cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
+cn: jdoe
+distinguishedName: cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
+sAMAccountName: jdoe
+mail: jdoe@myuniversity.edu
+
+
+dn: cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu
+cn: jkool
+distinguishedName: cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu
+sAMAccountName: jkool
+mail: jkool@guests.myuniversity.edu
+memberOf: cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu
+
+
+dn: cn=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu
+cn: unkool
+distinguishedName: cn=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu
+sAMAccountName: unkool
+mail: unkool@nowhere.myuniversity.edu
+memberOf: cn=unknown_people,ou=nowhere,dc=ad,dc=myuniversity,dc=edu
+
+
+dn: cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu
+cn: verykool
+distinguishedName: cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu
+sAMAccountName: verykool
+mail: verykool@myuniversity.edu
+meMBErof: cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu
+meMBErof: CN=NETadmins,ou=it,dc=ad,dc=myuniversity,dc=edu
+password: goodpwd
+
+
+dn: cn=service-account,dc=ad,dc=myuniversity,dc=edu
+cn: service-account
+distinguishedName: cn=service-account,dc=ad,dc=myuniversity,dc=edu
+sAMAccountName: service-account
+mail: service-account@myuniversity.edu
+memberOf: CN=service_accounts,OU=ServiceAccountGroups,DC=ad,DC=myuniversity,DC=edu
+password: goodpwd
+
+

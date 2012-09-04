@@ -39,7 +39,8 @@ class LdapAuthorizationOtherAuthenticationTests  extends LdapAuthorizationTestCa
     $consumer_conf_admin->save();
 
 
-    $verykool = $this->drupalCreateUser(array('access content'));
+    $verykool = $this->drupalCreateUser(); // array('access content')
+    
     $password = $verykool->pass_raw;
     $verykool = user_save($verykool, array('name' => 'verykool'));
     $edit = array('pass' =>  $password, 'name' => 'verykool');
