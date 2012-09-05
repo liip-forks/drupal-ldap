@@ -12,7 +12,8 @@ ldap_server_module_load_include('php', 'ldap_test', 'LdapTestFunctionsv2.class')
 class LdapTestCasev2 extends DrupalWebTestCase {
 
   public $testFunctions;
-
+  public $module_name;
+  
   // storage for test data
   public $useFeatureData;
   public $featurePath;
@@ -38,16 +39,7 @@ class LdapTestCasev2 extends DrupalWebTestCase {
     parent::setUp($modules);
     variable_set('ldap_simpletest', 2);
     variable_set('ldap_help_watchdog_detail', 0);
-    // create field_lname, field_binary_test user fields
 
-    foreach ($this->ldap_user_test_entity_fields() as $field_id => $field_conf) {
-      $field_info = field_info_field($field_id);
-      if (!$field_info) {
-        field_create_field($field_conf['field']);
-        field_create_instance($field_conf['instance']);
-      }
-      $field_info = field_info_field($field_id);
-    }
   }
 
   function tearDown() {
@@ -63,8 +55,7 @@ class LdapTestCasev2 extends DrupalWebTestCase {
       $ldap_feeds_conf_id = NULL,
       $ldap_query_conf_id = NULL
     ) {
-
-
+    
     $this->testFunctions->configureLdapServers($sids);
     if ($ldap_user_conf_id) {
       $this->testFunctions->configureLdapUser($ldap_user_conf_id);
@@ -82,7 +73,23 @@ class LdapTestCasev2 extends DrupalWebTestCase {
   }
 
 
-
+  /**
+   * keep user entity fields function for ldap_user
+   * in base class instead of user test class in case
+   * module integration testing is needed
+   */
+  
+  function ldap_user_create_user_test_entity_fields() {
+    foreach ($this->ldap_user_test_entity_fields() as $field_id => $field_conf) {
+      $field_info = field_info_field($field_id);
+      if (!$field_info) {
+        field_create_field($field_conf['field']);
+        field_create_instance($field_conf['instance']);
+      }
+      $field_info = field_info_field($field_id);
+    }
+  }
+  
   function ldap_user_test_entity_fields() {
 
     $fields = array();
