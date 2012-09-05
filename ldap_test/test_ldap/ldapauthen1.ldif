@@ -19,6 +19,7 @@ cn: jdoe
 distinguishedName: cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
 sAMAccountName: jdoe
 mail: jdoe@myuniversity.edu
+password: goodpwd
 
 
 dn: cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu
@@ -27,6 +28,7 @@ distinguishedName: cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu
 sAMAccountName: jkool
 mail: jkool@guests.myuniversity.edu
 memberOf: cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu
+password: goodpwd
 
 
 dn: cn=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu
@@ -35,6 +37,7 @@ distinguishedName: cn=unkool,ou=lost,dc=ad,dc=myuniversity,dc=edu
 sAMAccountName: unkool
 mail: unkool@nowhere.myuniversity.edu
 memberOf: cn=unknown_people,ou=nowhere,dc=ad,dc=myuniversity,dc=edu
+password: goodpwd
 
 
 dn: cn=verykool,ou=special guests,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu

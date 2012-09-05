@@ -37,6 +37,7 @@ userPrincipalName: fred_flintstone@pixotech.com
 objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
 mail: fred_flintstone@pixotech.co
 pixotechcomregistryuniqueid: e2eb4d760f81e80df1524cff71f720a0
+password: goodpwd
 
 
 dn: CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
@@ -62,6 +63,7 @@ userPrincipalName: jkeats@pixotech.com
 objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
 mail: boygen@hotmail.com
 pixotechcomregistryuniqueid: e2eb4d760f81e89df1524cff71f720a0
+password: goodpwd
 
 
 dn: CN=pshelly,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
@@ -87,6 +89,7 @@ userPrincipalName: pshelly@pixotech.com
 objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
 mail: poetandknowit@hotmail.com
 pixotechcomregistryuniqueid: e2eb4d760f81e87df1524cff71f720a0
+password: goodpwd
 
 
 dn: CN=hwapole,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
@@ -112,6 +115,7 @@ userPrincipalName: hwapole@pixotech.com
 objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
 mail: walpole@gmail.com
 pixotechcomregistryuniqueid: e2eb4d760f81e83df1524cff71f760a0
+password: goodpwd
 
 
 dn: CN=wwordsworth,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
@@ -137,3 +141,4 @@ userPrincipalName: wwordsworth@pixotech.com
 objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=activedirectory,DC=ldap,DC=pixotech,DC=com
 mail: wwordsworth@gmail.com
 pixotechcomregistryuniqueid: e2eb4d760f81e83df1524cff71f760a0
+password: goodpwd

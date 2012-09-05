@@ -96,6 +96,7 @@ class LdapTestFunctionsv2  {
     foreach ($sids as $i => $sid) {
       $current_sids[$sid] = $sid;
       $this->data['ldap_servers'][$sid]['entries'] = $this->getLdifData($sid . '.ldif');
+     // debug("configureLdapServers, $sid"); debug($this->data['ldap_servers'][$sid]['entries']);
       variable_set('ldap_test_server__' . $sid, $this->data['ldap_servers'][$sid]);
     }
 

@@ -72,7 +72,21 @@ class LdapTestCasev2 extends DrupalWebTestCase {
     }
   }
 
+  public function AttemptLogonNewUser($name, $goodpwd = TRUE) {
 
+    $this->drupalLogout();
+
+    $edit = array(
+      'name' => $name,
+      'pass' => ($goodpwd) ? "goodpwd" : "badpwd",
+    );
+    $user = user_load_by_name($name);
+    if ($user) {
+      user_delete($user->uid);
+    }
+    $this->drupalPost('user', $edit, t('Log in'));
+  }
+  
   /**
    * keep user entity fields function for ldap_user
    * in base class instead of user test class in case

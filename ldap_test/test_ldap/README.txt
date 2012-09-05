@@ -1,5 +1,5 @@
 
-These ldif files serve a number of roles:
+These ldif files (will) serve a number of roles:
 
 
 1) Their contents are (or will be) used in simpletests for drupal ldap modules

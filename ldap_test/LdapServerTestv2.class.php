@@ -84,8 +84,8 @@ class LdapServerTestv2 extends LdapServer {
   function bind($userdn = NULL, $pass = NULL, $anon_bind = FALSE) {
     $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
     $pass = ($pass != NULL) ? $pass : $this->bindpw;
-
-    if (! isset($this->testUsers[$userdn])) {
+   
+    if (! isset($this->entries[$userdn])) {
       $ldap_errno = LDAP_NO_SUCH_OBJECT;
       if (function_exists('ldap_err2str')) {
         $ldap_error = ldap_err2str($ldap_errno);
@@ -94,7 +94,16 @@ class LdapServerTestv2 extends LdapServer {
         $ldap_error = "Failed to find $userdn in LdapServerTestv2.class.php";
       }
     }
-    elseif (isset($this->testUsers[$userdn]['attr']['password'][0]) && $this->testUsers[$userdn]['attr']['password'][0] != $pass) {
+    elseif (isset($this->entries[$userdn]['password'][0]) && $this->entries[$userdn]['password'][0] == $pass && $pass) {
+      return LDAP_SUCCESS;
+    }
+    else {
+      if (!$pass) {
+        debug("Simpletest failure for $userdn.  No password submitted");
+      }
+      if (! isset($this->entries[$userdn]['password'][0])) {
+        debug("Simpletest failure for $userdn.  No password in entry to test for bind"); debug($this->entries[$userdn]);
+      }
       $ldap_errno = LDAP_INVALID_CREDENTIALS;
       if (function_exists('ldap_err2str')) {
         $ldap_error = ldap_err2str($ldap_errno);
@@ -103,15 +112,9 @@ class LdapServerTestv2 extends LdapServer {
         $ldap_error = "Credentials for $userdn failed in LdapServerTestv2.class.php";
       }
     }
-    else {
-      return LDAP_SUCCESS;
-    }
 
-    watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error",
-      array('%user' => $userdn,
-            '%errno' => $ldap_errno,
-            '%error' => $ldap_error,
-      ));
+    $watchdog_tokens = array('%user' => $userdn, '%errno' => $ldap_errno, '%error' => $ldap_error);
+    watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", $watchdog_tokens);
 
     return $ldap_errno;
 
@@ -140,7 +143,7 @@ class LdapServerTestv2 extends LdapServer {
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
     
-   // debug("ldap test v2 server search base_dn=$base_dn, filter=$filter"); debug($attributes);
+  //  debug("ldap test v2 server search base_dn=$base_dn, filter=$filter"); debug($attributes);
     $lcase_attribute = array();
     foreach ($attributes as $i => $attribute_name) {
       $lcase_attribute[] = drupal_strtolower($attribute_name);
@@ -215,7 +218,7 @@ class LdapServerTestv2 extends LdapServer {
     }
 
     $results['count'] = count($results);
-   // debug("ldap test server search results"); debug($results);
+//    debug("ldap test server search results"); debug($results);
     return $results;
   }
 
