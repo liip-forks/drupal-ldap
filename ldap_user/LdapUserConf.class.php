@@ -74,6 +74,16 @@ class LdapUserConf {
   
   // what should be done with ldap provisioned accounts that no longer have associated drupal accounts.
   public $orphanedDrupalAcctBehavior = 'ldap_user_orphan_email';
+   /** options are partially derived from user module account cancel options:
+    * 
+    'ldap_user_orphan_do_not_check' => Do not check for orphaned Drupal accounts.)
+    'ldap_user_orphan_email' => Perform no action, but email list of orphaned accounts. (All the other options will send email summaries also.)
+    'user_cancel_block' => Disable the account and keep its content.
+    'user_cancel_block_unpublish' => Disable the account and unpublish its content.
+    'user_cancel_reassign' => Delete the account and make its content belong to the Anonymous user.
+    'user_cancel_delete' => Delete the account and its content.
+    **/
+    
   public $orphanedCheckQty = 100;
   
   public $wsKey = NULL;
@@ -937,7 +947,6 @@ class LdapUserConf {
 
       }
       if (!$ldap_user) {
-        debug("provisionDrupalAccount:1B");
         if ($this->detailedWatchdog) {
           watchdog('ldap_user', '%username : failed to find associated ldap entry for username in provision.', $watchdog_tokens, WATCHDOG_DEBUG);
         }
