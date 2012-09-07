@@ -690,14 +690,19 @@ class LdapUserLdapProvisionTests extends LdapUserTestCasev2 {
      // 
       
     $this->assertTrue($ldap_entry_success, t("synch to ldap entry on user save succeeded for " . $username), $this->ldapTestId);
-    ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);    
-    //Delete user in drupal.
-  //  user_delete($user_acct->uid);
-   // ldap_servers_flush_server_cache();
-   // $server = ldap_servers_get_servers('activedirectory', NULL, TRUE, TRUE);
- //   $entry = $servers['activedirectory']->dnExists($desired_dn, 'ldap_entry');
-    //debug('entry after delete'); debug($entry);
-    // confirm that ldap entry for user is removed.
+    ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
+    
+    /**
+     * test Delete LDAP entry when the corresponding Drupal Account is deleted
+     *
+     * $this->ldapTestId = $this->module_name . ': test for deletion of ldap account on drupal acct delete';
+     * user_delete($user_acct->uid);
+     * ldap_servers_flush_server_cache();
+     * $server = ldap_servers_get_servers('activedirectory', NULL, TRUE, TRUE);
+     * $entry = $servers['activedirectory']->dnExists($desired_dn, 'ldap_entry');
+     * $this->assertFalse($entry, t("Corresponding LDAP entry deleted when Drupal Account deleted for " . $username), $this->ldapTestId);
+     */
+
     
     
     // do a password reset of some sort
