@@ -326,14 +326,21 @@ class LdapServer {
     );
  
     $result = $this->ldapQuery(LDAP_SCOPE_BASE, $params);
-   
-    if ($result && ($this->countEntries($result) !== FALSE)) {
-       return ($return == 'boolean') ? TRUE : $result[0];
+    if ($result !== FALSE) {
+      if ($return == 'boolean') {
+        return TRUE;
+      }
+
+      $entries = @ldap_get_entries($this->connection, $result);
+      if ($entries !== FALSE) {
+        return $entries[0];
+      }
     }
-    else {
-       return FALSE;
-    }
+
+    return FALSE;
+
   }
+    
   
   public function countEntries($ldap_result) {
     return ldap_count_entries($this->connection, $ldap_result);
@@ -466,7 +473,6 @@ class LdapServer {
 
   function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
     
-    dpm("modifyLdapEntry,dn=$dn, attributes="); dpm($attributes);
     $this->connectAndBindIfNotAlready();
     
     if (!$old_attributes) {

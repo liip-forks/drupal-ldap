@@ -110,6 +110,36 @@ class LdapServerTest extends LdapServer {
 
   }
 
+/**
+ * does dn exist for this server?
+ *
+ * @param string $dn
+ * @param enum $return = 'boolean' or 'ldap_entry'
+ *
+ * @param return FALSE or ldap entry array
+ */
+  function dnExists($dn, $return = 'boolean', $attributes = array('objectclass')) {
+
+    $params = array(
+      'base_dn' => $dn,
+      'attributes' => $attributes,
+      'attrsonly' => TRUE,
+      'filter' => '(objectclass=*)',
+      'sizelimit' => 0,
+      'timelimit' => 0,
+      'deref' => NULL,
+    );
+ 
+    $result = $this->ldapQuery(LDAP_SCOPE_BASE, $params);
+   
+    if ($result && ($this->countEntries($result) !== FALSE)) {
+       return ($return == 'boolean') ? TRUE : $result[0];
+    }
+    else {
+       return FALSE;
+    }
+  }
+  
   /**
    * Disconnect (unbind) from an active LDAP server.
    */
