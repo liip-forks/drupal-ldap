@@ -98,7 +98,7 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
         return ldap_user_ws_out(array((boolean)($new_account), $text));
       }
       elseif ($direction = LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
-        $result = $ldap_user_conf->provisionLdapEntry($drupal_user_name);
+        $provision_result = $ldap_user_conf->provisionLdapEntry($drupal_user_name); // no need for ldap_user_ldap_provision_semaphore call with webservice since not tied to single user like logon process
         // @todo turn result array into response 
       }        
     break;

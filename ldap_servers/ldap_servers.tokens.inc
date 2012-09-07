@@ -288,7 +288,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
   
-  $user_entered_password_available = (boolean)ldap_user_ldap_provision_semaphore('get_user_pass', NULL);
+  $user_entered_password_available = (boolean)ldap_user_ldap_provision_pwd('get');
   // ldapUserPwd((property_exists($user_account, 'ldapUserPwd') && $user_account->ldapUserPwd));
 
   if ($token_keys == 'all') {
@@ -338,7 +338,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
 
       case 'password':
         if ($user_entered_password_available && ($attr_name == 'user' || $attr_name == 'user-random' ||$attr_name == 'user-none')) {
-          $value = ldap_user_ldap_provision_semaphore('get_user_pass', NULL);
+          $value = ldap_user_ldap_provision_pwd('get');
         }
         elseif ($attr_name == 'random' || $attr_name == 'user-random') {
           $value = user_password();

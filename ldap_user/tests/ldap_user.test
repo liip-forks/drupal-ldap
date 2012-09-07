@@ -399,7 +399,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
       $property_name = isset($test['property_name']) ? $test['property_name'] : FALSE;
       $direction = ($property_name) ? $test['mapping']['direction'] : $test['mapping']['direction'];
       foreach ($test_prov_events[$direction] as $i => $prov_event) {  // test for each provision event
-        ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
+       
         // foreach (array(0, 1) as $flagged_for_provision) { // @todo add 0 back into arraytest with and without field flagged for synch to test for false positives
          // debug("test context: $context, flagged for synchprov:" . (int)$flagged_for_provision);
 

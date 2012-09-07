@@ -503,8 +503,7 @@ class LdapUserConf {
       $result['proposed'] = $proposed_ldap_entry;
       $result['created'] = $ldap_entry_created;
       $result['ldap_server'] = $ldap_server;
-      ldap_user_ldap_provision_semaphore('provision', 'user_action_mark' , $account->name);
-      ldap_user_ldap_provision_semaphore('synch', 'user_action_mark' , $account->name);
+
       // need to store <sid>|<dn> in ldap_user_prov_entries field, which may contain more than one
       $ldap_user_prov_entry = $ldap_server->sid . '|' . $proposed_ldap_entry['dn'];
       if (!isset($user_entity->ldap_user_prov_entries['und'])) {
@@ -584,7 +583,7 @@ class LdapUserConf {
     
     if (!$this->ldapEntryProvisionServer || $this->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID) {
       $ldap_server = ldap_servers_get_servers($this->ldapEntryProvisionServer, NULL, TRUE);
-      dpm('synchToLdapEntry:ldap_server, prov='. $this->ldapEntryProvisionServer); dpm($ldap_server);
+     // dpm('synchToLdapEntry:ldap_server, prov='. $this->ldapEntryProvisionServer); dpm($ldap_server);
       $params = array(
         'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
         'prov_events' => array(LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
@@ -627,9 +626,6 @@ class LdapUserConf {
         else {
          //  //debug('modifyLdapEntry,dn=' . $proposed_ldap_entry['dn']);  //debug($attributes);
           $result = $ldap_server->modifyLdapEntry($proposed_ldap_entry['dn'], $attributes);
-          if ($result) {
-            ldap_user_ldap_provision_semaphore('synch', 'user_action_mark' , $account->name);
-          }
         }
       }
       else { // failed to get acceptable proposed ldap entry
