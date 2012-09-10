@@ -137,6 +137,7 @@ function ldap_user_cron() {
 function ldap_user_conf_cache_clear() {
   $discard = ldap_user_conf('admin', TRUE);
   $discard = ldap_user_conf(NULL, TRUE);
+  ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
 }
 
 /**
@@ -197,7 +198,7 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
     
     $ldap_context = empty($params['ldap_context']) ? NULL : $params['ldap_context'];
     $direction = empty($params['direction']) ? $ldap_user_conf->ldapContextToProvDirection($ldap_context) : $params['direction'];
-    $attributes_required_by_user_module_mappings = $ldap_user_conf->getRequiredAttributes($direction, $ldap_context);
+    $attributes_required_by_user_module_mappings = $ldap_user_conf->getLdapUserRequiredAttributes($direction, $ldap_context);
     $attributes = array_merge($attributes_required_by_user_module_mappings, $attributes);
 
   }

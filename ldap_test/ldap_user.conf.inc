@@ -82,7 +82,7 @@ $conf['ad_authentication'] = array(
     )
   );
   
-  $conf['provision0']  = array(
+  $conf['provisionToDrupal']  = array(
     'drupalAcctProvisionServer' => 'activedirectory',
     'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,
     'drupalAcctProvisionTriggers' => array(
@@ -107,7 +107,7 @@ $conf['ad_authentication'] = array(
     )
   );
 
-  $conf['provision1']  = array(
+  $conf['provisionToLdap']  = array(
     'drupalAcctProvisionServer' => LDAP_USER_NO_SERVER_SID,
     'ldapEntryProvisionServer' => 'activedirectory',
     'drupalAcctProvisionTriggers' => array(),

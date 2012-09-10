@@ -48,7 +48,8 @@ class LdapTestCasev2 extends DrupalWebTestCase {
     variable_del('ldap_simpletest');
   }
 
-  function prepTestData($sids,
+  function prepTestData(
+      $sids,
       $ldap_user_conf_id = NULL,
       $ldap_authentication_conf_id = NULL,
       $ldap_authorization_conf_id = NULL,
@@ -71,7 +72,35 @@ class LdapTestCasev2 extends DrupalWebTestCase {
       }
     }
   }
-
+  
+  public function testId($description = NULL, $method = NULL) {
+    
+    static $test_id;
+    static $i;
+    
+    if ($description || $method) {
+      $test_id = NULL;
+      $i = 0;
+    }
+    elseif ($test_id)  { // default test id
+      $i++;
+      return $test_id . '.' . $i;
+    }
+    if (!$method) {
+      $trace = debug_backtrace();
+      
+      $caller = array_shift($trace);
+      $caller = array_shift($trace);
+      $method = $caller['function'];
+      $count = 1;
+      $method = str_replace('test', '', $method, $count);
+    }
+    
+    $test_id = join(".", array($this->module_name, $method, $description));
+    return $test_id;
+  
+  }
+  
   public function AttemptLogonNewUser($name, $goodpwd = TRUE) {
 
     $this->drupalLogout();

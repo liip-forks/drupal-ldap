@@ -12,7 +12,12 @@
  * alter attributes needed based on $op parameter
  *
  * @param array $attributes
- *   array of attributes to be returned from ldap queries
+ *   array of attributes to be returned from ldap queries where:
+ *     - each key is ldap attribute name (e.g. mail, cn)
+ *     - each value is associative array of form:
+ *       - 'source_data_type' => NULL,
+ *       - 'target_data_type' => NULL,
+ *       - 'values' => 
  *
  * @param array $params context array with some or all of the following key/values
  *   'sid' => drupal account object,

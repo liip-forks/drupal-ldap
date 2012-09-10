@@ -115,7 +115,7 @@ $attributes['mail'] = array(
 Functions using "*_attribute_maps" variables:
 - ldap_servers_token_extract_attributes(): $attribute_maps 
 - hook_ldap_attributes_needed_alter(): $attribute_maps
-- LdapUserConf->getRequiredAttributes(): $attributes_map
+- LdapUserConf->getLdapUserRequiredAttributes(): $attributes_map
 - $ldap_attr_in_token in ldapUserConfAdmin:validate(): $ldap_attribute_maps_in_token
 - LdapServer->user_lookup: $attribute_maps
 - LdapServer->search: $attribute_maps

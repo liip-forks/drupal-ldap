@@ -4,7 +4,9 @@
  * it attempts to cover all facets of the automated simpletests
  **********************************************/
 
-1. Remove remnants of existing ldap_user install: 
+---------------------------------------
+--- setup 
+Remove remnants of existing ldap_user install: 
 - Disable and uninstall ldap_user module.
 - Clear any variables that may not have been uninstalled:
    DELETE FROM variable where name like 'ldap_user%'
@@ -40,6 +42,8 @@ drush field-create user field_user_dept,text,text_textfield --entity_type=user
 drush field-create user field_user_lname,text,text_textfield --entity_type=user
 drush field-create user field_user_fname,text,text_textfield --entity_type=user
 drush field-create user field_user_display_name,text,text_textfield --entity_type=user  
+---------------------------------------
+
 
 ================================================================
 Tests for LDAP Entry ==> Drupal User Provisioning
