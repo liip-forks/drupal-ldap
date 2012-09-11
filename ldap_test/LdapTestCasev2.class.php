@@ -162,6 +162,32 @@ class LdapTestCasev2 extends DrupalWebTestCase {
       'settings' => array('user_register_form' => FALSE)
     );
 
+ $fields['field_department']['field'] = array(
+      'field_name' => 'field_department',
+      'type' => 'text',
+      'settings' => array(
+        'max_length' => 64,
+      )
+    );
+
+    $fields['field_department']['instance'] = array(
+      'field_name' => 'field_department',
+      'entity_type' => 'user',
+      'label' => 'Department',
+      'bundle' => 'user',
+      'required' => FALSE,
+      'widget' => array(
+        'type' => 'text_textfield',
+      ),
+      'display' => array(
+        'default' => array(
+          'type' => 'text_default',
+        ),
+      ),
+      'settings' => array('user_register_form' => FALSE)
+    );
+
+
     $fields['field_fname']['field'] = array(
       'field_name' => 'field_fname',
       'type' => 'text',

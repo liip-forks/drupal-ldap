@@ -510,7 +510,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
         'user_attr' => '[property.mail]',
         'convert' => 0,
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
-        'prov_events' => array(),
+        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
         'name' => 'Property: Mail',
         'enabled' => TRUE,
         'config_module' => 'ldap_servers',
@@ -671,8 +671,33 @@ class LdapUserIntegrationTests extends LdapUserTestCasev2 {
     );
   }
  
+ 
+ 
  /**
-   * make sure install succeeds and ldap user functions/methods work
+   * integration tests for provisioning to Drupal
+   */
+  function testProvisionToDrupal() {
+
+    // just to give warning if setup doesn't succeed.  may want to take these out at some point.
+    $setup_success = (
+        module_exists('ldap_user') &&
+        module_exists('ldap_servers') &&
+        (variable_get('ldap_simpletest', 0) > 0)
+      );
+    $this->assertTrue($setup_success, ' ldap_user testProvisionToDrupal setup successful', $this->testId("setup"));
+    variable_set('user_email_verification', 1);
+    variable_set('user_register', 1);
+    
+    $sids = array('activedirectory');
+    $this->prepTestData($sids, 'provisionToDrupalWithMappings'); // this will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc
+    
+    $ldap_user_conf = ldap_user_conf('default', TRUE);
+    //debug($ldap_user_conf);
+    
+  }
+  
+ /**
+   * integration tests for provisioning to ldap
    */
   function testProvisionToLdap() {
 

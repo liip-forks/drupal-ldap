@@ -422,7 +422,8 @@ function ldap_user_form_alter(&$form, $form_state, $form_id) {
  * Implements hook_form_FORM_ID_alter(). for user_register_form
  */
 function ldap_user_form_user_profile_form_alter(&$form, $form_state) {
-
+  global $user;
+  dpm($user);
   array_unshift($form['#submit'], 'ldap_user_form_user_profile_form_submit1');
 }
 
@@ -719,14 +720,14 @@ function ldap_user_user_login(&$edit, $account) {
 function ldap_user_user_insert(&$user_edit, $account, $category) {
 
  // debug('ldap_user_user_insert'); debug($user_edit); debug($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
-
-  if ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1)) {
-    return; // do not provision or synch user 1
-  }
-
+   
+  
+  global $user;
+  $is_user_1 = ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1));
+  $new_account_request = (boolean)($user->uid == 0 && $account->access == 0 && $account->login == 0); // check for first time user
   $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'get' , $account->name);
   $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->name);
-  if ($already_synched_to_ldap || $already_synched_to_ldap) {
+  if ($is_user_1 || $already_synched_to_ldap || $already_synched_to_ldap || $new_account_request) {
     return;
   }
   

@@ -107,6 +107,81 @@ $conf['ad_authentication'] = array(
     )
   );
 
+
+ $conf['provisionToDrupalWithMappings']  = array(
+    'drupalAcctProvisionServer' => 'activedirectory',
+    'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,
+    'drupalAcctProvisionTriggers' => array(
+      LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE,
+      LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE,
+      ),
+    'ldapEntryProvisionTriggers' => array(
+      LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE,
+    ),
+    'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
+    'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
+    'wsEnabled'  => 0,
+    'wsUserIps' => array('1.2.3.4'),
+    'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
+    'ldapUserSynchMappings' => array(
+      LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(
+        'activedirectory' => array(
+          '[field.field_display_name]' => array(
+              'sid' => 'activedirectory',
+              'ldap_attr' => '[givenname] [sn]',
+              'user_attr' => 'user_tokens',
+              'convert' => 0,
+              'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
+              'user_tokens' => '[field.field_display_name]',
+              'config_module' => 'ldap_user',
+              'synch_module' => 'ldap_user',
+              'enabled' => 1,
+              'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),  
+          ),
+         '[field.field_lname]' => array(
+              'sid' => 'activedirectory',
+              'ldap_attr' => '[sn:0]',
+              'user_attr' => 'user_tokens',
+              'convert' => 0,
+              'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
+              'user_tokens' => '[field.field_lname]',
+              'config_module' => 'ldap_user',
+              'synch_module' => 'ldap_user',
+              'enabled' => 1,
+              'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),  
+          ),
+         '[field.field_fname]' => array(
+              'sid' => 'activedirectory',
+              'ldap_attr' => '[givenName]',
+              'user_attr' => 'user_tokens',
+              'convert' => 0,
+              'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
+              'user_tokens' => '[field.field_fname]',
+              'config_module' => 'ldap_user',
+              'synch_module' => 'ldap_user',
+              'enabled' => 1,
+              'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),  
+          ),
+          '[field.field_department]' => array(
+              'sid' => 'activedirectory',
+              'ldap_attr' => 'Physics',
+              'user_attr' => 'user_tokens',
+              'convert' => 0,
+              'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
+              'user_tokens' => '[field.field_department]',
+              'config_module' => 'ldap_user',
+              'synch_module' => 'ldap_user',
+              'enabled' => 1,
+              'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),  
+          ),        
+        ),
+      ),
+      LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(
+        'activedirectory' => array(),
+      ),
+    ),
+  );
+ 
   $conf['provisionToLdap']  = array(
     'drupalAcctProvisionServer' => LDAP_USER_NO_SERVER_SID,
     'ldapEntryProvisionServer' => 'activedirectory',

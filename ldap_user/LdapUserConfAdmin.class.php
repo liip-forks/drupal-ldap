@@ -504,7 +504,7 @@ EOT;
     $errors = array();
     $warnings = array();
     $tokens = array();
-    
+ 
     $has_drupal_acct_prov_servers  = ($this->drupalAcctProvisionServer !== LDAP_USER_NO_SERVER_SID);
     $has_drupal_acct_prov_settings_options  = (count(array_filter($this->drupalAcctProvisionTriggers)) > 0);
    // dpm($has_drupal_acct_prov_servers); dpm($this->drupalAcctProvisionServer);
@@ -515,7 +515,7 @@ EOT;
       $warnings['drupalAcctProvisionTriggers'] =  t('Servers are enabled to provide provisioning to Drupal, but no Drupal Account Provisioning Options are selected.  This will result in no synching happening.', $tokens); 
     }
 
-    $has_ldap_prov_servers = ($this->drupalAcctProvisionServer !== LDAP_USER_NO_SERVER_SID);
+    $has_ldap_prov_servers = ($this->ldapEntryProvisionServer !== LDAP_USER_NO_SERVER_SID);
     $has_ldap_prov_settings_options = (count(array_filter($this->drupalAcctProvisionTriggers)) > 0);
     if (!$has_ldap_prov_servers && $has_ldap_prov_settings_options) {
       $warnings['ldapEntryProvisionServer'] =  t('No Servers are enabled to provide provisioning to ldap, but LDAP Entry Options are selected.', $tokens); 
