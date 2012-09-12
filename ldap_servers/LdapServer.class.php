@@ -388,32 +388,15 @@ class LdapServer {
       return FALSE;
     }
     
-    /**
-    $i = 67;
-    $cn = "ed-drupal-user-" . $i;
-    $dn = "cn=ed-drupal-jbarclay68,ou=test,ou=webs,ou=education,ou=urbana,dc=ad,dc=uillinois,dc=edu";
-    // displayname and givenname are null
-    $ldap_entry = array(
-              "displayName" => "",
-              "givenname" => "",
-              "cn" => "ed-drupal-jbarclay68",
-              "samaccountname" =>  "ed-drupal-jbarclay68",
-              "objectclass" => array(
-                "top", "person", "organizationalPerson", "user",
-              ),
-              "description" => "test user",
-              'mail' => "ed-drupal-jbarclay68@johnbarclay.com",
-              'givenName' => 'Drupal',
-              'sn' => 'User',
-              'distinguishedName' => "cn=ed-drupal-jbarclay68,ou=test,ou=webs,ou=education,ou=urbana,dc=ad,dc=uillinois,dc=edu",
-            );
-      **/      
-   // dpm('createLdapEntry result:'. $dn); dpm($this->connection); dpm($ldap_entry);
-   // set_error_handler(array('LDAPInterface', 'void_error_handler'));
-   //@todo need good try catch here with good watchdog for debugging.
-    $result = ldap_add($this->connection, $dn, $ldap_entry); 
-  //  restore_error_handler();
- // dpm('createLdapEntry result:'); dpm($result);
+
+    $result = @ldap_add($this->connection, $dn, $ldap_entry); 
+    if (!$result) {
+      $error = "LDAP Server ldap_add(%dn) Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
+      $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
+      watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
+    }
+
+
     return $result;
   }
 
