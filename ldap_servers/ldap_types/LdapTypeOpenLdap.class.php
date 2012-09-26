@@ -2,29 +2,37 @@
 
 /**
  * @file
- * Active Directory LDAP Implementation Details
+ * OpenLDAP LDAP Implementation Details
  *
+ * see: http://www.zytrax.com/books/ldap/
+ *      http://www.openldap.org/doc/
  */
 
 require_once(drupal_get_path('module', 'ldap_servers') . '/ldap_types/LdapTypeAbstract.class.php');
 
 class LdapTypeOpenLdap extends LdapTypeAbstract {
-
+  
+  // generic properties
   public $documentation = '';
   public $name = 'openLDAP LDAP';
   public $typeId = 'OpenLdap';
   public $description = 'openLDAP LDAP';
-  public $port = 389;
-  public $tls = 1;
+  
+  // ldap_servers configuration
+  public $tls = 0;
   public $encrypted = 0;
   public $user_attr = 'cn';
   public $mail_attr = 'mail';
-
-  public $groupObjectClassDefault = NULL;
-
+  public $unique_persistent_attr = 'entryUUID';
+  public $unique_persistent_attr_binary = FALSE;
+  public $groupObjectClassDefault = 'groupofnames';
+ 
+  // ldap_authorization configuration
   public $groupDerivationModelDefault = LDAP_SERVERS_DERIVE_GROUP_FROM_ENTRY;
+  public $deriveFromEntry = TRUE;
+  public $deriveFromEntryEntriesAttr = 'dn';
+  public $deriveFromEntryMembershipAttr = 'member';
+  public $deriveFromEntryAttrMatchingUserAttr = 'dn';
 
-  public $groupDeriveFromEntryAttrDefault = 'members';
-  public $groupDeriveFromEntryUserIdDefault = 'dn';
 
 }

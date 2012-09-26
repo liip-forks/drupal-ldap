@@ -1,0 +1,71 @@
+
+========================================
+IIC. Configuration: Derive From Entry  for OpenLDAP
+========================================
+
+#1 LDAP DNs containing roles (List of groups)
+-- cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu
+-- cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu
+
+#2 Attribute holding the previous list of values (What is previous list?)
+-- dn
+
+#3 Attribute holding drupal roles members (What attribute contains members?)
+-- member
+
+#4 User LDAP Entry attribute held in "Attribute holding drupal roles members" 
+-- dn
+
+#5 Convert fuill dn to value of first attribute
+-- no
+
+#6 Include Nested groups:
+-- no
+
+--------------------------------
+An example might be as follows:
+
+(#2) dn: cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu (#1)
+objectclass: groupofnames
+description: IT Group
+member (#3): cn=Robert Smith,ou=people,dc=ad,dc=myuniversity,dc=edu (#4)
+member (#3): cn=Another Smith,ou=people,dc=ad,dc=myuniversity,dc=edu (#4)
+
+(#2) dn: cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu (#1)
+objectclass: groupofnames
+description: IT Group
+member (#3) : cn=Tim Smith,ou=people,dc=ad,dc=myuniversity,dc=edu (#4)
+member (#3): cn=Bob Smith,ou=people,dc=ad,dc=myuniversity,dc=edu (#4)
+
+
+
+========================================
+IIC. Walk Through: Derive From Entry  for OpenLDAP
+========================================
+
+user ldap entry in question:
+  'dn' => 'cn=Robert Smith,ou=people,dc=ad,dc=myuniversity,dc=edu',
+  'mail' => array( 0 => 'joeprogrammer@myuniversity.edu'),
+
+
+--- walk-through ------
+1). foreach base dn, execute the following query:
+
+(&
+(objectClass=groupOfUniqueNames)
+(|(distinguishedname=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=people,cn=groups,dc=ad,dc=myuniversity,dc=edu))
+(uniquemember=cn=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu)
+)
+
+in psuedo code:
+(&
+(objectClass=[server.groupObjectClass])
+(|([authorization.deriveFromEnryEntryAttribute]=[authorization.deriveFromEntryEntries[i]])...([authorization.deriveFromEnryEntryAttribute]=[authorization.deriveFromEntryEntries[n]]))
+([authorization.deriveFromEntryMembershipAttr]=[user_ldap_entry[deriveFromEntryAttrMatchingUserAttr]])
+)
+
+
+2. All entries returned represent groups that user is a member of.
+Their DNs are added to the list of authorizations or the first attribute value
+if authorization.deriveFromEntryUseFirstAttr is true.
+

@@ -47,7 +47,18 @@ class LdapServer {
   public $editPath;
   public $queriableWithoutUserCredentials = FALSE; // can this server be queried without user credentials provided?
   public $userAttributeNeededCache = array(); // array of attributes needed keyed on $op such as 'user_update'
+  public $paginationEnabled = FALSE; // (boolean)(function_exists('ldap_control_paged_result_response') && function_exists('ldap_control_paged_result'));
+  public $searchPagination = FALSE;
+  public $searchPageSize = 1000;
+  public $searchPageStart = 0;
+  public $searchPageEnd = NULL;
 
+  public $groupObjectClass;
+
+  public $inDatabase = FALSE;
+
+  public $connection;
+  
   /**
    * @param scalar $puid is permanent unique id value and
    */
@@ -84,19 +95,6 @@ class LdapServer {
 
   }
 
-
-  public $paginationEnabled = FALSE; // (boolean)(function_exists('ldap_control_paged_result_response') && function_exists('ldap_control_paged_result'));
-
-  public $searchPagination = FALSE;
-  public $searchPageSize = 1000;
-  public $searchPageStart = 0;
-  public $searchPageEnd = NULL;
-
-  public $groupObjectClass;
-
-  public $inDatabase = FALSE;
-
-  public $connection;
   // direct mapping of db to object properties
   public static function field_to_properties_map() {
     return array( 'sid' => 'sid',
