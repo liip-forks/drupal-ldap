@@ -58,7 +58,7 @@ LDAP Entries:
 ),
 
 'dn' => 'cn=people,cn=groups,dc=ad,dc=myuniversity,dc=edu',
-'objectclass' => array( 0 => 'groupofuniquenames'),
+'objectclass' => array( 0 => 'groupofnames'),
 'member' => array(
    0 => 'cn=students,cn=groups,dc=ad,dc=myuniversity,dc=edu',
    1 => 'cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu',
@@ -71,7 +71,7 @@ The following steps need to be done for each base dn
 
 (&
 (objectClass=groupofnames)
-(uniquemember=cn=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu)
+(member=cn=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu)
 )
 
 in psuedo code:
@@ -84,7 +84,7 @@ in psuedo code:
 This will return the entries:
 
 'dn' => 'cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu',
-'objectclass' => array( 0 => 'groupofuniquenames'),
+'objectclass' => array( 0 => 'groupofnames'),
 'member' => array(
   0 => 'cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu',
   1 => 'cn=sysadmins,cn=groups,dc=ad,dc=myuniversity,dc=edu',
@@ -92,7 +92,7 @@ This will return the entries:
 ),
 
 'dn' => 'cn=chess players,cn=groups,dc=ad,dc=myuniversity,dc=edu',
-'objectclass' => array( 0 => 'groupofuniquenames'),
+'objectclass' => array( 0 => 'groupofnames'),
 'member' => array(
   0 => 'cn=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu',
   1 => 'cn=speed chess players,ou=groups,dc=ad,dc=myuniversity,dc=edu',
