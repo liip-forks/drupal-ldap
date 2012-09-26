@@ -1,7 +1,7 @@
 
 
 ========================================
-IIC. Configuration: Derive From Entry for OpenLDAP (Not nested)
+IIC. Configuration: Derive From Entry for OpenLDAP NESTED
 ========================================
 
 
@@ -18,7 +18,7 @@ server.groupObjectClass = 'groupofnames'
 
 
 ========================================
-Walk Through: IIC. Derive From Entry for OpenLDAP Not Nested
+Walk Through: IIC. Derive From Entry for OpenLDAP Nested
 ========================================
 
 user ldap entry in question:
@@ -26,6 +26,13 @@ user ldap entry in question:
   'mail' => array( 0 => 'joeprogrammer@myuniversity.edu'),
   
 LDAP Entries:
+
+'dn' => 'cn=game players,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+'objectclass' => array( 0 => 'groupofnames'),
+'member' => array(
+  0 => 'cn=chess players,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+  1 => 'cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+),
 
 'dn' => 'cn=chess players,cn=groups,dc=ad,dc=myuniversity,dc=edu',
 'objectclass' => array( 0 => 'groupofnames'),
@@ -58,8 +65,9 @@ LDAP Entries:
 ),
   
 
+The following steps need to be done for each base dn
 
-1). foreach base dn, execute the following query:
+1). execute the following query:
 
 (&
 (objectClass=groupofnames)
@@ -87,13 +95,73 @@ This will return the entries:
 'objectclass' => array( 0 => 'groupofuniquenames'),
 'member' => array(
   0 => 'cn=joeprogrammer,ou=it,dc=ad,dc=myuniversity,dc=edu',
-  0 => 'cn=speed chess players,ou=groups,dc=ad,dc=myuniversity,dc=edu',
+  1 => 'cn=speed chess players,ou=groups,dc=ad,dc=myuniversity,dc=edu',
 ),
 
 
 
 2. All group entries returned represent groups that user is a member of.
 Add all these group DNs to the list of group DNs user is a member of
-(cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu and cn=chess players,cn=groups,dc=ad,dc=myuniversity,dc=edu)
 
-3. Proceed to filtering and mapping.
+groups so far:
+-- cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu
+-- cn=chess players,cn=groups,dc=ad,dc=myuniversity,dc=edu
+
+3. Since looking at nested groups, need to find all theses groups' ancestors also.
+
+loop through all the dns and create a single query from them:
+
+(&
+  (objectClass=groupofnames)
+  (|
+    (member=cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu)
+    (member=cn=chess players,cn=groups,dc=ad,dc=myuniversity,dc=edu)
+  )
+)
+
+This will return the entries:
+
+'dn' => 'cn=game players,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+'objectclass' => array( 0 => 'groupofnames'),
+'member' => array(
+  0 => 'cn=chess players,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+  1 => 'cn=developers,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+),
+
+'dn' => 'cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+'objectclass' => array( 0 => 'groupofnames'),
+'member' => array(
+   0 => 'cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+   1 => 'cn=hr,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+   2 => 'cn=other,cn=groups,dc=ad,dc=myuniversity,dc=edu',
+),
+
+
+4. Add all these group DNs to the list of group DNs user is a member of
+groups so far:
+-- cn=it,cn=groups,dc=ad,dc=myuniversity,dc=edu
+-- cn=chess players,cn=groups,dc=ad,dc=myuniversity,dc=edu
+-- cn=game players,cn=groups,dc=ad,dc=myuniversity,dc=edu
+-- cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu 
+
+
+5. Since looking at nested groups, need to find all theses groups' ancestors also.
+
+loop through all the dns and create a single query from them:
+
+(&
+  (objectClass=groupofnames)
+  (|
+    (member=cn=game players,cn=groups,dc=ad,dc=myuniversity,dc=edu)
+    (member=cn=staff,cn=groups,dc=ad,dc=myuniversity,dc=edu)
+  )
+)
+
+This will return no entries:
+
+6.  Since no entries, exit.
+
+1/2, 3/4, 5/6 and so on are just recursion.
+
+
+7. Proceed to filtering and mapping.
