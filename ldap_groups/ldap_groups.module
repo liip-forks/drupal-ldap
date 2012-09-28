@@ -180,11 +180,30 @@ function ldap_groups_ldap_entry_post_provision($ldap_entries, $ldap_server, $con
  *
  * In config identify the ldap attribute for the role (i.e. cn).
  * Do a search for '(' . $attribute_name .'='. $role .')';
- *
  */
-function ldap_groups_get_group($role, $ldap_server) {
-  $dn = ldap_groups_get_dn($role);
+function ldap_groups_get_group($role, $ldap_server = NULL) {
+  $attribute_name = variable_get('ldap_groups_attribute_name');
+  $base_dn = variable_get('ldap_groups_base_dn');
 
+  // Make sure $ldap_server is a valid LdapServer object.
+  if ($ldap_server === NULL) {
+    $sid = variable_get('ldap_groups_sid');
+    $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
+  }
+
+  // Search for the role.
+  $filter = '(' . $attribute_name . '=' . $role . ')';
+  $entry = $ldap_server->search($base_dn, $filter);
+
+  // Error handler.
+  if ($entry === FALSE || $entry['count'] == 0) {
+    return FALSE;
+  }
+
+  // Return the first entry found. If more than one are found, other strange
+  // things will be happening with the directory, and the directory admin will
+  // need to fix it.
+  return $entry[0];
 }
 
 /**
