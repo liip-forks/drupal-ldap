@@ -361,7 +361,7 @@ class LdapUserConf {
    * given a $prov_event determine if ldap user configuration supports it.
    *   this is overall, not per field synching configuration
    *
-   * @param enaum $direction LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY
+   * @param enum $direction LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY
    * 
    * @param enum $prov_event
    *   LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER,LDAP_USER_EVENT_CREATE_DRUPAL_USER
@@ -463,6 +463,7 @@ class LdapUserConf {
    
     list($proposed_ldap_entry, $error) = $this->drupalUserToLdapEntry($account, $ldap_server, $params, $ldap_user);
     $proposed_dn = (is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn']) && $proposed_ldap_entry['dn']) ? $proposed_ldap_entry['dn'] : NULL;
+    $proposed_dn_lcase = drupal_strtolower($proposed_dn);
     $existing_ldap_entry = ($proposed_dn) ? $ldap_server->dnExists($proposed_dn, 'ldap_entry') : NULL;
 
     if ($error == LDAP_USER_PROV_RESULT_NO_PWD) {
@@ -490,44 +491,59 @@ class LdapUserConf {
       $result['proposed'] = $proposed_ldap_entry;
       $result['ldap_server'] = $ldap_server;        
     }
-    elseif ($ldap_entry_created = $ldap_server->createLdapEntry($proposed_ldap_entry, $proposed_dn)) {
-      $result['status'] = 'success';
-      $result['description'] = 'ldap account created';
-      $result['proposed'] = $proposed_ldap_entry;
-      $result['created'] = $ldap_entry_created;
-      $result['ldap_server'] = $ldap_server;
-
-      // need to store <sid>|<dn> in ldap_user_prov_entries field, which may contain more than one
-      $ldap_user_prov_entry = $ldap_server->sid . '|' . $proposed_ldap_entry['dn'];
-      if (!isset($user_entity->ldap_user_prov_entries['und'])) {
-        $user_entity->ldap_user_prov_entries = array('und' => array());
-      }
-      $ldap_user_prov_entry_exists = FALSE;
-      foreach ($user_entity->ldap_user_prov_entries['und'] as $i => $field_value_instance) {
-        if ($field_value_instance == $ldap_user_prov_entry) {
-          $ldap_user_prov_entry_exists = TRUE;
-        }   
-      }
-      if (!$ldap_user_prov_entry_exists) {
-        $user_entity->ldap_user_prov_entries['und'][] = array(
-          'value' =>  $ldap_user_prov_entry,
-          'format' => NULL,
-          'save_value' => $ldap_user_prov_entry,
-        );
-        $edit = array(
-          'ldap_user_prov_entries' => $user_entity->ldap_user_prov_entries,
-        );
-        $account = user_load($account->uid);
-        $account = user_save($account, $edit);
-      }
-        
-    }
     else {
-      $result['status'] = 'fail';
-      $result['proposed'] = $proposed_ldap_entry;
-      $result['created'] = $ldap_entry_created;
-      $result['ldap_server'] = $ldap_server;
-      $result['existing'] = NULL;
+      // stick $proposed_ldap_entry in $ldap_entries array for drupal_alter call
+      $ldap_entries = array($proposed_dn_lcase => $proposed_ldap_entry);
+      $context = array(
+        'action' => 'add',
+        'corresponding_drupal_data' => array($proposed_dn_lcase => $account),
+        'corresponding_drupal_data_type' => 'user',
+      );
+      drupal_alter('ldap_entry_pre_provision', $ldap_entries, $ldap_server, $context);
+      // remove altered $proposed_ldap_entry from $ldap_entries array
+      $proposed_ldap_entry = $ldap_entries[$proposed_dn_lcase];
+
+      $ldap_entry_created = $ldap_server->createLdapEntry($proposed_ldap_entry, $proposed_dn);
+      if ($ldap_entry_created) {
+        module_invoke_all('ldap_entry_post_provision', $ldap_entries, $ldap_server, $context);
+        $result['status'] = 'success';
+        $result['description'] = 'ldap account created';
+        $result['proposed'] = $proposed_ldap_entry;
+        $result['created'] = $ldap_entry_created;
+        $result['ldap_server'] = $ldap_server;
+  
+        // need to store <sid>|<dn> in ldap_user_prov_entries field, which may contain more than one
+        $ldap_user_prov_entry = $ldap_server->sid . '|' . $proposed_ldap_entry['dn'];
+        if (!isset($user_entity->ldap_user_prov_entries['und'])) {
+          $user_entity->ldap_user_prov_entries = array('und' => array());
+        }
+        $ldap_user_prov_entry_exists = FALSE;
+        foreach ($user_entity->ldap_user_prov_entries['und'] as $i => $field_value_instance) {
+          if ($field_value_instance == $ldap_user_prov_entry) {
+            $ldap_user_prov_entry_exists = TRUE;
+          }   
+        }
+        if (!$ldap_user_prov_entry_exists) {
+          $user_entity->ldap_user_prov_entries['und'][] = array(
+            'value' =>  $ldap_user_prov_entry,
+            'format' => NULL,
+            'save_value' => $ldap_user_prov_entry,
+          );
+          $edit = array(
+            'ldap_user_prov_entries' => $user_entity->ldap_user_prov_entries,
+          );
+          $account = user_load($account->uid);
+          $account = user_save($account, $edit);
+        }
+          
+      }
+      else {
+        $result['status'] = 'fail';
+        $result['proposed'] = $proposed_ldap_entry;
+        $result['created'] = $ldap_entry_created;
+        $result['ldap_server'] = $ldap_server;
+        $result['existing'] = NULL;
+      }
     }
 
     $tokens = array(
@@ -618,7 +634,23 @@ class LdapUserConf {
         }
         else {
          //  //debug('modifyLdapEntry,dn=' . $proposed_ldap_entry['dn']);  //debug($attributes);
+              // stick $proposed_ldap_entry in $ldap_entries array for drupal_alter call
+          $proposed_dn_lcase = drupal_strtolower($proposed_ldap_entry['dn']);
+          $ldap_entries = array($proposed_dn_lcase => $attributes);
+          $context = array(
+            'action' => 'update',
+            'corresponding_drupal_data' => array($proposed_dn_lcase => $attributes),
+            'corresponding_drupal_data_type' => 'user',
+          );
+          drupal_alter('ldap_entry_pre_provision', $ldap_entries, $ldap_server, $context);
+          // remove altered $proposed_ldap_entry from $ldap_entries array
+          $attributes = $ldap_entries[$proposed_dn_lcase];
           $result = $ldap_server->modifyLdapEntry($proposed_ldap_entry['dn'], $attributes);
+          if ($result) { // success
+            module_invoke_all('ldap_entry_post_provision', $ldap_entries, $ldap_server, $context);
+          }
+          
+                  
         }
       }
       else { // failed to get acceptable proposed ldap entry
