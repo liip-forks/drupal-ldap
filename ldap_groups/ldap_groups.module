@@ -218,7 +218,7 @@ function ldap_groups_add_user($role, $ldap_user, $ldap_server) {
 
   // If we're about to add a user to a group, we need to verify
   // that the group exists first.
-  $if (!ldap_groups_get_group($role, $ldap_server)) {
+  if (!ldap_groups_get_group($role, $ldap_server)) {
     ldap_groups_add_group($role, $ldap_server);
   }
   // Now add member….
