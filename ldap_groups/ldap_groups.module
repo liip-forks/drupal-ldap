@@ -10,6 +10,62 @@
  * to create a group without a user.
  *
  */
+define('LDAP_GROUPS_PROV_ON_LDAP_ENTRY_CREATED', 1);
+define('LDAP_GROUPS_PROV_ON_LDAP_ENTRY_UPDATED', 2);
+define('LDAP_GROUPS_PROV_ON_LDAP_ENTRY_DELETED', 3);
+define('LDAP_GROUPS_PROV_NO_CREATE', 1);
+define('LDAP_GROUPS_PROV_NO_REMOVE', 2);
+define('LDAP_GROUPS_PROV_DELETE_EMPTY_GROUPS', 3);
+
+/**
+ * Implements hook_menu().
+ */
+function ldap_groups_menu() {
+  $items = array();
+
+  $items['admin/config/people/ldap/groups'] = array(
+    'title' => 'Groups',
+    'description' => 'Settings related to LDAP Groups.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ldap_groups_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 7,
+    'file' => 'ldap_groups.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ *
+ * return ldap group conf object
+ *
+ * @param enum $type 'default', 'admin',
+ * @param boolean $reset do not use cached or static result
+ * @return LdapGroupsConf or LdapGroupsConfAdmin object
+ */
+function ldap_groups_conf($type = 'default', $reset = FALSE) {
+
+  static $ldapGroupsConf;
+  static $ldapGroupsConfAdmin;
+
+  if ($type == 'admin' && (!$ldapGroupsConfAdmin || $reset)) {
+    ldap_server_module_load_include('php', 'ldap_groups', 'LdapGroupsConfAdmin.class');
+    $ldapGroupsConfAdmin = new LdapGroupsConfAdmin();
+  }
+  elseif (!$ldapGroupsConf || $reset) {
+    ldap_server_module_load_include('php', 'ldap_groups', 'LdapGroupsConf.class');
+    $ldapGroupsConf = new LdapGroupsConf();
+  }
+  return ($type == 'admin') ? $ldapGroupsConfAdmin : $ldapGroupsConf;
+
+}
+
+function ldap_groups_conf_cache_clear() {
+  $discard = ldap_groups_conf('admin', TRUE);
+  $discard = ldap_groups_conf(NULL, TRUE);
+}
 
 /**
  * We may or may not need to use the Drupal user hooks directly.
@@ -28,11 +84,8 @@ function ldap_groups_user_delete($account) {
  * Implements hook_form_FORM_ID_alter().
  */
 function ldap_groups_form_user_register_form_alter(&$form, &$form_state) {
-  dsm($form_state);
 }
-
 function ldap_groups_form_user_profile_form_alter(&$form, &$form_state) {
-  dsm($form_state);
 }
 
   // AFTER user is created:
@@ -78,10 +131,13 @@ function ldap_groups_compare($role, $group) {
  * token substitutions.
  */
 function ldap_groups_role_to_group($role) {
-  // Do whatever needs to be done.
+  // Do whatever needs to be done to alter the name.
   return $role;
 }
 
+/**
+ * Function to create the dn for a user role.
+ */
 function ldap_groups_role_to_dn($role, $ldap_server) {
   $attribute_name = variable_get('ldap_groups_attribute_name');
   $base_dn = variable_get('ldap_groups_base_dn');
@@ -109,7 +165,7 @@ function ldap_groups_ldap_entry_pre_provision_alter($ldap_entries, $ldap_server,
  *
  * Used to take action after the ldap entry is written.
  */
-function ldap_groups_ldap_entry_post_provision($ldap_entries, $ldap_server, $context) {
+function ldap_groups_ldap_entry_post_provision($ldap_entries, $user_provisioning_ldap_server, $context) {
 
   // ATM we only care about user actions.
   $type = $context['corresponding_drupal_data_type'];
@@ -118,17 +174,13 @@ function ldap_groups_ldap_entry_post_provision($ldap_entries, $ldap_server, $con
   }
 
   $op = $context['action']; //'add', 'update', 'delete'
-  $attribute_name = variable_get('ldap_groups_attribute_name');
-  $base_dn = variable_get('ldap_groups_base_dn');
-  $object_class = $ldap_server->groupObjectClass;
-  $sid = variable_get('ldap_groups_sid');
 
-  if ($ldap_server->sid == $sid) {
-    $ldap_server = $ldap_server;
-  }
-  else {
-    $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
-  }
+  $ldap_groups_conf = ldap_groups_conf();
+  $attribute_name = $ldap_groups_conf->ldapProvisionGroupsRoleAttribute;
+  $base_dn = $ldap_groups_conf->ldapProvisionGroupsBaseDn;
+  $object_class = $ldap_groups_conf->groupObjectClass;
+  $sid = $ldap_groups_conf->ldapProvisionSid;
+  $group_provisioning_ldap_server = $ldap_groups_conf->ldapProvisionServer;
 
   foreach ($ldap_entries as $lcase_dn => $ldap_entry) {
     $user = $context['corresponding_drupal_data'][$lcase_dn];
@@ -140,9 +192,19 @@ function ldap_groups_ldap_entry_post_provision($ldap_entries, $ldap_server, $con
 
     $add = array();
     $remove = array();
-    $ldap_groups = ldap_groups_get_user_groups($ldap_user, $ldap_server);
 
-    foreach ($roles as $role) {
+    // Find the groups this user belongs to, so we can compare it
+    // to the roles they have in Drupal. They might have a group in LDAP
+    // that they need to be removed from.
+
+    $ldap_groups = $ldap_groups_conf->ldap_authorization->ldapGetGroups($user);
+
+    foreach ($roles as $rid => $role) {
+
+      // Ignore the authenticated and anonymous roles.
+      if ($rid == DRUPAL_AUTHENTICATED_RID || $rid == DRUPAL_ANONYMOUS_RID) {
+        continue;
+      }
       foreach ($ldap_groups as $group) {
         // There was a group on LDAP that they don't currently have a
         // role for. We need to remove them from that group.
@@ -161,11 +223,11 @@ function ldap_groups_ldap_entry_post_provision($ldap_entries, $ldap_server, $con
     // user from.
 
     foreach ($remove as $role) {
-      ldap_groups_remove_user($role, $ldap_user, $ldap_server);
+      ldap_groups_remove_user($role, $ldap_user, $group_provisioning_ldap_server);
     }
 
     foreach ($add as $role) {
-      ldap_groups_add_user($role, $ldap_user, $ldap_server);
+      ldap_groups_add_user($role, $ldap_user, $group_provisioning_ldap_server);
     }
   }
 }
@@ -209,7 +271,7 @@ function ldap_groups_get_group($role, $ldap_server = NULL) {
 /**
  * See if a user is a member of a LDAP group.
  */
-function ldap_groups_check_membership($role, $ldap_user, $ldap_server) {
+function ldap_groups_check_membership($role, $ldap_user, $group_provisioning_ldap_server) {
   $dn = ldap_groups_get_dn($role);
 
 }
@@ -217,7 +279,7 @@ function ldap_groups_check_membership($role, $ldap_user, $ldap_server) {
 /**
  * Add a new LDAP group.
  */
-function ldap_groups_add_group($role, $ldap_server) {
+function ldap_groups_add_group($role, $group_provisioning_ldap_server) {
   $dn = ldap_groups_get_dn($role);
 
 }
@@ -225,20 +287,20 @@ function ldap_groups_add_group($role, $ldap_server) {
 /**
  * Remove a LDAP group.
  */
-function ldap_groups_remove_group($role, $ldap_server) {
+function ldap_groups_remove_group($role, $group_provisioning_ldap_server) {
   $dn = ldap_groups_get_dn($role);
 }
 
 /**
  * Add a LDAP user to a LDAP group.
  */
-function ldap_groups_add_user($role, $ldap_user, $ldap_server) {
+function ldap_groups_add_user($role, $ldap_user, $group_provisioning_ldap_server) {
   $dn = ldap_groups_get_dn($role);
 
   // If we're about to add a user to a group, we need to verify
   // that the group exists first.
-  if (!ldap_groups_get_group($role, $ldap_server)) {
-    ldap_groups_add_group($role, $ldap_server);
+  if (!ldap_groups_get_group($role, $group_provisioning_ldap_server)) {
+    ldap_groups_add_group($role, $group_provisioning_ldap_server);
   }
   // Now add member….
 
@@ -247,23 +309,14 @@ function ldap_groups_add_user($role, $ldap_user, $ldap_server) {
 /**
  * A function to remove a LDAP user from a LDAP group.
  */
-function ldap_groups_remove_user($role, $ldap_user, $ldap_server) {
+function ldap_groups_remove_user($role, $ldap_user, $group_provisioning_ldap_server) {
   $dn = ldap_groups_get_dn($role);
 
   // See if this is the last member of a group before removing them.
   if ($last_user) {
-    ldap_groups_remove_group($role, $ldap_server);
+    ldap_groups_remove_group($role, $group_provisioning_ldap_server);
   }
   // Now remove member...
-
-}
-
-/**
- * Find the groups this user belongs to, so we can compare it
- * to the roles they have in Drupal. They might have a group in LDAP
- * that they need to be removed from.
- */
-function ldap_groups_get_user_groups($ldap_user, $ldap_server) {
 
 }
 
