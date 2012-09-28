@@ -27,18 +27,31 @@ function ldap_groups_user_delete($account) {
  * We need two hooks, one before and one after the LDAP user is created
  * or modified.
  */
-function ldap_groups_ldap_entry_post_provision(&$ldap_entry, &$drupal_object, $context) {
-  $type = $context['type'];
+function ldap_groups_ldap_entry_post_provision($ldap_entries, $user_provisioning_ldap_server, $context) {
+  $type = $context['corresponding_drupal_data_type'];
   if ($type != 'user') {
     return;
   }
 
-  $op = $context['op'];
+  $op = $context['action']; //'add', 'update', 'delete'
 
   $attribute_name = variable_get('ldap_groups_attribute_name');
-  $sid = variable_get('ldap_groups_sid');
+  
   $base_dn = variable_get('ldap_groups_base_dn');
+  $object_class = $ldap_server->groupObjectClass;
+  
+  $sid = variable_get('ldap_groups_sid');
+  if ($user_provisioning_ldap_server->sid == $sid) {
+    $group_provisioning_ldap_server = $user_provisioning_ldap_server;
+  }
+  else {
+    $group_provisioning_ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
+  }
 
+
+  foreach ($ldap_entries as $lcase_dn => $ldap_entry) {
+    $user = $context['corresponding_drupal_data'][$lcase_dn];
+  
   // AFTER user is created:
 
   // Loop through Drupal user roles and see if they exist in LDAP.
@@ -63,8 +76,8 @@ function ldap_groups_ldap_entry_post_provision(&$ldap_entry, &$drupal_object, $c
   // DELETE USER
   // Operate before user is deleted so we know their roles.
 
-  $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
-  $object_class = $ldap_server->groupObjectClass;
+  }
+  
 }
 
 /**
