@@ -1,0 +1,129 @@
+<?php
+/** @file
+ *
+ *  Provisions Drupal roles to LDAP groups.
+ *
+ */
+
+/**
+ * We may or may not need to use the Drupal user hooks directly.
+ * We won't have any information about what is going on with the
+ * LDAP user if we do.
+ */
+function ldap_groups_user_presave(&$edit, $account, $category) {
+}
+function ldap_groups_user_insert(&$edit, $account, $category) {
+}
+function ldap_groups_user_update(&$edit, $account, $category) {
+}
+function ldap_groups_user_delete($account) {
+}
+
+/**
+ * Implements a hook to be added to ldap_user or ldap_server.
+ * Adding it to the server will make it usable in other ways.
+ * We need add context to the hook so we know what operation is
+ * being performed and we need both the LDAP entry and Drupal object.
+ * We need two hooks, one before and one after the LDAP user is created
+ * or modified.
+ */
+function ldap_groups_ldap_entry_post_provision(&$ldap_entry, &$drupal_object, $context) {
+  $type = $context['type'];
+  if ($type != 'user') {
+    return;
+  }
+
+  $op = $context['op'];
+
+  $attribute_name = variable_get('ldap_groups_attribute_name');
+  $sid = variable_get('ldap_groups_sid');
+  $base_dn = variable_get('ldap_groups_base_dn');
+
+  // AFTER user is created:
+
+  // Loop through Drupal user roles and see if they exist in LDAP.
+  // Swap actual role with token replacement?
+  // Provide a dn and get a group, if any.
+  // We need a way to know what attribute to look for (a variable).
+
+  // If group does not exist, create it, then add user.
+  // If group does exist, see if user is in it, if not add them.
+  // See if they have lost a role and need to be removed.
+
+  // What happens to Drupal role when LDAP role goes away?
+  // If someone has admin role in Drupal but not LDAP they should not lose it?? (when provisioning from LDAP)
+  
+  // Configuration option, should LDAP override or Drupal? Which is authoritative? Does that need to be at attribute level?
+  // Need something like:
+
+  // Revoke drupal roles previously granted by LDAP Authorization but no longer valid.
+  // Re grant drupal roles previously granted by LDAP Authorization but removed manually.
+  // Create drupal roles if they do not exist. 
+
+  // DELETE USER
+  // Operate before user is deleted so we know their roles.
+
+  $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
+  $object_class = $ldap_server->groupObjectClass;
+}
+
+/**
+ * Query for the existance of a LDAP group.
+ *
+ * We might do one query by joining all roles to search for.
+ * But the LDAP directory may limit results and not return all of them,
+ * so it is better to do one query at a time.
+ * LDAP is optimized for reads, so this should be OK.
+ *
+ * In config identify the ldap attribute for the role (i.e. cn).
+ * Do a search for '(' . $attribute_name .'='. $role .')';
+ *
+ */
+function ldap_groups_get_group($role, $ldap_server) {
+  $attribute_name = variable_get('ldap_groups_attribute_name', 'cn');
+  $dn = $attribute_name . '='. $role .',' . $basedn
+}
+
+/**
+ * See if a user is a member of a LDAP group.
+ */
+function ldap_groups_check_membership($role, $ldap_user, $ldap_server) {
+  $attribute_name = variable_get('ldap_groups_attribute_name', 'cn');
+  $dn = $attribute_name . '='. $role .',' . $basedn
+
+}
+
+/**
+ * Add a new LDAP group.
+ */
+function ldap_groups_add_group($role, $ldap_server) {
+  $attribute_name = variable_get('ldap_groups_attribute_name', 'cn');
+  $dn = $attribute_name . '='. $role .',' . $basedn
+
+}
+
+/**
+ * Remove a LDAP group.
+ */
+function ldap_groups_remove_group($role, $ldap_server) {
+  $attribute_name = variable_get('ldap_groups_attribute_name', 'cn');
+  $dn = $attribute_name . '='. $role .',' . $basedn
+}
+
+/**
+ * Add a LDAP user to a LDAP group.
+ */
+function ldap_groups_add_user($role, $ldap_user, $ldap_server) {
+  $attribute_name = variable_get('ldap_groups_attribute_name', 'cn');
+  $dn = $attribute_name . '='. $role .',' . $basedn
+
+}
+
+/**
+ * A function to remove a LDAP user from a LDAP group.
+ */
+function ldap_groups_remove_user($role, $ldap_user, $ldap_server) {
+  $attribute_name = variable_get('ldap_groups_attribute_name', 'cn');
+  $dn = $attribute_name . '='. $role .',' . $basedn
+
+}
