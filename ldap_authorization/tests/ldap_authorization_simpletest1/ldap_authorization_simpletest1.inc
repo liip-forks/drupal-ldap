@@ -22,11 +22,6 @@ function ldap_authorization_simpletest1_default_ldap_authorization() {
   $ldap_authorization_conf->only_ldap_authenticated = TRUE;
   $ldap_authorization_conf->derive_from_dn = FALSE;
   $ldap_authorization_conf->derive_from_dn_attr = NULL;
-  $ldap_authorization_conf->derive_from_attr = TRUE;
-  $ldap_authorization_conf->derive_from_attr_attr = 'memberOf';
-  $ldap_authorization_conf->derive_from_entry = FALSE;
-  $ldap_authorization_conf->derive_from_entry_entries = '';
-  $ldap_authorization_conf->derive_from_entry_attr = '';
   $ldap_authorization_conf->mappings = 'cn=netadmins,ou=it,dc=ad,dc=myuniveristy,dc=edu|netadmins';
   $ldap_authorization_conf->use_filter = TRUE;
   $ldap_authorization_conf->synch_to_ldap = FALSE;

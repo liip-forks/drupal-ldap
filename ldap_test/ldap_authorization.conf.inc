@@ -14,14 +14,6 @@ $conf['ldapauthen1']['drupal_role'] = array(
 
   'deriveFromDn' => 1,
   'deriveFromDnAttr' => 'ou',
-  
-  'deriveFromAttr' => 0,
-  'deriveFromAttrAttr' => array(),
-  
-  'deriveFromEntry' => 0,
-  'deriveFromEntryEntries' => NULL,
-  'deriveFromEntryEntriesAttr' => NULL,
-  'deriveFromEntryMembershipAttr' => NULL,
 
   'mappings' => array(
     array('Campus Accounts', 'campus accounts'),
@@ -52,14 +44,7 @@ $conf['og_group']['og_group'] = array(
   'deriveFromDn' =>  1,
   'deriveFromDnAttr' =>  'ou',
 
-  'deriveFromAttr' => 1,
-  'deriveFromAttrAttr' =>  array('memberOf', 'mailcode'),
-  'deriveFromAttrUseFirstAttr' => 0,
-
-  'deriveFromEntry' => 0,
-  'deriveFromEntryEntries' => array(),
-    'deriveFromEntryEntriesAttr' => NULL,
-  'deriveFromEntryMembershipAttr' => array(),
+  'useFirstAttrAsGroupId' => 0,
 
   'mappings' => array(
     0 => array('cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu',

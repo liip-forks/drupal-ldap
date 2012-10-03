@@ -29,7 +29,7 @@
  *     as ldap user entries and drupal user objects; ldap groups and drupal roles; etc
  *     this will be array keyed on lowercase dn with values of objects
  *     e.g. 
- *     $ldap_entries = array(
+ *     $context['corresponding_drupal_data'] = array(
  *      'cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu' => drupal user object1,
  *      'cn=jfun,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu'  => drupal user object2,
  *     )

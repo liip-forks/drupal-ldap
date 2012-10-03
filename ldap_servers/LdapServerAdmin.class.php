@@ -75,6 +75,12 @@ class LdapServerAdmin extends LdapServer {
     $this->testingDrupalUsername = trim($values['testing_drupal_username']);
     $this->groupObjectClass = trim($values['group_object_category']);
 
+    $this->groupNested = trim($values['groupNested']);
+    $this->groupDeriveFrom = trim($values['groupDeriveFrom']);
+    $this->groupDeriveFromAttrAttr = trim($values['groupDeriveFromAttrAttr']);
+    $this->groupDeriveFromEntryMembershipAttr = trim($values['groupDeriveFromEntryMembershipAttr']);
+    $this->groupDeriveFromEntryAttrMatchingUserAttr = trim($values['groupDeriveFromEntryAttrMatchingUserAttr']);
+    
     $this->searchPagination = ($values['search_pagination']) ? 1 : 0;
     $this->searchPageSize = trim($values['search_page_size']);
 
@@ -883,13 +889,45 @@ public function drupalFormSubmit($op, $values) {
       ),
 
 
+      'groupDeriveFrom' => array(
+        'form' => array(
+          'fieldset' => 'groups',
+          '#type' => 'radios',
+          '#title' => t('How are groups defined?'),
+          '#options' => array(
+            LDAP_SERVERS_GROUP_FROM_UNDEFINED => t('Groups are not relevant to my LDAP configuration.
+              LDAP Authorization, LDAP Groups, etc. modules are not being used.'),
+
+            LDAP_SERVERS_GROUP_FROM_ATTR => 
+              t('Groups are contained in a Users\' LDAP attribute such as <code>memberOf</code>.
+                Active Directory and openLdap with memberOf overlay fit this model.'),
+        
+            LDAP_SERVERS_GROUP_FROM_ENTRY => t('Previous option does not apply.  This is common in openLDAP,
+              openDirectory, and other non Active Directory LDAPs.'), 
+          ),
+        ),
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      
+      
      'group_object_category' =>  array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
           '#size' => 30,
           '#title' => t('Name of Group Object Class.'),
-          '#description' => t('This is used in ldap modules that use groups such as LDAP Authorization.'),
+          '#description' => t('e.g. groupOfNames, groupOfUniqueNames, group.'),
+          '#states' => array(
+             'invisible' => array(   // action to take.
+               ':input[name="groupDeriveFrom"]' =>
+                 array('value' => LDAP_SERVERS_GROUP_FROM_UNDEFINED),
+             ),
+           ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -898,6 +936,90 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
+      'groupNested' => array(
+        'form' => array(
+          'fieldset' => 'groups',
+          '#type' => 'checkbox',
+          '#title' => t('Use Nested Groups'),
+          '#disabled' => FALSE,
+          '#states' => array(
+             'invisible' => array(   // action to take.
+               ':input[name="groupDeriveFrom"]' =>
+                 array('value' => LDAP_SERVERS_GROUP_FROM_UNDEFINED),
+             ),
+           ),
+        ),
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => FALSE,
+          'default' => 0,
+        ),
+      ),
+ 
+      'groupDeriveFromAttrAttr' =>  array(
+        'form' => array(
+          'fieldset' => 'groups',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('User LDAP Entry Attribute containing groups'),
+          '#description' => t('e.g. memberOf'),
+          '#states' => array(
+             'visible' => array(   // action to take.
+               ':input[name="groupDeriveFrom"]' =>
+                 array('value' => LDAP_SERVERS_GROUP_FROM_ATTR),
+             ),
+           ),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+      ),
+      
+      'groupDeriveFromEntryMembershipAttr' =>  array(
+        'form' => array(
+          'fieldset' => 'groups',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('LDAP Group Entry Attribute Holding Users'),
+          '#description' => t('e.g uniquemember, memberUid'),
+          '#states' => array(
+             'visible' => array(   // action to take.
+               ':input[name="groupDeriveFrom"]' =>
+                 array('value' => LDAP_SERVERS_GROUP_FROM_ENTRY),
+             ),
+           ),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+      ),      
+
+      'groupDeriveFromEntryAttrMatchingUserAttr' =>  array(
+        'form' => array(
+          'fieldset' => 'groups',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('User LDAP Entry attribute held in "LDAP Group Entry Attribute Holding Users"'),
+          '#description' => t('This is almost always "dn" (which technically isn\'t an attribute.  Sometimes its "cn".'),
+          '#states' => array(
+             'visible' => array(   // action to take.
+               ':input[name="groupDeriveFrom"]' =>
+                 array('value' => LDAP_SERVERS_GROUP_FROM_ENTRY),
+             ),
+           ),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+      ),
+      
       'search_pagination' => array(
         'form' => array(
           'fieldset' => 'pagination',

@@ -339,3 +339,46 @@ function ldap_authorization_update_7108() {
   _ldap_authorization_add_ldap_user_fields();
 
 }
+
+/**
+ * moving some groups related fields into ldap server module
+ */
+function ldap_authorization_update_7109() {
+
+// need to merge 2 table fields (derive_from_entry_use_first_attr and derive_from_attr_use_first_attr into one field useFirstAttrAsGroupId)
+  $results = '';
+  
+  if (!db_field_exists('ldap_authorization', 'useFirstAttrAsGroupId')) {
+    db_add_field('ldap_authorization', 'useFirstAttrAsGroupId', array(
+      'type' => 'int',
+      'size' => tiny,
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+    $results .= t('"useFirstAttrAsGroupId" field added to ldap_authorization table');
+  }
+
+  if (!db_field_exists('ldap_authorization', 'searchAll')) {
+    db_add_field('ldap_authorization', 'searchAll', array(
+      'type' => 'int',
+      'size' => tiny,
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+    $results .= t('"searchAll" field added to ldap_authorization table');
+  }
+  
+  $ldap_authorization_remove = array(
+'derive_from_attr', 'derive_from_attr_attr', 'derive_from_attr_nested','derive_from_entry', 'derive_from_entry_nested',
+'derive_from_entry_attr','derive_from_entry_search_all', 
+'derive_from_entry_user_ldap_attr','derive_from_entry_use_first_attr', 'derive_from_attr_use_first_attr');
+  
+  foreach ($ldap_authorization_remove as $ldap_authorization_field) {
+    if (db_field_exists('ldap_authorization', $ldap_authorization_field)) {
+      db_drop_field('ldap_authorization', $ldap_authorization_field);
+      $changes .=  $ldap_authorization_field . t('field dropped from to ldap_authorization table');
+    }    
+  }
+
+}
+

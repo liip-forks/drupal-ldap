@@ -26,14 +26,8 @@ $authorization['og_group'] = array(
 
   'deriveFromDn' =>  1,
   'deriveFromDnAttr' =>  'ou',
+  'useFirstAttrAsGroupId' => 0,
 
-  'deriveFromAttr' => 1,
-  'deriveFromAttrAttr' =>  array('memberOf', 'mailcode'),
-  'deriveFromAttrUseFirstAttr' => 0,
-
-  'deriveFromEntry' => 0,
-  'deriveFromEntryEntries' => array(),
-  'deriveFromEntryAttr' => array(),
 
   'mappings' => array(
     0 => array('ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu',

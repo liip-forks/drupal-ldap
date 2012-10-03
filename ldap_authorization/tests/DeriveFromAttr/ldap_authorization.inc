@@ -19,17 +19,7 @@ $authorization['drupal_role'] = array(
   'deriveFromDn' => 0,
   'deriveFromDnAttr' => NULL,
 
-  'deriveFromAttr' => 1,
-  'deriveFromAttrAttr' => array('memberOf', 'mailcode'),
-  'deriveFromAttrUseFirstAttr' => 0,
-  'deriveFromAttrNested' => 0,
-
-  'deriveFromEntry' => 0,
-  'deriveFromEntryEntries' => NULL,
-  'deriveFromEntryEntriesAttr' => NULL,
-  'deriveFromEntryMembershipAttr' => NULL,
-  'deriveFromEntryUseFirstAttr' => 0,
-  'deriveFromEntryNested' => 0,
+  'useFirstAttrAsGroupId' => 0,
 
   'mappings' => array(
     array('cn=SYSadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'sysadmins'),

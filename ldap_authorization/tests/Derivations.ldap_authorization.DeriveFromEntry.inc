@@ -16,13 +16,6 @@ $authorization['drupal_role'] = array(
   'deriveFromDn' => 0,
   'deriveFromDnAttr' => NULL,
 
-  'deriveFromAttr' => 0,
-  'deriveFromAttrAttr' => array(),
-
-  'deriveFromEntry' => 1,
-  'deriveFromEntryEntries' => array('ou=groups,dc=ad,dc=myuniveristy,dc=edu'),
-  'deriveFromEntryAttr' => 'member',
-
   'mappings' => array(
     0 => array('ou=content editors,ou=groups,dc=ad,dc=myuniveristy,dc=edu', 'content editors'),
     1 => array('ou=content approvers,ou=groups,dc=ad,dc=myuniveristy,dc=edu', 'content approvers'),

@@ -91,12 +91,12 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
 
 
     /**
-     * test:  convert full dn to value of first attribute (consumer->deriveFromAttrUseFirstAttr = TRUE)
+     * test:  convert full dn to value of first attribute (consumer->useFirstAttrAsGroupId = TRUE)
      * e.g. cn=netadmins,ou=it,dc=ad,dc=myuniversity,dc=edu would be converted to netadmins
      */
 
     $consumer_conf_admin = ldap_authorization_get_consumer_admin_object($this->consumerType, FALSE);
-    $consumer_conf_admin->deriveFromAttrUseFirstAttr = 1;
+    $consumer_conf_admin->useFirstAttrAsGroupId = 1;
     $consumer_conf_admin->save();
     $user = $this->drupalCreateUser(array());
     $verykool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'verykool', 'mail' =>  'verykool@guests.myuniversity.edu'), TRUE, $user);
@@ -109,8 +109,8 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
     if (!$correct_roles) {
       debug('new authorizations'); debug($new_authorizations);
     }
-    $this->assertTrue($correct_roles, 'user account verykool tested for granting drupal_role "netadmins2"', $this->ldapTestId . '.deriveFromAttrUseFirstAttr');
-    $consumer_conf_admin->deriveFromAttrUseFirstAttr = 0;
+    $this->assertTrue($correct_roles, 'user account verykool tested for granting drupal_role "netadmins2"', $this->ldapTestId . '.useFirstAttrAsGroupId');
+    $consumer_conf_admin->useFirstAttrAsGroupId = 0;
     $consumer_conf_admin->save();
     user_delete($user->uid);
 
@@ -125,14 +125,14 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
      * NULL and "comma freaks"
      */
 
-    $consumer_conf_admin->deriveFromAttrUseFirstAttr = 1;
+    $consumer_conf_admin->useFirstAttrAsGroupId = 1;
     $consumer_conf_admin->save();
     $user = $this->drupalCreateUser(array());
     $wilmaf = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'wilmaf', 'mail' =>  'wilmaf@guests.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($wilmaf, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('comma freaks', $new_authorizations['drupal_role']));
-    $this->assertTrue($correct_roles, 'user account wilmaf tested for granting drupal_role "comma freaks"', $this->ldapTestId . '.deriveFromAttrUseFirstAttr.escaped');
-    $consumer_conf_admin->deriveFromAttrUseFirstAttr = 0;
+    $this->assertTrue($correct_roles, 'user account wilmaf tested for granting drupal_role "comma freaks"', $this->ldapTestId . '.useFirstAttrAsGroupId.escaped');
+    $consumer_conf_admin->useFirstAttrAsGroupId = 0;
     $consumer_conf_admin->save();
     user_delete($user->uid);
 
@@ -144,14 +144,14 @@ class LdapAuthorizationDeriveFromAttr  extends LdapAuthorizationTestCase {
      * NULL and "comma freaks"
      */
 
-    $consumer_conf_admin->deriveFromAttrUseFirstAttr = 1;
+    $consumer_conf_admin->useFirstAttrAsGroupId = 1;
     $consumer_conf_admin->save();
     $user = $this->drupalCreateUser(array());
     $barneyr = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'barneyr', 'mail' =>  'barneyr@guests.myuniversity.edu'), TRUE, $user);
     list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($barneyr, 'query', $this->consumerType);  // just see if the correct ones are derived.
     $correct_roles = (bool)(isset($new_authorizations[$this->consumerType]) && in_array('comma freaks', $new_authorizations['drupal_role']));
-    $this->assertTrue($correct_roles, 'user account barneyr tested for granting drupal_role "comma freaks"', $this->ldapTestId . '.deriveFromAttrUseFirstAttr.quoted');
-    $consumer_conf_admin->deriveFromAttrUseFirstAttr = 0;
+    $this->assertTrue($correct_roles, 'user account barneyr tested for granting drupal_role "comma freaks"', $this->ldapTestId . '.useFirstAttrAsGroupId.quoted');
+    $consumer_conf_admin->useFirstAttrAsGroupId = 0;
     $consumer_conf_admin->save();
     user_delete($user->uid);
 

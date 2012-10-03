@@ -9,14 +9,15 @@ require_once('ldap_groups.module');  // constants and such
 
 class LdapGroupsConf {
 
-  public $ldapProvisionServer;
+  public $ldapProvisionServer;  
   public $ldapProvisionSid = LDAP_USER_NO_SERVER_SID;
-  public $ldapProvisionGroupsBaseDn;
-  public $ldapProvisionGroupsRoleAttribute = 'cn';
+  public $ldapProvisionGroupsBaseDn;  
+  public $ldapProvisionGroupsRoleAttribute = 'cn'; 
   public $groupObjectClass;
   public $provisionGroupEntryEvents = array();
   public $provisionOptions = array();
   public $inDatabase = FALSE;
+ 
 
   public $saveable = array(
     'ldapProvisionSid',
@@ -25,6 +26,8 @@ class LdapGroupsConf {
     'provisionOptions',
     'provisionGroupEntryEvents'
   );
+  
+
 
   function __construct() {
     $this->load();
@@ -54,4 +57,14 @@ class LdapGroupsConf {
    * Destructor Method
    */
   function __destruct() { }
+  
+  public function groupDnFromRole($role) {
+    if ($this->ldapProvisionGroupsRoleAttribute && $this->ldapProvisionGroupsBaseDn) {
+      return $this->ldapProvisionGroupsRoleAttribute . '=' . $role . ',' . $this->ldapProvisionGroupsBaseDn;
+    }
+    else {
+      return FALSE;
+    }
+ 
+  }
 }

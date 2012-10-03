@@ -16,6 +16,7 @@
 class LdapAuthorizationConsumerConf {
 
   public $sid = NULL;
+  public $server;
   public $consumerType = NULL;
   public $consumerModule = NULL;
   public $consumer = NULL;
@@ -29,22 +30,10 @@ class LdapAuthorizationConsumerConf {
   public $deriveFromDn = FALSE;
   public $deriveFromDnAttr = NULL;
 
-  public $deriveFromAttr = FALSE;
-  public $deriveFromAttrAttr = NULL;
-  public $deriveFromAttrUseFirstAttr = FALSE;
-  public $deriveFromAttrNested = FALSE;
+  public $useFirstAttrAsGroupId = FALSE;
 
-  public $deriveFromEntry = FALSE;
-  public $deriveFromEntryEntries = NULL;
-  public $deriveFromEntryEntriesAttr = NULL;
 
-  public $deriveFromEntryMembershipAttr = NULL;
-  public $deriveFromEntrySearchAll = FALSE;
-  public $deriveFromEntryAttrMatchingUserAttr = FALSE; // can be removed in 2.0 branch
-  public $deriveFromEntryAttrMatchingUserAttrUndefined = TRUE;
-  public $deriveFromEntryUseFirstAttr = FALSE;
-  public $deriveFromEntryNested = FALSE;
-
+  public $searchAll = FALSE;
 
   public $mappings = array();
   public $normalizedMappings = array(); // mappings in simples form.
@@ -84,13 +73,6 @@ class LdapAuthorizationConsumerConf {
     }
     // default value for deriveFromEntryAttrMatchingUserAttr set up this way for backward compatibility in 1.0 branch,
     // make deriveFromEntryAttrMatchingUserAttr default to dn in 2.0 branch.
-    if ($this->deriveFromEntryAttrMatchingUserAttr) {
-      $this->deriveFromEntryAttrMatchingUserAttrUndefined = FALSE;
-    }
-    else {
-      $this->deriveFromEntryAttrMatchingUserAttr = 'dn';
-      $this->deriveFromEntryAttrMatchingUserAttrUndefined = TRUE;
-    }
     $this->normalizedMappings = $consumer->normalizeMappings($this->mappings);
   }
 
@@ -125,21 +107,10 @@ class LdapAuthorizationConsumerConf {
     $this->deriveFromDn  = (bool)(@$consumer_conf->derive_from_dn);
     $this->deriveFromDnAttr = isset($consumer_conf->derive_from_dn_attr) ? $consumer_conf->derive_from_dn_attr : NULL;
 
-    $this->deriveFromAttr  = (bool)(@$consumer_conf->derive_from_attr);
-    $this->deriveFromAttrAttr =  $this->linesToArray($consumer_conf->derive_from_attr_attr);
-    $this->deriveFromAttrUseFirstAttr  = (bool)(@$consumer_conf->derive_from_attr_use_first_attr);
-    $this->deriveFromAttrNested  = (bool)(@$consumer_conf->derive_from_attr_nested);
+    $this->useFirstAttrAsGroupId  = (bool)(@$consumer_conf->useFirstAttrAsGroupId);
 
-    $this->deriveFromEntry  = (bool)(@$consumer_conf->derive_from_entry);
-    $this->deriveFromEntryEntries = $this->linesToArray($consumer_conf->derive_from_entry_entries);
-    $this->deriveFromEntryEntriesAttr = isset($consumer_conf->derive_from_entry_entries_attr) ? $consumer_conf->derive_from_entry_entries_attr : NULL;
-
-    $this->deriveFromEntryMembershipAttr = $consumer_conf->derive_from_entry_attr;
-    $this->deriveFromEntryAttrMatchingUserAttr = isset($consumer_conf->derive_from_entry_user_ldap_attr) ? $consumer_conf->derive_from_entry_user_ldap_attr : NULL;
-    $this->deriveFromEntrySearchAll = (bool)(@$consumer_conf->derive_from_entry_search_all);
-    $this->deriveFromEntryUseFirstAttr  = (bool)(@$consumer_conf->derive_from_entry_use_first_attr);
-    $this->deriveFromEntryNested = isset($consumer_conf->derive_from_entry_nested) ? $consumer_conf->derive_from_entry_nested : NULL;
-
+    $this->searchAll = (bool)(@$consumer_conf->searchAll);
+   
     $this->mappings = $this->pipeListToArray($consumer_conf->mappings, FALSE);
     $this->useMappingsAsFilter = (bool)(@$consumer_conf->use_filter);
 
@@ -148,7 +119,7 @@ class LdapAuthorizationConsumerConf {
     $this->regrantLdapProvisioned = (bool)(@$consumer_conf->regrant_ldap_provisioned);
     $this->revokeLdapProvisioned = (bool)(@$consumer_conf->revoke_ldap_provisioned);
     $this->createConsumers = (bool)(@$consumer_conf->create_consumers);
-
+    $this->server = ldap_servers_get_servers($this->sid, NULL, TRUE);
 
   }
   /**
@@ -168,20 +139,6 @@ class LdapAuthorizationConsumerConf {
     'onlyApplyToLdapAuthenticated',
     'deriveFromDn',
     'deriveFromDnAttr',
-    'deriveFromAttr',
-    'deriveFromAttrAttr',
-    'deriveFromAttrUseFirstAttr',
-    'deriveFromAttrNested',
-
-    'deriveFromEntry',
-    'deriveFromEntryEntries',
-    'deriveFromEntryEntriesAttr',
-    'deriveFromEntryMembershipAttr',
-    'deriveFromEntrySearchAll',
-    'deriveFromEntryAttrMatchingUserAttr',
-    'deriveFromEntryUseFirstAttr',
-    'deriveFromEntryNested',
-
     'mappings',
     'useMappingsAsFilter',
     'synchToLdap',
@@ -190,9 +147,10 @@ class LdapAuthorizationConsumerConf {
     'revokeLdapProvisioned',
     'createConsumers',
     'regrantLdapProvisioned',
+    'searchAll',
+    'useFirstAttrAsGroupId',
 
   );
-
 
   protected function linesToArray($lines) {
     $lines = trim($lines);

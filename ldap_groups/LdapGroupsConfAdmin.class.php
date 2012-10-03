@@ -8,7 +8,7 @@
 
 ldap_server_module_load_include('module', 'ldap_groups');
 ldap_server_module_load_include('php', 'ldap_groups', 'LdapGroupsConf.class');
-
+    
 class LdapGroupsConfAdmin extends LdapGroupsConf {
 
   protected function setTranslatableProperties() {
@@ -17,7 +17,7 @@ class LdapGroupsConfAdmin extends LdapGroupsConf {
       create ldap groups entries.');
 
     $values['provisionGroupEntryEventsDescription'] = t('');
-
+    
     $values['provisionGroupEntryEventsOptions'] = array(
       LDAP_GROUPS_PROV_ON_LDAP_ENTRY_CREATED => t('When LDAP Entry is created (by Drupal).'),
       LDAP_GROUPS_PROV_ON_LDAP_ENTRY_UPDATED => t('When LDAP Entry is updated (by Drupal).'),
@@ -25,13 +25,13 @@ class LdapGroupsConfAdmin extends LdapGroupsConf {
     );
 
     $values['provisionOptionsDescription'] = t('');
-
+    
     $values['provisionOptionsOptions'] =  array(
       LDAP_GROUPS_PROV_NO_CREATE => t('Do not create LDAP Groups if they do not exist.'),
       LDAP_GROUPS_PROV_NO_REMOVE => t('Do not remove LDAP Group memberships even if user no longer has corresponding Drupal role.'),
       LDAP_GROUPS_PROV_DELETE_EMPTY_GROUPS => t('Remove empty LDAP groups when last member is removed.'),
     );
-
+    
     foreach ($values as $property => $value) {
       $this->$property = $value;
     }
@@ -39,7 +39,7 @@ class LdapGroupsConfAdmin extends LdapGroupsConf {
 
   protected $ldapProvisionSidDescription;
   protected $ldapProvisionSidOptions = array();
-
+ 
   protected $provisionGroupEntryEventsDescription;
   protected $provisionGroupEntryEventsOptions = array();
 
@@ -59,7 +59,7 @@ class LdapGroupsConfAdmin extends LdapGroupsConf {
     foreach ($this->saveable as $property) {
       $save[$property] = $this->{$property};
     //  dpm( "<hr/>$property. set=" . isset($save[$property]) . "is property=" . property_exists($this, $property));
-
+      
     }
     variable_set('ldap_group_conf', $save);
     ldap_groups_conf_cache_clear();
@@ -88,7 +88,7 @@ class LdapGroupsConfAdmin extends LdapGroupsConf {
       '#type' => 'item',
       '#markup' => t('<h1>LDAP Group Settings</h1>'),
     );
-
+    
     if (count($this->provisionServerOptions) == 0) {
       $form['intro']['#markup']  .= ldap_servers_no_enabled_servers_msg('configure LDAP Groups');
       return $form;
@@ -96,21 +96,13 @@ class LdapGroupsConfAdmin extends LdapGroupsConf {
 
     $form['#theme'] = 'ldap_group_conf_form';
 
-    $form['basic_to_drupal'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Basic LDAP Group Settings'),
-      '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
-    );
-
-
     $form['provisioning_to_ldap_settings'] = array(
       '#type' => 'fieldset',
       '#title' => t('Settings for Provisioning to LDAP Group Entries'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
-
+    
     $form['provisioning_to_ldap_settings']['ldapProvisionSid'] = array(
       '#type' => 'radios',
       '#title' => t('LDAP Servers Providing Provisioning Data'),
@@ -128,7 +120,7 @@ class LdapGroupsConfAdmin extends LdapGroupsConf {
       '#default_value' => $this->ldapProvisionGroupsBaseDn,
       '#required' => FALSE,
     );
-
+    
     $form['provisioning_to_ldap_settings']['ldapProvisionGroupsRoleAttribute'] = array(
       '#type' => 'textfield',
       '#size' => 40,
@@ -137,7 +129,7 @@ class LdapGroupsConfAdmin extends LdapGroupsConf {
       '#default_value' => $this->ldapProvisionGroupsRoleAttribute,
       '#required' => FALSE,
     );
-
+  
     $form['provisioning_to_ldap_settings']['provisionGroupEntryEvents'] = array(
       '#type' => 'checkboxes',
       '#title' => t('When should creation of LDAP group entries and members added to LDAP group entries occur?'),

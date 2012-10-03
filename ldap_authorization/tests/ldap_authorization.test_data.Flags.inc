@@ -20,13 +20,6 @@
     'deriveFromDn' =>  1,
     'deriveFromDnAttr' => 'ou',
 
-    'deriveFromAttr' =>  0,
-    'deriveFromAttrAttr' =>  array(),
-
-    'deriveFromEntry' =>  0,
-    'deriveFromEntryEntries' =>  NULL,
-    'deriveFromEntryAttr' =>  NULL,
-
     'mappings' => array(
       array('Campus Accounts', 'campus accounts'),
       array('guest accounts', 'guests'),

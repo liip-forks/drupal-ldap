@@ -15,7 +15,7 @@ function ldap_servers_install() {
   variable_set('ldap_servers_require_ssl_for_credentails', 0);
 
   if (! ($key = variable_get('ldap_servers_encrypt_key', NULL))) {
- 	module_load_include('inc', 'ldap_servers','ldap_servers.functions');
+	module_load_include('inc', 'ldap_servers','ldap_servers.functions');
     ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
     $key = ldap_servers_random_salt(10);
     variable_set('ldap_servers_encrypt_key', $key);
@@ -291,3 +291,81 @@ function ldap_servers_update_7107() {
 	}
 	return ($msg) ? $msg :  t('No database changes made.');
 }
+
+
+
+
+/**
+ * add group related fields to ldap_servers table
+ */
+function ldap_servers_update_7108() {
+  
+  if (!db_field_exists('ldap_servers', 'groupNested')) {
+    db_add_field('ldap_servers', 'groupNested', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => FALSE,
+      'default' => 0,
+    ));
+    $msg = t('"groupNested" field added to ldap_servers table');
+  }
+
+  if (!db_field_exists('ldap_servers', 'groupUseFirstAttr')) {
+    db_add_field('ldap_servers', 'groupUseFirstAttr', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => FALSE,
+      'default' => 0,
+    ));
+    $msg .= '<br/>' . t('"groupUseFirstAttr" field added to ldap_servers table');
+  }
+
+  if (!db_field_exists('ldap_servers', 'groupSearchAll')) {
+    db_add_field('ldap_servers', 'groupSearchAll', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => FALSE,
+      'default' => 0,
+    ));
+    $msg = t('"groupSearchAll" field added to ldap_servers table');
+  }
+
+  if (!db_field_exists('ldap_servers', 'groupDeriveFrom')) {
+    db_add_field('ldap_servers', 'groupDeriveFrom', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => FALSE,
+      'default' => 0,
+    ));
+    $msg = t('"groupDeriveFrom" field added to ldap_servers table');
+  }
+       
+  if (!db_field_exists('ldap_servers', 'groupDeriveFromAttrAttr')) {
+    db_add_field('ldap_servers', 'groupDeriveFromAttrAttr', array(
+      'type' => 'varchar',
+      'length' => '255',
+      'not null' => FALSE,
+    ));
+    $msg = t('"groupDeriveFromAttrAttr" field added to ldap_servers table');
+  }
+
+  if (!db_field_exists('ldap_servers', 'groupDeriveFromEntryMembershipAttr')) {
+    db_add_field('ldap_servers', 'groupDeriveFromEntryMembershipAttr', array(
+      'type' => 'varchar',
+      'length' => '255',
+      'not null' => FALSE,
+    ));
+    $msg = t('"groupDeriveFromEntryMembershipAttr" field added to ldap_servers table');
+  }      
+
+  if (!db_field_exists('ldap_servers', 'groupDeriveFromEntryAttrMatchingUserAttr')) {
+    db_add_field('ldap_servers', 'groupDeriveFromEntryAttrMatchingUserAttr', array(
+      'type' => 'varchar',
+      'length' => '255',
+      'not null' => FALSE,
+    ));
+    $msg = t('"groupDeriveFromEntryAttrMatchingUserAttr" field added to ldap_servers table');
+  }       
+
+}
+			
