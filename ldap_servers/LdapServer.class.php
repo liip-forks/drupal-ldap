@@ -55,14 +55,17 @@ class LdapServer {
 
   public $groupObjectClass;
   public $groupNested = 0; // 1 | 0
-
-  public $groupDeriveFrom = LDAP_SERVERS_GROUP_FROM_UNDEFINED; // LDAP_SERVERS_GROUP_FROM_ATTR || LDAP_SERVERS_GROUP_FROM_ENTRY || LDAP_SERVERS_GROUP_FROM_UNDEFINED 
-  public $groupDeriveFromAttrAttr = NULL;
-  public $groupDeriveFromEntryMembershipAttr = NULL;
-  public $groupDeriveFromEntryAttrMatchingUserAttr = NULL;
-
+  
+  public $groupDeriveFromDn = FALSE;
+  public $groupDeriveFromDnAttr = NULL;
+  
+  public $groupUserMembershipsAttrExists = FALSE;
+  public $groupUserMembershipsAttr = NULL;
+  
+  public $groupMembershipsAttr = NULL;
+  public $groupMembershipsAttrMatchingUserAttr = NULL;
+  public $groupGroupEntryMembershipsConfigured = FALSE;
   public $inDatabase = FALSE;
-
   public $connection;
   
   /**
@@ -125,11 +128,15 @@ class LdapServer {
     'group_object_category' => 'groupObjectClass',
     'search_pagination' => 'searchPagination',
     'search_page_size' => 'searchPageSize',
+
     'groupNested' => 'groupNested',
-    'groupDeriveFrom' => 'groupDeriveFrom',
-    'groupDeriveFromEntryMembershipAttr' => 'groupDeriveFromEntryMembershipAttr',
-    'groupDeriveFromEntryAttrMatchingUserAttr' => 'groupDeriveFromEntryAttrMatchingUserAttr',
-    'groupDeriveFromAttrAttr'=> 'groupDeriveFromAttrAttr',
+    'groupUserMembershipsAttrExists' => 'groupUserMembershipsAttrExists',
+    'groupUserMembershipsAttr'=> 'groupUserMembershipsAttr',
+    'groupMembershipsAttr' => 'groupMembershipsAttr',
+    'groupMembershipsAttrMatchingUserAttr' => 'groupMembershipsAttrMatchingUserAttr',
+    'groupDeriveFromDn' => 'groupDeriveFromDn',
+    'groupDeriveFromDnAttr' => 'groupDeriveFromDnAttr',
+
     );
 
   }
@@ -195,6 +202,8 @@ class LdapServer {
       $this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
     );
     $this->editPath = 'admin/config/people/ldap/servers/edit/' . $this->sid;
+    
+    $this->groupGroupEntryMembershipsConfigured = ($this->groupMembershipsAttrMatchingUserAttr && $this->groupMembershipsAttr);
   }
 
   /**
@@ -904,7 +913,7 @@ class LdapServer {
   /**
    * is a user's dn a member of group
    *
-   * @param string $group_id Generally dn of group, but could be cn if groupDeriveFromEntryAttrMatchingUserAttr is 'cn'
+   * @param string $group_id Generally dn of group, but could be cn if groupMembershipsAttrMatchingUserAttr is 'cn'
    * @param string $ldap_user_dn as ldap dn
    * @param enum $nested = NULL (default to server configuration), TRUE, or FALSE indicating to test for nested groups
    */
@@ -967,8 +976,8 @@ class LdapServer {
    
   public function groupGetUsersGroupDns($ldap_user_dn, $nested = NULL) {
     $group_ids = $this->groupGetUsersGroupIds($ldap_user_dn);
-    if ($this->groupDeriveFrom == LDAP_SERVERS_GROUP_FROM_ENTRY && $this->groupDeriveFromEntryAttrMatchingUserAttr != 'dn') {
-      $attr = $this->groupDeriveFromEntryAttrMatchingUserAttr;
+    if (!$this->groupUserMembershipsAttrExists && $this->groupGroupEntryMembershipsConfigured && $this->groupMembershipsAttrMatchingUserAttr != 'dn') {
+      $attr = $this->groupMembershipsAttrMatchingUserAttr;
       // @todo given a list of CNs, etc. how to convert to dns.  does a template need to exist in ldap server groups configuration
       // or a transform function?
       return FALSE;
@@ -984,7 +993,7 @@ class LdapServer {
    *  @param boolean $nested if groups should be recursed or not.
    *
    *  @return array of group dns, cns,
-   *  Will be dns  unless $this->groupDeriveFrom = LDAP_SERVERS_GROUP_FROM_ENTRY  and $this->groupDeriveFromEntryAttrMatchingUserAttr != dn
+   *  Will be dns  unless $this->groupUserMembershipsAttrExists == FALSE  and && $this->groupGroupEntryMembershipsConfigured and $this->groupMembershipsAttrMatchingUserAttr != dn
    */
    
   public function groupGetUsersGroupIds($ldap_user_dn, $nested = NULL) {
@@ -994,11 +1003,11 @@ class LdapServer {
     if (!$user_ldap_entry) {
       return FALSE;
     }
-    elseif ($this->groupDeriveFrom == LDAP_SERVERS_GROUP_FROM_ATTR) {
-      return $this->groupDeriveFromAttrGroupIds($user_ldap_entry, $nested);
+    elseif ($this->groupUserMembershipsAttrExists) {
+      return $this->groupUserMembershipsAttrExistsAttrGroupIds($user_ldap_entry, $nested);
     }
-    elseif ($this->groupDeriveFrom == LDAP_SERVERS_GROUP_FROM_ENTRY) {
-      return $this->groupDeriveFromEntryGroupIds($user_ldap_entry, $nested);
+    elseif (!$this->groupUserMembershipsAttrExists) {
+      return $this->groupUserMembershipsAttrExistsEntryGroupIds($user_ldap_entry, $nested);
     }
     else {
       return FALSE;
@@ -1011,22 +1020,22 @@ class LdapServer {
    *  @return array of group dns
    */
 
-  public function groupDeriveFromAttrGroupIds($user_ldap_entry, $nested) {
+  public function groupUserMembershipsAttrExistsAttrGroupIds($user_ldap_entry, $nested) {
 
     $all_groups = array();
     $groups_by_level = array();
     $level = 0;
     foreach ($user_ldap_entry['attr'] as $user_attr_name => $user_attr_values) {
-      if (strcasecmp($this->groupDeriveFromAttrAttr, $user_attr_name) !== 0) {
+      if (strcasecmp($this->groupUserMembershipsAttr, $user_attr_name) !== 0) {
         continue;
       }
       // patch 1050944
       for ($i = 0; $i < $user_attr_values['count']; $i++) {
         $all_groups[] = (string)$user_attr_values[$i]; // these could be cns or dns or what have you, but are generally dns
-        $groups_by_level[$this->groupDeriveFromAttrAttr][$level][] = drupal_strtolower((string)$user_attr_values[$i]);
+        $groups_by_level[$this->groupUserMembershipsAttr][$level][] = drupal_strtolower((string)$user_attr_values[$i]);
       }
       if ($nested) {
-        $this->groupDeriveFromAttrGroupIdsResursive($all_groups, $groups_by_level, $level, 10); // LDAP_SERVER_GROUPS_RECURSE_DEPTH
+        $this->groupUserMembershipsAttrExistsAttrGroupIdsResursive($all_groups, $groups_by_level, $level, 10); // LDAP_SERVER_GROUPS_RECURSE_DEPTH
       }
     }
     return array_unique($all_groups);
@@ -1037,32 +1046,32 @@ class LdapServer {
    * will be ton of permission issues with service accounts
    * need configurable obj type to avoid binding to a million user entries, printers, etc.
    */
-  private function groupDeriveFromAttrGroupIdsResursive(&$all_groups, &$groups_by_level, $level, $max_depth) {
+  private function groupUserMembershipsAttrExistsAttrGroupIdsResursive(&$all_groups, &$groups_by_level, $level, $max_depth) {
     // derive query with & of all groups at current level
     // e.g. (|(distinguishedname=cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu)(distinguishedname=cn=content approvers,ou=groups,dc=ad,dc=myuniversity,dc=edu))
     // execute query and loop through it to populate $groups_by_level[$level + 1]
     // call recursively provided max depth not excluded and $groups_by_level[$level + 1] > 0
 
     // this needs to be configurable also and default per ldap implementation
-    $group_values = $groups_by_level[$this->groupDeriveFromAttrAttr][$level];
+    $group_values = $groups_by_level[$this->groupUserMembershipsAttr][$level];
     $filter = "(&\n  (objectClass=" . ldap_server_massage_text($this->groupObjectClass, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ")\n" .
-     "(" . $this->groupDeriveFromAttrAttr . "=*)\n" .
+     "(" . $this->groupUserMembershipsAttr . "=*)\n" .
      "(|\n    (distinguishedname=" . join(")\n    (distinguishedname=", ldap_server_massage_text($group_values, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)) . ")\n  )\n)";
     $level++;
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
-      $entries = $this->search($base_dn, $filter, array($this->groupDeriveFromAttrAttr));
+      $entries = $this->search($base_dn, $filter, array($this->groupUserMembershipsAttr));
       foreach ($entries as $entry) {
         $attr_values = array();
         if (is_array($entry) && count($entry)) {
-          if (isset($entry[$this->groupDeriveFromAttrAttr])) {
-            $attr_values = $entry[$this->groupDeriveFromAttrAttr];
+          if (isset($entry[$this->groupUserMembershipsAttr])) {
+            $attr_values = $entry[$this->groupUserMembershipsAttr];
           }
-          elseif (isset($entry[drupal_strtolower($this->groupDeriveFromAttrAttr)])) {
-            $attr_values = $entry[drupal_strtolower($this->groupDeriveFromAttrAttr)];
+          elseif (isset($entry[drupal_strtolower($this->groupUserMembershipsAttr)])) {
+            $attr_values = $entry[drupal_strtolower($this->groupUserMembershipsAttr)];
           }
           else {
             foreach ($entry as $attr_name => $values) {
-              if (strcasecmp($this->groupDeriveFromAttrAttr, $attr_name) !== 0) {
+              if (strcasecmp($this->groupUserMembershipsAttr, $attr_name) !== 0) {
                 continue;
               }
               $attr_values = $entry[$attr_name];
@@ -1073,7 +1082,7 @@ class LdapServer {
             for ($i = 0; $i < $attr_values['count']; $i++) {
               $value = (string)$attr_values[$i];
               if (!in_array($value, $all_groups)) {
-                $groups_by_level[$this->groupDeriveFromAttrAttr][$level][] = $value;
+                $groups_by_level[$this->groupUserMembershipsAttr][$level][] = $value;
                 $all_groups[] = $value;
               }
             }
@@ -1081,8 +1090,8 @@ class LdapServer {
         }
       }
     }
-    if (isset($groups_by_level[$this->groupDeriveFromAttrAttr][$level]) && count($groups_by_level[$this->groupDeriveFromAttrAttr][$level]) && $level < $max_depth) {
-      $this->groupDeriveFromAttrGroupIdsResursive($all_groups, $groups_by_level, $level, $max_depth);
+    if (isset($groups_by_level[$this->groupUserMembershipsAttr][$level]) && count($groups_by_level[$this->groupUserMembershipsAttr][$level]) && $level < $max_depth) {
+      $this->groupUserMembershipsAttrExistsAttrGroupIdsResursive($all_groups, $groups_by_level, $level, $max_depth);
     }
   }
 
@@ -1092,15 +1101,15 @@ class LdapServer {
    *  @param string $user_ldap_attr e.g.  cn, dn, etc.
    *  @param boolean $nested if groups should be recursed or not.
    *
-   *  @return array of groups dns, cns, etc.  Will be dn if groupDeriveFromEntryAttrMatchingUserAttr == dn
+   *  @return array of groups dns, cns, etc.  Will be dn if groupMembershipsAttrMatchingUserAttr == dn
    *
    *  @see tests/DeriveFromEntry/ldap_servers.inc for fuller notes and test example
    */
-  public function groupDeriveFromEntryGroupIds($user_ldap_entry, $nested = FALSE) {
+  public function groupUserMembershipsAttrExistsEntryGroupIds($user_ldap_entry, $nested = FALSE) {
 
     $authorizations = array();
-    $membership_attr = $this->groupDeriveFromEntryMembershipAttr;
-    $user_ldap_attr_in_membership_attr = $this->groupDeriveFromEntryAttrMatchingUserAttr;
+    $membership_attr = $this->groupMembershipsAttr;
+    $user_ldap_attr_in_membership_attr = $this->groupMembershipsAttrMatchingUserAttr;
     $config_tokens = array(
       '!groupObjectClass' => $this->groupObjectClass,
       '!membership_attr' => $membership_attr,
@@ -1174,8 +1183,8 @@ class LdapServer {
 
   public function groupsByEntryIsMember($members, $base_dn, &$tested_groups, $matching_user_value, $depth, $max_depth) {
  
-    $membership_attr = $this->groupDeriveFromEntryMembershipAttr;
-    $entries_attr = $this->groupDeriveFromEntryAttrMatchingUserAttr;
+    $membership_attr = $this->groupMembershipsAttr;
+    $entries_attr = $this->groupMembershipsAttrMatchingUserAttr;
     
     // query for all members that are groups
     $filter = "(&(objectClass=". ldap_server_massage_text($this->groupObjectClass, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)

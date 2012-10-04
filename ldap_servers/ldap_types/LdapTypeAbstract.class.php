@@ -26,8 +26,8 @@ abstract class LdapTypeAbstract {
   public $deriveFromDn = FALSE;
   public $deriveFromAttr = FALSE;
   public $deriveFromEntry = FALSE;
-  public $groupDeriveFromEntryMembershipAttr = NULL;
-  public $groupDeriveFromEntryAttrMatchingUserAttr = FALSE; // can be removed in 2.0 branch
+  public $groupMembershipsAttr = NULL;
+  public $groupMembershipsAttrMatchingUserAttr = FALSE; // can be removed in 2.0 branch
 
   
  /**

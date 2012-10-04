@@ -25,8 +25,8 @@ class LdapTypeNovell extends LdapTypeAbstract {
 
   public $groupDerivationModelDefault = LDAP_SERVERS_DERIVE_GROUP_FROM_ENTRY;
 
-  public $groupDeriveFromEntryAttrDefault = 'members';
-  public $groupDeriveFromEntryUserIdDefault = 'dn';
+  public $groupUserMembershipsAttrExistsEntryAttrDefault = 'members';
+  public $groupUserMembershipsAttrExistsEntryUserIdDefault = 'dn';
 
 
 

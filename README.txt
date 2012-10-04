@@ -57,8 +57,8 @@ LDAP Servers
 
 
 -- relationship between ldap groups and drupal role (could belong in ldap_groups)
----- LdapServer::groupDeriveFromAttrGroupIds()
----- LdapServer::groupDeriveFromAttrGroupIdsResursive()
+---- LdapServer::groupUserMembershipsAttrExistsAttrGroupIds()
+---- LdapServer::groupUserMembershipsAttrExistsAttrGroupIdsResursive()
 ---- LdapServer::deriveFromEntryGroups()
 ---- LdapServer::groupsByEntryIsMember()
 ---- LdapServer::groupObjectClass

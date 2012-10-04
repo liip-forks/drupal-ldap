@@ -44,7 +44,7 @@ class LdapTypeActiveDirectory extends LdapTypeAbstract {
   // ldap_authorization configuration
   public $groupDerivationModelDefault = LDAP_SERVERS_DERIVE_GROUP_FROM_ATTRIBUTE;
   public $deriveFromAttr = TRUE;
-  public $groupDeriveFromAttrAttr = 'memberOf';
+  public $groupUserMembershipsAttr = 'memberOf';
 
   
 

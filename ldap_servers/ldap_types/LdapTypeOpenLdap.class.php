@@ -29,8 +29,8 @@ class LdapTypeOpenLdap extends LdapTypeAbstract {
  
   // ldap_authorization configuration
   public $groupDerivationModelDefault = LDAP_SERVERS_DERIVE_GROUP_FROM_ENTRY;
-  public $groupDeriveFromEntryMembershipAttr = 'member';
-  public $groupDeriveFromEntryAttrMatchingUserAttr = 'dn';
+  public $groupMembershipsAttr = 'member';
+  public $groupMembershipsAttrMatchingUserAttr = 'dn';
 
 
 }

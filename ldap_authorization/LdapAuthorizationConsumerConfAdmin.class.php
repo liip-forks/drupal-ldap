@@ -71,7 +71,6 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       'consumer_type',
       'consumer_module',
       'only_ldap_authenticated',
-      'groupUseFirstAttr',
       'use_filter',
       'synch_to_ldap',
       'synch_on_logon',
@@ -194,16 +193,15 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#type' => 'fieldset',
       '#title' => t('III. LDAP to !consumer_name mapping and filtering', $consumer_tokens),
       '#description' => t('
-The settings in part II generate a list of "raw authorization ids" which
-need to be converted to !consumer_namePlural.
-Raw authorization ids look like:
+Representations of groups derived from LDAP might initially look like:
 <ul>
-<li><code>Campus Accounts</code> (...from II.A)</li>
-<li><code>ou=Underlings,dc=myorg,dc=mytld,dc=edu</code> (...from II.B and II.C.)</li>
-<li><code>ou=IT,dc=myorg,dc=mytld,dc=edu</code> (...from II.B and II.C.)</li>
+<li><code>Campus Accounts</code></li>
+<li><code>ou=Underlings,dc=myorg,dc=mytld,dc=edu</code></li>
+<li><code>ou=IT,dc=myorg,dc=mytld,dc=edu</code></li>
+<li><code>IT</code></li>
 </ul>
 
-<p><strong>Mappings are often needed to convert these "raw authorization ids" to !consumer_namePlural.</strong></p>
+<p><strong>Mappings are often needed to convert these group representations to !consumer_namePlural.</strong></p>
 
 !consumer_mappingDirections
 
@@ -362,11 +360,6 @@ Raw authorization ids look like:
 
     if ($this->inDatabase  && (!$this->consumerType)) {
       $errors['consumer_type'] = t('Edit or delete called without consumer type in form.');
-    }
-
-    // are correct values available for selected mapping approach
-    if ($this->deriveFromDn && !trim($this->deriveFromDnAttr)) {
-      $errors['derive_from_dn'] = t('DN attribute is missing.');
     }
 
     if (count($this->mappings) > 0) {

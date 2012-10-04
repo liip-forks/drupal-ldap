@@ -27,9 +27,6 @@ class LdapAuthorizationConsumerConf {
   public $status = NULL;
   public $onlyApplyToLdapAuthenticated = TRUE;
 
-  public $deriveFromDn = FALSE;
-  public $deriveFromDnAttr = NULL;
-
   public $useFirstAttrAsGroupId = FALSE;
 
 
@@ -104,9 +101,6 @@ class LdapAuthorizationConsumerConf {
     $this->status = ($consumer_conf->status) ? 1 : 0;
     $this->onlyApplyToLdapAuthenticated  = (bool)(@$consumer_conf->only_ldap_authenticated);
 
-    $this->deriveFromDn  = (bool)(@$consumer_conf->derive_from_dn);
-    $this->deriveFromDnAttr = isset($consumer_conf->derive_from_dn_attr) ? $consumer_conf->derive_from_dn_attr : NULL;
-
     $this->useFirstAttrAsGroupId  = (bool)(@$consumer_conf->useFirstAttrAsGroupId);
 
     $this->searchAll = (bool)(@$consumer_conf->searchAll);
@@ -137,8 +131,6 @@ class LdapAuthorizationConsumerConf {
     'consumerType',
     'status',
     'onlyApplyToLdapAuthenticated',
-    'deriveFromDn',
-    'deriveFromDnAttr',
     'mappings',
     'useMappingsAsFilter',
     'synchToLdap',

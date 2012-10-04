@@ -408,13 +408,12 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
   // Strategy 1: group extracted from user's DN.
   $derive_from_dn_authorizations = array();
-  if ($consumer_conf->deriveFromDn) {
-   // debug('deriveFromDn');
+  if ($consumer_conf->server->groupDeriveFromDn) {
     $pairs = ldap_explode_dn($user_ldap_entry['dn'], 0); // escapes attribute values, need to be unescaped later
     $count = array_shift($pairs);
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
-      if (drupal_strtolower(trim($pair[0])) == drupal_strtolower($consumer_conf->deriveFromDnAttr)) {
+      if (drupal_strtolower(trim($pair[0])) == drupal_strtolower($consumer_conf->server->groupDeriveFromDnAttr)) {
         $id = drupal_strtolower(ldap_pear_unescape_dn_value(trim($pair[1])));
         $derive_from_dn_authorizations[$id] = (string)$id;
       }
@@ -422,13 +421,13 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   //  debug($derive_from_dn_authorizations);
   }
   if ($op == 'test_query') {
-    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 1. Derive from DN'] = ($consumer_conf->deriveFromDn) ? $derive_from_dn_authorizations : t('disabled');
+    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 1. Derive from DN'] = ($consumer_conf->server->groupDeriveFromDn) ? $derive_from_dn_authorizations : t('disabled');
   }
 
   // Strategy 2: groups in user attributes
   $derive_from_attr_authorizations = array();
-  if ($consumer_conf->server->groupDeriveFrom == LDAP_SERVERS_GROUP_FROM_ATTR) {
-    $authorizations = $ldap_server->groupDeriveFromAttrGroupIds($user_ldap_entry);
+  if ($consumer_conf->server->groupUserMembershipsAttrExists) {
+    $authorizations = $ldap_server->groupUserMembershipsAttrExistsAttrGroupIds($user_ldap_entry);
     foreach ($authorizations as $id => $authorization) {
       if ($consumer_conf->useFirstAttrAsGroupId) {
         $attr_parts = ldap_explode_dn($authorization, 0); // explode_dn escapes attribute values, so must be unescaped later!
@@ -448,7 +447,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
   }
   if ($op == 'test_query') {
-    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 2. Groups in User Attributes'] = ($consumer_conf->server->groupDeriveFrom == LDAP_SERVERS_GROUP_FROM_ATTR) ? $derive_from_attr_authorizations : t('disabled');
+    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 2. Groups in User Attributes'] = ($consumer_conf->server->groupUserMembershipsAttrExists) ? $derive_from_attr_authorizations : t('disabled');
   }
 
 /**
@@ -470,8 +469,8 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
  */
 
   $derive_from_entry_authorizations = array();
-  if ($consumer_conf->server->groupDeriveFrom == LDAP_SERVERS_GROUP_FROM_ENTRY) {
-    $derive_from_entry_authorizations = $ldap_server->groupDeriveFromEntryGroupIds($user_ldap_entry);
+  if (!$consumer_conf->server->groupUserMembershipsAttrExists && $consumer_conf->server->groupGroupEntryMembershipsConfigured) {
+    $derive_from_entry_authorizations = $ldap_server->groupUserMembershipsAttrExistsEntryGroupIds($user_ldap_entry);
     if (count($derive_from_entry_authorizations)) {
       foreach ($derive_from_entry_authorizations as $i => $authorization) {
         if ($consumer_conf->useFirstAttrAsGroupId) {
@@ -488,7 +487,8 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
     }
   }
   if ($op == 'test_query') {
-    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 3. groups  as entries'] = ($consumer_conf->server->groupDeriveFrom == LDAP_SERVERS_GROUP_FROM_ENTRY) ? $derive_from_entry_authorizations  : t('disabled');
+    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 3. groups  as entries'] =
+      (!$consumer_conf->server->groupUserMembershipsAttrExists && $consumer_conf->server->groupGroupEntryMembershipsConfigured) ? $derive_from_entry_authorizations  : t('disabled');
   }
 
   $values = array_merge(array_values($derive_from_dn_authorizations), array_values($derive_from_attr_authorizations), array_values($derive_from_entry_authorizations));

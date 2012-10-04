@@ -380,10 +380,6 @@ function ldap_help_get_ldap_authorization() {
   $items['status']['status'] = 'string';
   $items['status']['only_ldap_authenticated'] = 'string';
 
-
-  $items['derive_from_dn']['derive_from_dn'] = 'string';
-  $items['derive_from_dn']['derive_from_dn_attr'] = 'string';
-
   // $items['filter_and_mappings']['mappings'] = 'string';
   $items['use_filter']['mappings'] = 'string';
 
