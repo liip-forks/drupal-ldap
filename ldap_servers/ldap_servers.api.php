@@ -58,7 +58,7 @@ function hook_ldap_entry_pre_provision_alter(&$ldap_entries, $ldap_server, $cont
  *    returned from ldap_get_entries() with 'count' keys
  */
 
-function hook_ldap_entry_post_provision($ldap_entries, $ldap_server, $context) {
+function hook_ldap_entry_post_provision(&$ldap_entries, $ldap_server, $context) {
   
   
   

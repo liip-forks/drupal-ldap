@@ -971,6 +971,7 @@ class LdapServer {
    */
   public function groupAddMember($group_dn, $ldap_user_dn) {
     //@todo finish
+    // See if the group exists before trying this.
   }
     
   /**
@@ -981,6 +982,7 @@ class LdapServer {
    */
   public function groupRemoveMember($group_dn, $ldap_user_dn) {
     //@todo finish
+    // See if this is the last member in a group before trying this.
   }  
  
     /**
