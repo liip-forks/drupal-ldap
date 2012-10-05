@@ -300,101 +300,27 @@ function ldap_servers_update_7107() {
  */
 function ldap_servers_update_7108() {
   
-  if (!db_field_exists('ldap_servers', 'groupNested')) {
-    db_add_field('ldap_servers', 'groupNested', array(
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => FALSE,
-      'default' => 0,
-    ));
-    $msg = t('"groupNested" field added to ldap_servers table');
-  }
-
-  if (!db_field_exists('ldap_servers', 'groupSearchAll')) {
-    db_add_field('ldap_servers', 'groupSearchAll', array(
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => FALSE,
-      'default' => 0,
-    ));
-    $msg = t('"groupSearchAll" field added to ldap_servers table');
-  }
-
-  if (!db_field_exists('ldap_servers', 'groupUserMembershipsAttrExists')) {
-    db_add_field('ldap_servers', 'groupUserMembershipsAttrExists', array(
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => FALSE,
-      'default' => 0,
-    ));
-    $msg = t('"groupUserMembershipsAttrExists" field added to ldap_servers table');
-  }
-       
-  if (!db_field_exists('ldap_servers', 'groupUserMembershipsAttr')) {
-    db_add_field('ldap_servers', 'groupUserMembershipsAttr', array(
-      'type' => 'varchar',
-      'length' => '255',
-      'not null' => FALSE,
-    ));
-    $msg = t('"groupUserMembershipsAttr" field added to ldap_servers table');
-  }
-
-  if (!db_field_exists('ldap_servers', 'groupMembershipsAttr')) {
-    db_add_field('ldap_servers', 'groupMembershipsAttr', array(
-      'type' => 'varchar',
-      'length' => '255',
-      'not null' => FALSE,
-    ));
-    $msg = t('"groupMembershipsAttr" field added to ldap_servers table');
-  }      
-
-  if (!db_field_exists('ldap_servers', 'groupMembershipsAttrMatchingUserAttr')) {
-    db_add_field('ldap_servers', 'groupMembershipsAttrMatchingUserAttr', array(
-      'type' => 'varchar',
-      'length' => '255',
-      'not null' => FALSE,
-    ));
-    $msg = t('"groupMembershipsAttrMatchingUserAttr" field added to ldap_servers table');
-  }
-	
-  if (!db_field_exists('ldap_servers', 'groupUserMembershipsAttrExists')) {
-    db_add_field('ldap_servers', 'groupUserMembershipsAttrExists', array(
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => FALSE,
-      'default' => 0,
-    ));
-    $msg = t('"groupUserMembershipsAttrExists" field added to ldap_servers table');
-  }	
-	
-	  if (!db_field_exists('ldap_servers', 'groupUserMembershipsAttr')) {
-    db_add_field('ldap_servers', 'groupUserMembershipsAttr', array(
-      'type' => 'varchar',
-      'length' => '255',
-      'not null' => FALSE,
-    ));
-    $msg = t('"groupUserMembershipsAttr" field added to ldap_servers table');
-  }	
-	
-  if (!db_field_exists('ldap_servers', 'groupDeriveFromDn')) {
-    db_add_field('ldap_servers', 'groupDeriveFromDn', array(
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => FALSE,
-      'default' => 0,
-    ));
-    $msg = t('"groupDeriveFromDn" field added to ldap_servers table');
-  }	
-	
-	  if (!db_field_exists('ldap_servers', 'groupDeriveFromDnAttr')) {
-    db_add_field('ldap_servers', 'groupDeriveFromDnAttr', array(
-      'type' => 'varchar',
-      'length' => '255',
-      'not null' => FALSE,
-    ));
-    $msg = t('"groupDeriveFromDnAttr" field added to ldap_servers table');
-  }		
-
+	foreach (array('groupFunctionalityUnused', 'groupNested','groupSearchAll', 'groupUserMembershipsAttrExists', 'groupDeriveFromDn','groupUserMembershipsAttrExists') as $tinyint_field_name) {
+		if (!db_field_exists('ldap_servers', $tinyint_field_name)) {
+			db_add_field('ldap_servers', $tinyint_field_name, array(
+				'type' => 'int',
+				'size' => 'tiny',
+				'not null' => FALSE,
+				'default' => 0,
+			));
+			$msg = t('"!name" field added to ldap_servers table', array('!name' => $tinyint_field_name));
+		}
+	}
+	foreach (array( 'groupUserMembershipsAttr', 'groupMembershipsAttr','groupTestGroupDn','groupUserMembershipsAttr','groupMembershipsAttrMatchingUserAttr') as $varchar255field_name) {
+		if (!db_field_exists('ldap_servers', $varchar255field_name)) {
+			db_add_field('ldap_servers', $varchar255field_name, array(
+				'type' => 'varchar',
+				'length' => '255',
+				'not null' => FALSE,
+			));
+			$msg = t('"!name" field added to ldap_servers table', array('!name' => $varchar255field_name));
+		}		
+	}
 }
 
 
@@ -493,3 +419,28 @@ function ldap_servers_update_7109() {
 
 }
 			
+/**
+ * adjust group related fields to ldap_servers table
+ */
+function ldap_servers_update_7110() {
+  
+  if (!db_field_exists('ldap_servers', 'groupFunctionalityUnused')) {
+    db_add_field('ldap_servers', 'groupFunctionalityUnused', array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => FALSE,
+      'default' => 0,
+    ));
+    $msg = t('"groupFunctionalityUnused" field added to ldap_servers table');
+  }
+ 
+  if (!db_field_exists('ldap_servers', 'groupTestGroupDn')) {
+    db_add_field('ldap_servers', 'groupTestGroupDn', array(
+      'type' => 'varchar',
+      'length' => '255',
+      'not null' => FALSE,
+    ));
+    $msg = t('"groupTestGroupDn" field added to ldap_servers table');
+  }
+
+}

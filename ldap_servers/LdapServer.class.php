@@ -47,31 +47,37 @@ class LdapServer {
   public $editPath;
   public $queriableWithoutUserCredentials = FALSE; // can this server be queried without user credentials provided?
   public $userAttributeNeededCache = array(); // array of attributes needed keyed on $op such as 'user_update'
+
+  public $groupFunctionalityUnused = FALSE;
+  public $groupObjectClass;
+  public $groupNested = 0; // 1 | 0
+  public $groupDeriveFromDn = FALSE;
+  public $groupDeriveFromDnAttr = NULL;
+  public $groupUserMembershipsAttrExists = FALSE;
+  public $groupUserMembershipsAttr = NULL;
+  public $groupMembershipsAttr = NULL;
+  public $groupMembershipsAttrMatchingUserAttr = NULL;
+  public $groupGroupEntryMembershipsConfigured = FALSE;
+  public $groupTestGroupDn = NULL;
+  
   public $paginationEnabled = FALSE; // (boolean)(function_exists('ldap_control_paged_result_response') && function_exists('ldap_control_paged_result'));
   public $searchPagination = FALSE;
   public $searchPageSize = 1000;
   public $searchPageStart = 0;
   public $searchPageEnd = NULL;
-
-  public $groupObjectClass;
-  public $groupNested = 0; // 1 | 0
   
-  public $groupDeriveFromDn = FALSE;
-  public $groupDeriveFromDnAttr = NULL;
-  
-  public $groupUserMembershipsAttrExists = FALSE;
-  public $groupUserMembershipsAttr = NULL;
-  
-  public $groupMembershipsAttr = NULL;
-  public $groupMembershipsAttrMatchingUserAttr = NULL;
-  public $groupGroupEntryMembershipsConfigured = FALSE;
   public $inDatabase = FALSE;
   public $connection;
   
   /**
    * @param scalar $puid is permanent unique id value and
    */
-
+  private $group_properties = array(
+    'groupObjectClass', 'groupNested', 'groupDeriveFromDn','groupDeriveFromDnAttr','groupUserMembershipsAttrExists',
+    'groupUserMembershipsAttr','groupMembershipsAttrMatchingUserAttr','groupMembershipsAttrMatchingUserAttr',
+    'groupMembershipsAttrMatchingUserAttr','groupMembershipsAttrMatchingUserAttr','groupTestGroupDn'
+  );
+  
   public function drupalUserFromPuid($puid) {
     
    // list($account, $user_entity) = ldap_user_load_user_acct_and_entity('jkeats');
@@ -125,10 +131,9 @@ class LdapServer {
     'unique_persistent_attr_binary' => 'unique_persistent_attr_binary',
     'ldap_to_drupal_user'  => 'ldapToDrupalUserPhp',
     'testing_drupal_username'  => 'testingDrupalUsername',
+    
+    'groupFunctionalityUnused' => 'groupFunctionalityUnused',
     'group_object_category' => 'groupObjectClass',
-    'search_pagination' => 'searchPagination',
-    'search_page_size' => 'searchPageSize',
-
     'groupNested' => 'groupNested',
     'groupUserMembershipsAttrExists' => 'groupUserMembershipsAttrExists',
     'groupUserMembershipsAttr'=> 'groupUserMembershipsAttr',
@@ -136,7 +141,11 @@ class LdapServer {
     'groupMembershipsAttrMatchingUserAttr' => 'groupMembershipsAttrMatchingUserAttr',
     'groupDeriveFromDn' => 'groupDeriveFromDn',
     'groupDeriveFromDnAttr' => 'groupDeriveFromDnAttr',
+    'groupTestGroupDn' =>  'groupTestGroupDn',
 
+    'search_pagination' => 'searchPagination',
+    'search_page_size' => 'searchPageSize',
+    
     );
 
   }
@@ -182,10 +191,16 @@ class LdapServer {
     else {
       // @todo throw error
     }
-
+    
+    $groups_unused = (isset($server_record->groupFunctionalityUnused) && $server_record->groupFunctionalityUnused);
     foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
       if (isset($server_record->$db_field_name)) {
-        $this->{$property_name} = $server_record->$db_field_name;
+        if ($groups_unused && in_array($db_field_name, $this->group_properties)) {
+          // leave as default
+        }
+        else {
+          $this->{$property_name} = $server_record->$db_field_name;
+        }
       }
     }
     if (is_scalar($this->basedn)) {
@@ -195,7 +210,8 @@ class LdapServer {
       $this->bindpw = $server_record->bindpw;
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
-	$this->paginationEnabled = (boolean)(ldap_servers_php_supports_pagination() && $this->searchPagination);
+    
+    $this->paginationEnabled = (boolean)(ldap_servers_php_supports_pagination() && $this->searchPagination);
 
     $this->queriableWithoutUserCredentials = (boolean)(
       $this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||

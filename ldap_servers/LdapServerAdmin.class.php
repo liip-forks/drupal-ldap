@@ -73,8 +73,10 @@ class LdapServerAdmin extends LdapServer {
     $this->unique_persistent_attr_binary = trim($values['unique_persistent_attr_binary']);
     $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
     $this->testingDrupalUsername = trim($values['testing_drupal_username']);
+    
+    
+    $this->groupFunctionalityUnused = trim($values['groupFunctionalityUnused']);
     $this->groupObjectClass = trim($values['group_object_category']);
-
     $this->groupNested = trim($values['groupNested']);
     
     $this->groupUserMembershipsAttrExists = trim($values['groupUserMembershipsAttrExists']);
@@ -85,6 +87,8 @@ class LdapServerAdmin extends LdapServer {
     
     $this->groupDeriveFromDn = trim($values['groupDeriveFromDn']);
     $this->groupDeriveFromDnAttr = trim($values['groupDeriveFromDnAttr']);
+    $this->groupTestGroupDn = trim($values['groupTestGroupDn']);
+    
     
     $this->searchPagination = ($values['search_pagination']) ? 1 : 0;
     $this->searchPageSize = trim($values['search_page_size']);
@@ -191,7 +195,7 @@ class LdapServerAdmin extends LdapServer {
 LDAP Authorization, etc.</p>
 <p>More than one LDAP server configuration can exist for a physical LDAP server.
 Multiple configurations for the same physical ldap server are useful in cases such as: (1) different
-base dns for authentication and authorization and (2) non anonymous bind users with different privileges
+base dns for authentication and authorization and (2) service accounts with different privileges
 for different purposes.</p>
 EOF;
 
@@ -207,19 +211,6 @@ EOF;
   $form['bind_method'] = array(
     '#type' => 'fieldset',
     '#title' => t('Binding Method'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-
-  $form['binding_service_acct'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Service Account Binding Credentials'),
-    '#description' => t('<p>Required when "Service Account Bind" selected above. </p>
-      <p>Some LDAP configurations (specially common in <strong>Active Directory</strong>
-      setups) restrict anonymous searches.</p><p>If your LDAP setup does not allow anonymous searches,
-      or these are restricted in such a way that login names for users cannot be retrieved as a result
-      of them, you have to specify a service account DN//password pair that will be used for these searches.</p>
-      <p>For security reasons, this pair should belong to an LDAP account with stripped down permissions.</p>'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
@@ -681,12 +672,29 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
+    'binding_service_acct' => array(
+      'form' => array(
+        'fieldset' => 'bind_method',
+        '#type' => 'markup',
+        '#markup' => t('<label>Service Account</label> Some LDAP configurations 
+          prohibit or restrict results of anonymous searches. These LDAPs require a DN//password pair
+          for binding. For security reasons, this pair should belong to an
+          LDAP account with stripped down permissions.'),
+        ),
+      ),
+
+
       'binddn' => array(
         'form' => array(
-          'fieldset' => 'binding_service_acct',
+          'fieldset' => 'bind_method',
           '#type' => 'textfield',
           '#title' => t('DN for non-anonymous search'),
           '#size' => 80,
+          '#states' => array(
+             'enabled' => array(   // action to take.
+               ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
+             ),
+           ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -696,10 +704,15 @@ public function drupalFormSubmit($op, $values) {
 
       'bindpw' => array(
         'form' => array(
-          'fieldset' => 'binding_service_acct',
+          'fieldset' => 'bind_method',
           '#type' => 'password',
           '#title' => t('Password for non-anonymous search'),
           '#size' => 20,
+          '#states' => array(
+             'enabled' => array(   // action to take.
+               ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
+             ),
+           ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -709,7 +722,7 @@ public function drupalFormSubmit($op, $values) {
 
       'clear_bindpw' => array(
         'form' => array(
-          'fieldset' => 'binding_service_acct',
+          'fieldset' => 'bind_method',
           '#type' => 'checkbox',
           '#title' => t('Clear existing password from database.  Check this when switching away from service account binding.'),
           '#default_value' => 0,
@@ -723,11 +736,11 @@ public function drupalFormSubmit($op, $values) {
           '#cols' => 50,
           '#rows' => 6,
           '#title' => t('Base DNs for LDAP users, groups, and other entries this server configuration.'),
-          '#description' => t('What DNs have entries relavant to this configuration?
+          '#description' => '<div>' . t('What DNs have entries relavant to this configuration?
             e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>
             Keep in mind that every additional basedn likely doubles the number of queries.  Place the
             more heavily used one first and consider using one higher base DN rather than 2 or more lower base DNs.
-            Enter one per line in case if you need more than one.'),
+            Enter one per line in case if you need more than one.') . '</div>',
         ),
         'schema' => array(
           'type' => 'text',
@@ -893,6 +906,21 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
+      'groupFunctionalityUnused' => array(
+        'form' => array(
+          'fieldset' => 'groups',
+          '#type' => 'checkbox',
+          '#title' => t('Groups are not relevant to this Drupal site.  This is generally true if LDAP Groups, LDAP Authorization, etc are not it use.'),
+          '#disabled' => FALSE,
+        ),
+        'schema' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      
      'group_object_category' =>  array(
         'form' => array(
           'fieldset' => 'groups',
@@ -900,6 +928,11 @@ public function drupalFormSubmit($op, $values) {
           '#size' => 30,
           '#title' => t('Name of Group Object Class'),
           '#description' => t('e.g. groupOfNames, groupOfUniqueNames, group.'),
+          '#states' => array(
+             'visible' => array(   // action to take.
+               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+             ),
+           ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -917,6 +950,11 @@ public function drupalFormSubmit($op, $values) {
           '#description' => t('If a user is a member of group A and group A is a member of group B,
              user should be considered to be in group A and B.  If your LDAP has nested groups, but you
              want to ignore nesting, leave this unchecked.'),
+          '#states' => array(
+             'visible' => array(   // action to take.
+               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+             ),
+           ),
         ),
         'schema' => array(
           'type' => 'int',
@@ -933,6 +971,11 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('A user LDAP attribute such as <code>memberOf</code> exists that contains a list of their groups.
             Active Directory and openLdap with memberOf overlay fit this model.'),
           '#disabled' => FALSE,
+          '#states' => array(
+             'visible' => array(   // action to take.
+               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+             ),
+           ),
         ),
         'schema' => array(
           'type' => 'int',
@@ -950,10 +993,13 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('Attribute in User Entry Containing Groups'),
           '#description' => t('e.g. memberOf'),
           '#states' => array(
+            'enabled' => array(   // action to take.
+              ':input[name=groupUserMembershipsAttrExists]' => array('checked' => TRUE),
+            ),
              'visible' => array(   // action to take.
-               ':input[name=groupUserMembershipsAttrExists]' => array('checked' => TRUE),
-             ),
-           ),
+              ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+            ),
+          ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -969,6 +1015,11 @@ public function drupalFormSubmit($op, $values) {
           '#size' => 30,
           '#title' => t('LDAP Group Entry Attribute Holding User\'s DN, CN, etc.'),
           '#description' => t('e.g uniquemember, memberUid'),
+          '#states' => array(
+             'visible' => array(   // action to take.
+               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+             ),
+           ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -984,6 +1035,11 @@ public function drupalFormSubmit($op, $values) {
           '#size' => 30,
           '#title' => t('User attribute held in "LDAP Group Entry Attribute Holding..."'),
           '#description' => t('This is almost always "dn" (which technically isn\'t an attribute).  Sometimes its "cn".'),
+          '#states' => array(
+             'visible' => array(   // action to take.
+               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+             ),
+           ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -998,6 +1054,11 @@ public function drupalFormSubmit($op, $values) {
           '#type' => 'checkbox',
           '#title' => t('Groups are derived from user\'s LDAP entry DN.'),
           '#disabled' => FALSE,
+          '#states' => array(
+             'visible' => array(   // action to take.
+               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+             ),
+           ),
         ),
         'schema' => array(
           'type' => 'int',
@@ -1006,7 +1067,7 @@ public function drupalFormSubmit($op, $values) {
           'default' => 0,
         ),
       ),
-      
+    
       'groupDeriveFromDnAttr' =>  array(
         'form' => array(
           'fieldset' => 'groups',
@@ -1015,8 +1076,31 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('Attribute of the User\'s LDAP Entry DN which contains the group'),
           '#description' => t('e.g. ou'),
           '#states' => array(
+            'enabled' => array(   // action to take.
+              ':input[name=groupDeriveFromDn]' => array('checked' => TRUE),
+            ),
              'visible' => array(   // action to take.
-               ':input[name=groupDeriveFromDn]' => array('checked' => TRUE),
+              ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+            ),
+          ),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+      ),
+
+     'groupTestGroupDn' =>  array(
+        'form' => array(
+          'fieldset' => 'groups',
+          '#type' => 'textfield',
+          '#size' => 80,
+          '#title' => t('Testing LDAP Group DN'),
+          '#description' => t('This is optional and can be useful for debugging and validating forms.'),
+          '#states' => array(
+             'visible' => array(   // action to take.
+               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
              ),
            ),
         ),
@@ -1026,7 +1110,7 @@ public function drupalFormSubmit($op, $values) {
           'not null' => FALSE,
         ),
       ),
-      
+     
       'search_pagination' => array(
         'form' => array(
           'fieldset' => 'pagination',
