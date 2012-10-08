@@ -16,6 +16,5 @@ files[] = ldap_servers.module
 files[] = ldap_servers.settings.inc
 files[] = ldap_servers.test_form.inc
 files[] = ldap_servers.theme.inc
-files[] = tests/ldap_servers.test
 files[] = tests/ldap_servers_v3.test
 configure = admin/config/people/ldap/servers

@@ -50,9 +50,11 @@ class LdapServerTestv2 extends LdapServer {
   }
 
   public function refreshFakeData() {
+   // debug("refreshFakeData sid=". $this->sid);
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
     $this->methodResponses = (is_array($test_data) && isset($test_data['methodResponses'])) ? $test_data['methodResponses'] : array();
-    $this->entries = (is_array($test_data) && isset($test_data['entries'])) ? $test_data['entries'] : array();
+    $this->entries = (is_array($test_data) && isset($test_data['ldap'])) ? $test_data['ldap'] : array();
+  //  debug('this->entries');debug($this->entries);
     $this->searchResults = (isset($test_data['search_results'])) ? $test_data['search_results'] : array();
     $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
     foreach ($test_data['properties'] as $property_name => $property_value ) {
@@ -233,7 +235,7 @@ class LdapServerTestv2 extends LdapServer {
   function dnExists($find_dn, $return = 'boolean', $attributes = array('objectclass')) {
     $this->refreshFakeData();
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
-   // debug("testserver:dnExists test variable entry keys: "); debug(join(', ', array_keys($test_data['entries'])));
+    debug("testserver:dnExists test variable entry keys: find_dn=$find_dn"); debug(join(', ', array_keys($test_data['entries'])));
    // debug("testserver:dnExists,find_dn=$find_dn"); debug(array_keys($this->entries));
     foreach ($this->entries as $entry_dn => $entry) {
       $match = (strcasecmp($entry_dn, $find_dn) == 0);

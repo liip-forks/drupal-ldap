@@ -34,7 +34,7 @@ class LdapServersTestCase extends LdapTestCasev3 {
   
   function setUp() {
     variable_set('ldap_simpletest', 2);
-    variable_set('ldap_help_watchdog_detail', 1);
+   // variable_set('ldap_help_watchdog_detail', 1);
     parent::setUp(array('ldap_servers','ldap_test'));
     //$this->ldap_user_create_user_test_entity_fields();
   }
@@ -46,11 +46,12 @@ class LdapServersTestCase extends LdapTestCasev3 {
   }
 
   public function testApiFunctions() {
+    $group = 'ldap_servers: functions';
     $sid = 'openldap1';
     $this->prepTestData('hogwarts', array($sid));
     $test_data = variable_get('ldap_test_server__' . $sid, array());
    // debug('test_data'); debug(array_keys($test_data));
-    foreach (array('csv','ldap','properties') as $key) {
+    foreach (array('properties') as $key) { // 'csv','ldap',
       debug($key); debug($test_data[$key]);
     }
     
@@ -67,20 +68,33 @@ class LdapServersTestCase extends LdapTestCasev3 {
    // $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
     debug('ldap_server'); debug($ldap_server); 
     
+    // check against csv data rather than ldap array to make sure csv to ldap conversion is correct
     $user_csv_entry = $test_data['csv']['users']['101'];
-    debug($user_ldap_entry);
+    $user_dn = $user_csv_entry['dn'];
+    $user_cn = $user_csv_entry['cn'];
+    $user_ldap_entry = $test_data['ldap'][$user_dn];
     
+    $username = $ldap_server->userUsernameFromLdapEntry($user_ldap_entry);
+    $this->assertTrue($username == $user_csv_entry['cn'], 'LdapServer::userUsernameFromLdapEntry works when LdapServer::user_attr attribute used', $group);
+ 
+    $bogus_ldap_entry = array();
+    $username = $ldap_server->userUsernameFromLdapEntry($bogus_ldap_entry);
+    $this->assertTrue($username === FALSE, 'LdapServer::userUsernameFromLdapEntry fails correctly', $group);
     
-    $username = $ldap_server->userUsernameFromDn($user_ldap_entry['dn']);
-    debug("userUsernameFromDn = $username");
-    debug('ldap entry'); debug($test_data['ldap'][$user_ldap_entry['dn']]);
-$username = $ldap_server->userUsernameFromLdapEntry($test_data['ldap'][$user_ldap_entry['dn']]);
-     debug("userUsernameFromLdapEntry = $username");
-   // $groups_not_nested = $ldap_server->groupMembershipsFromUser($user_ldap_entry, 'group_dns', FALSE);
-   // $groups_nested = $ldap_server->groupMembershipsFromUser($user_ldap_entry, 'group_dns', TRUE);
-    
+    $username = $ldap_server->userUsernameFromDn($user_dn);
+    $this->assertTrue($username == $user_cn, 'LdapServer::userUsernameFromDn works when LdapServer::user_attr attribute used', $group);
 
-   // 
+    $username = $ldap_server->userUsernameFromDn('bogus dn');
+    $this->assertTrue($username === FALSE, 'LdapServer::userUsernameFromDn fails correctly', $group);
+   
+   debug('need to actually provision user for following tests to work');
+   // this should be tested with all forms of user (username, userdn, user object, user ldapentry)
+   $groups_not_nested = @$ldap_server->groupMembershipsFromUser($user_cn, 'group_dns', FALSE);
+   debug($groups_not_nested);
+   
+    $groups_nested = @$ldap_server->groupMembershipsFromUser($user_ldap_entry, 'group_dns', TRUE);
+    debug($groups_not_nested);
+
 
     $this->assertTrue(TRUE, 'test assertion', 'group');
     

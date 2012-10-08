@@ -11,7 +11,7 @@ function ldap_servers_dev() {
   require_once('LdapTestFunctionsv3.class.php');
   require_once('LdapTestCasev3.class.php');
   
-  
+  variable_set('ldap_simpletest', 2);
   $ldapTestFunctions = new LdapTestFunctionsv3();
   dpm($ldapTestFunctions);
   
@@ -19,10 +19,13 @@ function ldap_servers_dev() {
   
   $fakeServers = variable_get('ldap_test_servers', array());
   foreach ($fakeServers as $sid) {
+    dpm("fake server sid=$sid");
      dpm(variable_get('ldap_test_server__' . $sid, array()));
   }
-
-
+  
+  $ldap_server = ldap_servers_get_servers('openldap1', NULL, TRUE, TRUE);
+  dpm($ldap_server);
+  
   return "hello";
   
 }

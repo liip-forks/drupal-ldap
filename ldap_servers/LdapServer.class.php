@@ -821,16 +821,16 @@ class LdapServer {
    * @return string user's username value
    */
   public function userUsernameFromLdapEntry($ldap_entry) {
+    
+    $accountname = FALSE;
+    if ($this->account_name_attr) {
+      $accountname = (empty($ldap_entry[$this->user_attr][0])) ? FALSE : $ldap_entry[$this->account_name_attr][0];
+    }
+    elseif ($this->user_attr)  {
+      $accountname = (empty($ldap_entry[$this->user_attr][0])) ? FALSE : $ldap_entry[$this->user_attr][0];
+    }
 
-    if ($this->account_name_attr != '') {
-      $accountname = @$ldap_entry[$this->account_name_attr][0];
-    }
-    elseif ($this->user_attr != '')  {
-      $accountname = @$ldap_entry[$this->user_attr][0];
-    }
-    else {
-      return FALSE;
-    }
+    return $accountname;
   }
 
  /**
@@ -840,7 +840,8 @@ class LdapServer {
    */
   public function userUsernameFromDn($dn) {
     
-    if (!$ldap_entry = dnExists($dn, 'ldap_entry', array())) {
+    $ldap_entry = @$this->dnExists($dn, 'ldap_entry', array());
+    if (!$ldap_entry || !is_array($ldap_entry)) {
       return FALSE;
     }
     else {
@@ -907,11 +908,11 @@ class LdapServer {
       $user_ldap_entry = $user;
     }
     elseif (is_scalar($user)) {
-      if (strpos($user, '=') === TRUE) {
-        $user_ldap_entry = $this->dnExists($user, 'ldap_entry');
-      }
-      else { // username
+      if (strpos($user, '=') === FALSE) { // username
         $user_ldap_entry = $this->userUserNameToExistingLdapEntry($user);
+      }
+      else { 
+        $user_ldap_entry = $this->dnExists($user, 'ldap_entry');
       }
     }
     return $user_ldap_entry;  
@@ -1016,15 +1017,17 @@ class LdapServer {
    *    - drupal user object (stdClass Object)
    *    - ldap entry of user (array)
    *    - ldap dn of user (array)
+   *    - drupal username of user (string)
    *  @param enum $return = 'group_dns'
    *  @param boolean $nested if groups should be recursed or not.
    *
-   *  @return array of groups dns in mixed case 
+   *  @return array of groups dns in mixed case or FALSE on error
    */
 
   public function groupMembershipsFromUser($user, $return = 'group_dns', $nested = NULL) {
     
-    $user_ldap_entry = $this->userUserToExistingLdapEntry($user);
+    $user_ldap_entry = @$this->userUserToExistingLdapEntry($user);
+   // debug('groupMembershipsFromUser: user_ldap_entry'); debug($user_ldap_entry); debug($this->groupFunctionalityUnused);
     if (!$user_ldap_entry || $this->groupFunctionalityUnused) {
       return FALSE;
     }
@@ -1055,6 +1058,7 @@ class LdapServer {
    *    - drupal user object (stdClass Object)
    *    - ldap entry of user (array)
    *    - ldap dn of user (array)
+   *    - drupal user name
    * @param enum $nested = NULL (default to server configuration), TRUE, or FALSE indicating to test for nested groups
    */
   public function groupIsMember($group_dn, $user, $nested = NULL) {
@@ -1274,6 +1278,7 @@ class LdapServer {
    *    - drupal user object (stdClass Object)
    *    - ldap entry of user (array)
    *    - ldap dn of user (array)
+   *    - drupal username of user (string)
    *  @param boolean $nested if groups should be recursed or not.
    *
    *  @return array of group dns
@@ -1317,6 +1322,7 @@ class LdapServer {
    *    - drupal user object (stdClass Object)
    *    - ldap entry of user (array)
    *    - ldap dn of user (array)
+   *    - drupal username of user (string)
    *  @param boolean $nested if groups should be recursed or not.
    *
    *  @return array of group dns MIXED CASE VALUES

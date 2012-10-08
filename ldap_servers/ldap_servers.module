@@ -480,7 +480,7 @@ function ldap_servers_flush_server_cache() {
 function ldap_servers_get_servers($sid = NULL, $type = NULL, $flatten = FALSE, $reset = FALSE) {
   ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers');
   if (variable_get('ldap_simpletest', FALSE)) {
-    return ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset);
+    return _ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset);
   }
   else {
     return _ldap_servers_get_servers($sid, $type, $flatten, $reset);

@@ -130,7 +130,7 @@ function ldap_groups_ldap_entry_post_provision($ldap_entries, $user_provisioning
     // to the roles they have in Drupal. They might have a group in LDAP
     // that they need to be removed from.
 
-    $ldap_groups = $ldap_groups_conf->ldapProvisionServer->groupGetUsersGroupDns($lcase_dn;
+    $ldap_groups = $ldap_groups_conf->ldapProvisionServer->groupMembershipsFromUser($lcase_dn, 'group_dns');
 
     foreach ($roles as $rid => $role) {
 
@@ -193,7 +193,7 @@ function ldap_groups_role_to_group($role) {
  */
 function ldap_groups_get_group_dn_from_role($role, $ldap_groups_conf = NULL) {
   $ldap_groups_conf = _ldap_groups_conf_if_not($ldap_groups_conf);
-  return $ldap_groups_conf->ldapProvisionServer->groupDnFromRole($role);
+  return $ldap_groups_conf->groupDnFromRole($role);
 }
 
 /**
@@ -206,7 +206,7 @@ function ldap_groups_get_group_dn_from_role($role, $ldap_groups_conf = NULL) {
  */
 function ldap_groups_check_membership($role, $ldap_entry, $ldap_groups_conf = NULL, $nested = NULL) {
   $ldap_groups_conf = _ldap_groups_conf_if_not($ldap_groups_conf);
-  $group_dn = $ldap_groups_conf->ldapProvisionServer->groupDnFromRole($role);
+  $group_dn = $ldap_groups_conf->groupDnFromRole($role);
   return ($group_dn) ? $ldap_groups_conf->ldapProvisionServer->groupIsMember($group_dn, $ldap_entry['dn'], $nested) : FALSE;
 }
 
@@ -215,11 +215,12 @@ function ldap_groups_check_membership($role, $ldap_entry, $ldap_groups_conf = NU
  * 
  * @param string $role as drupal role in string form
  * @param LdapGroupsConf $ldap_groups_conf.  ldap groups configuration object
+ * @param array $attributes as ldap attributes of group.  if none, defaults will be used where appropriate
  */
-function ldap_groups_add_group($role, $ldap_groups_conf = NULL) {
+function ldap_groups_add_group($role, $ldap_groups_conf = NULL, $attributes = array()) {
   $ldap_groups_conf = _ldap_groups_conf_if_not($ldap_groups_conf);
-  $group_dn = $ldap_groups_conf->ldapProvisionServer->groupDnFromRole($role);
-  $result = $ldap_groups_conf->ldapProvisionServer->groupAddGroup($group_dn);
+  $group_dn = $ldap_groups_conf->groupDnFromRole($role);
+  $result = $ldap_groups_conf->ldapProvisionServer->groupAddGroup($group_dn, $attributes);
 }
 
 /**
@@ -231,7 +232,7 @@ function ldap_groups_add_group($role, $ldap_groups_conf = NULL) {
  */
 function ldap_groups_remove_group($role, $ldap_groups_conf = NULL, $only_if_group_empty = TRUE) {
   $ldap_groups_conf = _ldap_groups_conf_if_not($ldap_groups_conf);
-  $group_dn = $ldap_groups_conf->ldapProvisionServer->groupGetGroupDnFromRole($role);
+  $group_dn = $ldap_groups_conf->groupDnFromRole($role);
   $result = $ldap_groups_conf->ldapProvisionServer->groupRemoveGroup($group_dn, $only_if_group_empty);
 }
 
@@ -244,7 +245,7 @@ function ldap_groups_remove_group($role, $ldap_groups_conf = NULL, $only_if_grou
  */
 function ldap_groups_add_user($role, $ldap_entry, $ldap_groups_conf = NULL) {
   $ldap_groups_conf = _ldap_groups_conf_if_not($ldap_groups_conf);
-  $group_dn = $ldap_groups_conf->ldapProvisionServer->groupGetGroupDnFromRole($role);
+  $group_dn = $ldap_groups_conf->groupDnFromRole($role);
   $result = $ldap_groups_conf->ldapProvisionServer->groupAddMember($group_dn, $ldap_entry['dn']);
 
 }
@@ -253,8 +254,9 @@ function ldap_groups_add_user($role, $ldap_entry, $ldap_groups_conf = NULL) {
  * A function to remove a LDAP user from a LDAP group.
  */
 function ldap_groups_remove_user($role, $ldap_entry, $ldap_groups_conf, $ldap_groups_conf = NULL) {
+    //@todo whether or not empty groups are allowed needs to be configurable in ldap_servers module
   $ldap_groups_conf = _ldap_groups_conf_if_not($ldap_groups_conf);
-  $group_dn = $ldap_groups_conf->ldapProvisionServer->groupGetGroupDnFromRole($role);
+  $group_dn = $ldap_groups_conf->groupDnFromRole($role);
   $result = $ldap_groups_conf->ldapProvisionServer->groupRemoveMember($group_dn, $ldap_entry['dn']);
 }
 

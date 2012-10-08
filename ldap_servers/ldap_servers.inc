@@ -86,12 +86,13 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
   //two flavors of mock servers exist.  ultimately v2 will be used in all simpletests
   if (variable_get('ldap_simpletest', 0) == 2) {
     ldap_servers_module_load_include('php', 'ldap_test', 'LdapServerTestv2.class');
-    $servers['all'] = LdapServerTestv2::getLdapServerObjects('all', NULL);
+    $servers['all'] = LdapServerTestv2::getLdapServerObjects(NULL, 'all', FALSE);
     foreach ($servers['all'] as $_sid => $ldap_server) {
       if ($ldap_server->status == 1) {
         $servers['enabled'][$_sid] = $ldap_server;
       }
     }
+    // dpm('servers'); dpm($servers);
   }
   else {
      ldap_servers_module_load_include('php', 'ldap_servers', 'tests/LdapServerTest.class');
