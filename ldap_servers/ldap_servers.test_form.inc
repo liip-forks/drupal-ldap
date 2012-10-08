@@ -62,6 +62,15 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
     '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
   );
 
+  $form['groupTestGroupDn'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Testing Group DN'),
+    '#default_value' => $ldap_server->groupTestGroupDn,
+    '#size' => 80,
+    '#maxlength' => 255,
+    '#description' => t('This is optional and used for testing this server\'s group configuration.'),
+  );
+  
   if ($ldap_server->bind_method ==  LDAP_SERVERS_BIND_METHOD_ANON_USER) {
     $form['testing_drupal_userpw'] = array(
       '#type' => 'password',
@@ -83,11 +92,12 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
       array(
         'entry' => $_SESSION['ldap_server_test_data']['LDAP Entry']['attr'],
         'username' => $_SESSION['ldap_server_test_data']['username'],
-      ));
+        'dn' => $_SESSION['ldap_server_test_data']['LDAP Entry']['dn'],
+      ))  . '<h2>Group Test (dn: ' . $_SESSION['ldap_server_test_data']['Group DN'] . ')</h2>' . theme('table', array('header' => array('Test', 'Result'), 'rows' => $_SESSION['ldap_server_test_data']['Group Results']));
     if (function_exists('dpm')) {
       $user_name =  $_SESSION['ldap_server_test_data']['username'];
-      dpm("ldap full result array for: " . $user_name);
-      dpm($_SESSION['ldap_server_test_data']['LDAP Entry']['attr']);
+    //  dpm("ldap full result array for: " . $user_name);
+    //  dpm($_SESSION['ldap_server_test_data']['LDAP Entry']['attr']);
 
       $user = user_load_by_name($user_name);
 
@@ -192,6 +202,67 @@ function ldap_servers_test_form_submit($form, &$form_state) {
       'LDAP Entry' => $ldap_user,
     );
   }
+  
+  $group_results = array();
+  if (!$has_errors && @$values['groupTestGroupDn']) {
+    $group_dn = $values['groupTestGroupDn'];
+    $user = @$values['testing_drupal_username'];
+    
+    foreach (array(0,1) as $nested) {
+      if ($user) {
+        
+        $memberships = $ldap_server->groupMembershipsFromUser($user, 'group_dns', $nested);
+        $result = theme('item_list', array('items' => $memberships, 'type' => 'ul'));
+        $group_results[] = array("ldap_server->groupMembershipsFromUser($user, 'group_dns', $nested)", $result);
+        
+        $result = $ldap_server->groupIsMember($group_dn, $user, $nested);
+        $group_results[] = array("ldap_server->groupIsMember($group_dn, $user, $nested)", $result);
+        
+      //  $ldap_server->groupAddMember($group_dn, $ldap_user_dn);
+      //  $ldap_server->groupRemoveMember($group_dn, $ldap_user_dn);
+        
+        if ($ldap_server->groupUserMembershipsConfigured) {
+          $memberships = $ldap_server->groupUserMembershipsFromUserAttr($user, $nested);
+          $result = theme('item_list', array('items' => $memberships, 'type' => 'ul'));
+        }
+        else {
+          $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
+        }
+        $group_results[] = array("ldap_server->groupUserMembershipsFromUserAttr($user, $nested)", $result);
+        
+        if ($ldap_server->groupGroupEntryMembershipsConfigured) {
+          $memberships = $ldap_server->groupUserMembershipsFromEntry($user, $nested);
+          $result = theme('item_list', array('items' => $memberships, 'type' => 'ul'));
+        }
+        else {
+          $result = "Groups by entry not configured.";
+        }
+        $group_results[] = array("ldap_server->groupUserMembershipsFromEntry($user, $nested)", $result);
+      }
+
+      
+     // $members = $ldap_server->groupAllMembers($group_dn, NULL, $nested);
+     // $group_results[] = array("ldap_server->groupAllMembers($group_dn, NULL, $nested)", $memberships);
+     // dpm($members);
+     //$ldap_server->groupAddGroup($group_dn);
+     // $ldap_server->groupRemoveGroup($group_dn, TRUE);
+     
+      
+    }
+  // dpm('results'); dpm($group_results);
+
+      
+  //  dpm('ldap_user'); dpm($ldap_user);
+    $results = array_merge($results, $more_results);
+    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? ldap_servers_token_tokenize_entry($ldap_user['attr'], 'all') : array();
+    $_SESSION['ldap_server_test_data'] = array(
+      'username' => $values['testing_drupal_username'],
+      'Tokens Available' => $tokens,
+      'LDAP Entry' => $ldap_user,
+      'Group Results' => $group_results,
+      'Group DN' => @$values['groupTestGroupDn'],
+    );
+  }
   $message = theme_item_list(array('items' => $results, 'title' => t('Result Messages'), 'type' => 'ul', 'attributes' => array()));
 
   drupal_set_message(t($message), ($has_errors) ? 'error' : 'status');
@@ -230,9 +301,9 @@ function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw) {
 }
 
 function ldap_servers_test_user_mapping($drupal_username, &$ldap_server, $direction = LDAP_USER_PROV_DIRECTION_ALL, $ldap_context = NULL) {
-  dpm("this needs to be reworked");
+  //dpm("this needs to be reworked");
   $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($drupal_username, $ldap_context);
-
+ // dpm("ldap_user"); dpm($ldap_user);
   $errors = FALSE;
   if (! $ldap_user ) {
     $results[] = t('Failed to find test user %username by searching on  %user_attr = %username.',

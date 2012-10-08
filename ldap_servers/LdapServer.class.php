@@ -896,7 +896,7 @@ class LdapServer {
    *    - ldap dn of user (string)
    *    - drupal username of user (string)
    *    
-   *  @return array $ldap_user_entry
+   *  @return array $ldap_user_entry (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
   */
  
   public function userUserToExistingLdapEntry($user) {
@@ -932,9 +932,10 @@ class LdapServer {
    *   An array with user's LDAP data or NULL if not found.
    */
   function userUserNameToExistingLdapEntry($drupal_user_name, $ldap_context = NULL) {
-   // dpm("userUserNameToExistingLdapEntry, drupal_user_name=$drupal_user_name, op=$op");
+  //  dpm("userUserNameToExistingLdapEntry, drupal_user_name=$drupal_user_name, ldap_context=$ldap_context");
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
     $ldap_username = $this->userUsernameToLdapNameTransform($drupal_user_name, $watchdog_tokens);
+  //  dpm("userUserNameToExistingLdapEntry, ldap_username=$ldap_username");
     if (!$ldap_username) {
       return FALSE;
     }
@@ -950,7 +951,7 @@ class LdapServer {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
       $result = $this->search($basedn, $filter, array_keys($attribute_maps));
-     // debug("ldap_server: userUserNameToExistingLdapEntry, filter=$filter, basedn=$basedn, result="); debug($result); debug('userUserNameToExistingLdapEntry:attributes needed'); debug($attribute_maps); 
+   //  debug("ldap_server: userUserNameToExistingLdapEntry, filter=$filter, basedn=$basedn, result="); debug($result); debug('userUserNameToExistingLdapEntry:attributes needed'); debug($attribute_maps); 
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.
@@ -1015,7 +1016,7 @@ class LdapServer {
   /**
    *  @param mixed
    *    - drupal user object (stdClass Object)
-   *    - ldap entry of user (array)
+   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
    *    - ldap dn of user (array)
    *    - drupal username of user (string)
    *  @param enum $return = 'group_dns'
@@ -1026,21 +1027,22 @@ class LdapServer {
 
   public function groupMembershipsFromUser($user, $return = 'group_dns', $nested = NULL) {
     
+    $group_dns = FALSE;
     $user_ldap_entry = @$this->userUserToExistingLdapEntry($user);
-   // debug('groupMembershipsFromUser: user_ldap_entry'); debug($user_ldap_entry); debug($this->groupFunctionalityUnused);
+    
     if (!$user_ldap_entry || $this->groupFunctionalityUnused) {
       return FALSE;
     }
     $nested = ($nested === TRUE || $nested === FALSE) ? $nested : $this->groupNested;
     
-    
+   // dpm("groupMembershipsFromUser: user_ldap_entry,$nested=$nested"); dpm($user_ldap_entry); dpm($this->groupFunctionalityUnused);
     if ($this->groupUserMembershipsConfigured) {
       $group_dns = $this->groupUserMembershipsFromUserAttr($user_ldap_entry, $nested);
     }
-    elseif ($this->groupUserMembershipsConfigured) {
+    elseif ($this->groupGroupEntryMembershipsConfigured) {
       $group_dns = $this->groupUserMembershipsFromEntry($user_ldap_entry, $nested);
     }
-    
+   // dpm("group_dns"); dpm($group_dns);
     if ($return == 'group_dns') {
       return $group_dns;
     }
@@ -1062,9 +1064,11 @@ class LdapServer {
    * @param enum $nested = NULL (default to server configuration), TRUE, or FALSE indicating to test for nested groups
    */
   public function groupIsMember($group_dn, $user, $nested = NULL) {
+    
     $nested = ($nested === TRUE || $nested === FALSE) ? $nested : $this->groupNested;
     $group_dns = $this->groupMembershipsFromUser($user, 'group_dns', $nested);
-    return (is_array($group_dns) && in_array($group_dn, $group_ids));
+   //  dpm('groupIsMember');dpm('group_dn'); dpm($group_dn); dpm('user'); dpm($user); dpm($group_dns); dpm($group_dn);
+    return (is_array($group_dns) && in_array($group_dn, $group_dns));
   }
   
 
@@ -1276,7 +1280,7 @@ class LdapServer {
   /**
    *  @param mixed
    *    - drupal user object (stdClass Object)
-   *    - ldap entry of user (array)
+   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
    *    - ldap dn of user (array)
    *    - drupal username of user (string)
    *  @param boolean $nested if groups should be recursed or not.
@@ -1291,14 +1295,14 @@ class LdapServer {
     }
     $nested = ($nested === TRUE || $nested === FALSE) ? $nested : $this->groupNested;
     $user_ldap_entry = $this->userUserToExistingLdapEntry($user);
-    if (!isset($user_ldap_entry[$this->groupUserMembershipsAttr])) {
+    if (!isset($user_ldap_entry['attr'][$this->groupUserMembershipsAttr])) {
       return FALSE; // user's membership attribute is not present.  either misconfigured or query failed
     }
     
     $all_group_dns = array();
     $tested_group_ids = array();
     $level = 0;
-    $member_group_dns = $user_ldap_entry[$this->groupUserMembershipsAttr];
+    $member_group_dns = $user_ldap_entry['attr'][$this->groupUserMembershipsAttr];
     if (isset($member_group_dns['count'])) {
       unset($member_group_dns['count']);
     };
@@ -1320,7 +1324,7 @@ class LdapServer {
   /**
    *  @param mixed
    *    - drupal user object (stdClass Object)
-   *    - ldap entry of user (array)
+   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
    *    - ldap dn of user (array)
    *    - drupal username of user (string)
    *  @param boolean $nested if groups should be recursed or not.
@@ -1345,10 +1349,11 @@ class LdapServer {
       $member_value = $user_ldap_entry['dn'];
     }
     else {
-      $member_value = $user_ldap_entry[$this->groupMembershipsAttrMatchingUserAttr][0];
+      $member_value = $user_ldap_entry['attr'][$this->groupMembershipsAttrMatchingUserAttr][0];
     }
 
     $group_query = '(&(objectClass=' . $this->groupObjectClass . ')(' . $this->groupMembershipsAttr ."=$member_value))";
+    
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
       $group_entries = $this->search($base_dn, $group_query, array()); // only need dn, so empty array forces return of no attributes 
       if ($group_entries !== FALSE) {
@@ -1388,23 +1393,27 @@ class LdapServer {
       unset($current_group_entries['count']);
     };
     $ors = array();
+
     foreach ($current_group_entries as $i => $group_entry) {
-      if ($this->groupMembershipsAttr == 'dn') {
+      if ($this->groupMembershipsAttrMatchingUserAttr == 'dn') {
         $member_id = $group_entry['dn'];
       }
       else {// maybe cn, uid, etc is held
         $member_id = ldap_servers_get_first_rdn_value_from_dn($group_entry['dn'], $this->groupMembershipsAttrMatchingUserAttr);
       }
+     // dpm("member_id=$member_id, tested group ids="); dpm($tested_group_ids);
       if ($member_id && !in_array($member_id, $tested_group_ids)) {
         $tested_group_ids[] = $member_id;
         $all_group_dns[] = $group_entry['dn'];
         // add $group_id (dn, cn, uid) to query
-        $ors[] =  $this->groupMembershipsAttr .'=' . ldap_servers_get_first_rdn_value_from_dn($group_entry['dn'], $group_entry['dn']);
+        $ors[] =  $this->groupMembershipsAttr .'=' . $member_id;
       }
     }
+  //  dpm("ors="); dpm($ors);
     if (count($ors)) {
       $or = '(|(' . join(")\n(", $ors) . '))';  // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
       $query_for_parent_groups = '&(objectClass=' . $this->groupObjectClass . ')' . $or . ')';
+     //  dpm("query_for_parent_groups=$query_for_parent_groups"); 
       foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
         $group_entries = $this->search($base_dn, $query_for_parent_groups, array());  // no attributes, just dns needed
         if ($group_entries !== FALSE  && $max_levels > $level) {

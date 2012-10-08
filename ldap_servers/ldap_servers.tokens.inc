@@ -390,6 +390,7 @@ function ldap_servers_token_show_sample_user_tokens($sid) {
     $table = theme('ldap_server_ldap_entry_table', array(
       'entry' => $ldap_user['attr'],
       'username' => $test_username,
+      'dn' => $ldap_user['dn'],
       ));
   }
   else {
