@@ -260,8 +260,8 @@ function ldap_help_get_ldap_servers() {
     return FALSE;
   }
 
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.settings');
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.admin');
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.settings');
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.admin');
 
   $conf_form = ldap_servers_settings();
 
@@ -317,7 +317,7 @@ function ldap_help_get_ldap_servers() {
 
 function ldap_help_get_ldap_authentication() {
 
-  ldap_server_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
+  ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
   $auth_conf = new LdapAuthenticationConfAdmin();
   $conf_form = $auth_conf->drupalForm();
 
@@ -342,7 +342,7 @@ function ldap_help_get_ldap_authentication() {
 }
 
 function ldap_help_get_ldap_user() {
-  ldap_server_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
+  ldap_servers_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
   $conf = new LdapUserConfAdmin();
   $form = $conf->drupalForm();
 
@@ -359,9 +359,9 @@ function ldap_help_get_ldap_user() {
 
 function ldap_help_get_ldap_authorization() {
   $status = array();
-  ldap_server_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.settings');
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.admin');
+  ldap_servers_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.settings');
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.admin');
 
   $servers = ldap_servers_get_servers(NULL, 'enabled');
   $consumers = ldap_authorization_get_consumers();

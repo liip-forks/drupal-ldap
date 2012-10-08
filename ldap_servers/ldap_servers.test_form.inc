@@ -181,7 +181,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   }
 
   if (!$has_errors && @$values['testing_drupal_username']) {
-    ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
+    ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);
   //  dpm('ldap_user'); dpm($ldap_user);
     $results = array_merge($results, $more_results);
@@ -231,7 +231,7 @@ function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw) {
 
 function ldap_servers_test_user_mapping($drupal_username, &$ldap_server, $direction = LDAP_USER_PROV_DIRECTION_ALL, $ldap_context = NULL) {
   dpm("this needs to be reworked");
-  $ldap_user = $ldap_server->user_lookup($drupal_username, $ldap_context);
+  $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($drupal_username, $ldap_context);
 
   $errors = FALSE;
   if (! $ldap_user ) {

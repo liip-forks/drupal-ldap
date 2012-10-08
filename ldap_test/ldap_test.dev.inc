@@ -6,6 +6,29 @@
  *
  */
 
+function ldap_servers_dev() {
+  
+  require_once('LdapTestFunctionsv3.class.php');
+  require_once('LdapTestCasev3.class.php');
+  
+  
+  $ldapTestFunctions = new LdapTestFunctionsv3();
+  dpm($ldapTestFunctions);
+  
+  $ldapTestFunctions->populateFakeLdapServerData('hogwarts', 'openldap1');
+  
+  $fakeServers = variable_get('ldap_test_servers', array());
+  foreach ($fakeServers as $sid) {
+     dpm(variable_get('ldap_test_server__' . $sid, array()));
+  }
+
+
+  return "hello";
+  
+}
+
+
+
 /**
  * function to test provision functions in ldap_user
  * basically a one off of simpletests to make testing and development faster
@@ -13,7 +36,7 @@
  */
 
 function ldap_test_dev_provision() {
-  ldap_server_module_load_include('php', 'ldap_test', 'LdapTestFunctionsv2.class');
+  ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestFunctionsv2.class');
   variable_set('ldap_simpletest', 1);
   variable_set('ldap_help_watchdog_detail', 1);
   //return 'set to return and clear simpletest flag';

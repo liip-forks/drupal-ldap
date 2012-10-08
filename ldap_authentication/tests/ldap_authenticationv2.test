@@ -7,6 +7,7 @@
  *
  */
 module_load_include('php', 'ldap_test', 'LdapTestCasev2.class');
+module_load_include('module', 'ldap_authentication', 'ldap_authentication');
 
 class LdapAuthenticationTestCase extends LdapTestCasev2 {
   public static function getInfo() {

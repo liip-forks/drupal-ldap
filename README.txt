@@ -39,12 +39,12 @@ LDAP Servers
 
   
 -- relationship between ldap user and drupal user (could belong in ldap_user)
----- LdapServer::drupalToLdapNameTransform()
----- LdapServer::user_lookup()
----- LdapServer::deriveUsernameFromLdapEntry()
----- LdapServer::deriveUsernameFromDn()
----- LdapServer::deriveEmailFromLdapEntry()
----- LdapServer::derivePuidFromLdapEntry()
+---- LdapServer::userUsernameToLdapNameTransform()
+---- LdapServer::userUserNameToExistingLdapEntry()
+---- LdapServer::userUsernameFromLdapEntry()
+---- LdapServer::userUsernameFromDn()
+---- LdapServer::userEmailFromLdapEntry()
+---- LdapServer::userPuidFromLdapEntry()
 ---- LdapServer::user_dn_expression
 ---- LdapServer::user_attr
 ---- LdapServer::account_name_attr
@@ -57,8 +57,8 @@ LDAP Servers
 
 
 -- relationship between ldap groups and drupal role (could belong in ldap_groups)
----- LdapServer::groupUserMembershipsAttrExistsAttrGroupIds()
----- LdapServer::groupUserMembershipsAttrExistsAttrGroupIdsResursive()
+---- LdapServer::groupUserMembershipsFromUserAttr()
+---- LdapServer::groupUserMembershipsFromUserAttrResursive()
 ---- LdapServer::deriveFromEntryGroups()
 ---- LdapServer::groupsByEntryIsMember()
 ---- LdapServer::groupObjectClass

@@ -75,7 +75,7 @@ function theme_ldap_query($variables) {
 
   extract($variables);  // $ldap_query, $actions, $type (see above)
 
-  ldap_server_module_load_include('php', 'ldap_query', 'LdapQuery.class');
+  ldap_servers_module_load_include('php', 'ldap_query', 'LdapQuery.class');
   $properties = array();
   foreach (LdapQuery::fields() as $field_id => $field) {
     $value = $ldap_query->{$field['property_name']};

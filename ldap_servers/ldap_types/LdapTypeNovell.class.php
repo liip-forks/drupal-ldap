@@ -7,7 +7,7 @@
  */
 
 
-ldap_server_module_load_include('php', 'ldap_servers', 'ldap_types/LdapTypeAbstract.class');
+ldap_servers_module_load_include('php', 'ldap_servers', 'ldap_types/LdapTypeAbstract.class');
 
 class LdapTypeNovell extends LdapTypeAbstract {
 

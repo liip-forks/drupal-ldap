@@ -41,6 +41,7 @@ class LdapServerTest extends LdapServer {
     else {
       $test_data = variable_get('ldap_test_server__' . $sid, array());
     }
+    debug('test data, ldap_test_server__' . $sid); debug($test_data);
     $this->sid = $sid;
     $this->methodResponses = $test_data['methodResponses'];
     $this->testUsers = $test_data['users'];

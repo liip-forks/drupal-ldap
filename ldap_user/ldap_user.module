@@ -153,11 +153,11 @@ function ldap_user_conf($type = NULL, $reset = FALSE) {
   static $ldap_user_conf_admin;
 
   if ($type == 'admin' && ($reset || !is_object($ldap_user_conf_admin))) {
-    ldap_server_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
+    ldap_servers_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
     $ldap_user_conf_admin = new LdapUserConfAdmin();
   }
   elseif ($type != 'admin' && ($reset || !is_object($ldap_user_conf))) {
-    ldap_server_module_load_include('php', 'ldap_user', 'LdapUserConf.class');
+    ldap_servers_module_load_include('php', 'ldap_user', 'LdapUserConf.class');
     $ldap_user_conf = new LdapUserConf();
   }
 
@@ -380,6 +380,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       }
 
     }
+    dpm($available_user_attrs);
   }
 
    // 3. profile2 fields

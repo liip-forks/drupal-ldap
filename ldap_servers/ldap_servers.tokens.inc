@@ -386,7 +386,7 @@ function ldap_servers_token_show_sample_user_tokens($sid) {
     return FALSE;
   }
 
-  if ($ldap_user = $ldap_server->user_lookup($test_username)) {
+  if ($ldap_user = $ldap_server->userUserNameToExistingLdapEntry($test_username)) {
     $table = theme('ldap_server_ldap_entry_table', array(
       'entry' => $ldap_user['attr'],
       'username' => $test_username,

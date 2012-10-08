@@ -35,7 +35,7 @@ common variables used in ldap_* and their structures
 -----------
 $ldap_user
 -----------
-Associative array representing ldap data of a user. See $ldap_server->user_lookup() for example of returned value.
+Associative array representing ldap data of a user. See $ldap_server->userUserNameToExistingLdapEntry() for example of returned value.
   'sid' => ldap server id
   'mail' => derived from ldap mail (not always populated).
   'dn'   => dn of user
@@ -117,7 +117,7 @@ Functions using "*_attribute_maps" variables:
 - hook_ldap_attributes_needed_alter(): $attribute_maps
 - LdapUserConf->getLdapUserRequiredAttributes(): $attributes_map
 - $ldap_attr_in_token in ldapUserConfAdmin:validate(): $ldap_attribute_maps_in_token
-- LdapServer->user_lookup: $attribute_maps
+- LdapServer->userUserNameToExistingLdapEntry: $attribute_maps
 - LdapServer->search: $attribute_maps
 
  

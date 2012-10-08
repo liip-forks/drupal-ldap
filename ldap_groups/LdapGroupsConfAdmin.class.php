@@ -6,8 +6,8 @@
  *   including admin functions like save and validate
  */
 
-ldap_server_module_load_include('module', 'ldap_groups');
-ldap_server_module_load_include('php', 'ldap_groups', 'LdapGroupsConf.class');
+ldap_servers_module_load_include('module', 'ldap_groups');
+ldap_servers_module_load_include('php', 'ldap_groups', 'LdapGroupsConf.class');
     
 class LdapGroupsConfAdmin extends LdapGroupsConf {
 

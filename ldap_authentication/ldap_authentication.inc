@@ -277,7 +277,7 @@ Will not work on most ldaps.'),
       // with sso enabled this method of binding isn't valid
       foreach ($ldap_server->basedn as $basedn) {
         $search = array('%basedn', '%username');
-        $transformname =  $ldap_server->drupalToLdapNameTransform($authname, $watchdog_tokens);
+        $transformname =  $ldap_server->userUsernameToLdapNameTransform($authname, $watchdog_tokens);
         $replace = array($basedn, $transformname);
         $userdn = str_replace($search, $replace, $ldap_server->user_dn_expression);
         $bind_success = ($ldap_server->bind($userdn, $pass) == LDAP_SUCCESS);
@@ -302,19 +302,19 @@ Will not work on most ldaps.'),
 
     // #3 DOES USER EXIST IN SERVER'S LDAP
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-      $ldap_user = $ldap_server->user_lookup($authname);
+      $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($authname);
     }
     elseif ($sso_login) {
-      $ldap_user = $ldap_server->user_lookup($authname);
+      $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($authname);
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%result'] = var_export($result, TRUE);
         watchdog('ldap_authentication', '%username : attempting single sign-on
           login in bind_method of LDAP_SERVERS_BIND_METHOD_USER. Result of
-          user_lookup: <pre>%result</pre>', $watchdog_tokens, WATCHDOG_DEBUG);
+          userUserNameToExistingLdapEntry: <pre>%result</pre>', $watchdog_tokens, WATCHDOG_DEBUG);
       }
     }
     else {
-      $ldap_user = $ldap_server->user_lookup($authname);
+      $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($authname);
     }
 
     if (!$ldap_user) {
@@ -377,7 +377,7 @@ Will not work on most ldaps.'),
     else {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_SUCCESS;
       if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-        $ldap_user = $ldap_server->user_lookup($authname); // after successful bind, lookup user again to get private attributes
+        $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($authname); // after successful bind, lookup user again to get private attributes
         $watchdog_tokens['%mail'] = $ldap_user['mail'];
       }
       if ($ldap_server->account_name_attr != '') {
@@ -446,9 +446,9 @@ Will not work on most ldaps.'),
   $user_edit = array(); // array of attributes that are changing for existing users
   if (!$account_exists && isset($auth_conf->enabledAuthenticationServers[$ldap_user['sid']])) {
     $ldap_server = $auth_conf->enabledAuthenticationServers[$ldap_user['sid']];
-    $puid = $ldap_server->derivePuidFromLdapEntry($ldap_user['attr']);
+    $puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
     if ($puid) {
-      $account = $ldap_server->drupalUserFromPuid($puid);
+      $account = $ldap_server->userUserEntityFromPuid($puid);
       if ($account) {
         $account_exists = TRUE;
         $user_edit['name'] = $name;
@@ -498,7 +498,7 @@ Will not work on most ldaps.'),
      *       a little tweak to add user->data and mail etc as parameters would make it more useful
      *       for external authentication modules
      */
-    ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
+    ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
 
     // $ldap_user['sid'] = $sid;
     $account = NULL;

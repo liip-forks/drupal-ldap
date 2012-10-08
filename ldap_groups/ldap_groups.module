@@ -46,11 +46,11 @@ function ldap_groups_conf($type = 'default', $reset = FALSE) {
   static $ldapGroupsConfAdmin;
 
   if ($type == 'admin' && (!$ldapGroupsConfAdmin || $reset)) {
-    ldap_server_module_load_include('php', 'ldap_groups', 'LdapGroupsConfAdmin.class');
+    ldap_servers_module_load_include('php', 'ldap_groups', 'LdapGroupsConfAdmin.class');
     $ldapGroupsConfAdmin = new LdapGroupsConfAdmin();
   }
   elseif (!$ldapGroupsConf || $reset) {
-    ldap_server_module_load_include('php', 'ldap_groups', 'LdapGroupsConf.class');
+    ldap_servers_module_load_include('php', 'ldap_groups', 'LdapGroupsConf.class');
     $ldapGroupsConf = new LdapGroupsConf();
   }
   return ($type == 'admin') ? $ldapGroupsConfAdmin : $ldapGroupsConf;

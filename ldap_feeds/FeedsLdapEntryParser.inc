@@ -23,7 +23,7 @@ class FeedsLdapEntryParser extends FeedsParser {
       foreach ($mappings as $j => $map) {
         $source = $map['source'];
         if (isset($ldap_entry['attr'])) {
-          // exception need because of unconvential format of ldap data returned from $ldap_server->user_lookup
+          // exception need because of unconvential format of ldap data returned from $ldap_server->userUserNameToExistingLdapEntry
           $ldap_attributes = $ldap_entry['attr'];
         }
         else {

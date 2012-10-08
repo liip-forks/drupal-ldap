@@ -18,7 +18,7 @@
 
 // require_once(drupal_get_path('module', 'ldap_servers') . '/LdapServer.class.php');
 
-ldap_server_module_load_include('php', 'ldap_servers', 'LdapServer.class');
+ldap_servers_module_load_include('php', 'ldap_servers', 'LdapServer.class');
 
 class LdapServerTestv2 extends LdapServer {
   // LDAP Settings
@@ -252,14 +252,26 @@ class LdapServerTestv2 extends LdapServer {
     return ldap_count_entries($this->connection, $ldap_result);
   }
 
-  public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServerTestv2') {
-
-    $server_ids = variable_get('ldap_test_servers', array());
-    $servers = array();
-    foreach ($server_ids as $sid => $_sid) {
+  public static function getLdapServerObjects($sid = NULL, $type = NULL, $flatten = FALSE) {
+ 
+    $servers = array();   
+    if ($sid) {
       $servers[$sid] = new LdapServerTestv2($sid);
     }
-    return $servers;
+    else {
+      $server_ids = variable_get('ldap_test_servers', array());
+      foreach ($server_ids as $sid => $_sid) {
+        $servers[$sid] = new LdapServerTestv2($sid);
+      }
+    }
+    
+    if ($flatten && $sid) {
+      return $servers[$sid];
+    }
+    else {
+      return $servers;
+    }
+    
 
   }
   

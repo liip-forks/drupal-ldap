@@ -238,7 +238,7 @@ function ldap_servers_menu() {
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
-
+  
   return $items;
 }
 
@@ -276,7 +276,22 @@ function ldap_servers_theme() {
   );
 }
 
-
+  /** get mixed case match from case insensitive search
+   * 
+   * @param string mixed case $key
+   * @param array mixed case $array
+   * @return string matching key in mixed case or FALSE
+   */
+  function ldap_server_find_key($key, $array) {
+    $keys = array_combine(array_change_key_case($array), $array);
+    if (isset($keys[drupal_strtolower($key)])) {
+      return $keys[drupal_strtolower($key)];
+    }
+    else {
+      return FALSE;
+    }
+  }
+  
   /**
    * implements hook_ldap_attributes_needed_alter()
    */
@@ -463,10 +478,9 @@ function ldap_servers_flush_server_cache() {
  *         - single server conf object (if flatten == TRUE)
  */
 function ldap_servers_get_servers($sid = NULL, $type = NULL, $flatten = FALSE, $reset = FALSE) {
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
-
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers');
   if (variable_get('ldap_simpletest', FALSE)) {
-    return _ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset);
+    return ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset);
   }
   else {
     return _ldap_servers_get_servers($sid, $type, $flatten, $reset);
@@ -486,7 +500,7 @@ function ldap_servers_cache_clear() {
 }
 
 function ldap_servers_fields() {
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers');
   return _ldap_servers_fields();
 }
 
@@ -499,7 +513,7 @@ function ldap_servers_fields() {
  */
 
 function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_context = NULL) {
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers');
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers');
   return _ldap_servers_get_user_ldap_data($drupal_user, $sid, $ldap_context);
 }
 
@@ -555,7 +569,7 @@ function ldap_servers_disable_http_check(&$form) {
 }
 
 function ldap_servers_ldap_extension_summary($op = 'data') {
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.status');
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.status');
   return _ldap_servers_ldap_extension_summary($op);
 }
 
@@ -564,17 +578,17 @@ function ldap_servers_ldap_extension_loaded() {
 }
 
 function ldap_servers_encrypt($text, $encryption = NULL) {
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
   return _ldap_servers_encrypt($text, $encryption);
 }
 
 function ldap_servers_encrypt_types($category = 'all') {
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
   return _ldap_servers_encrypt_types($category);
 }
 
 function ldap_servers_decrypt($encrypted, $encryption = NULL) {
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
   return _ldap_servers_decrypt($encrypted, $encryption);
 }
 
@@ -659,6 +673,55 @@ function ldap_servers_get_ldap_type_object($ldap_conf) {
   return $ldap_type_class;
 
 }
+
+/**
+ * given a dn (such as cn=jdoe,ou=people)
+ * and an rdn (such as cn)
+ * determine that rdn value (such as jdoe)
+ *
+ * @param string $dn
+ * @param string $rdn
+ * @return string value of rdn
+ */
+function ldap_servers_get_first_rdn_value_from_dn($dn, $rdn) {
+  $pairs = ldap_explode_dn($dn, 0); // escapes attribute values, need to be unescaped later
+  $count = array_shift($pairs);
+  $rdn = drupal_strtolower($rdn);
+  $rdn_value = FALSE;
+  foreach ($pairs as $p) {
+    $pair = explode('=', $p);
+    if (drupal_strtolower(trim($pair[0])) == $rdn) {
+      $rdn_value = ldap_pear_unescape_dn_value(trim($pair[1]));
+      break;
+    }
+  }
+  return $rdn_value;
+}
+
+/**
+ * given a dn (such as cn=jdoe,ou=people)
+ * and an rdn (such as cn)
+ * determine that rdn value (such as jdoe)
+ *
+ * @param string $dn
+ * @param string $rdn
+ * @return array of all values of rdn
+ */
+function ldap_servers_get_all_rdn_values_from_dn($dn, $rdn) {
+  $pairs = ldap_explode_dn($dn, 0); // escapes attribute values, need to be unescaped later
+  $count = array_shift($pairs);
+  $rdn = drupal_strtolower($rdn);
+  $rdn_values = array();
+  foreach ($pairs as $p) {
+    $pair = explode('=', $p);
+    if (drupal_strtolower(trim($pair[0])) == $rdn) {
+      $rdn_values[] = ldap_pear_unescape_dn_value(trim($pair[1]));
+      break;
+    }
+  }
+  return $rdn_values;
+}
+
 
 /**
  * @return options for ldap type pulldown

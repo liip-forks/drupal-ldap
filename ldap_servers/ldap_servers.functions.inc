@@ -7,7 +7,7 @@
  */
 
 
-function ldap_server_module_load_include($type, $module, $name = NULL) {
+function ldap_servers_module_load_include($type, $module, $name = NULL) {
   $result = module_load_include($type, $module, $name);
   if ($result === FALSE) {
     print "Failed to load file $name.$type in module $module";

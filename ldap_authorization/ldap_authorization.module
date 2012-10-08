@@ -183,7 +183,7 @@ function ldap_authorization_ldap_attributes_needed_alter(&$attribute_maps, $para
  */
 function ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_entry, &$ldap_server, &$consumer_conf, &$authz_ids, $op) {
 
-  ldap_server_module_load_include('inc', 'ldap_authorization', 'ldap_authorization');
+  ldap_servers_module_load_include('inc', 'ldap_authorization', 'ldap_authorization');
   _ldap_authorization_ldap_authorization_maps_alter($user, $user_ldap_entry, $ldap_server, $consumer_conf, $authz_ids,  $op);
 }
 
@@ -263,7 +263,7 @@ function ldap_authorization_get_consumers($consumer_type = NULL, $reset = FALSE,
  *
  */
 function ldap_authorizations_user_authorizations(&$user, $op = 'query', $consumer_type = NULL, $context = NULL) {
-  ldap_server_module_load_include('inc', 'ldap_authorization', 'ldap_authorization');
+  ldap_servers_module_load_include('inc', 'ldap_authorization', 'ldap_authorization');
   if ($consumer_type != NULL) {
     list($new_authorizations, $notifications) = _ldap_authorizations_user_authorizations($user, $op, $consumer_type, $context);
   }
@@ -324,7 +324,7 @@ function ldap_authorization_tokens($consumer) {
 
 
 function ldap_authorization_get_consumer_admin_object($consumer_type, $new = NULL) {
-  ldap_server_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
+  ldap_servers_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
   $consumer_object = ldap_authorization_get_consumer_object($consumer_type);
   $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_object, $new);
   return $consumer_conf_admin;
@@ -333,11 +333,11 @@ function ldap_authorization_get_consumer_admin_object($consumer_type, $new = NUL
 function ldap_authorization_get_consumer_conf($consumer_type, $type = 'default', $new = NULL) {
   $consumer_object = ldap_authorization_get_consumer_object($consumer_type);
   if ($type == 'admin') {
-    ldap_server_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
+    ldap_servers_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
     $consumer_conf = new LdapAuthorizationConsumerConfAdmin($consumer_object, $new);
   }
   else {
-    ldap_server_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConf.class');
+    ldap_servers_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConf.class');
     $consumer_conf = new LdapAuthorizationConsumerConf($consumer_object, $new);    
   }
   return $consumer_conf;

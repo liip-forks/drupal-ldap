@@ -15,5 +15,12 @@ function ldap_test_menu() {
     'file' => 'ldap_test.dev.inc',
   );
 
+  $items['ldap_test/dev/test'] = array(
+    'title' => 'general test function',
+    'page callback' => 'ldap_servers_dev',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'ldap_test.dev.inc',
+  );
+  
   return $items;
 }

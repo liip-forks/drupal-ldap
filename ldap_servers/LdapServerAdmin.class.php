@@ -65,28 +65,28 @@ class LdapServerAdmin extends LdapServer {
     }
     $this->user_dn_expression = trim($values['user_dn_expression']);
     $this->basedn = $this->linesToArray(trim($values['basedn']));
-    $this->user_attr = trim($values['user_attr']);
-    $this->account_name_attr = trim($values['account_name_attr']);
-    $this->mail_attr = trim($values['mail_attr']);
+    $this->user_attr = drupal_strtolower(trim($values['user_attr']));
+    $this->account_name_attr = drupal_strtolower(trim($values['account_name_attr']));
+    $this->mail_attr = drupal_strtolower(trim($values['mail_attr']));
     $this->mail_template = trim($values['mail_template']);
-    $this->unique_persistent_attr = trim($values['unique_persistent_attr']);
+    $this->unique_persistent_attr = drupal_strtolower(trim($values['unique_persistent_attr']));
     $this->unique_persistent_attr_binary = trim($values['unique_persistent_attr_binary']);
     $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
     $this->testingDrupalUsername = trim($values['testing_drupal_username']);
     
     
     $this->groupFunctionalityUnused = trim($values['groupFunctionalityUnused']);
-    $this->groupObjectClass = trim($values['group_object_category']);
+    $this->groupObjectClass = drupal_strtolower(trim($values['group_object_category']));
     $this->groupNested = trim($values['groupNested']);
     
     $this->groupUserMembershipsAttrExists = trim($values['groupUserMembershipsAttrExists']);
-    $this->groupUserMembershipsAttr = trim($values['groupUserMembershipsAttr']);
+    $this->groupUserMembershipsAttr =  drupal_strtolower(trim($values['groupUserMembershipsAttr']));
     
-    $this->groupMembershipsAttr = trim($values['groupMembershipsAttr']);
-    $this->groupMembershipsAttrMatchingUserAttr = trim($values['groupMembershipsAttrMatchingUserAttr']);
+    $this->groupMembershipsAttr = drupal_strtolower(trim($values['groupMembershipsAttr']));
+    $this->groupMembershipsAttrMatchingUserAttr =  drupal_strtolower(trim($values['groupMembershipsAttrMatchingUserAttr']));
     
     $this->groupDeriveFromDn = trim($values['groupDeriveFromDn']);
-    $this->groupDeriveFromDnAttr = trim($values['groupDeriveFromDnAttr']);
+    $this->groupDeriveFromDnAttr = drupal_strtolower(trim($values['groupDeriveFromDnAttr']));
     $this->groupTestGroupDn = trim($values['groupTestGroupDn']);
     
     

@@ -834,20 +834,21 @@ class LdapUserConf {
 
   }
 
-/** populate ldap entry array
-   *
-   * @param array $account drupal account
-   * @param object $ldap_server
-   * @param array $ldap_user ldap entry of user, returned by reference
-   * @param array $params with the following key values:
-   *    'ldap_context' => 
-        'module' => module calling function, e.g. 'ldap_user'
-        'function' => function calling function, e.g. 'provisionLdapEntry'
-        'include_count' => should 'count' array key be included
-        'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY || LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER
-   *
-   * @return ldap entry in ldap extension array format.
-   */
+/**
+  *  populate ldap entry array for provisioning
+  *
+  * @param array $account drupal account
+  * @param object $ldap_server
+  * @param array $ldap_user ldap entry of user, returned by reference
+  * @param array $params with the following key values:
+  *    'ldap_context' => 
+       'module' => module calling function, e.g. 'ldap_user'
+       'function' => function calling function, e.g. 'provisionLdapEntry'
+       'include_count' => should 'count' array key be included
+       'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY || LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER
+  *
+  * @return ldap entry in ldap extension array format.!THIS IS NOT THE ACTUAL LDAP ENTRY
+  */
 
   function drupalUserToLdapEntry($account, $ldap_server, $params, $ldap_user_entry = NULL) {
   //debug('call to drupalUserToLdapEntry, account:'); //debug($account); //debug('ldap_server'); //debug($ldap_server);
@@ -988,8 +989,8 @@ class LdapUserConf {
       
       drupal_alter('ldap_entry', $ldap_user, $params);
       // look for existing drupal account with same puid.  if so update username and attempt to synch in current context
-      $puid = $ldap_server->derivePuidFromLdapEntry($ldap_user['attr']);
-      $account2 = ($puid) ? $ldap_server->drupalUserFromPuid($puid) : FALSE;
+      $puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
+      $account2 = ($puid) ? $ldap_server->userUserEntityFromPuid($puid) : FALSE;
 
       if ($account2) { // synch drupal account, since drupal account exists
 
@@ -1066,14 +1067,14 @@ class LdapUserConf {
     }  
     $mail_synched = $this->isSynched('[property.mail]', $ldap_server, $prov_events, $direction);
     if (!isset($edit['mail']) && $mail_synched) {
-      $derived_mail = $ldap_server->deriveEmailFromLdapEntry($ldap_user['attr']);
+      $derived_mail = $ldap_server->userEmailFromLdapEntry($ldap_user['attr']);
       if ($derived_mail) {
         $edit['mail'] = $derived_mail;
       }
     }
     
     if ($this->isSynched('[property.name]', $ldap_server, $prov_events, $direction) && !isset($edit['name'])) {
-      $name = $ldap_server->deriveUsernameFromLdapEntry($ldap_user['attr']);
+      $name = $ldap_server->userUsernameFromLdapEntry($ldap_user['attr']);
       if ($name) {
         $edit['name'] = $name;
       }
@@ -1097,7 +1098,7 @@ class LdapUserConf {
      * basic $user ldap fields
      */
     if ($this->isSynched('[field.ldap_user_puid]', $ldap_server, $prov_events, $direction)) {
-      $ldap_user_puid = $ldap_server->derivePuidFromLdapEntry($ldap_user['attr']);
+      $ldap_user_puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
       if ($ldap_user_puid) {
         $edit['ldap_user_puid'][LANGUAGE_NONE][0]['value'] = $ldap_user_puid; //
       }

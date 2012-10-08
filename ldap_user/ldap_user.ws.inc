@@ -78,10 +78,10 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
     $drupal_user_name = check_plain($drupal_user_name_or_dn);
   }
   else {
-    $drupal_user_name = ($ldap_server) ? $ldap_server->deriveUsernameFromDn($drupal_user_name_or_dn) : FALSE;
+    $drupal_user_name = ($ldap_server) ? $ldap_server->userUsernameFromDn($drupal_user_name_or_dn) : FALSE;
   }
 
-  ldap_server_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
+  ldap_servers_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
   $ldap_user_conf = new LdapUserConf();
   
   $drupal_user = ($action == 'create' || $drupal_user_name === FALSE) ? FALSE : user_load_by_name($drupal_user_name);

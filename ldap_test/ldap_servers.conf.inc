@@ -92,5 +92,41 @@ $conf['ldapauthen1']['search_results']['member=cn=jkool,ou=guest accounts,dc=ad,
     'count' => 1,
   );
 
+
+$conf['openldap1']['properties']  = array(
+    'sid' => 'openldap1',
+    'name'  => 'Test Open LDAP' ,
+    'inDatabase' => TRUE,
+    'status'  => 1,
+    'ldap_type'  => 'openldap',
+    'address'  => 'ldap.hogwarts.edu',
+    'port'  => 389,
+    'tls'  => FALSE,
+    'bind_method' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
+    'basedn'  => array(
+       'dc=ldap,dc=hogwarts,dc=edu',
+      ),
+    'binddn'  => 'cn=service-account,ou=service-accounts,dc=ldap,dc=hogwarts,dc=edu',
+    'bindpw' => 'goodpwd',
+    'user_dn_expression' => NULL,
+    'user_attr'  => 'cn',
+    'mail_attr'  => 'mail',
+    'mail_template'  => NULL,
+    'ldap_to_drupal_user' => FALSE,
+    'ldapToDrupalUserPhp'  => NULL,
+    'groupObjectClass' => 'groupofnames',
+    'groupUserMembershipsAttrExists' => FALSE,
+    'groupUserMembershipsAttr' => NULL,
+    'groupMembershipsAttr' => 'member',
+    'groupMembershipsAttrMatchingUserAttr' => 'dn',
+    'search_pagination' => 0,
+    'searchPageSize' => NULL,
+  );
+
+$conf['openldap1']['methodResponses']['connect'] = LDAP_SUCCESS;
+
+
+$conf['openldap1']['search_results'] = array();
+
 return $conf;
 }

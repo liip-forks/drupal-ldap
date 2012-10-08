@@ -7,7 +7,7 @@
  *
  */
 
-ldap_server_module_load_include('php', 'ldap_test', 'LdapTestCasev2.class');
+ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestCasev2.class');
 module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
 
 class LdapAuthorizationTestCasev2 extends LdapTestCasev2 {

@@ -23,7 +23,7 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $ldap_context) {
     return FALSE;
   }
   
-  $ldap_user = $ldap_server->user_lookup($drupal_username, $ldap_context);
+  $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($drupal_username, $ldap_context);
   
   //debug("_ldap_servers_get_user_ldap_data,sid=$sid, drupal_username=$drupal_username, ldap_context=$ldap_context,ldap_server="); debug($ldap_server);
  // debug("ldap_user"); debug($ldap_user);
@@ -43,7 +43,7 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $ldap_context) {
  */
 function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
  // dpm('_ldap_servers_get_servers params'); dpm(array($sid, $type, $flatten, $reset));
-  ldap_server_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
+  ldap_servers_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
   static $servers;
   $type = ($type) ? $type : 'all';
   if ($reset) {
@@ -78,15 +78,15 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
  * see ldap_servers_get_servers()
  */
 function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $reset = TRUE) {
+  
   if (!$type) {
     $type = 'all';
   }
   
   //two flavors of mock servers exist.  ultimately v2 will be used in all simpletests
-  // which stores its fake date in ldif format.
   if (variable_get('ldap_simpletest', 0) == 2) {
-    ldap_server_module_load_include('php', 'ldap_test', 'LdapServerTestv2.class');
-    $servers['all'] = LdapServerTestv2::getLdapServerObjects('all', NULL, 'LdapServer', $reset );
+    ldap_servers_module_load_include('php', 'ldap_test', 'LdapServerTestv2.class');
+    $servers['all'] = LdapServerTestv2::getLdapServerObjects('all', NULL);
     foreach ($servers['all'] as $_sid => $ldap_server) {
       if ($ldap_server->status == 1) {
         $servers['enabled'][$_sid] = $ldap_server;
@@ -94,7 +94,7 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
     }
   }
   else {
-     ldap_server_module_load_include('php', 'ldap_servers', 'tests/LdapServerTest.class');
+     ldap_servers_module_load_include('php', 'ldap_servers', 'tests/LdapServerTest.class');
     $servers['all'] = LdapServerTest::getLdapServerObjects('all', NULL, 'LdapServer', $reset );
     foreach ($servers['all'] as $_sid => $ldap_server) {
       if ($ldap_server->status == 1) {

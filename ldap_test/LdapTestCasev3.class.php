@@ -7,9 +7,9 @@
  *
  */
 
-ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestFunctionsv2.class');
+ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestFunctionsv3.class');
 
-class LdapTestCasev2 extends DrupalWebTestCase {
+class LdapTestCasev3 extends DrupalWebTestCase {
 
   public $testFunctions;
   public $module_name;
@@ -28,7 +28,7 @@ class LdapTestCasev2 extends DrupalWebTestCase {
 
   function __construct($test_id = NULL) {
     parent::__construct($test_id);
-    $this->testFunctions = new LdapTestFunctionsv2();
+    $this->testFunctions = new LdapTestFunctionsv3();
   }
 
   function setUp() {
@@ -47,8 +47,25 @@ class LdapTestCasev2 extends DrupalWebTestCase {
     variable_del('ldap_help_watchdog_detail');
     variable_del('ldap_simpletest');
   }
-
+  
+  /**
+   * setup configuration and fake test data for all ldap modules
+   *
+   * @param  string $test_ldap_id name of directory in ldap_test where data is (e.g. hogwarts)
+   *
+   * the following params are ids that indicate what config data in /ldap_test/<module_name>.conf.inc to use
+   * for example if $ldap_user_conf_id = 'ad_authentication', the array /ldap_test/ldap_user.conf.inc with the key
+   *  'ad_authentication' will be used for the user module cofiguration
+   *  
+   * @param array $sids to setup
+   * @param string $ldap_user_conf_id
+   * @param string $ldap_authentication_conf_id = NULL,
+   * @param string $ldap_authorization_conf_id = NULL,
+   * @param string $ldap_feeds_conf_id = NULL,
+   * @param string $ldap_query_conf_id = NULL
+   */
   function prepTestData(
+      $test_ldap_id,
       $sids,
       $ldap_user_conf_id = NULL,
       $ldap_authentication_conf_id = NULL,
@@ -58,6 +75,11 @@ class LdapTestCasev2 extends DrupalWebTestCase {
     ) {
     
     $this->testFunctions->configureLdapServers($sids);
+    
+    foreach ($sids as $sid) {
+      $this->testFunctions->populateFakeLdapServerData($test_ldap_id, $sid);
+    }
+    
     if ($ldap_user_conf_id) {
       $this->testFunctions->configureLdapUser($ldap_user_conf_id);
     }
@@ -72,6 +94,42 @@ class LdapTestCasev2 extends DrupalWebTestCase {
       }
     }
   }
+
+ /**
+   * @param string $test_ldap_data_id base data to populate ldap, e.g. hogwarts
+   * @param string $test_ldap_conf_id ldap configuration, e.g. TestOpenLdap1
+   * @param array $sids server ids to populate with fake data
+   */
+  
+  function prepTestLdapData($test_ldap_data_id, $sids = array('default')) {
+ 
+    foreach ($sids as $sid) {
+      $this->populateFakeLdapServerData($test_ldap_id, $sid);
+    }
+    
+    if ($ldap_conf->moduleLdapUser) {
+      $this->configureLdapUser();
+    }
+    
+    if ($ldap_conf->moduleLdapAuthentication) {
+      $this->configureLdapAuthentication();
+    }
+
+    if ($ldap_conf->moduleLdapGroup) {
+      $this->configureLdapGroup();
+    }
+    
+    if ($ldap_conf->moduleLdapAuthorization) {
+      $this->prepConsumerConf();
+      $consumer_conf_admin = ldap_authorization_get_consumer_admin_object('drupal_role');
+      $consumer_conf_admin->status = 1;
+      $consumer_conf_admin->save();
+    }
+
+  }
+  
+ 
+  
   
   public function testId($description = NULL, $method = NULL) {
     
