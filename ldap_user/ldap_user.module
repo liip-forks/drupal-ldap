@@ -380,7 +380,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       }
 
     }
-    dpm($available_user_attrs);
+   // dpm($available_user_attrs);
   }
 
    // 3. profile2 fields

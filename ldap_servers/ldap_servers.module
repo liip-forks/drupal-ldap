@@ -7,6 +7,8 @@ function ldap_servers_form_user_admin_permissions_alter(&$form, &$form_state) {
 
 }
 
+define('LDAP_SERVER_LDAP_QUERY_CHUNK', 50);
+define('LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT', 10);
 
 define('LDAP_SCOPE_BASE', 1);
 define('LDAP_SCOPE_ONELEVEL', 2);
