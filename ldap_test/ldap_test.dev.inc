@@ -26,6 +26,10 @@ function ldap_servers_dev() {
   $ldap_server = ldap_servers_get_servers('openldap1', NULL, TRUE, TRUE);
   dpm($ldap_server);
   
+  foreach ($fakeServers as $sid) {
+    variable_del('ldap_test_server__' . $sid);
+  }
+  variable_del('ldap_simpletest');
   return "hello";
   
 }

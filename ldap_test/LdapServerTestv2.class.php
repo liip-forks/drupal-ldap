@@ -47,6 +47,7 @@ class LdapServerTestv2 extends LdapServer {
 
     $this->sid = $sid;
     $this->refreshFakeData();
+    $this->initDerivedProperties();
   }
 
   public function refreshFakeData() {
@@ -145,7 +146,7 @@ class LdapServerTestv2 extends LdapServer {
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
     
-  //  debug("ldap test v2 server search base_dn=$base_dn, filter=$filter"); debug($attributes);
+    //debug("ldap test v2 server search base_dn=$base_dn, filter=$filter"); 
     $lcase_attribute = array();
     foreach ($attributes as $i => $attribute_name) {
       $lcase_attribute[] = drupal_strtolower($attribute_name);
@@ -165,6 +166,7 @@ class LdapServerTestv2 extends LdapServer {
 
     // return prepolulated search results in test data array if present
     if (isset($this->searchResults[$filter][$base_dn])) {
+      //debug('search result'); debug($this->searchResults[$filter][$base_dn]);
       return $this->searchResults[$filter][$base_dn];
     }
 
@@ -220,7 +222,7 @@ class LdapServerTestv2 extends LdapServer {
     }
 
     $results['count'] = count($results);
-//    debug("ldap test server search results"); debug($results);
+   // debug("ldap test server search results"); debug($results);
     return $results;
   }
 
@@ -235,7 +237,7 @@ class LdapServerTestv2 extends LdapServer {
   function dnExists($find_dn, $return = 'boolean', $attributes = array('objectclass')) {
     $this->refreshFakeData();
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
-    debug("testserver:dnExists test variable entry keys: find_dn=$find_dn"); debug(join(', ', array_keys($test_data['entries'])));
+//    debug("testserver:dnExists test variable entry keys: find_dn=$find_dn"); debug(join(', ', array_keys($test_data['entries'])));
    // debug("testserver:dnExists,find_dn=$find_dn"); debug(array_keys($this->entries));
     foreach ($this->entries as $entry_dn => $entry) {
       $match = (strcasecmp($entry_dn, $find_dn) == 0);

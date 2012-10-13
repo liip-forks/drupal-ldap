@@ -209,20 +209,9 @@ class LdapTestFunctionsv3  {
         ),
       );
 
-      if ($server_properties['groupUserMembershipsAttrExists']) {
-        // gid,group_cn,member_guid
-        // 1,gryffindor,101
-        foreach ($this->csvTables['memberships'] as $gid => $membership) {
-          if ($membership['member_guid'] == $user['guid']) {
-            $attributes[$server_properties['groupUserMembershipsAttr']][] = $dn;
-          }
-        }
-        $attributes[$server_conf['groupUserMembershipsAttr']]['count'] = count($attributes[$server_properties['groupUserMembershipsAttr']]);
-        
-      }
-      // need to figure out if memberOf type attribute is desired and populate it
-      
       $this->data['ldap_servers'][$sid]['users'][$dn]['attr'] = $attributes;
+      $this->data['ldap_servers_by_guid'][$sid][$user['guid']]['attr'] = $attributes;
+      $this->data['ldap_servers_by_guid'][$sid][$user['guid']]['dn'] = $dn;
       $this->ldapData['ldap_servers'][$sid][$dn] = $attributes;
       $this->ldapData['ldap_servers'][$sid][$dn]['count'] = count($attributes);
        
@@ -277,10 +266,24 @@ class LdapTestFunctionsv3  {
         
       }
       // need to figure out if memberOf type attribute is desired and populate it
-      
+      $this->data['ldap_servers_by_guid'][$sid][$group['guid']]['attr'] = $attributes;
+      $this->data['ldap_servers_by_guid'][$sid][$group['guid']]['dn'] = $dn;
       $this->data['ldap_servers'][$sid]['groups'][$dn]['attr'] = $attributes;
       $this->ldapData['ldap_servers'][$sid][$dn] = $attributes;
        
+    }
+    if ($server_properties['groupUserMembershipsAttrExists']) {
+      $member_attr = $server_properties['groupUserMembershipsAttr'];
+      foreach ($this->csvTables['memberships'] as $gid => $membership) {
+        $group_dn =  $this->data['ldap_servers_by_guid'][$sid][$membership['group_guid']]['dn'];
+        $user_dn =  $this->data['ldap_servers_by_guid'][$sid][$membership['member_guid']]['dn'];
+        $this->ldapData['ldap_servers'][$sid][$user_dn][$member_attr][] = $group_dn;
+        if (isset($this->ldapData['ldap_servers'][$sid][$user_dn][$member_attr]['count'])) {
+          unset($this->ldapData['ldap_servers'][$sid][$user_dn][$member_attr]['count']);
+        }
+        $this->ldapData['ldap_servers'][$sid][$user_dn][$member_attr]['count'] =
+        count( $this->ldapData['ldap_servers'][$sid][$user_dn][$member_attr]);
+      }
     }
     
     //dpm('this->data'); dpm("sid=$sid"); dpm($this->data['ldap_servers'][$sid]);

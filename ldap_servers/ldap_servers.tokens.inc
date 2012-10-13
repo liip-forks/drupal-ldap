@@ -61,7 +61,6 @@ function ldap_servers_parse_user_attr_name($user_attr_key) {
 function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_entry') { // user_account
 
   $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);
- // dpm("ldap_servers_token_replace text=$text, desired tokens=");dpm($desired_tokens);
   switch ($resource_type) {
     case 'ldap_entry':
     $tokens = ldap_servers_token_tokenize_entry($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
@@ -71,7 +70,7 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
     $tokens = ldap_servers_token_tokenize_user_account($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
     break;  
   }
-  //debug('ldap_servers_token_replace:tokens'); debug($tokens);
+  //
   foreach ($tokens as $key => $value) {
     $tokens[drupal_strtolower($key)] = $value;
   }
@@ -170,7 +169,7 @@ should return tokens such as:
 
  */
 function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
- // debug('ldap_servers_token_tokenize_entry,ldap_entry'); debug($ldap_entry);
+  
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
   
@@ -206,6 +205,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
     $parts_last_value[$attr_name] = $attr_value;
     $parts_count[$attr_name]++;
   }
+  
   foreach ($parts_count as $attr_name => $count) {
     $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = $parts_last_value[$attr_name];
   }
@@ -229,30 +229,33 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
       }
       elseif (is_scalar($attr_value)) {
         $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($attr_value);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = check_plain($attr_value);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value); 
       }
     }
   }
   else {
-
     foreach ($token_keys as $token_key) {
       // $token_key = 'dn', 'mail', 'mail:0', 'mail:last', 'dept:1', etc.
+      $value = NULL;
       $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token_key);
       $attr_name = $parts[0];
-      $ordinal_key = isset($parts[1]) ? (int)$parts[1] : 0;
+      $ordinal_key = isset($parts[1]) ? $parts[1] : 0;
+      $i = NULL;
       
       if ($attr_name == 'dn' || !isset($ldap_entry[$attr_name])) { // don't use empty() since a 0, "", etc value may be a desired value
-          continue;
+        continue;
       }
       else {
         $count = $ldap_entry[$attr_name]['count'];
-        if ($ordinal_key == 'last') {
+        if ($ordinal_key === 'last') {
           $i = ($count > 0) ? $count - 1 : 0;
           $value = $ldap_entry[$attr_name][$i];
         }
         elseif (is_numeric($ordinal_key) || $ordinal_key == '0') {
           $value = $ldap_entry[$attr_name][$ordinal_key];
         }
-        else { 
+        else {
           continue;  // don't add token if case not covered
         }
       }

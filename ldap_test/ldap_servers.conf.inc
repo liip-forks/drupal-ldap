@@ -105,7 +105,7 @@ $conf['openldap1']['properties']  = array(
     'bind_method' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
     'basedn'  => array(
        'dc=ldap,dc=hogwarts,dc=edu',
-      ),
+    ),
     'binddn'  => 'cn=service-account,ou=service-accounts,dc=ldap,dc=hogwarts,dc=edu',
     'bindpw' => 'goodpwd',
     'user_dn_expression' => NULL,
@@ -114,6 +114,7 @@ $conf['openldap1']['properties']  = array(
     'mail_template'  => NULL,
     'ldap_to_drupal_user' => FALSE,
     'ldapToDrupalUserPhp'  => NULL,
+    'groupFunctionalityUnused' => FALSE,
     'groupObjectClass' => 'groupofnames',
     'groupUserMembershipsAttrExists' => FALSE,
     'groupUserMembershipsAttr' => NULL,
@@ -127,6 +128,68 @@ $conf['openldap1']['methodResponses']['connect'] = LDAP_SUCCESS;
 
 
 $conf['openldap1']['search_results'] = array();
+
+$conf['openldap1']['search_results']['(&(objectClass=groupofnames)(member=cn=hpotter,ou=people,dc=hogwarts,dc=edu))']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array('count' => 1, 'dn' => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu'),
+  1 => array('count' => 1, 'dn' => 'cn=students,ou=groups,dc=hogwarts,dc=edu'),
+  2 => array('count' => 1, 'dn' => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu'),
+  'count' => 3,
+);
+
+$conf['openldap1']['search_results']['(&(objectClass=groupofnames)(|(member=cn=gryffindor,ou=groups,dc=hogwarts,dc=edu)(member=cn=students,ou=groups,dc=hogwarts,dc=edu)(member=cn=honors students,ou=groups,dc=hogwarts,dc=edu)))']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array('count' => 1, 'dn' => 'cn=users,ou=groups,dc=hogwarts,dc=edu'),
+  'count' => 1,
+);
+
+
+
+$conf['activedirectory1']['properties']  = array(
+    'sid' => 'activedirectory1',
+    'name'  => 'Test Active Directory LDAP' ,
+    'inDatabase' => TRUE,
+    'status'  => 1,
+    'ldap_type'  => 'activedirectory',
+    'address'  => 'ldap.hogwarts.edu',
+    'port'  => 389,
+    'tls'  => FALSE,
+    'bind_method' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
+    'basedn'  => array(
+       'dc=ldap,dc=hogwarts,dc=edu',
+    ),
+    'binddn'  => 'cn=service-account,ou=service-accounts,dc=ldap,dc=hogwarts,dc=edu',
+    'bindpw' => 'goodpwd',
+    'user_dn_expression' => NULL,
+    'user_attr'  => 'cn',
+    'mail_attr'  => 'mail',
+    'mail_template'  => NULL,
+    'ldap_to_drupal_user' => FALSE,
+    'ldapToDrupalUserPhp'  => NULL,
+    'groupFunctionalityUnused' => FALSE,
+    'groupObjectClass' => 'group',
+    'groupUserMembershipsAttrExists' => TRUE,
+    'groupUserMembershipsAttr' => 'memberof',
+    'groupMembershipsAttr' => 'member',
+    'groupMembershipsAttrMatchingUserAttr' => 'dn',
+    'search_pagination' => 0,
+    'searchPageSize' => NULL,
+  );
+
+$conf['activedirectory1']['methodResponses']['connect'] = LDAP_SUCCESS;
+
+
+$conf['activedirectory1']['search_results'] = array();
+
+$conf['activedirectory1']['search_results']['(&(objectClass=group)(member=cn=hpotter,ou=people,dc=hogwarts,dc=edu))']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array('count' => 1, 'dn' => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu'),
+  1 => array('count' => 1, 'dn' => 'cn=students,ou=groups,dc=hogwarts,dc=edu'),
+  2 => array('count' => 1, 'dn' => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu'),
+  'count' => 3,
+);
+
+$conf['activedirectory1']['search_results']['(&(objectClass=group)(|(member=cn=gryffindor,ou=groups,dc=hogwarts,dc=edu)(member=cn=students,ou=groups,dc=hogwarts,dc=edu)(member=cn=honors students,ou=groups,dc=hogwarts,dc=edu)))']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array('count' => 1, 'dn' => 'cn=users,ou=groups,dc=hogwarts,dc=edu'),
+  'count' => 1,
+);
 
 return $conf;
 }

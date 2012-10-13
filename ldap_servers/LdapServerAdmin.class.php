@@ -421,9 +421,9 @@ protected function warnings($op, $has_errors = NULL) {
           for your particular LDAP.', $tokens);
       }
     }
-    if (!$this->status && $has_errors != TRUE) {
-      $warnings['status'] =  t('This server configuration is currently disabled.');
-    }
+  //  if (!$this->status && $has_errors != TRUE) {
+    //  $warnings['status'] =  t('This server configuration is currently disabled.');
+   // }
 
     if (!$this->mail_attr && !$this->mail_template) {
       $warnings['mail_attr'] =  t('Mail attribute or Mail Template should be used for most user account functionality.');

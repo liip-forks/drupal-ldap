@@ -162,17 +162,25 @@ class LdapServer {
       // @todo throw error
     }
     
-    $groups_unused = (isset($server_record->groupFunctionalityUnused) && $server_record->groupFunctionalityUnused);
+   
+    $this->groupFunctionalityUnused = (isset($server_record->groupFunctionalityUnused) && $server_record->groupFunctionalityUnused);
     foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
       if (isset($server_record->$db_field_name)) {
-        if ($groups_unused && in_array($db_field_name, $this->group_properties)) {
-          // leave as default
+        if ($this->groupFunctionalityUnused && in_array($db_field_name, $this->group_properties)) {
+          // leave group properties as default if groups are set as unused
         }
         else {
           $this->{$property_name} = $server_record->$db_field_name;
         }
       }
     }
+    
+    $this->initDerivedProperties();
+//    dpm($this);
+  }
+  
+  protected function initDerivedProperties() {
+
     if (is_scalar($this->basedn)) {
       $this->basedn = unserialize($this->basedn);
     }
@@ -192,7 +200,6 @@ class LdapServer {
     $this->groupGroupEntryMembershipsConfigured = ($this->groupMembershipsAttrMatchingUserAttr && $this->groupMembershipsAttr);
     $this->groupUserMembershipsConfigured = ($this->groupUserMembershipsAttrExists && $this->groupUserMembershipsAttr);
   }
-
   /**
    * Destructor Method
    */
@@ -312,6 +319,9 @@ class LdapServer {
   
 /**
  * does dn exist for this server?
+ * [ ] Finished
+ * [ ] Test Coverage.  Test ID:
+ * [ ] Case insensitive
  *
  * @param string $dn
  * @param enum $return = 'boolean' or 'ldap_entry'
@@ -1188,9 +1198,11 @@ class LdapServer {
    *
    * @return FALSE on error otherwise array of group members (could be users or groups)
    */  
-  public function groupAllMembers($group_dn, $object_classes = NULL, $nested = NULL) {
+  public function groupAllMembers($group_dn, $object_classes = NULL, $nested = 'default') {
     
-    $nested = ($nested === TRUE || $nested === FALSE) ? $nested : $this->groupNested;
+    if ($nested == 'default') {
+      $nested = $this->groupNested;
+    }
     $max_levels = ($nested) ? LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT : 1;
     
     $group_entry = $this->dnExists($group_dn, 'ldap_entry');
@@ -1304,16 +1316,17 @@ class LdapServer {
    *  @return array of groups dns in mixed case or FALSE on error
    */
 
-  public function groupMembershipsFromUser($user, $return = 'group_dns', $nested = NULL) {
+  public function groupMembershipsFromUser($user, $return = 'group_dns', $nested = 'default') {
 
     $group_dns = FALSE;
     $user_ldap_entry = @$this->userUserToExistingLdapEntry($user);
-    
+
     if (!$user_ldap_entry || $this->groupFunctionalityUnused) {
       return FALSE;
     }
-    $nested = ($nested === TRUE || $nested === FALSE) ? $nested : $this->groupNested;
-    
+    if ($nested == 'default') {
+      $nested = $this->groupNested;
+    }
 
     if ($this->groupUserMembershipsConfigured) { // preferred method
       $group_dns = $this->groupUserMembershipsFromUserAttr($user_ldap_entry, $nested);
@@ -1350,15 +1363,23 @@ class LdapServer {
    *  @return array of group dns
    */
 
-  public function groupUserMembershipsFromUserAttr($user, $nested = NULL) {
-    
+  public function groupUserMembershipsFromUserAttr($user, $nested = 'default') {
+   
     if (!$this->groupUserMembershipsConfigured) {
       return FALSE;
     }
-    $nested = ($nested === TRUE || $nested === FALSE) ? $nested : $this->groupNested;
-    $user_ldap_entry = $this->userUserToExistingLdapEntry($user);
-    if (!isset($user_ldap_entry['attr'][$this->groupUserMembershipsAttr])) {
-      return FALSE; // user's membership attribute is not present.  either misconfigured or query failed
+    if ($nested == 'default') {
+      $nested = $this->groupNested;
+    }
+
+    if (!is_array($user['attr']) && !isset($user['attr'][$this->groupUserMembershipsAttr])) {
+      $user_ldap_entry = $this->userUserToExistingLdapEntry($user);
+        if (!isset($user_ldap_entry['attr'][$this->groupUserMembershipsAttr])) {
+          return FALSE; // user's membership attribute is not present.  either misconfigured or query failed
+        }
+    }
+    else {
+      $user_ldap_entry = $user;
     }
     
     $all_group_dns = array();
@@ -1382,19 +1403,17 @@ class LdapServer {
         $ors[] =  $this->groupMembershipsAttr .'=' . $member_value;
       }
     }
-   // dpm("nested = $nested, ors"); dpm($ors);
-    if ($nested && count($ors)) {
-   // dpm("call to groupMembershipsFromEntryResursive from groupUserMembershipsFromUserAttr, entries="); dpm($current_group_entries);
-    //  $this->groupMembershipsFromEntryResursive($current_group_entries, $all_group_dns, $tested_group_ids, $level + 1, LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
 
+    if ($nested && count($ors)) {
       $count = count($ors);
       for ($i=0; $i < $count; $i=$i+LDAP_SERVER_LDAP_QUERY_CHUNK) { // only 50 or so per query
         $current_ors = array_slice($ors, $i, LDAP_SERVER_LDAP_QUERY_CHUNK);
         $or = '(|(' . join(")(", $current_ors) . '))';  // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
         $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass . ')' . $or . ')';
+
         foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
+          // debug("query for parent groups, base_dn=$base_dn, $query_for_parent_groups");
           $group_entries = $this->search($base_dn, $query_for_parent_groups);  // no attributes, just dns needed
-        //  dpm("groupUserMembershipsFromUserAttr:base_dn=$base_dn, group_entries,count=" . count($group_entries)); //dpm($group_entries);
           if ($group_entries !== FALSE  && $level < LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT) {
             $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level + 1, LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
           }
@@ -1426,12 +1445,15 @@ class LdapServer {
    *
    *  @see tests/DeriveFromEntry/ldap_servers.inc for fuller notes and test example
    */
-  public function groupUserMembershipsFromEntry($user, $nested = FALSE) {
-
+  public function groupUserMembershipsFromEntry($user, $nested = 'default') {
+   
     if (!$this->groupGroupEntryMembershipsConfigured) {
       return FALSE;
     }
-    $nested = ($nested === TRUE || $nested === FALSE) ? $nested : $this->groupNested;
+    if ($nested == 'default') {
+      $nested = $this->groupNested;
+    }
+
     $user_ldap_entry = $this->userUserToExistingLdapEntry($user);
     
     $all_group_dns = array(); // MIXED CASE VALUES
@@ -1448,7 +1470,7 @@ class LdapServer {
     $group_query = '(&(objectClass=' . $this->groupObjectClass . ')(' . $this->groupMembershipsAttr ."=$member_value))";
     
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
-      $group_entries = $this->search($base_dn, $group_query, array()); // only need dn, so empty array forces return of no attributes 
+      $group_entries = $this->search($base_dn, $group_query, array()); // only need dn, so empty array forces return of no attributes
       if ($group_entries !== FALSE) {
         $max_levels = ($nested) ? LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT : 0;
         $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level, $max_levels);
@@ -1511,7 +1533,8 @@ class LdapServer {
         $or = '(|(' . join(")(", $current_ors) . '))';  // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
         $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass . ')' . $or . ')';
      
-        // dpm("query_for_parent_groups=$query_for_parent_groups"); 
+
+        // debug('query_for_parent_groups'); debug($query_for_parent_groups);
         foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
           $group_entries = $this->search($base_dn, $query_for_parent_groups);  // no attributes, just dns needed
           if ($group_entries !== FALSE  && $level < $max_levels) {
