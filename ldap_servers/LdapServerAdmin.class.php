@@ -73,7 +73,7 @@ class LdapServerAdmin extends LdapServer {
     $this->unique_persistent_attr_binary = trim($values['unique_persistent_attr_binary']);
     $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
     $this->testingDrupalUsername = trim($values['testing_drupal_username']);
-    
+    $this->testingDrupalUserDn = trim($values['testingDrupalUserDn']);   
     
     $this->groupFunctionalityUnused = trim($values['groupFunctionalityUnused']);
     $this->groupObjectClass = drupal_strtolower(trim($values['group_object_category']));
@@ -88,6 +88,7 @@ class LdapServerAdmin extends LdapServer {
     $this->groupDeriveFromDn = trim($values['groupDeriveFromDn']);
     $this->groupDeriveFromDnAttr = drupal_strtolower(trim($values['groupDeriveFromDnAttr']));
     $this->groupTestGroupDn = trim($values['groupTestGroupDn']);
+    $this->groupTestGroupDnWriteable = trim($values['groupTestGroupDnWriteable']);
     
     
     $this->searchPagination = ($values['search_pagination']) ? 1 : 0;
@@ -906,6 +907,24 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
+     'testingDrupalUserDn' =>  array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'textfield',
+          '#size' => 120,
+          '#title' => t('DN of testing username, e.g. cn=hpotter,ou=people,dc=hogwarts,dc=edu'),
+          '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+      ),
+
+
+
+
       'groupFunctionalityUnused' => array(
         'form' => array(
           'fieldset' => 'groups',
@@ -1095,8 +1114,28 @@ public function drupalFormSubmit($op, $values) {
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
-          '#size' => 80,
+          '#size' => 120,
           '#title' => t('Testing LDAP Group DN'),
+          '#description' => t('This is optional and can be useful for debugging and validating forms.'),
+          '#states' => array(
+             'visible' => array(   // action to take.
+               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+             ),
+           ),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+      ),
+
+     'groupTestGroupDnWriteable' =>  array(
+        'form' => array(
+          'fieldset' => 'groups',
+          '#type' => 'textfield',
+          '#size' => 120,
+          '#title' => t('Testing LDAP Group DN that is writable.  WARNING the test script for the server will create, delete, and add members to this group!'),
           '#description' => t('This is optional and can be useful for debugging and validating forms.'),
           '#states' => array(
              'visible' => array(   // action to take.

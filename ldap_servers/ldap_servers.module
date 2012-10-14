@@ -205,7 +205,7 @@ function ldap_servers_menu() {
   );
 
   $items['admin/config/people/ldap/servers/test/%'] = array(
-    'title' => 'Test LDAP Server Configuraion',
+    'title' => 'Test LDAP Server Configuration',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ldap_servers_test_form', $menu_offset + 1, $menu_offset + 2),
     'access arguments' => array('administer site configuration'),
@@ -496,10 +496,6 @@ function ldap_servers_cache_clear() {
   $discard = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE);
 }
 
-function ldap_servers_fields() {
-  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers');
-  return _ldap_servers_fields();
-}
 
 /**
  * @todo needs caching element.  several modules could potentially call this in the same
