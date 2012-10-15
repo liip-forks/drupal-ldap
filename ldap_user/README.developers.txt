@@ -68,10 +68,10 @@ configurable elsewhere or no implemented:
 ------------
 4.C  Field Level: Does provisioning occur for a given field and ldap server for a given "prov_event" and "ldap _context"?
 
-ldapUserConf::isSynched($field, $ldap_server, $prov_event, $direction)
+ldapUserConf::isSynched($field, $prov_event, $direction)
 
 This depends on: 
-ldapUserConf::synchMapping[$direction][$ldap_server->sid][$field]['prov_events']
+ldapUserConf::synchMapping[$direction][$field]['prov_events']
 which is populated by various ldap and possibly other modules.
 
 "ldap_contexts" (any module can provide its own context which is just a string)

@@ -33,7 +33,7 @@ class LdapServersTestCase extends LdapTestCasev3 {
    */
   
   function setUp() {
-    parent::setUp(array('ldap_servers','ldap_test'));
+    parent::setUp(array('ldap_servers', 'ldap_test'));
     variable_set('ldap_simpletest', 2);
     //$this->ldap_user_create_user_test_entity_fields();
   }
@@ -88,7 +88,7 @@ class LdapServersTestCase extends LdapTestCasev3 {
    //  debug($groups_not_nested);
       
       $desired = array();
-      $desired[0] = array (
+      $desired[0] = array(
         0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
         2 => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
@@ -102,7 +102,7 @@ class LdapServersTestCase extends LdapTestCasev3 {
         $ldap_module_user_entry = array('attr' => $user_ldap_entry, 'dn' => $user_dn);
         $groups_desired = $desired[$nested];
         
-        $suffix = ",desired=$desired_count, nested=". (boolean)$nested;
+        $suffix = ",desired=$desired_count, nested=" . (boolean)$nested;
       //  debug('ldap_module_user_entry'); debug($ldap_module_user_entry);
         
         // test parent function groupMembershipsFromUser
@@ -138,9 +138,9 @@ class LdapServersTestCase extends LdapTestCasev3 {
         $diff1 = array_diff($groups_desired, $groups);
         $diff2 = array_diff($groups, $groups_desired);
         $pass = (count($diff1) == 0 && count($diff2) == 0 && $count == $desired_count);
-        $this->assertTrue($pass, "LdapServer::groupUserMembershipsFromEntry $nested_display works", $group  . $suffix);
+        $this->assertTrue($pass, "LdapServer::groupUserMembershipsFromEntry $nested_display works", $group . $suffix);
         if (!$pass) {
-          debug('groupUserMembershipsFromEntry');debug($groups);  debug($diff1);  debug($diff2);  debug($groups_desired );    
+          debug('groupUserMembershipsFromEntry'); debug($groups);  debug($diff1);  debug($diff2);  debug($groups_desired );    
         }
       }
     }
@@ -156,7 +156,7 @@ class LdapServersTestCase extends LdapTestCasev3 {
     $install_tables = array('ldap_servers');
     // disable, uninstall, and enable/install module
     $modules = array($this->module_name);
-    $ldap_module_uninstall_sequence = array('ldap_authentication','ldap_test','ldap_user','ldap_group','ldap_servers');
+    $ldap_module_uninstall_sequence = array('ldap_authentication', 'ldap_test', 'ldap_user', 'ldap_group', 'ldap_servers');
     module_disable($ldap_module_uninstall_sequence); // disable dependent modules
     drupal_uninstall_modules($ldap_module_uninstall_sequence);
     module_enable($modules, TRUE);
@@ -230,9 +230,9 @@ class LdapServersTestCase extends LdapTestCasev3 {
       'port'       => array(389, 7000),
       'tls'        => array(TRUE, FALSE),
       'bind_method' => array(1, 3),
-      'binddn'  => array('cn=service-account,ou=service-accounts,dc=ldap,dc=hogwarts,dc=edu', ''),
+      'binddn'  => array('cn=service-account,ou=service-accounts, dc=ldap,dc=hogwarts,dc=edu', ''),
       'bindpw'  => array('sdfsdafsdfasdf', 'sdfsdafsdfasdf'),
-      'basedn' => array('dc=ldap,dc=hogwarts,dc=edu','ou=users,dc=ldap,dc=hogwarts,dc=edu'),
+      'basedn' => array('dc=ldap,dc=hogwarts,dc=edu', 'ou=users,dc=ldap,dc=hogwarts,dc=edu'),
       'user_attr' => array('sAMAccountName', 'blah'),
       'account_name_attr' => array('sAMAccountName', 'blah'),
       'mail_attr' => array('mail', ''),
@@ -246,10 +246,10 @@ class LdapServersTestCase extends LdapTestCasev3 {
       'search_page_size' => array(1000, ''),
       
       'groupFunctionalityUnused' => array(NULL, NULL, 0, 0),
-      'group_object_category' => array('group','group'),
+      'group_object_category' => array('group', 'group'),
       'groupNested' => array(NULL, NULL, 0, 0),
       'groupUserMembershipsAttrExists' => array(1, 1, 1, 1),
-      'groupUserMembershipsAttr' =>  array('memberof','memberof'),
+      'groupUserMembershipsAttr' =>  array('memberof', 'memberof'),
       'groupMembershipsAttr' => array('member', 'member'),
       'groupMembershipsAttrMatchingUserAttr' => array('dn', 'dn'),
       

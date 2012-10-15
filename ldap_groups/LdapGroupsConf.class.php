@@ -47,7 +47,7 @@ class LdapGroupsConf {
       $this->inDatabase = FALSE;
     }
 
-    if ($this->ldapProvisionSid != LDAP_USER_NO_SERVER_SID) {
+    if ($this->ldapProvisionSid) {
       $this->ldapProvisionServer = ldap_servers_get_servers($this->ldapProvisionSid, NULL, TRUE);
       $this->groupObjectClass = $this->ldapProvisionServer->groupObjectClass;
     }

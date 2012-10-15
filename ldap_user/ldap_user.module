@@ -56,7 +56,7 @@ define('LDAP_USER_PROV_RESULT_NO_ERROR', 0);
 define('LDAP_USER_PROV_RESULT_NO_PWD', 1);
 define('LDAP_USER_PROV_RESULT_BAD_PARAMS', 2);
 
-define('LDAP_USER_NO_SERVER_SID', '{LDAP_USER.NO_SERVER_ID}'); // need to avoid conflicting with server ids
+define('LDAP_USER_NO_SERVER_SID', 0); // need to avoid conflicting with server ids
 define('LDAP_USER_TEST_FORM_PATH', 'admin/config/people/ldap/user/test');
 define('LDAP_USER_WS_USER_PATH', 'ldap/user/ws');
 
@@ -170,7 +170,7 @@ function ldap_user_conf($type = NULL, $reset = FALSE) {
  */
 function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
 
-  if (isset($params['sid']) && $params['sid'] && $params['sid'] != LDAP_USER_NO_SERVER_SID) { // puid attributes are server specific
+  if (isset($params['sid']) && $params['sid']) { // puid attributes are server specific
     if (is_scalar($params['sid'])) {
       $ldap_server = ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
     }
@@ -242,8 +242,8 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
     
   // 1. Drupal user properties
   // 1.a make sure empty array are present so array + function works
-  foreach (array('property.status','property.timezone','property.signature') as $i => $property_id) {
-    $property_token = '[' . $property_id  .']';
+  foreach (array('property.status', 'property.timezone', 'property.signature') as $i => $property_id) {
+    $property_token = '[' . $property_id . ']';
     if (!isset($available_user_attrs[$property_token]) || !is_array($available_user_attrs[$property_token])) {
       $available_user_attrs[$property_token] = array();
     }
@@ -284,10 +284,9 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
     if (!isset($available_user_attrs[$field_id]) || !is_array($available_user_attrs[$field_id])) {
       $available_user_attrs[$field_id] = array();
     }
-   // dpm($field_id);
-   // dpm($available_user_attrs[$field_id]);
+
     $available_user_attrs[$field_id] = $available_user_attrs[$field_id] + array(
-      'name' => t('Field: '). $field_instance['label'],
+      'name' => t('Field') . ': ' . $field_instance['label'],
       'configurable_to_drupal' => 1,
       'configurable_to_ldap' => 1,
       'enabled' => FALSE,
@@ -351,9 +350,9 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
   }
     
   //this is where need to be added to arrays
-  if (is_array($ldap_user_conf->ldapUserSynchMappings) && isset($ldap_user_conf->ldapUserSynchMappings[$direction][$sid])) {
+  if (!empty($ldap_user_conf->ldapUserSynchMappings[$direction])) {
 
-    foreach ($ldap_user_conf->ldapUserSynchMappings[$direction][$sid] as $target_token => $mapping) {
+    foreach ($ldap_user_conf->ldapUserSynchMappings[$direction] as $target_token => $mapping) {
       if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER && isset($mapping['user_attr'])) {
         $key = $mapping['user_attr'];
       }
@@ -365,7 +364,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       }
 
 
-      foreach (array('sid','ldap_attr','user_attr','convert','direction','enabled','prov_events') as $k) {
+      foreach (array('ldap_attr', 'user_attr', 'convert', 'direction', 'enabled', 'prov_events') as $k) {
         if (isset($mapping[$k])) {
           $available_user_attrs[$key][$k] = $mapping[$k];
         }
@@ -458,7 +457,7 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
     );  
   }
  
-  if ($ldap_user_conf->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID) {
+  if ($ldap_user_conf->ldapEntryProvisionServer) {
     $ldap_fieldset['ldap_user_create_ldap_acct'] = array(
       '#type' => 'checkbox',
       '#title' => t('Create corresponding LDAP entry.'),
@@ -675,7 +674,7 @@ function ldap_user_user_login(&$edit, $account) {
       $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers
       && ldap_user_ldap_provision_semaphore('provision', 'get', $account->name) === FALSE
       && !$ldap_user_conf->getProvisionRelatedLdapEntry($account)
-      && $ldap_user_conf->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID
+      && $ldap_user_conf->ldapEntryProvisionServer
       && $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE)
       ) {
     $provision_result = $ldap_user_conf->provisionLdapEntry($account);

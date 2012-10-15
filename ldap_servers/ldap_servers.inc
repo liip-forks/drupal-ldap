@@ -16,9 +16,7 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid, $ldap_context) {
     $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
   }
   
-  //dpm("sid=$sid");
-  $ldap_server = ldap_servers_get_servers($sid, 'enabled', TRUE);
-  if ($ldap_server === FALSE) {
+  $ldap_server = ldap_servers_get_servers($sid, 'enabled', TRUE);  if ($ldap_server === FALSE) {
     watchdog('ldap_servers', 'Failed to load server object %sid in _ldap_servers_get_user_ldap_data', array('%sid' => $sid), WATCHDOG_ERROR);
     return FALSE;
   }

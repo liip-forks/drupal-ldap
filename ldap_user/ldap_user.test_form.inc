@@ -104,26 +104,26 @@ function ldap_user_test_form_submit($form, &$form_state) {
     else {
       $user_entity = NULL;
     }
-    dpm($user_object); dpm($user_entity);
-    
+
     $ldap_user_conf = ldap_user_conf();
-    
     $test_servers = array();
-    if ($ldap_user_conf->drupalAcctProvisionServer != LDAP_USER_NO_SERVER_SID) {
+    $user_ldap_entry = FALSE;
+    if ($ldap_user_conf->drupalAcctProvisionServer) {
       $test_servers[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER] = $ldap_user_conf->drupalAcctProvisionServer;
+      $user_ldap_entry = ldap_servers_get_user_ldap_data($username, $ldap_user_conf->drupalAcctProvisionServer);
     }
-    if ($ldap_user_conf->ldapEntryProvisionServer != LDAP_USER_NO_SERVER_SID) {
+    if ($ldap_user_conf->ldapEntryProvisionServer) {
       $test_servers[LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY] = $ldap_user_conf->ldapEntryProvisionServer;
+      if (!$user_ldap_entry) {
+        $user_ldap_entry = ldap_servers_get_user_ldap_data($username, $ldap_user_conf->ldapEntryProvisionServer);
+      }
     }
-    
     $results = array();
     $results['username'] = $username;
     $results['user object (before provisioning or synching)'] = $user_object;
     $results['user entity (before provisioning or synching)'] = $user_entity;
-      
-
-    $user_ldap_entry = ldap_servers_get_user_ldap_data($username);
     $results['related ldap entry (before provisioning or synching)'] = $user_ldap_entry;
+    $results['ldap_user_conf'] = $ldap_user_conf;
 
     if (is_object($user_object)) {
       $authmaps = db_query("SELECT aid, uid, module, authname FROM {authmap} WHERE uid = :uid", array(':uid' => $user_object->uid))->fetchAllAssoc('aid',  PDO::FETCH_ASSOC);
@@ -194,7 +194,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
       dpm($results);
     }
     else {
-      drupal_set_message('This form will not display results unless the devel module is enabled.', 'warning');  
+      drupal_set_message(t('This form will not display results unless the devel module is enabled.'), 'warning');  
     }
   }
   

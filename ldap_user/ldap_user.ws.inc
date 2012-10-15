@@ -74,7 +74,7 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
     $ldap_server = FALSE;
   }
 
-  if (strpos($drupal_user_name_or_dn,'=') === FALSE) {
+  if (strpos($drupal_user_name_or_dn, '=') === FALSE) {
     $drupal_user_name = check_plain($drupal_user_name_or_dn);
   }
   else {
@@ -127,7 +127,7 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
     case 'delete':
       if ($direction = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
         user_delete($drupal_user->uid);
-        return ldap_user_ws_out(array(1,'Deleted Account ' . $drupal_user_name));
+        return ldap_user_ws_out(array(1, 'Deleted Account ' . $drupal_user_name));
       }
       elseif ($direction = LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
         // @todo implement delete ldap record and call ldap_user event handler for delete account

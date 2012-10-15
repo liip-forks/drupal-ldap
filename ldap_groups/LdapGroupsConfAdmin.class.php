@@ -176,7 +176,7 @@ class LdapGroupsConfAdmin extends LdapGroupsConf {
     $warnings = array();
     $tokens = array();
 
-    $has_drupal_acct_prov_servers  = ($this->ldapProvisionSid !== LDAP_USER_NO_SERVER_SID);
+    $has_drupal_acct_prov_servers  = (boolean)($this->ldapProvisionSid);
 
     return array($errors, $warnings);
   }

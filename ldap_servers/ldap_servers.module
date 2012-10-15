@@ -296,7 +296,7 @@ function ldap_servers_theme() {
 
     $attributes['dn'] = ldap_servers_set_attribute_map(@$attributes['dn'], 'ldap_dn', 'ldap_dn'); // force this data type
 
-    if ($params['sid'] && $params['sid'] && $params['sid'] != LDAP_USER_NO_SERVER_SID) { // puid attributes are server specific
+    if ($params['sid'] && $params['sid']) { // puid attributes are server specific
       if (is_scalar($params['sid'])) {
         $ldap_server = ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
       }
@@ -386,7 +386,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'configurable_to_drupal' => 0,
       'configurable_to_ldap' => 1,
       'source' => '[' . $ldap_server->unique_persistent_attr . ']',
-      'notes' => 'configure at '. $server_edit_path,
+      'notes' => 'configure at ' . $server_edit_path,
       'convert' => $ldap_server->unique_persistent_attr_binary,
       'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
@@ -401,7 +401,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'configurable_to_drupal' => 0,
       'configurable_to_ldap' => 1,
       'source' =>  $ldap_server->unique_persistent_attr ,
-      'notes' => 'configure at '. $server_edit_path,
+      'notes' => 'configure at ' . $server_edit_path,
       'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
       'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),

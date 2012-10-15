@@ -193,7 +193,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
     $user_test_dn = @$values['testingDrupalUserDn'];
     $group_create_test_dn = $values['groupTestGroupDnWriteable'];
     $group_create_test_attr = array(
-      'objectClass' => array($ldap_server->groupObjectClass,'top'),
+      'objectClass' => array($ldap_server->groupObjectClass, 'top'),
     );
     
     // 1. delete test group if it exists
@@ -224,7 +224,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
     // 5. add member to group 
     $result = $ldap_server->groupAddMember($group_create_test_dn, $user_test_dn);
     $result = is_array($ldap_server->groupAllMembers($group_create_test_dn)) ? 'PASS' : 'FAIL';
-    $results_tables['group1'][] = array("LdapServer::groupAddMember($group_create_test_dn, $user_test_dn)",$result);
+    $results_tables['group1'][] = array("LdapServer::groupAddMember($group_create_test_dn, $user_test_dn)", $result);
   
    // 6. try to remove group with member in it
     $only_if_group_empty = TRUE;
@@ -266,10 +266,10 @@ function ldap_servers_test_form_submit($form, &$form_state) {
       array('%bind_dn' =>  $ldap_user['dn'])));
     $result = $ldap_server->bind($ldap_user['dn'], $values['testing_drupal_userpw']);
     if ($result == LDAP_SUCCESS) {
-      $results_tables['basic'][] = array(t('Successfully bound to server'),'PASS');
+      $results_tables['basic'][] = array(t('Successfully bound to server'), 'PASS');
     }
     else {
-      $results_tables['basic'][] = array(t('Failed to bind to server. ldap error #') . $result . ' ' . $ldap_server->errorMsg('ldap'),'FAIL') ;
+      $results_tables['basic'][] = array(t('Failed to bind to server. ldap error #') . $result . ' ' . $ldap_server->errorMsg('ldap'), 'FAIL') ;
     }
   }
 
@@ -289,32 +289,32 @@ function ldap_servers_test_form_submit($form, &$form_state) {
         $group_results[] = array("ldap_server->groupIsMember($group_dn, $user, nested=$nested_display)", $result);
         
         if ($ldap_server->groupUserMembershipsConfigured) {
-          $groupUserMembershipsFromUserAttr = $ldap_server->groupUserMembershipsFromUserAttr($user, $nested);
-          $count =  count($groupUserMembershipsFromUserAttr);
-          $result = theme('item_list', array('items' => $groupUserMembershipsFromUserAttr, 'type' => 'ul'));
+          $groupusermembershipsfromuserattr = $ldap_server->groupUserMembershipsFromUserAttr($user, $nested);
+          $count =  count($groupusermembershipsfromuserattr);
+          $result = theme('item_list', array('items' => $groupusermembershipsfromuserattr, 'type' => 'ul'));
         }
         else {
-          $groupUserMembershipsFromUserAttr = array();
+          $groupusermembershipsfromuserattr = array();
           $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
         }
         $results_tables['group2'][] = array("ldap_server->groupUserMembershipsFromUserAttr($user, nested=$nested_display)<br/> count=" .
-            count($groupUserMembershipsFromUserAttr) , $result);
+            count($groupusermembershipsfromuserattr) , $result);
         
 
         if ($ldap_server->groupGroupEntryMembershipsConfigured) {
-          $groupUserMembershipsFromEntry = $ldap_server->groupUserMembershipsFromEntry($user, $nested);
-          $result = theme('item_list', array('items' => $groupUserMembershipsFromEntry, 'type' => 'ul'));
+          $groupusermembershipsfromentry = $ldap_server->groupUserMembershipsFromEntry($user, $nested);
+          $result = theme('item_list', array('items' => $groupusermembershipsfromentry, 'type' => 'ul'));
         }
         else {
-          $groupUserMembershipsFromEntry = array();
+          $groupusermembershipsfromentry = array();
           $result = "Groups by entry not configured.";
         }
         $results_tables['group2'][] = array("ldap_server->groupUserMembershipsFromEntry($user, nested=$nested_display)<br/>count=" .
-                                 count($groupUserMembershipsFromEntry) , $result);
+                                 count($groupusermembershipsfromentry) , $result);
         
-        if (count($groupUserMembershipsFromEntry) && count($groupUserMembershipsFromUserAttr)) {
-          $diff1 = array_diff($groupUserMembershipsFromUserAttr, $groupUserMembershipsFromEntry);
-          $diff2 = array_diff($groupUserMembershipsFromEntry, $groupUserMembershipsFromUserAttr);
+        if (count($groupusermembershipsfromentry) && count($groupusermembershipsfromuserattr)) {
+          $diff1 = array_diff($groupusermembershipsfromuserattr, $groupusermembershipsfromentry);
+          $diff2 = array_diff($groupusermembershipsfromentry, $groupusermembershipsfromuserattr);
           $result1 = theme('item_list', array('items' => $diff1, 'type' => 'ul'));
           $result2 = theme('item_list', array('items' => $diff2, 'type' => 'ul'));
           $results_tables['group2'][] = array("groupUserMembershipsFromEntry and FromUserAttr Diff)", $result1);
@@ -375,9 +375,9 @@ function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw, &$results
 }
 
 function ldap_servers_test_user_mapping($drupal_username, &$ldap_server, $direction = LDAP_USER_PROV_DIRECTION_ALL, $ldap_context = NULL) {
-  //dpm("this needs to be reworked");
+
   $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($drupal_username, $ldap_context);
- // dpm("ldap_user"); dpm($ldap_user);
+
   $errors = FALSE;
   if (! $ldap_user ) {
     $results[] = t('Failed to find test user %username by searching on  %user_attr = %username.',
@@ -385,7 +385,7 @@ function ldap_servers_test_user_mapping($drupal_username, &$ldap_server, $direct
         '%username' => $drupal_username,
         '%user_attr' => $ldap_server->user_attr )
       )
-    . ' ' . t('Error Message: ') . $ldap_server->errorMsg('ldap');
+    . ' ' . t('Error Message:') . ' ' . $ldap_server->errorMsg('ldap');
     $errors = TRUE;
   }
   else {

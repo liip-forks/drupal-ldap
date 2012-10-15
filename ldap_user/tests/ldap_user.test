@@ -80,24 +80,24 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     $user_edit = array();
     $ldap_user = ldap_servers_get_user_ldap_data('jkeats', $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
    // debug('ldap_servers_get_user_ldap_data:ldap_user'); debug($ldap_user);
-    $desired_result =  array (
+    $desired_result = array(
       'dn' => 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
       'mail' => 'boygen@hotmail.com',
       'attr' => 
-      array (
+      array(
         'dn' => 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
         'mail' => 
-        array (
+        array(
           0 => 'boygen@hotmail.com',
           'count' => 1,
         ),
         'pixotechcomregistryuniqueid' => 
-        array (
+        array(
           0 => 'e2eb4d760f81e89df1524cff71f720a0',
           'count' => 1,
         ),
         'samaccountname' => 
-        array (
+        array(
           0 => 'jkeats',
           'count' => 1,
         ),
@@ -119,11 +119,11 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
         'status' => 1,
         'signature' => '',
         'data' => 
-        array (
+        array(
           'ldap_authentication' => 
-          array (
+          array(
             'init' => 
-            array (
+            array(
               'sid' => 'activedirectory',
               'dn' => 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
               'mail' => 'boygen@hotmail.com',
@@ -131,41 +131,41 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
           ),
         ),
         'ldap_user_puid' => 
-        array (
+        array(
           'und' => 
-          array (
+          array(
             0 => 
-            array (
+            array(
               'value' => 'e2eb4d760f81e89df1524cff71f720a0',
             ),
           ),
         ),
         'ldap_user_puid_property' => 
-        array (
+        array(
           'und' => 
-          array (
+          array(
             0 => 
-            array (
+            array(
               'value' => 'pixotechcomregistryuniqueid',
             ),
           ),
         ),
         'ldap_user_puid_sid' => 
-        array (
+        array(
           'und' => 
-          array (
+          array(
             0 => 
-            array (
+            array(
               'value' => 'activedirectory',
             ),
           ),
         ),
         'ldap_user_current_dn' => 
-        array (
+        array(
           'und' => 
-          array (
+          array(
             0 => 
-            array (
+            array(
               'value' => 'CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com',
             ),
           ),
@@ -195,11 +195,11 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     foreach ($is_synched_tests as $prov_event => $tests) {
       foreach ($tests as $boolean_result => $attribute_tokens) {
         foreach ($attribute_tokens as $attribute_token) {
-          $is_synched = $ldap_user_conf->isSynched($attribute_token, $ldap_todrupal_prov_server, array($prov_event), LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER);
+          $is_synched = $ldap_user_conf->isSynched($attribute_token, array($prov_event), LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER);
           // debug("is_synched_tests: is_synched=$is_synched, attribute_token=$attribute_token, prov_event=$prov_event");
           if ((int)$is_synched !== (int)$boolean_result) {
             $fail = TRUE;
-            $debug[$attribute_token] = "isSynched($attribute_token,".  $ldap_todrupal_prov_server->sid . ", array($prov_event),
+            $debug[$attribute_token] = "isSynched($attribute_token, array($prov_event),
               LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) returned $is_synched when it should have returned ". (int)$boolean_result;
           }
         }
@@ -269,9 +269,9 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
 
     $data_diff = array_diff(
       $jkeats->data['ldap_authentication'],
-      array (
+      array(
       'init' =>
-        array (
+        array(
           'sid' => 'activedirectory',
           'dn' => NULL,
           'mail' => 'boygen@hotmail.com',
@@ -287,13 +287,13 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
     $user_edit = NULL;
     $ldap_user_conf->ldapUserSynchMappings = array();
     $sid = 'activedirectory';
-    $ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER][$sid]['[property.mail]'] = array(
+    $ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER]['[property.mail]'] = array(
       'sid' => $sid,
       'ldap_attr' => '[mail]',
       'user_attr' => '[property.mail]',
       'convert' => 0,
       'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
-      'ldap_contexts' => array('ldap_user_insert_drupal_user','ldap_user_update_drupal_user','ldap_authentication_authenticate'),
+      'ldap_contexts' => array('ldap_user_insert_drupal_user', 'ldap_user_update_drupal_user', 'ldap_authentication_authenticate'),
       'prov_events' => array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
       'name' => 'Property: Mail',
       'enabled' => TRUE,
@@ -502,7 +502,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
       'disabled' => 0,
       'user' => 'jkeats',
       'property_name' => 'mail',
-      'property_values' => array(array('mail' => 'jkeats@hotmail.com'), array('mail' =>'jkeats@yahoo.com')),
+      'property_values' => array(array('mail' => 'jkeats@hotmail.com'), array('mail' => 'jkeats@yahoo.com')),
       'property_results' => array('jkeats@hotmail.com', 'jkeats@yahoo.com'),
       'mapping' => array(
         'sid' => $sid,
@@ -580,7 +580,7 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
               0);
           }
           $property_token = '[property.' . $property_name . ']';
-          $ldap_user_conf->ldapUserSynchMappings[$direction][$sid][$property_token] = $test['mapping'];
+          $ldap_user_conf->ldapUserSynchMappings[$direction][$property_token] = $test['mapping'];
         }
         if ($field_name) {
           $token_attributes = array();
@@ -594,8 +594,8 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
               $test['field_values'][0][$attr_name],
               0);
           }
-          $field_token = '[field.'    . $field_name . ']';
-          $ldap_user_conf->ldapUserSynchMappings[$direction][$sid][$field_token] = $test['mapping'];
+          $field_token = '[field.' . $field_name . ']';
+          $ldap_user_conf->ldapUserSynchMappings[$direction][$field_token] = $test['mapping'];
         }
         
         $ldap_user_conf->save();
@@ -616,18 +616,13 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
         $user_edit = array('name' => $username);
        // $this->ldapTestId = $this->module_name . ': provisionDrupalAccount function test';
         $result = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
-      //  debug("provisionDrupalAccount result"); debug($result);
         list($user_object, $user_entity) = ldap_user_load_user_acct_and_entity($username);
-      //  debug('initially provisioned user and entity for:'. $username); debug($user_object); debug($user_entity);
-      //  debug('before user synch,  mail (should be jkeats@hotmail.com)=' . $user_object->{$property_name} . ',lname (should be keatsalicious) =') . debug($user_entity->{$field_name});        
-        
         if ($property_name) {
-         // debug("property_name=$property_name, prov_event=$prov_event, property_token=$property_token, direction=$direction, sid=$sid, ldap_user_conf->ldapUserSynchMappings $direction - $sid"); debug($ldap_user_conf->ldapUserSynchMappings[$direction][$sid]);
-          if (in_array($prov_event, $ldap_user_conf->ldapUserSynchMappings[$direction][$sid][$property_token]['prov_events'])) { // if intended to synch
+          if (in_array($prov_event, $ldap_user_conf->ldapUserSynchMappings[$direction][$property_token]['prov_events'])) { // if intended to synch
             $property_success = ($user_object->{$property_name} == $test['property_results'][0]);
             $this->assertTrue($property_success, t("provisionDrupalAccount worked for property $property_name"), $this->testId(":provisionDrupalAccount.i=$j.prov_event=$prov_event"));
             if (!$property_success) {
-              debug('field fail,'. $property_name); debug($user_entity->{$property_name}); debug($test['property_results'][0]); //debug($user_entity);
+              debug('field fail,' . $property_name); debug($user_entity->{$property_name}); debug($test['property_results'][0]); //debug($user_entity);
             }
           }
           else {
@@ -637,12 +632,12 @@ class LdapUserUnitTests extends LdapUserTestCasev2 {
         if ($field_name) {
           // debug("property_name=$property_name, prov_event=$prov_event, direction=$direction, field_token=$field_token, sid=$sid, ldap_user_conf->ldapUserSynchMappings $direction - $sid"); debug($ldap_user_conf->ldapUserSynchMappings[$direction][$sid]);
  
-          if (in_array($prov_event, $ldap_user_conf->ldapUserSynchMappings[$direction][$sid][$field_token]['prov_events'])) { // if intended to synch
+          if (in_array($prov_event, $ldap_user_conf->ldapUserSynchMappings[$direction][$field_token]['prov_events'])) { // if intended to synch
             $field_success = isset($user_entity->{$field_name}['und'][0]['value']) &&
               $user_entity->{$field_name}['und'][0]['value'] == $test['field_results'][0];          
             $this->assertTrue($field_success, t("provisionDrupalAccount worked for field $field_name"),  $this->testId(":provisionDrupalAccount.i=$j.prov_event=$prov_event"));
             if (!$field_success) {
-              debug('field fail,'. $field_name); debug($user_entity->{$field_name}); debug($test['field_results'][0]); //debug($user_entity);
+              debug('field fail,' . $field_name); debug($user_entity->{$field_name}); debug($test['field_results'][0]); //debug($user_entity);
             }
           }
           else {
@@ -884,23 +879,23 @@ class LdapUserUITests extends LdapUserTestCasev2 {
     $this->assertTrue($ldap_user_conf->acctCreation == LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT, t('Account creation field set correctly'), $this->ldapTestId);
     
     $field_token = '[field.field_lname]';
-    $field_lname_set_correctly = ($ldap_user_conf->ldapUserSynchMappings[$direction][$sid][$field_token]['enabled'] == TRUE &&
-      $ldap_user_conf->ldapUserSynchMappings[$direction][$sid][$field_token]['direction'] == 1 &&
-      $ldap_user_conf->ldapUserSynchMappings[$direction][$sid][$field_token]['ldap_attr'] == '[sn]');
+    $field_lname_set_correctly = ($ldap_user_conf->ldapUserSynchMappings[$direction][$field_token]['enabled'] == TRUE &&
+      $ldap_user_conf->ldapUserSynchMappings[$direction][$field_token]['direction'] == 1 &&
+      $ldap_user_conf->ldapUserSynchMappings[$direction][$field_token]['ldap_attr'] == '[sn]');
 
     $this->assertTrue($field_lname_set_correctly, t('Synch mapping for field.field_lname  field set correctly'), $this->ldapTestId);
     if (!$field_lname_set_correctly) {
-      debug('ldap_user_conf->synchMapping[direction][sid][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[$direction][$sid]['field.field_lname']);
+      debug('ldap_user_conf->synchMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[$direction]['field.field_lname']);
     }
     
     $field_token = '[field.field_fname]';
-    $field_fname_set_correctly = ($ldap_user_conf->ldapUserSynchMappings[$direction][$sid][$field_token]['enabled'] == TRUE &&
-      $ldap_user_conf->ldapUserSynchMappings[$direction][$sid][$field_token]['direction'] == 1 &&
-      $ldap_user_conf->ldapUserSynchMappings[$direction][$sid][$field_token]['ldap_attr'] == '[givenname]');
+    $field_fname_set_correctly = ($ldap_user_conf->ldapUserSynchMappings[$direction][$field_token]['enabled'] == TRUE &&
+      $ldap_user_conf->ldapUserSynchMappings[$direction][$field_token]['direction'] == 1 &&
+      $ldap_user_conf->ldapUserSynchMappings[$direction][$field_token]['ldap_attr'] == '[givenname]');
 
     $this->assertTrue($field_fname_set_correctly, t('Synch mapping for field.field_lname  field set correctly'), $this->ldapTestId);
      if (!$field_fname_set_correctly) {
-      debug('ldap_user_conf->synchMapping[direction][sid][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[$direction][$sid]['field.field_lname']);
+      debug('ldap_user_conf->synchMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[$direction]['field.field_lname']);
     }
 
     $this->assertTrue($ldap_user_conf->wsKey == $wsKey, t('wsKey field set correctly'), $this->ldapTestId);

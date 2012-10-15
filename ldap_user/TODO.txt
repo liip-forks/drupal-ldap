@@ -1,7 +1,7 @@
 
 LDAP User To dos
 
--- need to move data in admin/config/people/ldap/user on update.
+-- need to move data in admin/config/people/ldap/user on hook update.
 -- need ldap_user_update() hook to change ldap_authentication to ldap_user in authmaps table.
 -- add in password provisioning options to ldap user
 -- implement binary field conversion
@@ -10,7 +10,7 @@ LDAP User To dos
 
 Mapping and mapping UI Tasks:
 - add validation
-- add some CSS to make sections clearer and generally improve usability
+
 - allow for feeds tamper plugins be configured and act on mappings
 - add some js to disable disallowed directions for selected user attributes
 
@@ -44,14 +44,15 @@ move data into ldap_user module structure
 - X create new fields in user and add to .install file
 - X add authmap data to user->ldap_authmap_* fields
 - X add mapping form for user field and ldap entry mapping
+- X add some CSS to make sections clearer and generally improve usability
 - write hook_user_* and entity_* functions to populate ldap data fields
 - test by creating users manually
 - write script to move user->data to correct fields in $user-> entity
 - add update to execute previous script
 
-- bring ldap_provision code into module
+- X bring ldap_provision code into module
 - bring ldap_profile code into module
-- allow rules for each field [sych on intitail provision, synch on logon, synch on periodic update, push to ldap entry]
+- X allow rules for each field [sych on intitail provision, synch on logon, synch on periodic update, push to ldap entry]
 - X implement drupal user -> ldap entry synching
 
 tests

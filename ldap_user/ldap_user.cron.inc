@@ -48,8 +48,8 @@ function _ldap_user_orphans($ldap_user_conf) {
         }
       }
       foreach ($filters as $sid => $puid_attrs) {
-        foreach ($puid_attrs as $puid_attr => $ORs) {
-          $query = "|" . join('', $ORs);
+        foreach ($puid_attrs as $puid_attr => $ors) {
+          $query = "|" . join('', $ors);
          // $ldap_entries = $ldap_servers[$sid]->query(...)
          // if error, do nothing and return don't remove users unless successful non zero query
          //   the nonzero part is a design call to failsafe failed query logic/ldap user/server configuration from removing all ldap users

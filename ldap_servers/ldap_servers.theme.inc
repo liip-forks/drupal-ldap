@@ -160,6 +160,6 @@ function theme_ldap_server_ldap_entry_table($variables) {
       }
     }
   }
-  $entry_table = '<div class="content"><h2>' . t('LDAP Entry for %username (dn: %dn)', array('%dn' => $variables['dn'],'%username' => $variables['username'])) . '</h2>' . theme('table', array('colgroups' => NULL, 'caption' => 'ldap entry array', 'header' => $header, 'rows' => $rows, 'sticky' => TRUE, 'attributes' => array(), 'empty' => 'No data')) . '</div>';
+  $entry_table = '<div class="content"><h2>' . t('LDAP Entry for %username (dn: %dn)', array('%dn' => $variables['dn'], '%username' => $variables['username'])) . '</h2>' . theme('table', array('colgroups' => NULL, 'caption' => 'ldap entry array', 'header' => $header, 'rows' => $rows, 'sticky' => TRUE, 'attributes' => array(), 'empty' => 'No data')) . '</div>';
   return $entry_table;
 }

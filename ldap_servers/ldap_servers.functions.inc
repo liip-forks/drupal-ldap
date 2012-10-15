@@ -326,10 +326,10 @@ function ldap_server_massage_text($value, $value_type, $context) {
             if (preg_match('/^(\s*)(.+?)(\s*)$/', $val, $matches)) {
                 $val = $matches[2];
                 for ($i = 0; $i < strlen($matches[1]); $i++) {
-                    $val = '\20'.$val;
+                    $val = '\20' . $val;
                 }
                 for ($i = 0; $i < strlen($matches[3]); $i++) {
-                    $val = $val.'\20';
+                    $val = $val . '\20';
                 }
             }
 
@@ -408,8 +408,8 @@ function ldap_server_massage_text($value, $value_type, $context) {
             $char = substr($string, $i, 1);
             if (ord($char) < 32) {
                 $hex = dechex(ord($char));
-                if (strlen($hex) == 1) $hex = '0'.$hex;
-                $string = str_replace($char, '\\'.$hex, $string);
+                if (strlen($hex) == 1) $hex = '0' . $hex;
+                $string = str_replace($char, '\\' . $hex, $string);
             }
         }
         return $string;
