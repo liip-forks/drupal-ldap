@@ -35,7 +35,7 @@ class LdapServersTestCase extends LdapTestCasev3 {
   function setUp() {
     parent::setUp(array('ldap_servers', 'ldap_test'));
     variable_set('ldap_simpletest', 2);
-    //$this->ldap_user_create_user_test_entity_fields();
+    //$this->createTestUserFields();
   }
 
   function tearDown() {

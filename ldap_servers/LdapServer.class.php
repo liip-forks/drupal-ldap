@@ -890,8 +890,10 @@ class LdapServer {
    * @return string user's mail value
    */
   public function userEmailFromLdapEntry($ldap_entry) {
+ 
     if ($this->mail_attr) { // not using template
-      return @$ldap_entry[$this->mail_attr][0];
+      $mail = $ldap_entry[$this->mail_attr][0];
+      return $mail;
     }
     elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
       ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
@@ -955,8 +957,7 @@ class LdapServer {
   /**
    * Queries LDAP server for the user.
    *
-   * @param $drupal_user_name
-   *  drupal user name.
+   * @param string $drupal_user_name
    *
    * @param string or int $prov_event
    *   This could be anything, particularly when used by other modules.  Other modules should use string like 'mymodule_myevent'
@@ -966,10 +967,10 @@ class LdapServer {
    *   An array with user's LDAP data or NULL if not found.
    */
   function userUserNameToExistingLdapEntry($drupal_user_name, $ldap_context = NULL) {
-  //  dpm("userUserNameToExistingLdapEntry, drupal_user_name=$drupal_user_name, ldap_context=$ldap_context");
+
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
     $ldap_username = $this->userUsernameToLdapNameTransform($drupal_user_name, $watchdog_tokens);
-  //  dpm("userUserNameToExistingLdapEntry, ldap_username=$ldap_username");
+
     if (!$ldap_username) {
       return FALSE;
     }
@@ -977,7 +978,6 @@ class LdapServer {
       $attribute_maps = array();
     }
     else {
-     // debug('ldap_servers_attributes_needed(this->sid, direction, prov_event)'); debug(array($this, $this->sid, $direction, $prov_event));
       $attribute_maps = ldap_servers_attributes_needed($this->sid, $ldap_context);
     }
     
@@ -985,7 +985,7 @@ class LdapServer {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
       $result = $this->search($basedn, $filter, array_keys($attribute_maps));
-   //  debug("ldap_server: userUserNameToExistingLdapEntry, filter=$filter, basedn=$basedn, result="); debug($result); debug('userUserNameToExistingLdapEntry:attributes needed'); debug($attribute_maps); 
+    //  debug('search result:'); debug($result);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.

@@ -112,6 +112,8 @@ $conf['openldap1']['properties']  = array(
     'user_attr'  => 'cn',
     'mail_attr'  => 'mail',
     'mail_template'  => NULL,
+    'unique_persistent_attr' => 'guid',
+    'unique_persistent_attr_binary' => FALSE,
     'ldap_to_drupal_user' => FALSE,
     'ldapToDrupalUserPhp'  => NULL,
     'groupFunctionalityUnused' => FALSE,
@@ -162,6 +164,8 @@ $conf['activedirectory1']['properties']  = array(
     'user_attr'  => 'cn',
     'mail_attr'  => 'mail',
     'mail_template'  => NULL,
+    'unique_persistent_attr' => 'guid',
+    'unique_persistent_attr_binary' => FALSE,
     'ldap_to_drupal_user' => FALSE,
     'ldapToDrupalUserPhp'  => NULL,
     'groupFunctionalityUnused' => FALSE,
@@ -188,6 +192,15 @@ $conf['activedirectory1']['search_results']['(&(objectClass=group)(member=cn=hpo
 
 $conf['activedirectory1']['search_results']['(&(objectClass=group)(|(member=cn=gryffindor,ou=groups,dc=hogwarts,dc=edu)(member=cn=students,ou=groups,dc=hogwarts,dc=edu)(member=cn=honors students,ou=groups,dc=hogwarts,dc=edu)))']['dc=ldap,dc=hogwarts,dc=edu'] = array(
   0 => array('count' => 1, 'dn' => 'cn=users,ou=groups,dc=hogwarts,dc=edu'),
+  'count' => 1,
+);
+
+$conf['activedirectory1']['search_results']['(cn=hpotter)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array(
+    'count' => 1,
+    'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+    'FULLENTRY' => TRUE,
+  ),
   'count' => 1,
 );
 

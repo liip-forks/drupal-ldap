@@ -122,7 +122,7 @@ class LdapTestCasev2 extends DrupalWebTestCase {
    * module integration testing is needed
    */
   
-  function ldap_user_create_user_test_entity_fields() {
+  function createTestUserFields() {
     foreach ($this->ldap_user_test_entity_fields() as $field_id => $field_conf) {
       $field_info = field_info_field($field_id);
       if (!$field_info) {

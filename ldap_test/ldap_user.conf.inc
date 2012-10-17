@@ -11,7 +11,7 @@
 function ldap_test_ldap_user_data() {
 
 $conf['default']  = array(
-    'drupalAcctProvisionServer' => 'activedirectory',
+    'drupalAcctProvisionServer' => 'activedirectory1',
     'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,
     'drupalAcctProvisionTriggers' => array(
       LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE,

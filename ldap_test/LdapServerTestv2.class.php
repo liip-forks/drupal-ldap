@@ -146,7 +146,7 @@ class LdapServerTestv2 extends LdapServer {
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
     
-    //debug("ldap test v2 server search base_dn=$base_dn, filter=$filter"); 
+    debug("ldap test v2 server search base_dn=$base_dn, filter=$filter"); 
     $lcase_attribute = array();
     foreach ($attributes as $i => $attribute_name) {
       $lcase_attribute[] = drupal_strtolower($attribute_name);
@@ -166,8 +166,20 @@ class LdapServerTestv2 extends LdapServer {
 
     // return prepolulated search results in test data array if present
     if (isset($this->searchResults[$filter][$base_dn])) {
-      //debug('search result'); debug($this->searchResults[$filter][$base_dn]);
-      return $this->searchResults[$filter][$base_dn];
+      $results = $this->searchResults[$filter][$base_dn];
+      foreach ($results as $i => $entry) {
+      //  debug('entry'); debug($entry);
+        if (is_array($entry) && isset($entry['FULLENTRY'])) {
+          unset($results[$i]['FULLENTRY']);
+          $dn = $results[$i]['dn'];
+        //  debug("dn=$dn");
+        //  debug($this->entries[$dn]);
+          $results[$i] = $this->entries[$dn];
+          $results[$i]['dn'] = $dn;
+        }
+      }
+     // debug('custom search result'); debug($results);
+      return $results;
     }
 
     $base_dn = drupal_strtolower($base_dn);

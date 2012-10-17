@@ -188,7 +188,7 @@ class LdapUserConf {
 
 
   /**
-   * Util to fetch mappings for a given server id
+   * Util to fetch mappings for a given direction
    *
    * @param string $sid
    *   The server id
@@ -224,11 +224,27 @@ class LdapUserConf {
   }
 
   public function isDrupalAcctProvisionServer($sid) {
-    return (boolean)($this->drupalAcctProvisionServer == $sid);
+    if (!$sid || !$this->drupalAcctProvisionServer) {
+      return FALSE;
+    }
+    elseif ($this->ldapEntryProvisionServer == $sid) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
   }
   
   public function isLdapEntryProvisionServer($sid) {
-    return (boolean)($this->ldapEntryProvisionServer == $sid);
+    if (!$sid || !$this->ldapEntryProvisionServer) {
+      return FALSE;
+    }
+    elseif ($this->ldapEntryProvisionServer == $sid) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
   }
   
   /**
@@ -575,8 +591,8 @@ class LdapUserConf {
    */
 
   public function synchToLdapEntry($account, $user_edit = NULL, $ldap_user =  array(), $test_query = FALSE) {
-////debug("synchToLdapEntry, account, user_edit"); //debug($account);//debug($user_edit); 
-    //ldap_servers_//debug('synchToLdapEntry'); ldap_servers_//debug($account); ldap_servers_//debug($user_edit);
+    //dpm("synchToLdapEntry, test_query=$test_query, account, user_edit"); dpm($account); dpm($user_edit); 
+    //debug("synchToLdapEntry, test_query=$test_query, account, user_edit"); debug($account); debug($user_edit); 
 
     if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
       return FALSE; // do not provision or synch user 1
@@ -940,7 +956,7 @@ class LdapUserConf {
    */
 
   public function provisionDrupalAccount($account = FALSE, &$user_edit, $ldap_user = NULL, $save = TRUE) {
-    
+    //dpm("provisionDrupalAccount"); dpm($ldap_user);
     $watchdog_tokens = array();
     /**
      * @todo
@@ -956,7 +972,7 @@ class LdapUserConf {
     if (!$ldap_user && !isset($user_edit['name'])) {
        return FALSE;
     }
-   // dpm('ldap_user 675');dpm($ldap_user);
+
     if (!$ldap_user) {
       $watchdog_tokens['%username'] = $user_edit['name'];
       if ($this->drupalAcctProvisionServer) {
@@ -975,7 +991,9 @@ class LdapUserConf {
       $watchdog_tokens['%username'] = $user_edit['name'];
     }
     if ($this->drupalAcctProvisionServer) {
+     // dpm("this->drupalAcctProvisionServer=" . $this->drupalAcctProvisionServer);
       $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);  // $ldap_user['sid']
+
       $params = array(
         'account' => $account,
         'user_edit' => $user_edit,
@@ -984,16 +1002,14 @@ class LdapUserConf {
         'function' => 'provisionDrupalAccount',
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       );
-      
+
       drupal_alter('ldap_entry', $ldap_user, $params);
+
       // look for existing drupal account with same puid.  if so update username and attempt to synch in current context
       $puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
-     // dpm("puid=$puid");
       $account2 = ($puid) ? $ldap_server->userUserEntityFromPuid($puid) : FALSE;
-      //dpm($account2);
 
       if ($account2) { // synch drupal account, since drupal account exists
-
         // 1. correct username and authmap
         $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
         $account = user_save($account2, $user_edit, 'ldap_user');
@@ -1006,7 +1022,6 @@ class LdapUserConf {
       }
       else { // create drupal account
         $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_CREATE_DRUPAL_USER));
-         //826 dpm('provisionDrupalAccount: user_edit'); dpm($user_edit); 
         if ($save) {
           $account = user_save(NULL, $user_edit, 'ldap_user');
           if (!$account) {
@@ -1028,7 +1043,7 @@ class LdapUserConf {
       $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);  // $ldap_user['sid']
       $account = user_load_by_name($drupal_username);
       $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $this->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
-     // dpm('ldapAssociateDrupalAccount:ldap_user'); dpm($ldap_user);
+
       $user_edit = array();
       $params = array(
         'account' => $account,
@@ -1040,9 +1055,8 @@ class LdapUserConf {
       );
       drupal_alter('ldap_entry', $ldap_user, $params);
       $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_events);
-     // dpm('ldapAssociateDrupalAccount:user_edit'); dpm($user_edit);
       $account = user_save($account, $user_edit, 'ldap_user');
-    //  dpm('ldapAssociateDrupalAccount:account after user save'); dpm($account);
+
       if ($account) {
         user_set_authmaps($account, array('authname_ldap_user' => $drupal_username));
       }
@@ -1060,7 +1074,7 @@ class LdapUserConf {
    */
 
   function entryToUserEdit($ldap_user, &$edit, $ldap_server, $direction = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_events = NULL) {
-//826 dpm("entryToUserEdit: provision_event=$prov_event");
+
     // need array of user fields and which direction and when they should be synched.
     if (!$prov_events) {
       $prov_events = ldap_user_all_events();

@@ -27,7 +27,7 @@ class LdapUserTestCasev2 extends LdapTestCasev2 {
 
   function setUp() {
     parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role', 'ldap_test'));
-    $this->ldap_user_create_user_test_entity_fields();
+    $this->createTestUserFields();
   }
 
   function tearDown() {

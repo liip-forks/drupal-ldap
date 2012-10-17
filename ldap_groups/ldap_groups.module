@@ -117,7 +117,7 @@ function ldap_groups_ldap_entry_post_provision($ldap_entries, $user_provisioning
 
   foreach ($ldap_entries as $lcase_dn => $ldap_entry) {
     $user = $context['corresponding_drupal_data'][$lcase_dn];
-    $roles = $user->roles();
+    $roles = $user->roles;
 
     // The only way we can be sure which groups a user belongs to is
     // to query the LDAP server. Even checking the previous roles in
