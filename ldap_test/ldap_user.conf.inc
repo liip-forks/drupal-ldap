@@ -71,15 +71,13 @@ $conf['ad_authentication'] = array(
   );
   
   $conf['provisionToDrupal']  = array(
-    'drupalAcctProvisionServer' => 'activedirectory',
+    'drupalAcctProvisionServer' => 'activedirectory1',
     'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,
     'drupalAcctProvisionTriggers' => array(
       LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE,
       LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE,
       ),
-    'ldapEntryProvisionTriggers' => array(
-      LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE,
-    ),
+    'ldapEntryProvisionTriggers' => array(),
     'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
     'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
     'wsEnabled'  => 0,
@@ -93,7 +91,7 @@ $conf['ad_authentication'] = array(
 
 
  $conf['provisionToDrupalWithMappings']  = array(
-    'drupalAcctProvisionServer' => 'activedirectory',
+    'drupalAcctProvisionServer' => 'activedirectory1',
     'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,
     'drupalAcctProvisionTriggers' => array(
       LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE,
@@ -110,7 +108,7 @@ $conf['ad_authentication'] = array(
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(
         '[field.field_display_name]' => array(
-            'sid' => 'activedirectory',
+            'sid' => 'activedirectory1',
             'ldap_attr' => '[givenname] [sn]',
             'user_attr' => 'user_tokens',
             'convert' => 0,
@@ -122,7 +120,7 @@ $conf['ad_authentication'] = array(
             'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),  
         ),
        '[field.field_lname]' => array(
-            'sid' => 'activedirectory',
+            'sid' => 'activedirectory1',
             'ldap_attr' => '[sn:0]',
             'user_attr' => 'user_tokens',
             'convert' => 0,
@@ -134,7 +132,7 @@ $conf['ad_authentication'] = array(
             'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),  
         ),
        '[field.field_fname]' => array(
-            'sid' => 'activedirectory',
+            'sid' => 'activedirectory1',
             'ldap_attr' => '[givenName]',
             'user_attr' => 'user_tokens',
             'convert' => 0,
@@ -146,7 +144,7 @@ $conf['ad_authentication'] = array(
             'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),  
         ),
         '[field.field_department]' => array(
-            'sid' => 'activedirectory',
+            'sid' => 'activedirectory1',
             'ldap_attr' => 'Physics',
             'user_attr' => 'user_tokens',
             'convert' => 0,
@@ -164,7 +162,7 @@ $conf['ad_authentication'] = array(
  
   $conf['provisionToLdap']  = array(
     'drupalAcctProvisionServer' => LDAP_USER_NO_SERVER_SID,
-    'ldapEntryProvisionServer' => 'activedirectory',
+    'ldapEntryProvisionServer' => 'activedirectory1',
     'drupalAcctProvisionTriggers' => array(),
     'ldapEntryProvisionTriggers' => array(
       LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE,
@@ -179,19 +177,19 @@ $conf['ad_authentication'] = array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(
           '[dn]' => array(
-            'sid' => 'activedirectory',
+            'sid' => 'activedirectory1',
             'ldap_attr' => '[dn]',
             'user_attr' => 'user_tokens',
             'convert' => 0,
             'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
-            'user_tokens' => 'cn=[property.name],ou=people,dc=activedirectory,dc=ldap,dc=pixotech,dc=com',
+            'user_tokens' => 'cn=[property.name],ou=people,dc=hogwarts,dc=edu',
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
           ),
           '[cn]' => array (
-            'sid' =>  'activedirectory',
+            'sid' =>  'activedirectory1',
             'ldap_attr' => '[cn]',
             'user_attr' => '[property.name]',
             'convert' => 0,
@@ -202,9 +200,9 @@ $conf['ad_authentication'] = array(
             'enabled' => 1,
             'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
           ),
-          '[displayName]' => array(
-            'sid' => 'activedirectory',
-            'ldap_attr' => '[displayName]',
+          '[displayname]' => array(
+            'sid' => 'activedirectory1',
+            'ldap_attr' => '[displayname]',
             'user_attr' => 'user_tokens',
             'convert' => 0,
             'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
@@ -214,9 +212,9 @@ $conf['ad_authentication'] = array(
             'enabled' => 1,
             'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),  
           ),
-          '[sAMAccountName]' => array(
-            'sid' => 'activedirectory',
-            'ldap_attr' => '[sAMAccountName]',
+          '[samaccountname]' => array(
+            'sid' => 'activedirectory1',
+            'ldap_attr' => '[samaccountname]',
             'user_attr' => '[property.name]',
             'convert' => 0,
             'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
@@ -226,7 +224,7 @@ $conf['ad_authentication'] = array(
             'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY),  
           ),
           '[sn]' => array(
-            'sid' => 'activedirectory',
+            'sid' => 'activedirectory1',
             'ldap_attr' => '[sn]',
             'user_attr' => '[field.field_lname]',
             'convert' => 0,
@@ -237,9 +235,9 @@ $conf['ad_authentication'] = array(
             'enabled' => 1,
             'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY), 
           ),
-          '[givenName]' => array(
-            'sid' => 'activedirectory',
-            'ldap_attr' => '[givenName]',
+          '[givenname]' => array(
+            'sid' => 'activedirectory1',
+            'ldap_attr' => '[givenname]',
             'user_attr' => '[field.field_fname]',
             'convert' => 0,
             'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
@@ -250,24 +248,24 @@ $conf['ad_authentication'] = array(
             'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY), 
           ), 
           '[guid]' => array(
-            'sid' => 'activedirectory',
+            'sid' => 'activedirectory1',
             'ldap_attr' => '[guid]',
             'user_attr' => 'user_tokens',
             'convert' => 0,
             'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
-            'user_tokens' => 'ldap.pixotech.com.uid.[property.uid]',
+            'user_tokens' => '151',
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY), 
           ),
-          '[provisionSource]' => array(
-            'sid' => 'activedirectory',
-            'ldap_attr' => '[provisionSource]',
+          '[provisionsource]' => array(
+            'sid' => 'activedirectory1',
+            'ldap_attr' => '[provisionsource]',
             'user_attr' => 'user_tokens',
             'convert' => 0,
             'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
-            'user_tokens' => 'drupal.pixotech.com',
+            'user_tokens' => 'drupal.hogwarts.edu',
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,

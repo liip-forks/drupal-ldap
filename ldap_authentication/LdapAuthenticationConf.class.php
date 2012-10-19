@@ -1,5 +1,4 @@
 <?php
-// $Id: LdapAuthenticationConf.class.php,v 1.4.2.2 2011/02/08 20:05:41 johnbarclay Exp $
 
 /**
  * @file
@@ -10,8 +9,6 @@
 module_load_include('php', 'ldap_user', 'LdapUserConf.class');
 
 class LdapAuthenticationConf {
-
-  // no need for LdapAuthenticationConf id as only one instance will exist per drupal install
 
   public $sids = array();  // server configuration ids being used for authentication
   public $enabledAuthenticationServers = array(); // ldap server object
@@ -65,7 +62,6 @@ class LdapAuthenticationConf {
     'cookieExpire',
   );
 
-   /** are any ldap servers that are enabled associated with ldap authentication **/
   public function hasEnabledAuthenticationServers() {
     return !(count($this->enabledAuthenticationServers) == 0);
   }
@@ -109,16 +105,18 @@ class LdapAuthenticationConf {
   /**
    * Destructor Method
    */
-  function __destruct() {
-
-
-  }
+  function __destruct() { }
 
 
  /**
    * decide if a username is excluded or not
    *
-   * return boolean
+   * @param string $name as proposed drupal username
+   * @param array $ldap_user where top level keys are 'dn','attr','mail'
+   * @return boolean
+   *
+   * @todo.  this function should simply invoke hook_ldap_authentication_allowuser_results_alter
+   *   and most of this function should go in ldap_authentication_allowuser_results_alter
    */
   public function allowUser($name, $ldap_user, $account_exists = NULL) {
     
@@ -195,8 +193,8 @@ class LdapAuthenticationConf {
       $user->ldap_authenticated = TRUE; // fake user property added for query
       $consumers = ldap_authorization_get_consumers();
       $has_enabled_consumers = FALSE;
+      
       foreach ($consumers as $consumer_type => $consumer_config) {
-
         $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
         if ($consumer_obj->consumerConf->status) {
           $has_enabled_consumers = TRUE;

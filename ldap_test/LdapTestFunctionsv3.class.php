@@ -50,16 +50,26 @@ class LdapTestFunctionsv3  {
     variable_set('ldap_test_server__' . $sid, $test_data);
   }
 // ('jkeats@hotmail.com', 'jkeats@yahoo.com')
+// $this->testFunctions->setFakeServerUserAttribute($sid, 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'mail', 'hpotter@owlcarriers.com', 0);
   function setFakeServerUserAttribute($sid, $dn, $attr_name, $attr_value, $i=0) {
+    
     $test_data = variable_get('ldap_test_server__' . $sid, array());
+ //   debug("setFakeServerUserAttribute test data keys"); debug(array_keys($test_data));
    // if ($attr_value == 'jkeats@hotmail.com' || $attr_value == 'jkeats@yahoo.com') {
    //   debug("setFakeServerUserAttribute: test data before set: $sid, $dn, $attr_name, $attr_value, $i"); debug($test_data['entries']['CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com']['mail']);
   //  }
     $test_data['entries'][$dn][$attr_name][$i] = $attr_value;
+    $test_data['ldap'][$dn][$attr_name][$i] = $attr_value;
   //  if ($attr_value == 'jkeats@hotmail.com' || $attr_value == 'jkeats@yahoo.com') {
   //    debug('setFakeServerUserAttribute: test data after set'); debug($test_data['entries']['CN=jkeats,CN=Users,DC=activedirectory,DC=ldap,DC=pixotech,DC=com']['mail']);
   //  }
+  //  debug("setFakeServerUserAttribute v3 $sid, $dn, $attr_name, $attr_value, $i");
+   // if (!empty($test_data['entries'][$dn])) {
+   //   debug($test_data['entries'][$dn]);
+   // }
     variable_set('ldap_test_server__' . $sid, $test_data);
+    //debug($test_data);
+    $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE, TRUE); // clear server cache;
   }
 
   function configureLdapAuthentication($ldap_authentication_test_conf_id, $sids) {
@@ -208,7 +218,14 @@ class LdapTestFunctionsv3  {
           'count' => 1,
         ),
       );
-
+      if ($server_properties['ldap_type']  == 'activedirectory') {
+        $attributes[$server_properties['user_attr']] =  array( 0 => $user['cn'], 'count' => 1);
+        $attributes['distinguishedname'] =  array( 0 => $dn, 'count' => 1);
+      }
+      elseif ($server_properties['ldap_type']  == 'openldap') {
+        
+      }
+      
       $this->data['ldap_servers'][$sid]['users'][$dn]['attr'] = $attributes;
       $this->data['ldap_servers_by_guid'][$sid][$user['guid']]['attr'] = $attributes;
       $this->data['ldap_servers_by_guid'][$sid][$user['guid']]['dn'] = $dn;

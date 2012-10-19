@@ -465,6 +465,8 @@ class LdapServer {
         $attributes["attribute1"] = "value";
         $attributes["attribute2"][0] = "value1";
         $attributes["attribute2"][1] = "value2";
+        
+    @return TRUE on success FALSE on error
    */
 
   function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
@@ -472,7 +474,14 @@ class LdapServer {
     $this->connectAndBindIfNotAlready();
     
     if (!$old_attributes) {
-      $result = ldap_read($this->connection, $dn, 'objectClass=*');
+      $result = @ldap_read($this->connection, $dn, 'objectClass=*');
+      if (!$result) {
+        $error = "LDAP Server ldap_read(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
+        $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
+        watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
+        return FALSE;
+      }
+    
       $entries = ldap_get_entries($this->connection, $result);
       if (is_array($entries) && $entries['count'] == 1) {
         $old_attributes =  $entries[0];
@@ -495,7 +504,13 @@ class LdapServer {
 
       if ($cur_val == '' && $old_value != '') { // remove enpty attributes
         unset($attributes[$key]);
-        ldap_mod_del($this->connection, $dn, array($key_lcase => $old_value));
+        $result = @ldap_mod_del($this->connection, $dn, array($key_lcase => $old_value));
+        if (!$result) {
+          $error = "LDAP Server ldap_mod_del(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
+          $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
+          watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
+          return FALSE;
+        }
       }
       elseif (is_array($cur_val)) {
         foreach ($cur_val as $mv_key => $mv_cur_val) {
@@ -510,22 +525,16 @@ class LdapServer {
     }
   //  dpm('modifyLdapEntry, attributes to modify'); dpm($attributes);
     if (count($attributes) > 0) {
-      $status = ldap_modify($this->connection, $dn, $attributes);
-    }
-    else {
-      $status = TRUE; // since no changes, TRUE
-    }
-
-    if (!$status) {
-      watchdog(
-      'ldap_servers',
-      'Error: ldapModify() failed to modify ldap entry w/ DN "!dn" with values: !values',
-      array('!dn' => $dn, '!value' => var_export($attributes, TRUE)),
-      WATCHDOG_ERROR
-      );
+      $result = @ldap_modify($this->connection, $dn, $attributes);
+      if (!$result) {
+        $error = "LDAP Server ldap_modify(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
+        $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
+        watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
+        return FALSE;
+      }
     }
 
-    return $status;
+    return TRUE;
 
   }
 
@@ -543,6 +552,11 @@ class LdapServer {
       $this->bind();
     }
     $result = @ldap_delete($this->connection, $dn);
+    if (!$result) {
+      $error = "LDAP Server delete(%dn) in LdapServer::delete() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
+      $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
+      watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
+    }
     return $result;
   }
   /**
@@ -985,10 +999,11 @@ class LdapServer {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
       $result = $this->search($basedn, $filter, array_keys($attribute_maps));
-    //  debug('search result:'); debug($result);
+      //debug("search result: $filter"); debug($result);debug($result['count']);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.
+
       if ($result['count'] != 1) {
         $count = $result['count'];
         watchdog('ldap_servers', "Error: !count users found with $filter under $basedn.", array('!count' => $count), WATCHDOG_ERROR);
@@ -1001,11 +1016,13 @@ class LdapServer {
       // This was contributed by Dan "Gribnif" Wilga, and described
       // here: http://drupal.org/node/87833
       $name_attr = $this->user_attr;
+
       if (isset($match[$name_attr][0])) {
 
       }
       elseif (isset($match[drupal_strtolower($name_attr)][0])) {
         $name_attr = drupal_strtolower($name_attr);
+
       }
       else {
         if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
@@ -1038,7 +1055,6 @@ class LdapServer {
             'attr' => $match,
             'sid' => $this->sid,
           );
-
           return $result;
         }
       }

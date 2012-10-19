@@ -1,5 +1,4 @@
 <?php
-// $Id: ldap_authentication.module,v 1.1.4.3 2011/02/08 20:05:41 johnbarclay Exp $
 
 /**
  * @file
@@ -8,7 +7,6 @@
 
 /**
  * @todo fix advanced help for ../ldap/authentication settings page
- *
  */
 define('LDAP_AUTHENTICATION_PROJECT_TAG', 'ldap');
 
@@ -91,7 +89,9 @@ function ldap_authentication_menu_alter(&$items) {
   }
 }
 
-
+/**
+ * Implements hook_theme().
+ */
 function ldap_authentication_theme() {
   return array(
     'ldap_authentication_user_login_block_links' => array(
@@ -172,12 +172,8 @@ function ldap_authentication_info($field = 0) {
  * @param object $user
  * @return boolean
  *    true if user is recorded as ldap authenticated and identified (ldap_authentified)
- *
- * notes to developers
- * -  make user object explicit for clarity; don't default to current user as admins could be editing profile pages
- * -  don't use $user->data['ldap_authentified'] as it is geared toward ldap_authentication data, not where the user is currently ldap authenticated
- * -
  */
+
 function ldap_authentication_ldap_authenticated($user) {
 
   if (is_numeric($user)) {
@@ -392,19 +388,15 @@ function ldap_authentication_show_ldap_help_link($user = NULL) {
   if (!$auth_conf = ldap_authentication_get_valid_conf()) {
     return FALSE;
   }
-
-  if ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_MIXED) {
+  elseif ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_MIXED) {
     return (ldap_authentication_ldap_authenticated($user));
-  // LDAP_authen.login_forms.MM.*  // show ldap help only if ldap authenticated in mixed mode
-
   }
   elseif ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_EXCLUSIVE) {
     if ($user->uid == 0 || ldap_authentication_ldap_authenticated($user)) {
-    // LDAP_authen.login_forms.EM.anon, LDAP_authen.login_forms.EM.ldap
       return TRUE;
     }
     else {
-      return FALSE; // LDAP_authen.login_forms.EM.user1, LDAP_authen.login_forms.EM.drupal
+      return FALSE;
     }
   }
 }

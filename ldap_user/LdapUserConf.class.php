@@ -592,7 +592,7 @@ class LdapUserConf {
 
   public function synchToLdapEntry($account, $user_edit = NULL, $ldap_user =  array(), $test_query = FALSE) {
     //dpm("synchToLdapEntry, test_query=$test_query, account, user_edit"); dpm($account); dpm($user_edit); 
-    //debug("synchToLdapEntry, test_query=$test_query, account, user_edit"); debug($account); debug($user_edit); 
+   // debug("synchToLdapEntry, test_query=$test_query, account, user_edit"); debug($account); debug($user_edit); 
 
     if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
       return FALSE; // do not provision or synch user 1
@@ -685,10 +685,10 @@ class LdapUserConf {
     );
 
     if ($result) {
-      watchdog('ldap_user', 'LDAP entry on server %sid synched dn=%dn. username=%username, uid=%uid', array(), WATCHDOG_INFO);
+      watchdog('ldap_user', 'LDAP entry on server %sid synched dn=%dn. username=%username, uid=%uid', $tokens, WATCHDOG_INFO);
     }
     else {
-      watchdog('ldap_user', 'LDAP entry on server %sid not synched because error. username=%username, uid=%uid', array(), WATCHDOG_ERROR);
+      watchdog('ldap_user', 'LDAP entry on server %sid not synched because error. username=%username, uid=%uid', $tokens, WATCHDOG_ERROR);
     }
 
     return $result;

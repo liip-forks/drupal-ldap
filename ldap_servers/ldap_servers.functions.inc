@@ -22,18 +22,14 @@ function ldap_servers_module_load_include($type, $module, $name = NULL) {
   * which handles empty attributes better.
   *
   */
-function ldap_user_modify($userdn, $attributes, $ldap_server) {
-  $status = ldap_modify($ldap_server->connection, $userdn, $attributes);
-  if (!$status) {
-    watchdog(
-      'ldap_servers',
-      'Error: user_modify() failed to modify ldap entry w/ base DN "!dn" with values: !values',
-      array('!dn' => $userdn, '!value' => var_export($attributes, TRUE)),
-      WATCHDOG_ERROR
-    );
+function ldap_user_modify($dn, $attributes, $ldap_server) {
+  $result = ldap_modify($ldap_server->connection, $dn, $attributes);
+  if (!$result) {
+    $error = "LDAP Server ldap_modify(%dn) in ldap_user_modify() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
+    $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
+    watchdog('ldap_servers', $error, $tokens, WATCHDOG_ERROR);
   }
-
-  return $status;
+  return $result;
 }
 
 /**

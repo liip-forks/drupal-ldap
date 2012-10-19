@@ -1,28 +1,16 @@
 <?php
-// $Id: ldap_authentication.inc,v 1.1.2.3 2011/02/18 15:17:09 johnbarclay Exp $
 
 /**
  * @file
- * ldap_authn provides authentication against ldap server.
+ * ldap_authentication helper functions
  */
 
 /**
   * helper function for ldap_authn_form_user_login_block_alter and ldap_authn_form_user_login_alter
   *
-  * hook_user is gone in drupal 7 so functionality can be replaced by
-  * altering login form submit and validate functions
-  * http://drupal.org/update/modules/6/7#remove_op
-  *
-  * if form is being generated on non https and is set in preferences, set warning and end form development
-  *   add submit functions to form
-  *   - make sure submit function is in the correct order; that is if ldap precedes drupal, make _ldap_authn_login_form_submit first.
-  *   do not remove other authentication submit functions, just reorder.
+  * @todo if form is being generated on non https and is set in preferences, set warning and end form development
   */
 function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
-
-/**
- * make sure ldap_authentication is configured and valid first
- */
 
   if (!$auth_conf = ldap_authentication_get_valid_conf()) {
     return;
@@ -96,7 +84,14 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
 
 
 
-
+/**
+  * alter user editing form (profile form) based on ldap authentication configuration
+  *
+  * @param array $form array from user profile
+  * @param array $form_state from user profile
+  * 
+  * @return NULL (alters $form by reference)
+  */
 function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) {
   // keep in mind admin may be editing another users profile form.  don't assume current global $user
   $auth_conf = ldap_authentication_get_valid_conf();
@@ -128,9 +123,11 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
 
 /**
   * user form validation will take care of username, pwd fields
-  *
-  * this may validate if the user exists in ldap in the case of using
+  * this function validates ldap autentication specific issues
   * ldap authentication exclusively
+  *
+  * @param array $form_state array from user logon form
+  * @return NULL (form_set_error() calls throw validation errors)
   */
 function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
 
@@ -185,7 +182,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     watchdog('ldap_authentication', '%username : user_load_by_name(%username)', $watchdog_tokens, WATCHDOG_DEBUG);
   }
 
-  if(!($account = user_load_by_name($authname))) {
+  if (!($account = user_load_by_name($authname))) {
     $uid = db_query("SELECT uid FROM {authmap} WHERE authname = :authname AND module = 'ldap_user'", array(':authname' => $authname))->fetchColumn();
     $account = $uid ? user_load($uid) : FALSE;
   }
@@ -384,14 +381,14 @@ Will not work on most ldaps.'),
         $accountname = $ldap_user['attr'][ldap_server_massage_text($ldap_server->account_name_attr, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)][0];
       }
       else {
-      	$accountname = $authname;
+        $accountname = $authname;
       }
       $watchdog_tokens['%account_name_attr'] = $accountname;
       if ($ldap_server->account_name_attr != '') {
         $accountname = $ldap_user['attr'][ldap_server_massage_text($ldap_server->account_name_attr, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)][0];
       }
       else {
-      	$accountname = $authname;
+        $accountname = $authname;
       }
       $watchdog_tokens['%account_name_attr'] = $accountname;
       if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
@@ -463,8 +460,8 @@ Will not work on most ldaps.'),
    *
    */
   if (!$account_exists && ($account = user_load_by_name($accountname))) {
- 	  user_set_authmaps($account, array('authname_ldap_user' => $authname));
-   	$account_exists = TRUE;
+    user_set_authmaps($account, array('authname_ldap_user' => $authname));
+    $account_exists = TRUE;
   }
   if (!$account_exists) {
 
@@ -588,17 +585,22 @@ Will not work on most ldaps.'),
 }
 
 
-
+/**
+ * get human readable authentication error string
+ *
+ * @param int $error as LDAP_AUTHENTICATION_RESULT_* constant defined in ldap_authentication.module
+ * @return string human readable error text
+ */
 function _ldap_authentication_err_text($error) {
 
   $msg = t('unknown error: ' . $error);
   switch ($error) {
     case LDAP_AUTHENTICATION_RESULT_FAIL_CONNECT:
-    $msg = "Failed to connect to ldap server";
+    $msg = t('Failed to connect to ldap server');
     break;
 
     case LDAP_AUTHENTICATION_RESULT_FAIL_BIND:
-    $msg = "Failed to bind to ldap server";
+    $msg = t('Failed to bind to ldap server');
     break;
 
     case LDAP_AUTHENTICATION_RESULT_FAIL_FIND:
@@ -606,7 +608,7 @@ function _ldap_authentication_err_text($error) {
     break;
 
     case LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED:
-    $msg = "User disallowed";
+    $msg = t('User disallowed');
     break;
 
     case LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS:
@@ -626,13 +628,4 @@ function _ldap_authentication_err_text($error) {
   return $msg;
 }
 
-function ldap_authentication_redirect_to_ldap_help() {
 
-  if ($auth_conf = ldap_authentication_get_valid_conf() && $auth_conf->ldapUserHelpLinkUrl) {
-    drupal_goto($auth_conf->ldapUserHelpLinkUrl);
-  }
-  else {
-    return "Misconfigured LDAP Help Link";
-  }
-
-}

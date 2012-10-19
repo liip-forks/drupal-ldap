@@ -33,8 +33,37 @@ $conf['MixedModeUserLogon'] = array(
     'excludeIfNoAuthorizations' => LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT,
   );
 
+$conf['MixedModeUserLogon3'] = array(
+    'sids' => array('activedirectory1' => 'activedirectory1'),
+    'authenticationMode' => LDAP_AUTHENTICATION_MIXED,
+    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
+    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
+    'ldapUserHelpLinkUrl' => '',
+    'ldapUserHelpLinkText' => '',
+    'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
+    'emailUpdate' => LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE,
+    'allowOnlyIfTextInDn' => NULL,
+    'excludeIfTextInDn' => NULL,
+    'allowTestPhp' => NULL,
+    'excludeIfNoAuthorizations' => LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT,
+  );
+
 $conf['ExclusiveModeUserLogon'] = array(
     'sids' => array('ldapauthen1' => 'ldapauthen1'),
+    'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
+    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
+    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
+    'ldapUserHelpLinkUrl' => '',
+    'ldapUserHelpLinkText' => '',
+    'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
+    'emailUpdate' => LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE,
+    'allowOnlyIfTextInDn' => NULL,
+    'excludeIfTextInDn' => NULL,
+    'allowTestPhp' => NULL,
+    'excludeIfNoAuthorizations' => LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT,
+  );
+$conf['ExclusiveModeUserLogon3'] = array(
+    'sids' => array('activedirectory1' => 'activedirectory1'),
     'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
     'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
     'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
@@ -50,6 +79,21 @@ $conf['ExclusiveModeUserLogon'] = array(
 
 $conf['WL1'] = array(
     'sids' => array('ldapauthen1' => 'ldapauthen1'),
+    'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
+    'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
+    'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,
+    'ldapUserHelpLinkUrl' => '',
+    'ldapUserHelpLinkText' => '',
+    'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
+    'emailUpdate' => LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE,
+    'allowOnlyIfTextInDn' => NULL,
+    'excludeIfTextInDn' => NULL,
+    'allowTestPhp' => NULL,
+    'excludeIfNoAuthorizations' => 0,
+  );
+
+$conf['WL3'] = array(
+    'sids' => array('activedirectory1' => 'activedirectory1'),
     'authenticationMode' => LDAP_AUTHENTICATION_EXCLUSIVE,
     'loginConflictResolve' => LDAP_AUTHENTICATION_CONFLICT_LOG,
     'acctCreation' => LDAP_AUTHENTICATION_ACCT_CREATION_LDAP_BEHAVIOR,

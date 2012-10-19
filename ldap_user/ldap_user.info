@@ -17,6 +17,6 @@ files[] = ldap_user.theme.inc
 files[] = ldap_user.ws.inc
 files[] = LdapUserConf.class.php
 files[] = LdapUserConfAdmin.class.php
-files[] = tests/ldap_user_v3.test
+files[] = tests/ldap_user.test
 
 configure = admin/config/people/ldap/user

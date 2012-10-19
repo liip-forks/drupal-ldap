@@ -1,6 +1,4 @@
 <?php
-// $Id: ldap_authentication.theme.inc,v 1.1.2.1 2011/02/08 06:01:00 johnbarclay Exp $
-
 
 /**
  * @file

@@ -161,7 +161,7 @@ $conf['activedirectory1']['properties']  = array(
     'binddn'  => 'cn=service-account,ou=service-accounts,dc=ldap,dc=hogwarts,dc=edu',
     'bindpw' => 'goodpwd',
     'user_dn_expression' => NULL,
-    'user_attr'  => 'cn',
+    'user_attr'  => 'samaccountname',
     'mail_attr'  => 'mail',
     'mail_template'  => NULL,
     'unique_persistent_attr' => 'guid',
@@ -203,6 +203,26 @@ $conf['activedirectory1']['search_results']['(cn=hpotter)']['dc=ldap,dc=hogwarts
   ),
   'count' => 1,
 );
+
+$conf['activedirectory1']['search_results']['(samaccountname=hpotter)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array(
+    'count' => 1,
+    'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+    'FULLENTRY' => TRUE,
+  ),
+  'count' => 1,
+);
+
+$conf['activedirectory1']['search_results']['(samaccountname=hpotter-granger)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array(
+    'count' => 1,
+    'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+    'FULLENTRY' => TRUE,
+  ),
+  'count' => 1,
+);
+
+
 
 return $conf;
 }

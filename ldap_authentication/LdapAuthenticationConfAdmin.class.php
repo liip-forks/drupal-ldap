@@ -1,10 +1,10 @@
 <?php
-// $Id: LdapAuthenticationConfAdmin.class.php,v 1.4.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file
  * This classextends by LdapAuthenticationConf for configuration and other admin functions
  */
+
 module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConf.class');
 
 class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
@@ -378,22 +378,11 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#collapsed' => (boolean)(!$this->ssoEnabled),
     );
 
-/**
-    $form['sso']['ssoEnabled'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable Single Sign-On'),
-      '#description' => t($this->ssoEnabledDescription),
-      '#default_value' => $this->ssoEnabled,
-      '#disabled' => (boolean)(!module_exists('ldap_sso')),
-      );
-**/
     if ($this->ssoEnabled) {
-
       $form['sso']['enabled'] = array(
         '#type' => 'markup',
         '#markup' => $this->ssoEnabledDescription,
       );
-
     }
     else {
       $form['sso']['disabled'] = array(
@@ -401,11 +390,9 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
        '#markup' => '<p><em>' . t('LDAP Single Sign-On module must be enabled for options below to work.')
        . ' ' . t('It is currently disabled.')
         . ' ' .  l('Modules Form', 'admin/modules') . '</p></em>',
-     );
-
-
-
+      );
     }
+    
     $form['sso']['ssoRemoteUserStripDomainName'] = array(
       '#type' => 'checkbox',
       '#title' => t('Strip REMOTE_USER domain name'),
@@ -500,7 +487,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->excludeIfNoAuthorizations = ($values['excludeIfNoAuthorizations']) ? (int)$values['excludeIfNoAuthorizations'] : NULL;
     $this->emailOption  = ($values['emailOption']) ? (int)$values['emailOption'] : NULL;
     $this->emailUpdate  = ($values['emailUpdate']) ? (int)$values['emailUpdate'] : NULL;
-   // $this->ssoEnabled = ($values['ssoEnabled']) ? (int)$values['ssoEnabled'] : NULL;
     $this->ssoRemoteUserStripDomainName = ($values['ssoRemoteUserStripDomainName']) ? (int)$values['ssoRemoteUserStripDomainName'] : NULL;
     $this->seamlessLogin = ($values['seamlessLogin']) ? (int)$values['seamlessLogin'] : NULL;
     $this->cookieExpire = ($values['cookieExpire']) ? (int)$values['cookieExpire'] : NULL;
