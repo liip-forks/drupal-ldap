@@ -199,7 +199,7 @@ class LdapTestCasev2 extends DrupalWebTestCase {
     $fields['field_fname']['instance'] = array(
       'field_name' => 'field_fname',
       'entity_type' => 'user',
-      'label' => 'Last Name',
+      'label' => 'First Name',
       'bundle' => 'user',
       'required' => FALSE,
       'widget' => array(

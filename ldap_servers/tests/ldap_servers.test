@@ -206,7 +206,16 @@ class LdapServersTestCase extends LdapTestCasev3 {
 
     $sAMAccountName3 = ldap_servers_token_replace($ldap_entry, '[sAMAccountName]');
     $this->assertTrue($sAMAccountName2 == $ldap_entry['sAMAccountName'][0], t('[sAMAccountName] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
-  
+
+    /**
+     * @todo test tokens for 'user_account'
+     * 
+    $account = new stdClass();
+    $account->
+    ldap_servers_token_replace($account, '[property.name]', 'user_account');
+    
+    **/
+ 
     module_enable($modules, TRUE);
   }
   

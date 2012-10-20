@@ -131,6 +131,39 @@ $conf['openldap1']['methodResponses']['connect'] = LDAP_SUCCESS;
 
 $conf['openldap1']['search_results'] = array();
 
+
+$conf['openldap1']['search_results']['(&(objectClass=group)(|(member=cn=gryffindor,ou=groups,dc=hogwarts,dc=edu)(member=cn=students,ou=groups,dc=hogwarts,dc=edu)(member=cn=honors students,ou=groups,dc=hogwarts,dc=edu)))']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array('count' => 1, 'dn' => 'cn=users,ou=groups,dc=hogwarts,dc=edu'),
+  'count' => 1,
+);
+
+$conf['openldap1']['search_results']['(cn=hpotter)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array(
+    'count' => 1,
+    'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+    'FULLENTRY' => TRUE,
+  ),
+  'count' => 1,
+);
+
+$conf['openldap1']['search_results']['(cn=hpotter)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array(
+    'count' => 1,
+    'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+    'FULLENTRY' => TRUE,
+  ),
+  'count' => 1,
+);
+
+$conf['openldap1']['search_results']['(cn=hpotter-granger)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array(
+    'count' => 1,
+    'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+    'FULLENTRY' => TRUE,
+  ),
+  'count' => 1,
+);
+
 $conf['openldap1']['search_results']['(&(objectClass=groupofnames)(member=cn=hpotter,ou=people,dc=hogwarts,dc=edu))']['dc=ldap,dc=hogwarts,dc=edu'] = array(
   0 => array('count' => 1, 'dn' => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu'),
   1 => array('count' => 1, 'dn' => 'cn=students,ou=groups,dc=hogwarts,dc=edu'),

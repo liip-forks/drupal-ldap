@@ -317,10 +317,6 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
     if ($ldap_user_conf->setsLdapPassword) {
       $token_keys[] = 'password.random';
       $token_keys[] = 'password.user-random';
-      $token_keys[] = 'password.user-none';
-      if ($user_entered_password_available) {
-        $token_keys[] = 'password.user';
-      }
     }
   }
 
@@ -330,6 +326,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
     $attr_name = $parts[1];
     $value = FALSE;
     $skip = FALSE;
+
     switch ($attr_type) {
       case 'field':
         $value = @is_scalar($user_account->{$attr_name}['und'][0]['value']) ? $user_account->{$attr_name}['und'][0]['value'] : '';
@@ -340,7 +337,8 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
       break;
 
       case 'password':
-        if ($user_entered_password_available && ($attr_name == 'user' || $attr_name == 'user-random' ||$attr_name == 'user-none')) {
+        
+        if ($user_entered_password_available && $attr_name == 'user-random') {
           $value = ldap_user_ldap_provision_pwd('get');
         }
         elseif ($attr_name == 'random' || $attr_name == 'user-random') {
@@ -349,6 +347,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
         else {
           $skip = TRUE; // don't set token value because token is invalid
         }
+        // debug("case password: user_entered_password_available=$user_entered_password_available, attr_name=$attr_name, value=$value");
       break;
     }
     if (!$skip) {

@@ -977,8 +977,12 @@ class LdapServer {
    *   This could be anything, particularly when used by other modules.  Other modules should use string like 'mymodule_myevent'
    *   LDAP_USER_EVENT_ALL signifies get all attributes needed by all other contexts/ops
    *
-   * @return
-   *   An array with user's LDAP data or NULL if not found.
+   * @return associative array representing ldap data of a user.  for example of returned value.
+   *   'sid' => ldap server id
+   *   'mail' => derived from ldap mail (not always populated).
+   *   'dn'   => dn of user
+   *   'attr' => single ldap entry array in form returned from ldap_search() extension, e.g.
+   *   'dn' => dn of entry
    */
   function userUserNameToExistingLdapEntry($drupal_user_name, $ldap_context = NULL) {
 

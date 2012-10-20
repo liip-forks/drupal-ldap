@@ -54,7 +54,7 @@ function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
  * @param array $edit
  *   The edit array (see hook_user_insert). Make changes to this object as
  *   required.
- * @param array $ldap_user
+ * @param array $ldap_user, for structure @see LdapServer::userUserNameToExistingLdapEntry()
  *   Array, the ldap user object relating to the drupal user
  * @param object $ldap_server
  *   The LdapServer object from which the ldap entry was fetched
@@ -65,3 +65,6 @@ function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
 function hook_ldap_user_edit_user_alter(&$edit, &$ldap_user, $ldap_server, $prov_event) {
   $edit['myfield'] = $ldap_server->getAttributeValue($ldap_user, 'myfield');
 }
+
+
+

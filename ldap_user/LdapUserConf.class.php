@@ -10,19 +10,94 @@ require_once('ldap_user.module');
 
 class LdapUserConf {
 
-  public $drupalAcctProvisionServer = LDAP_USER_NO_SERVER_SID;  
+  /**
+   * server providing Drupal account provisioning
+   *
+   * @var string
+   *
+   * @see LdapServer::sid
+   */
+  public $drupalAcctProvisionServer = LDAP_USER_NO_SERVER_SID;
+
+  /**
+   * server providing LDAP entry provisioning
+   *
+   * @var string
+   *
+   * @see LdapServer::sid
+   */
   public $ldapEntryProvisionServer = LDAP_USER_NO_SERVER_SID;
+
+  /**
+   * Associative array mapping synch directions to ldap server instances.
+   *
+   * @var array
+   */
   public $provisionSidFromDirection = array(
     LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => LDAP_USER_NO_SERVER_SID,
     LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => LDAP_USER_NO_SERVER_SID,
   );
+  
+  /**
+   * Array of events that trigger provisioning of Drupal Accounts
+   * Valid constants are:
+   *   LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE
+   *   LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE
+   *
+   * @var array
+   */
   public $drupalAcctProvisionTriggers = array(LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE);
+  
+  /**
+   * Array of events that trigger provisioning of LDAP Entries
+   * Valid constants are:
+   *   LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE
+   *   LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE
+   *   LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE
+   *
+   * @var array
+   */
   public $ldapEntryProvisionTriggers = array();
+    
+  /**
+   * server providing LDAP entry provisioning
+   *
+   * @var string
+   *
+   * @see LdapServer::sid
+   */      
   public $userConflictResolve = LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
+  
+  /**
+   * drupal account creation model
+   *
+   * @var int 
+   *   LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR   /admin/config/people/accounts/settings do not affect "LDAP Associated" Drupal accounts.
+   *   LDAP_USER_ACCT_CREATION_USER_SETTINGS_FOR_LDAP  use Account creation settings at /admin/config/people/accounts/settings
+   */
   public $acctCreation = LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT;
+  
+  /**
+   * has current object been saved to the database?
+   *
+   * @var boolean
+   *
+   */
   public $inDatabase = FALSE;
+  
+  /**
+   * what to do when an ldap provisioned username conflicts with existing drupal user?
+   *
+   * @var int
+   *   LDAP_USER_CONFLICT_LOG - log the conflict
+   *   LDAP_USER_CONFLICT_RESOLVE - LDAP associate the existing drupal user
+   * 
+   */
   public $manualAccountConflict = LDAP_USER_MANUAL_ACCT_CONFLICT_REJECT;
+
   public $setsLdapPassword = TRUE; // @todo default to FALSE and check for mapping to set to true
+  
+
   public $loginConflictResolve = FALSE;
   /**
    * array of field synch mappings provided by all modules (via hook_ldap_user_attrs_list_alter())
@@ -585,7 +660,7 @@ class LdapUserConf {
    *
    * @param drupal user object $account.  Drupal user object
    * @param array $user_edit.  Edit array for user_save.  generally null unless user account is being created or modified in same synching
-   * @param array $ldap_user.  current ldap data of user. see README.developers.txt for structure
+   * @param array $ldap_user.  current ldap data of user. @see README.developers.txt for structure
    *
    * @return TRUE on success or FALSE on fail.
    */
@@ -859,7 +934,7 @@ class LdapUserConf {
        'include_count' => should 'count' array key be included
        'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY || LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER
   *
-  * @return ldap entry in ldap extension array format.!THIS IS NOT THE ACTUAL LDAP ENTRY
+  * @return array(ldap entry, $result) in ldap extension array format.!THIS IS NOT THE ACTUAL LDAP ENTRY
   */
 
   function drupalUserToLdapEntry($account, $ldap_server, $params, $ldap_user_entry = NULL) {
@@ -884,7 +959,7 @@ class LdapUserConf {
     
     $mappings = $this->getSynchMappings($direction, $prov_events);
      //debug('prov_events'); //debug(join(",",$prov_events));
-    //debug('mappings'); debug($mappings);
+  //  debug('mappings'); debug($mappings);
       // Loop over the mappings.
     foreach ($mappings as $field_key => $field_detail) {
       list($ldap_attr_name, $ordinal, $source_data_type, $target_data_type) = ldap_servers_token_extract_parts($field_key, TRUE);  //trim($field_key, '[]');
@@ -902,12 +977,6 @@ class LdapUserConf {
         if (substr($token, 0, 10) == '[password.' && (!$value || $value == $token)) { // deal with empty/unresolved password
           if (!$provision) {
             continue; //don't overwrite password on synch if no value provided
-          }
-          elseif ($token == '[password.user]') {
-            $result = LDAP_USER_PROV_RESULT_NO_PWD; // password.user signifies don't provision if no password available.
-          }
-          elseif ($provision && $token == '[password.user-none]') {
-            continue; // password.user-none signifies don't supply attribute to ldap
           }
         }
         
@@ -1093,7 +1162,7 @@ class LdapUserConf {
         $edit['name'] = $name;
       }
     }
-
+    
     if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER && in_array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, $prov_events)) {
       $edit['mail'] = isset($edit['mail']) ? $edit['mail'] : $ldap_user['mail'];
       $edit['pass'] = isset($edit['pass']) ? $edit['pass'] : user_password(20);

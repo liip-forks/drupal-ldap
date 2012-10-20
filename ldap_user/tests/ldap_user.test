@@ -242,7 +242,7 @@ class LdapUserUnitTests extends LdapTestCasev3 {
     $account = new stdClass();
     $account->name = 'hpotter';
     $params = array('ldap_context' => 'ldap_user_prov_to_drupal', 'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER);
-    $ldap_entry = $ldap_user_conf->drupalUserToLdapEntry($account, 'activedirectory1', $params);
+    list($ldap_entry, $error) = $ldap_user_conf->drupalUserToLdapEntry($account, 'activedirectory1', $params);
   //  debug('ldap_entry'); debug($ldap_entry);
     
     $account = NULL;
@@ -703,120 +703,293 @@ class LdapUserIntegrationTests extends LdapTestCasev3 {
         (variable_get('ldap_simpletest', 0) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId("setup"));
-
-    $sids = array('activedirectory1');
-    $this->prepTestData('hogwarts', $sids, 'provisionToLdap'); // this will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc
-    $ldap_user_conf = ldap_user_conf('default', TRUE);
     
-    // 9.B. Create and approve new user, populating first and last name.
-    $username = 'bhautdeser';
-    $user_edit = array(
-      'name' => $username,
-      'mail' => $username . '@hogwarts.org',
-      'pass' => user_password(),
-      'status' => 1,
-    );
-    $user_acct = new stdClass();
-    $user_acct->is_new = TRUE;
-    $user_acct->field_fname['und'][0]['value'] = 'Bercilak';
-    $user_acct->field_lname['und'][0]['value'] = 'Hautdesert';
-
-    $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
-    $desired_dn = "cn=bhautdeser,ou=people,dc=hogwarts,dc=edu";
-    
-    $pre_entry = $servers['activedirectory1']->dnExists($desired_dn, 'ldap_entry');
-    $drupal_account = user_save($user_acct, $user_edit);
-    $ldap_entry_post = $servers['activedirectory1']->dnExists($desired_dn, 'ldap_entry');
-    
-    $ldap_entry_success = (
-      $ldap_entry_post &&
-      $ldap_entry_post['cn'][0] == 'bhautdeser' &&
-      $ldap_entry_post['displayname'][0] == 'Bercilak Hautdesert' &&
-      $ldap_entry_post['sn'][0] == 'Hautdesert' &&
-      $ldap_entry_post['guid'][0] == '151' &&
-      $ldap_entry_post['provisionsource'][0] == 'drupal.hogwarts.edu'
-    );   
-    $this->assertTrue($ldap_entry_success, t("provision of ldap entry on user create succeeded for " . $username), $this->testId("test for provision to ldap on drupal acct create"));
-    if (!$ldap_entry_success) {
-      debug('drupal_account'); debug($drupal_account);
-      debug("desired_dn=$desired_dn, ldap_entry_post=");
-      debug($ldap_entry_post);
-      debug('ldap_user_conf'); debug($ldap_user_conf);
-    }
-    
-    
-    ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
-     
-    // Change lastname and first name (in drupal) and save user to test ldapSynch event handler
-    // confirm that appropriate attributes were changed in ldap entry
-    $ldap_entry_pre = $servers['activedirectory1']->dnExists($desired_dn, 'ldap_entry');
-    $user_acct_pre = user_load_by_name('bhautdeser');
-    $edit = array();
-    $edit['field_fname']['und'][0]['value'] = 'Bredbeddle';
-    $edit['field_lname']['und'][0]['value'] = 'Hautdesert';     
-    $user_acct = user_save($user_acct, $edit);
-    $user_acct_post = user_load_by_name('bhautdeser');
+    foreach (array('activedirectory1', 'openldap1') as $test_sid) {
+      $sids = array($test_sid);
+      $this->prepTestData('hogwarts', $sids, 'provisionToLdap_' . $test_sid); // this will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc
+      $ldap_user_conf = ldap_user_conf('default', TRUE);
+      
+      // 9.B. Create and approve new user, populating first and last name.
+      $username = 'bhautdeser';
+      if ($user = user_load_by_name($username)) {
+        user_delete($user->uid);
+      }
+      $user_edit = array(
+        'name' => $username,
+        'mail' => $username . '@hogwarts.org',
+        'pass' => user_password(),
+        'status' => 1,
+      );
+      $user_acct = new stdClass();
+      $user_acct->is_new = TRUE;
+      $user_acct->field_fname['und'][0]['value'] = 'Bercilak';
+      $user_acct->field_lname['und'][0]['value'] = 'Hautdesert';
   
-    $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE); // clear cache
-    $ldap_entry_post = $servers['activedirectory1']->dnExists($desired_dn, 'ldap_entry');
-
-    $ldap_entry_success = (
-      $ldap_entry_post['givenname'][0] == 'Bredbeddle'
-      && $ldap_entry_post['displayname'][0] == 'Bredbeddle Hautdesert' 
-      && $ldap_entry_post['sn'][0] == 'Hautdesert' 
-    );
-
-    $this->assertTrue($ldap_entry_success, t("synch to ldap entry on user save succeeded for " . $username), $this->testId());
-    if (!$ldap_entry_success) {
-      debug("dn=$desired_dn");
-      debug('drupal_account pre'); debug($user_acct_pre);
-      debug('drupal_account post'); debug($user_acct_post);
-      debug('ldap_entry_pre'); debug($ldap_entry_pre);
-      debug('ldap_entry_post'); debug($ldap_entry_post);
-      debug('ldap_user_conf'); debug($ldap_user_conf);      
-    }
+      $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
+      $desired_dn = "cn=bhautdeser,ou=people,dc=hogwarts,dc=edu";
+      
+      $pre_entry = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
+      $drupal_account = user_save($user_acct, $user_edit);
+      $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
+      
+      $ldap_entry_success = (
+        $ldap_entry_post &&
+        $ldap_entry_post['cn'][0] == 'bhautdeser' &&
+        $ldap_entry_post['displayname'][0] == 'Bercilak Hautdesert' &&
+        $ldap_entry_post['sn'][0] == 'Hautdesert' &&
+        $ldap_entry_post['guid'][0] == '151' &&
+        $ldap_entry_post['provisionsource'][0] == 'drupal.hogwarts.edu'
+      );   
+      $this->assertTrue($ldap_entry_success, t("provision of ldap entry on user create succeeded for " . $username), $this->testId("test for provision to ldap on drupal acct create"));
+      if (!$ldap_entry_success) {
+        debug('drupal_account'); debug($drupal_account);
+        debug("desired_dn=$desired_dn, ldap_entry_post=");
+        debug($ldap_entry_post);
+        debug('ldap_user_conf'); debug($ldap_user_conf);
+      }
+      
+      
+      ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);  // need to reset for simpletests
+       
+      // Change lastname and first name (in drupal) and save user to test ldapSynch event handler
+      // confirm that appropriate attributes were changed in ldap entry
+      $ldap_entry_pre = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
+      $user_acct_pre = user_load_by_name('bhautdeser');
+      $edit = array();
+      $edit['field_fname']['und'][0]['value'] = 'Bredbeddle';
+      $edit['field_lname']['und'][0]['value'] = 'Hautdesert';     
+      $user_acct = user_save($user_acct, $edit);
+      $user_acct_post = user_load_by_name('bhautdeser');
     
-    ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
-
-  // Change username and first name (in drupal) and save user to test ldapSynch event handler
-    // confirm that appropriate attributes were changed in ldap entry
-    $ldap_entry_pre = $servers['activedirectory1']->dnExists($desired_dn, 'ldap_entry');
-    $user_acct_pre = user_load_by_name('bhautdeser');
-    $edit = array();
-    $edit['field_fname']['und'][0]['value'] = 'Bredbeddle';
-    $edit['field_lname']['und'][0]['value'] = 'Hautdesert';     
-    $user_acct = user_save($user_acct, $edit);
-    $user_acct_post = user_load_by_name('bhautdeser');
+      $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE); // clear cache
+      $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
   
-    $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE); // clear cache
-    $ldap_entry_post = $servers['activedirectory1']->dnExists($desired_dn, 'ldap_entry');
+      $ldap_entry_success = (
+        $ldap_entry_post['givenname'][0] == 'Bredbeddle'
+        && $ldap_entry_post['displayname'][0] == 'Bredbeddle Hautdesert' 
+        && $ldap_entry_post['sn'][0] == 'Hautdesert' 
+      );
+  
+      $this->assertTrue($ldap_entry_success, t("synch to ldap entry on user save succeeded for " . $username), $this->testId());
+      if (!$ldap_entry_success) {
+        debug("dn=$desired_dn");
+        debug('drupal_account pre'); debug($user_acct_pre);
+        debug('drupal_account post'); debug($user_acct_post);
+        debug('ldap_entry_pre'); debug($ldap_entry_pre);
+        debug('ldap_entry_post'); debug($ldap_entry_post);
+        debug('ldap_user_conf'); debug($ldap_user_conf);      
+      }
+      
 
-    $ldap_entry_success = (
-      $ldap_entry_post['givenname'][0] == 'Bredbeddle'
-      && $ldap_entry_post['displayname'][0] == 'Bredbeddle Hautdesert' 
-      && $ldap_entry_post['sn'][0] == 'Hautdesert' 
-    );
-
-    $this->assertTrue($ldap_entry_success, t("synch to ldap entry on user save succeeded for " . $username), $this->testId());
-    if (!$ldap_entry_success) {
-      debug("dn=$desired_dn");
-      debug('drupal_account pre'); debug($user_acct_pre);
-      debug('drupal_account post'); debug($user_acct_post);
-      debug('ldap_entry_pre'); debug($ldap_entry_pre);
-      debug('ldap_entry_post'); debug($ldap_entry_post);
-      debug('ldap_user_conf'); debug($ldap_user_conf);      
+    // Change username and first name (in drupal) and save user to test ldapSynch event handler
+      // confirm that appropriate attributes were changed in ldap entry
+      $ldap_entry_pre = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
+      $user_acct_pre = user_load_by_name('bhautdeser');
+      $edit = array();
+      $edit['field_fname']['und'][0]['value'] = 'Bredbeddle';
+      $edit['field_lname']['und'][0]['value'] = 'Hautdesert';     
+      $user_acct = user_save($user_acct, $edit);
+      $user_acct_post = user_load_by_name('bhautdeser');
+    
+      $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE); // clear cache
+      $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
+  
+      $ldap_entry_success = (
+        $ldap_entry_post['givenname'][0] == 'Bredbeddle'
+        && $ldap_entry_post['displayname'][0] == 'Bredbeddle Hautdesert' 
+        && $ldap_entry_post['sn'][0] == 'Hautdesert' 
+      );
+  
+      $this->assertTrue($ldap_entry_success, t("synch to ldap entry on user save succeeded for " . $username), $this->testId());
+      if (!$ldap_entry_success) {
+        debug("dn=$desired_dn");
+        debug('drupal_account pre'); debug($user_acct_pre);
+        debug('drupal_account post'); debug($user_acct_post);
+        debug('ldap_entry_pre'); debug($ldap_entry_pre);
+        debug('ldap_entry_post'); debug($ldap_entry_post);
+        debug('ldap_user_conf'); debug($ldap_user_conf);      
+      }
     }
-   
     
     /**
-     * @todo functional tests
+     * provisionToLdapEmailVerification
+     * use case where a user self creates and confirms a drupal account and
+     *  a corresponding ldap entry with password is created
+     */
+    $password_tests = array(
+      '[password.user-random]' => 'goodpwd',
+      '[password.random]' => 'random',
+    );
+    
+    foreach ($password_tests as $password_token => $password_result) {
+      $test_id = "provisionToLdapEmailVerification $password_token, $test_sid";
+      ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE); // need to reset for simpletests
+      /**
+       * provisionToLdapEmailVerification setup
+       */
+      $this->prepTestData('hogwarts', $sids, 'provisionToLdap_' . $test_sid); // this will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc
+      $ldap_user_conf = ldap_user_conf('admin', TRUE);
+      $ldap_user_conf->drupalAcctProvisionServer = 0; // turn off provisioning to drupal
+      $ldap_user_conf->ldapEntryProvisionServer = $test_sid;
+      $ldap_user_conf->ldapEntryProvisionTriggers = array(
+        LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE,
+        LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE
+      );
+      
+      $ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY]['[password]'] = array(
+        'sid' => $test_sid,
+        'ldap_attr' => '[password]',
+        'user_attr' => 'user_tokens',
+        'convert' => 0,
+        'user_tokens' => $password_token,
+        'config_module' => 'ldap_user',
+        'synch_module' => 'ldap_user',
+        'enabled' => 1,
+        'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY), 
+      );
+  
+      $ldap_user_conf->save();
+      $ldap_user_conf = ldap_user_conf('default', TRUE);
+     // debug('ldap_user_conf after provisionToLdapEmailVerification setup'); debug($ldap_user_conf);
+  
+      variable_set('user_email_verification', TRUE);
+      variable_set('user_register', USER_REGISTER_VISITORS); // or USER_REGISTER_ADMINISTRATORS_ONLY, USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL
+      variable_set('user_cancel_method', 'user_cancel_block'); // user_cancel_block_unpublish, user_cancel_reassign, user_cancel_delete
+      $username = 'sstephens';
+      $this->drupalLogout();
+      if ($sstephens = user_load_by_name($username)) {
+        user_delete($sstephens->uid);
+      }
 
-     do a password reset of some sort
-     try to add a drupal user that conflicts with an ldap user
-     try a binary fields such as a user profile image
-     **/
+      /**
+       * provisionToLdapEmailVerification test
+       */
+      $this->drupalGet('user/register');  // user register form
+      $edit = array(
+        'name' => $username,
+        'mail' => $username . '@hogwarts.edu',
+        );
+      
+      $this->createTestUserFields(); // this will create last and first name fields
+  
+      $this->drupalPost('user/register', $edit, t('Create new account'));
+      
+      $sstephens = user_load_by_name($username);
+      
+  
+       //can't derive login url, must get it from outgoing email because timestamp in hash is not stored in user_mail_tokens()
+  
+      $emails = $this->drupalGetMails();
+      $email_body = $emails[count($emails) - 1]['body']; // most recent email is the one of interest
+      $result = array();
+      preg_match_all('/(user\/reset\/.*)This link can only be/s', $email_body, $result, PREG_PATTERN_ORDER);
+      if (count($result == 2)) {
+        $login_path = trim($result[1][0]);
+        $this->drupalGet($login_path);  // user login form
+        $sstephens = user_load_by_name($username);
+        $this->drupalPost($login_path, array(), t('Log in'));
+        $sstephens = user_load_by_name($username);
+  
+        $edit = array(
+          'mail' => $username . '@hogwarts.edu',
+          'pass[pass1]' => 'goodpwd',
+          'pass[pass2]' => 'goodpwd',
+          'field_fname[und][0][value]' => 'Samantha',
+          'field_lname[und][0][value]' => 'Stephens'
+        );
+        
+        $this->drupalPost(NULL, $edit, t('Save'));
+        $sstephens = user_load_by_name($username);
+        $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE); // clear cache
+        $desired_dn = "cn=$username,ou=people,dc=hogwarts,dc=edu";
+        $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
+        
+        $password_success = (
+          is_array($ldap_entry_post)
+          &&
+          (
+            ($password_token == '[password.random]' && $ldap_entry_post['password'][0] && $ldap_entry_post['password'][0] != 'goodpwd')
+            ||
+            ($password_token == '[password.user-random]' && $ldap_entry_post['password'][0] == $password_result)
+          )
+        );
+        $ldap_entry_success = (
+          $password_success &&
+          $ldap_entry_post['cn'][0] == $username &&
+          $ldap_entry_post['displayname'][0] == 'Samantha Stephens' &&
+          $ldap_entry_post['provisionsource'][0] == 'drupal.hogwarts.edu' &&
+          $ldap_entry_post['sn'][0] == 'Stephens' &&
+          $ldap_entry_post['givenname'][0] == 'Samantha'
+        );
+      }
+      else {
+        $ldap_entry_success = FALSE;
+      }
+     
+      $this->assertTrue($ldap_entry_success, t("correct ldap entry created for " . $username), $this->testId($test_id));
+      if (!$ldap_entry_success) {
+        debug("password_token,password_result: $password_token, $password_result");
+        debug('ldap_user_conf'); debug($ldap_user_conf);
+        debug('ldap_entry_post'); debug($ldap_entry_post);
+        debug('user'); debug($sstephens);
+      }
+      /**
+       * @todo functional tests
+  
+       do a password reset of some sort
+       try to add a drupal user that conflicts with an ldap user
+       try a binary fields such as a user profile image
+       **/
+      
+    }
     
+    // test deletion of drupal entry on deletion of drupal user (LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE)
     
+    // setup
+    // - create drupal provisioned ldap user
+    // - set LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE in event triggers
+    // - affirm that $ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account) works
+    // - delete drupal user
+    // - test that
+    
+    /**
+    foreach (array('activedirectory1', 'openldap1') as $test_sid) {
+      
+      $sids = array($test_sid);
+      $this->prepTestData('hogwarts', $sids, 'provisionToLdap_' . $test_sid); // this will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc
+      $ldap_user_conf = ldap_user_conf('admin', TRUE);
+      if (!in_array(LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE, $ldap_user_conf->ldapEntryProvisionTriggers)) {
+        $ldap_user_conf->ldapEntryProvisionTriggers[] = LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE;
+      }
+      $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers = TRUE;
+      $ldap_user_conf->save();
+  
+      $username = 'bhautdeser';
+      if ($user = user_load_by_name($username)) {
+        user_delete($user->uid);
+      }
+      $user_edit = array(
+        'name' => $username,
+        'mail' => $username . '@hogwarts.org',
+        'pass' => user_password(),
+        'status' => 1,
+      );
+      $user_acct = new stdClass();
+      $user_acct->is_new = TRUE;
+      $user_acct->field_fname['und'][0]['value'] = 'Bercilak';
+      $user_acct->field_lname['und'][0]['value'] = 'Hautdesert';
+  
+      $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
+      $desired_dn = "cn=bhautdeser,ou=people,dc=hogwarts,dc=edu";
+      
+      $pre_entry = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
+      $drupal_account = user_save($user_acct, $user_edit);
+      $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
+
+     //$ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account)
+    }
+   **/
+  
   }
 }
 
@@ -872,6 +1045,7 @@ class LdapUserUITests extends LdapTestCasev3 {
     $this->privileged_user = $this->drupalCreateUser(array(
       'administer site configuration',
       ));
+    
     $this->drupalLogin($this->privileged_user);
 
     $ldap_user_conf = ldap_user_conf();
@@ -943,8 +1117,6 @@ class LdapUserUITests extends LdapTestCasev3 {
       '2__sm__4__2' => TRUE,
     );
 
-    
-    
     $this->drupalPost('admin/config/people/ldap/user', $edit, t('Save'));
       
     $ldap_user_conf = ldap_user_conf(NULL, TRUE);

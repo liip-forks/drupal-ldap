@@ -320,16 +320,8 @@ the top of this form.
       $password_notes = <<<EOT
 <ul>
 <li>Pwd: Random -- Uses a random Drupal generated password</li>
-<li>Pwd: User -- Uses password supplied on user forms. If none available
-will throw error/warning and not provision account.  User password will not be
-available in certain contexts such as when accounts are created via webservice
-or cron.</li>
 <li>Pwd: User or Random -- Uses password supplied on user forms.
   If none available uses random password.</li>
-<li>Pwd: User or None -- Uses password supplied on user forms.
-  if none available does not provide a password, but still provisions account.
-  That is it will not set the password attribute at all rather than supply
-  an empty password.</li>
 </ul>
 EOT;
 

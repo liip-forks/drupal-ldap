@@ -35,25 +35,12 @@ common variables used in ldap_* and their structures
 -----------
 $ldap_user
 -----------
-Associative array representing ldap data of a user. See $ldap_server->userUserNameToExistingLdapEntry() for example of returned value.
-  'sid' => ldap server id
-  'mail' => derived from ldap mail (not always populated).
-  'dn'   => dn of user
-  'attr' => single ldap entry array in form returned from ldap_search() extension, e.g.
-    'dn' => dn of entry
-    'count' => 75
-    1 =>  'telephonenumber'
-    'telephonenumber' =>
-      'count => 2
-      0 => 555-555-5555
-      1 => 555-555-1232
-    2 => ...
+@see LdapServer::userUserNameToExistingLdapEntry() return
 
-  
 -----------
 $ldap_entry and $ldap_*_entry.  
 -----------
-single ldap entry from return of ldap_search()
+@see LdapServer::ldap_search() return array
 
 -----------
 $ldap_entries and $ldap_*_entries 

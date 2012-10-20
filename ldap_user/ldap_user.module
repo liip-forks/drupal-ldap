@@ -134,6 +134,15 @@ function ldap_user_cron() {
   }
 }
 
+/**
+ * Implements hook_ldap_derived_user_name_alter().
+ */
+function ldap_user_ldap_derived_user_name_alter(&$name, $ldap_user) {
+   // alter $name in some way here
+  
+}
+
+
 function ldap_user_conf_cache_clear() {
   $discard = ldap_user_conf('admin', TRUE);
   $discard = ldap_user_conf(NULL, TRUE);
@@ -323,17 +332,6 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       'configurable_to_ldap' => TRUE,
     );
     
-    // only works in contexts where user password is available
-    $available_user_attrs['[password.user]'] =  array(
-      'name' => 'Pwd: User',
-      'source' => '',
-      'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
-      'enabled' => TRUE,
-      'config_module' => 'ldap_user',
-      'prov_module' => 'ldap_user',
-      'configurable_to_ldap' => TRUE,
-    );
-  
     // use user password when available fall back to random pwd
     $available_user_attrs['[password.user-random]'] =  array(
       'name' => 'Pwd: User or Random',
@@ -346,17 +344,6 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       'configurable_to_ldap' => TRUE,
     );
     
-    // use user password when available fall back to not supplying password
-    $available_user_attrs['[password.user-none]'] =  array(
-      'name' => 'Pwd: User or None',
-      'source' => '',
-      'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
-      'enabled' => TRUE,
-      'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY), 
-      'config_module' => 'ldap_user',
-      'prov_module' => 'ldap_user',
-      'configurable_to_ldap' => TRUE,
-    );
   }
     
   //this is where need to be added to arrays
@@ -586,10 +573,10 @@ function ldap_user_provision_to_drupal($ldap_user, $user_edit = array()) {
 
 function ldap_user_ldap_provision_pwd($action, $value = NULL, $reset = FALSE) {
   
-  $calling_function = FALSE;
-  if (function_exists('debug_backtrace') && $backtrace = debug_backtrace()) { //   {
-    $calling_function = $backtrace[1]['function'];
-  }
+  //$calling_function = FALSE;
+  //if (function_exists('debug_backtrace') && $backtrace = debug_backtrace()) { //   {
+  //  $calling_function = $backtrace[1]['function'];
+  //}
 
   static $current_user_pass;
 
@@ -600,17 +587,12 @@ function ldap_user_ldap_provision_pwd($action, $value = NULL, $reset = FALSE) {
   if ($action == 'set') {
     $current_user_pass = $value;
   }
-  elseif ($action == 'get') {
-    if (
-        (!$calling_function || $calling_function == 'ldap_servers_token_tokenize_user_account')
-        &&
-        $current_user_pass
-        ) { // and viable calling function is ldap_servers_token_tokenize_user_account
-      return $current_user_pass;
-    }
-    else {
-      return FALSE;
-    }
+  elseif ($action == 'get' && $current_user_pass) {
+       // && (!$calling_function || $calling_function == 'ldap_servers_token_tokenize_user_account')
+    return $current_user_pass;
+  }
+  else {
+    return FALSE;
   }
   
 }
