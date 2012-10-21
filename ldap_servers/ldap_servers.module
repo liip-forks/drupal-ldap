@@ -537,14 +537,14 @@ function ldap_servers_binary($value) {
  */
 
 function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_context = NULL) {
-  //debug("_ldap_servers_get_user_ldap_data, sid=$sid, ldap_context=$ldap_context"); debug($drupal_user);
+  //dpm("_ldap_servers_get_user_ldap_data, sid=$sid, ldap_context=$ldap_context"); dpm($drupal_user);
   if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = db_query("SELECT authname FROM {authmap} WHERE uid = :uid AND module = 'ldap_user'", array(':uid' => $drupal_user->uid))->fetchColumn()) {
     $drupal_username = $authname;
   }
   else {
     $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
   }
-  
+
   $ldap_server = ldap_servers_get_servers($sid, 'enabled', TRUE);
  // debug("ldap_servers_get_user_ldap_data,sid=$sid"); debug($ldap_server->entries['cn=hpotter,ou=people,dc=hogwarts,dc=edu']);
   if ($ldap_server === FALSE) {
@@ -553,6 +553,7 @@ function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_contex
   }
 
   $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($drupal_username, $ldap_context);
+
   if ($ldap_user) {
     $ldap_user['sid'] = $sid;
   }

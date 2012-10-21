@@ -43,10 +43,11 @@ class LdapUserConf {
    * Valid constants are:
    *   LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE
    *   LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE
+   *   LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE
    *
    * @var array
    */
-  public $drupalAcctProvisionTriggers = array(LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE);
+  public $drupalAcctProvisionTriggers = array(LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE, LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE);
   
   /**
    * Array of events that trigger provisioning of LDAP Entries
@@ -187,13 +188,6 @@ class LdapUserConf {
     'wsUserIps',
   );
   
-  // events that can create drupal users
-  private $drupalAcctProvisionAvailableEvents = array(
-    LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE,
-    LDAP_USER_DRUPAL_USER_PROV_VIA_API,
-  );
-
-
   function __construct() {
     $this->load();
     
@@ -1103,29 +1097,59 @@ class LdapUserConf {
     }
   }
   
+  /**
+   * set ldap associations of a drupal account by altering user fields
+   *
+   * @param string $drupal_username
+   *
+   * @return boolean TRUE on success, FALSE on error or failure because of invalid user or ldap accounts
+   *
+   */
   function ldapAssociateDrupalAccount($drupal_username) {
+
     if ($this->drupalAcctProvisionServer) {
       $prov_events = array(LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT);
       $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);  // $ldap_user['sid']
       $account = user_load_by_name($drupal_username);
       $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $this->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
-
-      $user_edit = array();
-      $params = array(
-        'account' => $account,
-        'user_edit' => $user_edit,
-        'prov_events' =>  $prov_events,
-        'module' => 'ldap_user',
-        'function' => 'ldapAssociateDrupalAccount',
-        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
-      );
-      drupal_alter('ldap_entry', $ldap_user, $params);
-      $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_events);
-      $account = user_save($account, $user_edit, 'ldap_user');
-
-      if ($account) {
-        user_set_authmaps($account, array('authname_ldap_user' => $drupal_username));
+      if (!$account) {
+        watchdog(
+          'ldap_user',
+          'Failed to LDAP associate drupal account %drupal_username because account not found',
+          array('%drupal_username' => $drupal_username),
+          WATCHDOG_ERROR
+        );
+        return FALSE;
       }
+      elseif (!$ldap_user) {
+        watchdog(
+          'ldap_user',
+          'Failed to LDAP associate drupal account %drupal_username because corresponding LDAP entry not found',
+          array('%drupal_username' => $drupal_username),
+          WATCHDOG_ERROR
+        );
+        return FALSE;
+      }
+      else {
+        $user_edit = array();
+        $user_edit['data']['ldap_user']['init'] = array(
+          'sid'  => $ldap_user['sid'],
+          'dn'   => $ldap_user['dn'],
+          'mail'   => $account->mail,
+        );
+        $ldap_user_puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
+        if ($ldap_user_puid) {
+          $user_edit['ldap_user_puid'][LANGUAGE_NONE][0]['value'] = $ldap_user_puid; //
+        }
+        $user_edit['ldap_user_puid_property'][LANGUAGE_NONE][0]['value'] = $ldap_server->unique_persistent_attr;
+        $user_edit['ldap_user_puid_sid'][LANGUAGE_NONE][0]['value'] = $ldap_server->sid;
+        $user_edit['ldap_user_current_dn'][LANGUAGE_NONE][0]['value'] = $ldap_user['dn'];
+        $account = user_save($account, $user_edit, 'ldap_user');
+        return (boolean)$account;
+      }
+    }
+    else {
+      return FALSE;
     }
   }
   
@@ -1167,7 +1191,7 @@ class LdapUserConf {
       $edit['status'] = isset($edit['status']) ? $edit['status'] : 1;
       $edit['signature'] = isset($edit['signature']) ? $edit['signature'] : '';
       
-      $edit['data']['ldap_authentication']['init'] = array(
+      $edit['data']['ldap_user']['init'] = array(
         'sid'  => $ldap_user['sid'],
         'dn'   => $ldap_user['dn'],
         'mail' => $edit['mail'],

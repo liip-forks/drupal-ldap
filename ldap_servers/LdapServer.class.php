@@ -995,7 +995,6 @@ class LdapServer {
 
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
     $ldap_username = $this->userUsernameToLdapNameTransform($drupal_user_name, $watchdog_tokens);
-
     if (!$ldap_username) {
       return FALSE;
     }
@@ -1010,7 +1009,6 @@ class LdapServer {
       if (empty($basedn)) continue;
       $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
       $result = $this->search($basedn, $filter, array_keys($attribute_maps));
-      //debug("search result: $filter"); debug($result);debug($result['count']);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.

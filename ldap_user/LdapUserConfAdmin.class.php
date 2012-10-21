@@ -963,6 +963,7 @@ EOT;
         credentials. (Requires LDAP Authentication module).'),
       LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE => t('Create or Synch to Drupal user anytime a Drupal user account
         is created or updated. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
+      LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE => t('Provide option on admin/people/create to create corresponding LDAP Entry.'),
     );
 
     $values['ldapEntryProvisionTriggersDescription'] = t('Which LDAP attributes are synched on create or synch is determined in the

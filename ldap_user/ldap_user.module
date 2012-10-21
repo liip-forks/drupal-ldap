@@ -11,7 +11,7 @@ define('LDAP_USER_DRUPAL_HELP_URL', 'http://drupal.org/node/997082');
 // configurable drupal acct provision triggers
 define('LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE', 1);
 define('LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE', 2);
-define('LDAP_USER_DRUPAL_USER_PROV_VIA_API', 3);
+define('LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE', 3);
 
 // configurable ldap entry provision triggers 
 define('LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE', 6);
@@ -440,26 +440,35 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
   $ldap_user_conf = ldap_user_conf();
   
   $ldap_fieldset = array();
-  if ($ldap_user_conf->manualAccountConflict == LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM) {
-    $options = array(
-      LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE => t('Make this an LDAP Associated account.  If a related LDAP account can not be found, a validation error will appear and the account will not be created.'),
-      LDAP_USER_MANUAL_ACCT_CONFLICT_NO_LDAP_ASSOCIATE => t('Do not make this an LDAP Associated account.'),
-    );
-    $ldap_fieldset['ldap_user_association'] = array(
-      '#type' => 'radios',
-      '#options' => $options,
-      '#required' => FALSE,
-      '#title' => t('LDAP Entry Association.'),
-    );  
+  $options = array(
+    LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE => t('Make this an LDAP Associated account.  If a related LDAP account can not be found, a validation error will appear and the account will not be created.'),
+    LDAP_USER_MANUAL_ACCT_CONFLICT_NO_LDAP_ASSOCIATE => t('Do not make this an LDAP Associated account.'),
+  );
+  $ldap_fieldset['ldap_user_association'] = array(
+    '#type' => 'radios',
+    '#options' => $options,
+    '#required' => FALSE,
+    '#title' => t('LDAP Entry Association.'),
+  );  
+  if ($ldap_user_conf->manualAccountConflict != LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM) {
+    $ldap_fieldset['ldap_user_association']['#disabled'] = TRUE;
+    $ldap_fieldset['ldap_user_association']['#description'] =  t('To enable
+      this an LDAP server must be selected for provisioning to Drupal in
+      admin/config/people/ldap/user and "Show option on user create form..." must be selected.');   
   }
- 
-  if ($ldap_user_conf->ldapEntryProvisionServer) {
-    $ldap_fieldset['ldap_user_create_ldap_acct'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Create corresponding LDAP entry.'),
-    );
+
+  $ldap_fieldset['ldap_user_create_ldap_acct'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Create corresponding LDAP entry.'),
+  );
+  if (!$ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE)) {
+    $ldap_fieldset['ldap_user_create_ldap_acct']['#disabled'] = TRUE;
+    $ldap_fieldset['ldap_user_create_ldap_acct']['#description'] = t('To enable
+      this an LDAP server must be selected for provisioning to Drupal in
+      admin/config/people/ldap/user and manual creation of LDAP accounts
+      must be enabled also.');   
   }
-  
+
   if (count($ldap_fieldset) > 0) {
     $form['ldap_user_fields'] = $ldap_fieldset;
     $form['ldap_user_fields']['#type'] = 'fieldset';
@@ -490,7 +499,7 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
     if (!$ldap_user) {
      // dpm($ldap_user);
       form_set_error('ldap_user_association', t('User %name does not have a corresponding LDAP Entry (dn).
-        Under LDAP options, you may not select "Make this an LDAP Associated Account"', array('%name' => $drupal_username)));
+        Under LDAP options, you may NOT select "Make this an LDAP Associated Account"', array('%name' => $drupal_username)));
     }
   }
   
@@ -520,7 +529,27 @@ function ldap_user_form_register_form_submit1($form, &$form_state) {
 /** called after user_register_form_submit **/
 function ldap_user_form_register_form_submit2($form, &$form_state) {
   
-  if (@$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE) {
+  $values = $form_state['values'];
+  $ldap_user_association_set = FALSE;
+  
+  if (@$values['ldap_user_create_ldap_acct']) {
+    if ($account = user_load_by_name($values['name'])) {
+      $ldap_user_conf = ldap_user_conf();
+      $ldap_provision_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
+      if (!$ldap_provision_entry) {
+        $provision_result = $ldap_user_conf->provisionLdapEntry($account);
+      }
+      else {
+        $ldap_user_association_set = TRUE;
+      }
+    }
+    else {
+      // don't do anything here.  If account is not created, other user module warnings will exist
+    }
+  }
+
+  if ($ldap_user_association_set || @$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE) {
+    $ldap_user_conf = ldap_user_conf();
     $ldap_user_conf->ldapAssociateDrupalAccount($form_state['values']['name']);
   }
   
@@ -906,7 +935,7 @@ function ldap_user_synch_triggers_key_values() {
   return array(
     LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE => 'DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE',
     LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE => 'DRUPAL_USER_PROV_ON_AUTHENTICATE',
-    LDAP_USER_DRUPAL_USER_PROV_VIA_API => 'DRUPAL_USER_PROV_VIA_API',
+    LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE => 'LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE',
     LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE => 'LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE',
     LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE => 'LDAP_ENTRY_PROV_ON_AUTHENTICATE',
     LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE => 'LDAP_ENTRY_DELETE_ON_USER_DELETE',

@@ -11,7 +11,7 @@ determine when provisioning happens.
 // configurable drupal acct provision triggers
 LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE
 LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE
-LDAP_USER_DRUPAL_USER_PROV_VIA_API
+LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE
 
 // configurable ldap entry provision triggers 
 LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE
@@ -53,15 +53,12 @@ This method is based on the configuration of two sets of checkboxes at config/pe
 ldapUserConf::drupalAcctProvisionTriggers (see "LDAP Entry Provisioning Options"), contains:
   LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE
   LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE
+  LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE
 
 ldapUserConf::ldapEntryProvisionTriggers (see "Drupal Account Provisioning Options"), contains:
   LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE
   LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE
   LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE
-
-configurable elsewhere or no implemented:
-  LDAP_USER_DRUPAL_USER_PROV_VIA_API
-  
 
 @todo.  A hook to allow other modules to intervene here 
 
