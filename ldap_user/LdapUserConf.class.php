@@ -869,12 +869,10 @@ class LdapUserConf {
       'include_count' => FALSE,
       );
     list($proposed_ldap_entry, $error) = $this->drupalUserToLdapEntry($account, $ldap_server, $params);
-   //debug("getProvisionRelatedLdapEntry:proposed_ldap_entry"); //debug(array($proposed_ldap_entry, $error));
     if (!(is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn']) && $proposed_ldap_entry['dn'])) {
       return FALSE;
     }
     $ldap_entry = $ldap_server->dnExists($proposed_ldap_entry['dn'], 'ldap_entry', array());
-    //debug('getProvisionRelatedLdapEntry:ldap_entry'); //debug($ldap_entry);
     return $ldap_entry;
     
   }
@@ -889,9 +887,8 @@ class LdapUserConf {
    */
   public function deleteProvisionedLdapEntries($account) {
     // determine server that is associated with user
+    
     $boolean_result = FALSE;
-    list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name);
-
     $language = ($account->language) ? $account->language : 'und';
     if (isset($account->ldap_user_prov_entries[$language][0])) {
       foreach ($account->ldap_user_prov_entries[$language] as $i => $field_instance) {
@@ -901,7 +898,6 @@ class LdapUserConf {
           list($sid, $dn) = $parts;
           $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
           if (is_object($ldap_server) && $dn) {
-
             $boolean_result = $ldap_server->delete($dn);
             $tokens = array('%sid' => $sid, '%dn' => $dn, '%username' => $account->name, '%uid' => $account->uid);
             if ($boolean_result) {

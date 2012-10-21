@@ -943,18 +943,10 @@ class LdapUserIntegrationTests extends LdapTestCasev3 {
       
     }
     
-    // test deletion of drupal entry on deletion of drupal user (LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE)
-    
-    // setup
-    // - create drupal provisioned ldap user
-    // - set LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE in event triggers
-    // - affirm that $ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account) works
-    // - delete drupal user
-    // - test that
-    
-    /**
+    // test deletion of drupal entry on deletion of drupal user 
     foreach (array('activedirectory1', 'openldap1') as $test_sid) {
-      
+      $test_id = $test_sid;
+      // 1. setup
       $sids = array($test_sid);
       $this->prepTestData('hogwarts', $sids, 'provisionToLdap_' . $test_sid); // this will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc
       $ldap_user_conf = ldap_user_conf('admin', TRUE);
@@ -984,12 +976,24 @@ class LdapUserIntegrationTests extends LdapTestCasev3 {
       
       $pre_entry = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
       $drupal_account = user_save($user_acct, $user_edit);
-      $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
+      $ldap_entry_pre_delete = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
 
-     //$ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account)
+      $ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($drupal_account);
+
+      // 2. test
+      user_delete($drupal_account->uid);
+      $ldap_server = ldap_servers_get_servers($test_sid, 'all', TRUE, TRUE);
+      $ldap_entry_post_delete = $ldap_server->dnExists($desired_dn, 'ldap_entry');
+      
+
+      $success = (!$ldap_entry_post_delete);
+      $this->assertTrue($success, t("ldap entry removed for $username on drupal user delete with deletion enabled."), $this->testId($test_id));
+   
+      if (!$success) {
+        debug(" desired_dn=$desired_dn test_sid=$test_sid, ldap entry post:"); debug($ldap_entry_post_delete);
+      }
+
     }
-   **/
-  
   }
 }
 

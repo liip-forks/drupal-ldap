@@ -166,10 +166,13 @@ should return tokens such as:
     [samaccountname] = jdoe
     [samaccountname:0] = jdoe
     [samaccountname:last] = jdoe
+    
+    [guid:0;tobase64] = 243324234 where guid was converted via ldap_servers_tobase64() function
 
  */
 function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
   
+  debug('ldap_servers_token_tokenize_entry'); debug($token_keys);
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
   
@@ -236,11 +239,17 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
   }
   else {
     foreach ($token_keys as $token_key) {
-      // $token_key = 'dn', 'mail', 'mail:0', 'mail:last', 'dept:1', etc.
+      // $token_key = 'dn', 'mail', 'mail:0', 'mail:last', 'dept:1', 'guid:0;tobase64etc.
       $value = NULL;
       $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token_key);
       $attr_name = $parts[0];
       $ordinal_key = isset($parts[1]) ? $parts[1] : 0;
+      $conversion = FALSE;
+     // if (strpos($ordinal_key, ';') !== FALSE) {
+     //   $parts2 = explode(';', $ordinal_key);
+     //   $ordinal_key = $parts2[0];
+     //   $conversion = $parts2[1];
+     // }
       $i = NULL;
       
       if ($attr_name == 'dn' || !isset($ldap_entry[$attr_name])) { // don't use empty() since a 0, "", etc value may be a desired value
@@ -259,6 +268,24 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
           continue;  // don't add token if case not covered
         }
       }
+      /**
+      if ($conversion) {
+        switch ($conversion) {
+        
+          case 'base64_encode':
+            $value = base64_encode($value);
+            break;
+          
+          case 'bin2hex':
+            $value = bin2hex($value);
+            break;          
+
+          default:
+            // no default;
+        }
+      }
+      **/
+      
       $tokens[$pre . $token_key . $post] = check_plain($value);
       if ($token_key != drupal_strtolower($token_key)) {
         $tokens[$pre . drupal_strtolower($token_key) . $post] = check_plain($value);

@@ -319,7 +319,7 @@ class LdapServerTestv2 extends LdapServer {
       $result = TRUE;
       
     }
-    $test_data2 = variable_get('ldap_test_server__' . $this->sid, array());
+  //  $test_data2 = variable_get('ldap_test_server__' . $this->sid, array());
   //  debug('server test data after save'); debug($test_data2['entries']);
     return $result;
     
@@ -394,12 +394,10 @@ class LdapServerTestv2 extends LdapServer {
 
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
     if (isset($test_data['entries'][$dn])) {
-     // debug("test data $dn"); debug($test_data['entries'][$dn]);
-     // debug('this entries[dn]'); debug($this->entries[$dn]);
       unset($test_data['entries'][$dn]);
-      unset($this->entries[$dn]);
+      unset($test_data['ldap'][$dn]);
       variable_set('ldap_test_server__' . $this->sid, $test_data);
-     // $this->refreshFakeData();
+      $this->refreshFakeData();
       return TRUE;
     }
     else {
@@ -408,5 +406,4 @@ class LdapServerTestv2 extends LdapServer {
 
   }
   
-
 }

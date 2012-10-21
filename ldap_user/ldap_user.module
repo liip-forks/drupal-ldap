@@ -834,11 +834,10 @@ function ldap_user_user_delete($account) {
   if (
       $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers
       && $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE)
-      && $ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account)
       ) {
-    $ldap_user_conf->deleteProvisionedLdapEntries($account);
+    $boolean_result = $ldap_user_conf->deleteProvisionedLdapEntries($account);
+    // no need to watchdog here, because fail in deleteProvisionedLdapEntries provides watchdog entry
   }
-
 }
 
 
