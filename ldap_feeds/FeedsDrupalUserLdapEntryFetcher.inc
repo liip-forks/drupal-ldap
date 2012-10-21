@@ -46,7 +46,7 @@ class FeedsDrupalUserLdapEntryFetcherResult extends FeedsFetcherResult {
       if (
         $uid == 0 ||
         $uid == 1 ||
-        ($this->filterLdapAuthenticated && !isset($user->data['ldap_authentication'])) ||
+        ($this->filterLdapAuthenticated && !isset($user->data['ldap_user'])) ||
         ($filterOnRoles && !array_intersect(array_values($selectedRoles), array_keys($user->roles)))
         ) {
         continue;

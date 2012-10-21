@@ -276,7 +276,7 @@ class LdapUserUnitTests extends LdapTestCasev3 {
 
 
     $data_diff = array_diff(
-      $hpotter->data['ldap_authentication'],
+      $hpotter->data['ldap_user'],
       array(
       'init' =>
         array(

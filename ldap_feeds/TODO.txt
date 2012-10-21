@@ -1,6 +1,6 @@
 
 - add ldap token evaluation to feeds such that multiple attributes can be parsed
-- add functionality to populate user->data['ldap_authentication'] and other user populating data
+- add functionality to populate user->data['ldap_user'] and other user populating data
 - simpletests
 - documenation of use cases
 - inclusion of sample feeds as exportables

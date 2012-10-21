@@ -90,7 +90,7 @@ function ldap_test_dev_provision() {
   );
 
   $data_diff = array_diff(
-    $jkeats->data['ldap_authentication'],
+    $jkeats->data['ldap_user'],
     array (
     'init' =>
       array (

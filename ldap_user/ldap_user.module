@@ -449,8 +449,16 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
     '#options' => $options,
     '#required' => FALSE,
     '#title' => t('LDAP Entry Association.'),
-  );  
-  if ($ldap_user_conf->manualAccountConflict != LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM) {
+  );
+  
+  if ($ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE)) {
+    $ldap_fieldset['ldap_user_association']['#disabled'] = TRUE;
+    $ldap_fieldset['ldap_user_association']['#description'] =  t('Since "Create
+      or Synch to Drupal user anytime a Drupal user account is created or updated"
+      is selected at admin/config/people/ldap/user, this option will have no
+      effect so its disabled.');      
+  }
+  elseif ($ldap_user_conf->manualAccountConflict != LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM) {
     $ldap_fieldset['ldap_user_association']['#disabled'] = TRUE;
     $ldap_fieldset['ldap_user_association']['#description'] =  t('To enable
       this an LDAP server must be selected for provisioning to Drupal in
