@@ -332,6 +332,7 @@ class LdapUserConf {
   public function getLdapUserRequiredAttributes($direction = LDAP_USER_PROV_DIRECTION_ALL, $ldap_context = NULL) {
 
     $attributes_map = array();
+    $required_attributes = array();
     if ($this->drupalAcctProvisionServer) {
       $prov_events = $this->ldapContextToProvEvents($ldap_context);
       $attributes_map = $this->getSynchMappings($direction, $prov_events);

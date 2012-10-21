@@ -360,7 +360,6 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
         continue;
       }
 
-
       foreach (array('ldap_attr', 'user_attr', 'convert', 'direction', 'enabled', 'prov_events') as $k) {
         if (isset($mapping[$k])) {
           $available_user_attrs[$key][$k] = $mapping[$k];
@@ -459,12 +458,6 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
       '#type' => 'checkbox',
       '#title' => t('Create corresponding LDAP entry.'),
     );
-        
-    if (in_array(LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE, $ldap_user_conf->ldapEntryProvisionTriggers)) {
-      // account will be created if status = 1
-      $ldap_fieldset['ldap_user_create_ldap_acct']['#description'] = t('(LDAP User configuration is already set to automatically create LDAP entry when its status becomes "active")
-        Checking this will create the LDAP account even if its status is set to "Blocked"');
-    }
   }
   
   if (count($ldap_fieldset) > 0) {
