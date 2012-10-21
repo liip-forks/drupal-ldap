@@ -496,7 +496,37 @@ function ldap_servers_cache_clear() {
   $discard = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE);
 }
 
+/**
+ * function to convert microsoft style guids to strings
+ */
+function ldap_servers_msguid($value) {
+  
+  $hex_string = bin2hex($value);
+  // (MS?) GUID are displayed with first three GUID parts as "big endian"
+  // Doing this so String value matches what other LDAP tool displays for AD.
+  $value = strtoupper(substr( $hex_string, 6, 2) . substr( $hex_string, 4, 2) .
+  substr( $hex_string, 2, 2) . substr( $hex_string, 0, 2) . '-' .
+  substr( $hex_string, 10, 2) . substr( $hex_string, 8, 2) . '-' .
+  substr( $hex_string, 14, 2) . substr( $hex_string, 12, 2) . '-' .
+  substr( $hex_string, 16, 4) . '-' . substr( $hex_string, 20, 12));
+  
+  return $value;
+}
 
+/**
+ * general binary conversion function for guids
+ * tries to determine which approach based on length
+ * of string
+ */
+function ldap_servers_binary($value) {
+  if (strlen($value) == 16) {
+    $value = ldap_servers_msguid($value);
+  }
+  else {
+    $value = bin2hex($value);
+  }
+  return $value;
+}
 /**
  * @todo needs caching element.  several modules could potentially call this in the same
  * page request.

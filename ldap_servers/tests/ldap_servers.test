@@ -181,6 +181,7 @@ class LdapServersTestCase extends LdapTestCasev3 {
       'mail' => array( 0 => 'hpotter@hogwarts.edu', 'count' => 1),
       'sAMAccountName' => array( 0 => 'hpotter', 'count' => 1),
       'house' => array( 0 => 'Gryffindor', 1 => 'Privet Drive', 'count' => 2),
+      'guid' => array( 0 => 'sdafsdfsdf', 'count' => 1),
       'count' => 3,
     );
      
@@ -206,6 +207,22 @@ class LdapServersTestCase extends LdapTestCasev3 {
 
     $sAMAccountName3 = ldap_servers_token_replace($ldap_entry, '[sAMAccountName]');
     $this->assertTrue($sAMAccountName2 == $ldap_entry['sAMAccountName'][0], t('[sAMAccountName] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
+     
+    $base64encode = ldap_servers_token_replace($ldap_entry, '[guid;base64_encode]');
+    //debug("base64encode=$base64encode");
+    $this->assertTrue($base64encode == base64_encode($ldap_entry['guid'][0]), t('[guid;base64_encode] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
+
+    $bin2hex = ldap_servers_token_replace($ldap_entry, '[guid;bin2hex]');
+     //    debug("bin2hex=$bin2hex");
+    $this->assertTrue($bin2hex == bin2hex($ldap_entry['guid'][0]), t('[guid;bin2hex] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
+     
+    $msguid = ldap_servers_token_replace($ldap_entry, '[guid;msguid]');
+   //  debug("msguid=$msguid");
+    $this->assertTrue($msguid == ldap_servers_msguid($ldap_entry['guid'][0]), t('[guid;msguid] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
+     
+    $binary = ldap_servers_token_replace($ldap_entry, '[guid;binary]');
+   // debug("binary=$binary");
+    $this->assertTrue($binary == ldap_servers_binary($ldap_entry['guid'][0]), t('[guid;binary] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
 
     /**
      * @todo test tokens for 'user_account'

@@ -1194,6 +1194,7 @@ class LdapUserConf {
 
     // Get any additional mappings.
     $mappings = $this->getSynchMappings($direction, $prov_events);
+ 
      // Loop over the mappings.
      foreach ($mappings as $user_attr_key => $field_detail) {
      // //dpm('field detail');//dpm($field_detail);
@@ -1201,7 +1202,13 @@ class LdapUserConf {
        if (!$this->isSynched($user_attr_key, $prov_events, $direction)) {
          continue;
        }
-
+       /**
+        * if "convert from binary is selected" and no particular method is in token,
+        * default to ldap_servers_binary() function
+        */
+       if ($field_detail['convert'] && strpos($field_detail['ldap_attr'], ';') === FALSE) {
+         $field_detail['ldap_attr'] = str_replace(']', ';binary]', $field_detail['ldap_attr']);
+       }
        $value = ldap_servers_token_replace($ldap_user['attr'], $field_detail['ldap_attr'], 'ldap_entry');
        list($value_type, $value_name, $value_instance) = ldap_servers_parse_user_attr_name($user_attr_key);
 

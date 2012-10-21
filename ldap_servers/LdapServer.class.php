@@ -806,7 +806,15 @@ class LdapServer {
     return array_keys(array_change_key_case(array_flip($dns), CASE_LOWER));
   }
   
+  /**
+   * @param binary or string $puid as returned from ldap_read or other ldap function
+   *
+   */
   public function userUserEntityFromPuid($puid) {
+    
+    if ($this->unique_persistent_attr_binary) {
+      $puid = ldap_servers_binary($puid);
+    }
     
    // list($account, $user_entity) = ldap_user_load_user_acct_and_entity('jkeats');
     //debug('userUserEntityFromPuid:account and user entity'); debug($account); debug($user_entity);
@@ -922,7 +930,7 @@ class LdapServer {
   /**
    * @param ldap entry array $ldap_entry
    *
-   * @return string user's PUID or permanent user id (within ldap)
+   * @return string user's PUID or permanent user id (within ldap) in native ldap format (no binary conversions applied)
    */
   public function userPuidFromLdapEntry($ldap_entry) {
   
@@ -931,7 +939,6 @@ class LdapServer {
         && is_scalar($ldap_entry[$this->unique_persistent_attr][0])
         ) {
 
-      //@todo this should go through whatever standard detokenizing function ldap_server module has
       return $ldap_entry[$this->unique_persistent_attr][0];
     }
     else {

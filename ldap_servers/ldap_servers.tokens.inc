@@ -167,12 +167,16 @@ should return tokens such as:
     [samaccountname:0] = jdoe
     [samaccountname:last] = jdoe
     
-    [guid:0;tobase64] = 243324234 where guid was converted via ldap_servers_tobase64() function
+    [guid:0;base64_encode] = apply base64_encode() function to value
+    [guid:0;bin2hex] = apply bin2hex() function to value
+    [guid:0;msguid] = apply ldap_servers_msguid() function to value
+    [guid:0;binary] = apply ldap_servers_binary() function to value. this is the most generic binary function
 
  */
+
 function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
   
-  debug('ldap_servers_token_tokenize_entry'); debug($token_keys);
+  //debug('ldap_servers_token_tokenize_entry'); debug($token_keys);
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
   
@@ -238,18 +242,24 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
     }
   }
   else {
-    foreach ($token_keys as $token_key) {
+    foreach ($token_keys as $full_token_key) {
       // $token_key = 'dn', 'mail', 'mail:0', 'mail:last', 'dept:1', 'guid:0;tobase64etc.
       $value = NULL;
+      
+      $conversion = FALSE;
+      $parts = explode(';', $full_token_key);
+      if (count($parts) == 2) {
+        $conversion = $parts[1];
+        $token_key = $parts[0];
+      }
+      else {
+        $token_key = $full_token_key;
+      }
+      
       $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token_key);
       $attr_name = $parts[0];
       $ordinal_key = isset($parts[1]) ? $parts[1] : 0;
-      $conversion = FALSE;
-     // if (strpos($ordinal_key, ';') !== FALSE) {
-     //   $parts2 = explode(';', $ordinal_key);
-     //   $ordinal_key = $parts2[0];
-     //   $conversion = $parts2[1];
-     // }
+      // debug("conversion=$conversion, attr_name=$attr_name, ordinal_key=$ordinal_key");
       $i = NULL;
       
       if ($attr_name == 'dn' || !isset($ldap_entry[$attr_name])) { // don't use empty() since a 0, "", etc value may be a desired value
@@ -268,7 +278,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
           continue;  // don't add token if case not covered
         }
       }
-      /**
+
       if ($conversion) {
         switch ($conversion) {
         
@@ -278,17 +288,22 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
           
           case 'bin2hex':
             $value = bin2hex($value);
-            break;          
-
-          default:
-            // no default;
+            break;
+          
+          case 'msguid':
+            $value = ldap_servers_msguid($value);
+            break;
+          
+          case 'binary':
+            $value = ldap_servers_binary($value);
+            break;
         }
       }
-      **/
+
       
-      $tokens[$pre . $token_key . $post] = check_plain($value);
-      if ($token_key != drupal_strtolower($token_key)) {
-        $tokens[$pre . drupal_strtolower($token_key) . $post] = check_plain($value);
+      $tokens[$pre . $full_token_key . $post] = check_plain($value);
+      if ($full_token_key != drupal_strtolower($full_token_key)) {
+        $tokens[$pre . drupal_strtolower($full_token_key) . $post] = check_plain($value);
       }
     }
   }
