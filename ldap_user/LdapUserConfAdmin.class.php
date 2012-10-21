@@ -972,7 +972,7 @@ EOT;
       LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE => t('Create or Synch to LDAP entry when a Drupal account is created or updated.
         Only applied to accounts with a status of approved.'),
       LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE => t('Create or Synch to LDAP entry when a user authenticates.'),
-      LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE => t('Delete LDAP entry when the corresponding Drupal Account is deleted.'),
+      LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE => t('Delete LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
     );
     
     $values['orphanedDrupalAcctBehaviorDescription'] = t('These actions will only occur if the query to server is successful
