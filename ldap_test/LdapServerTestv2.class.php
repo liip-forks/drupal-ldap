@@ -87,17 +87,20 @@ class LdapServerTestv2 extends LdapServer {
   function bind($userdn = NULL, $pass = NULL, $anon_bind = FALSE) {
     $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
     $pass = ($pass != NULL) ? $pass : $this->bindpw;
-   
+    
+    //debug("bind userdn=$userdn, pass=$pass, anon_bind=$anon_bind ");
     if (! isset($this->entries[$userdn])) {
-      $ldap_errno = LDAP_NO_SUCH_OBJECT;
+      $ldap_errno = LDAP_NO_SUCH_OBJECT;  // 0x20 or 32
       if (function_exists('ldap_err2str')) {
         $ldap_error = ldap_err2str($ldap_errno);
       }
       else {
         $ldap_error = "Failed to find $userdn in LdapServerTestv2.class.php";
       }
+      debug("failed to find $userdn in"); debug($this->entries);
     }
     elseif (isset($this->entries[$userdn]['password'][0]) && $this->entries[$userdn]['password'][0] == $pass && $pass) {
+     // debug("bind success");
       return LDAP_SUCCESS;
     }
     else {
@@ -118,7 +121,6 @@ class LdapServerTestv2 extends LdapServer {
 
     $watchdog_tokens = array('%user' => $userdn, '%errno' => $ldap_errno, '%error' => $ldap_error);
     watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", $watchdog_tokens);
-
     return $ldap_errno;
 
   }
@@ -146,7 +148,7 @@ class LdapServerTestv2 extends LdapServer {
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
     
-    // debug("ldap test v2 server search base_dn=$base_dn, filter=$filter");  debug($this->searchResults);
+    // debug("ldap test v2 server search base_dn=$base_dn, filter=$filter"); 
     $lcase_attribute = array();
     foreach ($attributes as $i => $attribute_name) {
       $lcase_attribute[] = drupal_strtolower($attribute_name);
@@ -230,7 +232,7 @@ class LdapServerTestv2 extends LdapServer {
     }
 
     $results['count'] = count($results);
-   // debug("ldap test server search results"); debug($results);
+    //debug("ldap test server search results"); debug($results);
     return $results;
   }
 

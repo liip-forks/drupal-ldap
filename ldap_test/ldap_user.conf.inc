@@ -31,7 +31,7 @@ $conf['default']  = array(
   );
 
 $conf['ad_authentication'] = array(
-    'drupalAcctProvisionServer' => 'ldapauthen1',
+    'drupalAcctProvisionServer' => 'activedirectory1',
     'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,
     'drupalAcctProvisionTriggers' => array(
       LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE,

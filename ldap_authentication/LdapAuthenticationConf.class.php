@@ -10,18 +10,103 @@ module_load_include('php', 'ldap_user', 'LdapUserConf.class');
 
 class LdapAuthenticationConf {
 
-  public $sids = array();  // server configuration ids being used for authentication
-  public $enabledAuthenticationServers = array(); // ldap server object
+  /**
+   * server configuration ids being used for authentication
+   *
+   * @var array
+   *
+   * @see LdapServer::sid
+   */
+  public $sids = array();
+
+  /**
+   * server configuration ids being used for authentication
+   *
+   * @var associative array of LdapServer objects keyed on sids
+   *
+   * @see LdapServer::sid
+   * @see LdapServer
+   */
+  public $enabledAuthenticationServers = array();
+  
+  /**
+   * LdapUser configuration object
+   *
+   * @var LdapUser object
+   */
   public $ldapUser = NULL; // ldap_user configuration object
+  
+  /**
+   * Has current object been saved to the database?
+   *
+   * @var boolean
+   */
   public $inDatabase = FALSE;
+  
+   /**
+   * Choice of authentication modes
+   *
+   * @var integer
+   *   LDAP_AUTHENTICATION_MODE_DEFAULT (LDAP_AUTHENTICATION_MIXED)
+   *   LDAP_AUTHENTICATION_MIXED - signifies both LDAP and Drupal authentication are allowed
+   *     Drupal authentication is attempted first.
+   *   LDAP_AUTHENTICATION_EXCLUSIVE - signifies only LDAP authenication is allowed
+   */ 
   public $authenticationMode = LDAP_AUTHENTICATION_MODE_DEFAULT;
+  
+  /**
+   * The following are used to alter the logon interface to direct users
+   * to local LDAP specific authentication help
+   */
+  
+  /**
+   * Text describing username to use, such as "Hogwarts Username"
+   *  which will be inserted on logon forms to help users figure out which
+   *  username to use
+   *
+   * @var string
+   */
   public $loginUIUsernameTxt;
+  
+  /**
+   * Text describing password to use, such as "Hogwards LDAP Password"
+   *  which will be inserted on logon forms.  Useful in organizations with
+   *  multiple account types for authentication
+   *
+   * @var string
+   */
   public $loginUIPasswordTxt;
+  
+  /**
+   * Text and Url to provide help link for password such as:
+   *   ldapUserHelpLinkUrl:    https://passwords.hogwarts.edu
+   *   ldapUserHelpLinkText:  Hogwarts IT Password Support Page
+   * 
+   * @var string
+   */
   public $ldapUserHelpLinkUrl;
   public $ldapUserHelpLinkText = LDAP_AUTHENTICATION_HELP_LINK_TEXT_DEFAULT;
 
+  /**
+   * Email handling option
+   *   LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE -- don't show email on user forms
+   *   LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE (default) -- disable email on user forms
+   *   LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW -- allow editing of email on user forms
+   * 
+   * @var int
+   */
   public $emailOption = LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT;
+  
+   /**
+   * Email handling option
+   *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY -- (default) Update stored email if LDAP email differs at login and notify user
+   *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE  -- Update stored email if LDAP email differs at login but don\'t notify user
+   *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE -- Don\'t update stored email if LDAP email differs at login
+   * 
+   * @var int
+   */ 
   public $emailUpdate = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DEFAULT;
+
   public $ssoEnabled = FALSE;
   public $ssoRemoteUserStripDomainName = FALSE;
   public $seamlessLogin = FALSE;
@@ -38,9 +123,37 @@ class LdapAuthenticationConf {
    *
    */
 
+  /**
+   * text which must be present in user's LDAP entry's DN for user to authenticate with LDAP
+   *   e.g. "ou=people"
+   * 
+   * @var string
+   */
   public $allowOnlyIfTextInDn = array(); // eg ou=education that must be met to allow ldap authentication
+  
+  /**
+   * text which prohibits logon if found in user's LDAP entry's DN for user to authenticate with LDAP
+   *   e.g. "ou=guest accounts"
+   * 
+   * @var string
+   */
   public $excludeIfTextInDn = array();
-  public $allowTestPhp = NULL; // code that returns boolean TRUE || FALSE for allowing ldap authentication
+  
+  /**
+   * code that prints 1 or 0 signifying if user is allowed
+   *   should not start with <?php
+   * 
+   * @var string of php
+   */  
+  public $allowTestPhp = NULL;
+  
+  /**
+   * if at least 1 ldap authorization must exist for user to be allowed
+   *   True signfies disallow if no authorizations.
+   *   False signifies don't consider authorizations.
+   *   
+   * @var boolean.
+   */  
   public $excludeIfNoAuthorizations = LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT;
 
   public $saveable = array(

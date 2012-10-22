@@ -59,7 +59,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $sid = 'activedirectory1';
     $testid = 'MixedModeUserLogon3';
     $sids = array($sid);
-    $this->prepTestData('hogwarts', array($sid), 'provisionToDrupal', 'MixedModeUserLogon3');
+    $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'MixedModeUserLogon3');
 
     $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
@@ -144,7 +144,6 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('hpotter'), 'Ldap user properly authmapped.', $testid);
     $this->drupalGet('user/logout');
     
-    
     /** LDAP_authen.MM.ULT.existingacct.badpwd - result: Drupal logon error message. **/
     $edit = array(
       'name' => 'hpotter',
@@ -174,12 +173,9 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
   function testExclusiveModeUserLogon() {
 
     $sid = 'activedirectory1';
-    $ldap_authentication_conf_id = 'ExclusiveModeUserLogon3';
-    $testid = $ldap_authentication_conf_id;
+    $testid = 'ExclusiveModeUserLogon3';
     $sids = array($sid);
-    $this->prepTestData($sids, 'ad_authentication', $ldap_authentication_conf_id);
-    
-  
+    $this->prepTestData('hogwarts', $sids, 'ad_authentication', 'ExclusiveModeUserLogon3');
     $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
 
@@ -288,16 +284,13 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     
   }
 
-
-
   function testAuthenticationWhitelistTests() {
     require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
 
     $sid = 'activedirectory1';
-    $ldap_authentication_conf_id = 'WL3';
-    $testid = $ldap_authentication_conf_id;
+    $testid = 'WL3';
     $sids = array($sid);
-    $this->prepTestData('hogwarts', array($sid), 'provisionToDrupal', $ldap_authentication_conf_id);
+    $this->prepTestData('hogwarts', array($sid), 'provisionToDrupal', 'WL3');
 
     //debug($this->testFunctions);
     $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
@@ -341,7 +334,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     * prep LDAP_authen.WL.allow
     */
     $authenticationConf = new LdapAuthenticationConfAdmin();
-    $authenticationConf->allowOnlyIfTextInDn = array('ou=guest accounts');
+    $authenticationConf->allowOnlyIfTextInDn = array('pot');
     $authenticationConf->save();
 
 
@@ -357,7 +350,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     */
 
     $this->AttemptLogonNewUser('ssnape');
-    $this->assertText(t('Sorry, unrecognized username or password'), 'User unable to authenticate because not in white list (allowOnlyIfTextInDn).', $testid);
+    $this->assertText(t('User disallowed'), 'User unable to authenticate because not in white list (allowOnlyIfTextInDn).', $testid);
     
 
     /**
@@ -381,7 +374,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     */
 
     $this->AttemptLogonNewUser('ssnape');
-    $this->assertText(t('Sorry, unrecognized username or password'), 'User unable to authenticate in exclude list (excludeIfTextInDn).', $testid);
+    $this->assertText(t('User disallowed'), 'User unable to authenticate in exclude list (excludeIfTextInDn).', $testid);
     
    /**
     *  LDAP_authen.WL.exclude.miss-- desirect_result: authenticate success
@@ -404,8 +397,8 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     */
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowTestPhp = "\n
-      //exclude users with guests.myuniversity.edu email address \n
-      if (strpos(\$_ldap_user_entry['attr']['mail'][0], '@guests.myuniversity.edu') === FALSE) {\n
+      //exclude users with dumb in email address \n
+      if (strpos(\$_ldap_user_entry['attr']['mail'][0], 'dumb') === FALSE) {\n
         print 1;\n
       }\n
       else {
@@ -427,14 +420,14 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
    /**
     * LDAP_authen.WL.php.true -- desired result: authenticate success
     */
-    $this->AttemptLogonNewUser('adumbledore');
+    $this->AttemptLogonNewUser('hpotter');
     $this->assertText(t('Member for'), 'Able to authenticate because php returned true (allowTestPhp).', $testid);
 
    /**
     *  LDAP_authen.WL.php.false-- desired result: authenticate fail
     */
 
-    $this->AttemptLogonNewUser('hpotter');
+    $this->AttemptLogonNewUser('adumbledore');
     $this->assertText(t('User disallowed'), 'User unable to authenticate  because php returned false (allowTestPhp).', $testid);
 
 

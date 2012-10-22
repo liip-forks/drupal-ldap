@@ -106,7 +106,7 @@ $conf['openldap1']['properties']  = array(
     'basedn'  => array(
        'dc=ldap,dc=hogwarts,dc=edu',
     ),
-    'binddn'  => 'cn=service-account,ou=service-accounts,dc=ldap,dc=hogwarts,dc=edu',
+    'binddn'  => 'cn=service-account,ou=people,dc=hogwarts,dc=edu',
     'bindpw' => 'goodpwd',
     'user_dn_expression' => NULL,
     'user_attr'  => 'cn',
@@ -164,6 +164,24 @@ $conf['openldap1']['search_results']['(cn=hpotter-granger)']['dc=ldap,dc=hogwart
   'count' => 1,
 );
 
+$conf['openldap1']['search_results']['(cn=ssnape)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array(
+    'count' => 1,
+    'dn' => 'cn=ssnape,ou=people,dc=hogwarts,dc=edu',
+    'FULLENTRY' => TRUE,
+  ),
+  'count' => 1,
+);
+
+$conf['openldap1']['search_results']['(cn=adumbledore)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array(
+    'count' => 1,
+    'dn' => 'cn=adumbledore,ou=people,dc=hogwarts,dc=edu',
+    'FULLENTRY' => TRUE,
+  ),
+  'count' => 1,
+);
+
 $conf['openldap1']['search_results']['(&(objectClass=groupofnames)(member=cn=hpotter,ou=people,dc=hogwarts,dc=edu))']['dc=ldap,dc=hogwarts,dc=edu'] = array(
   0 => array('count' => 1, 'dn' => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu'),
   1 => array('count' => 1, 'dn' => 'cn=students,ou=groups,dc=hogwarts,dc=edu'),
@@ -191,7 +209,7 @@ $conf['activedirectory1']['properties']  = array(
     'basedn'  => array(
        'dc=ldap,dc=hogwarts,dc=edu',
     ),
-    'binddn'  => 'cn=service-account,ou=service-accounts,dc=ldap,dc=hogwarts,dc=edu',
+    'binddn'  => 'cn=service-account,ou=people,dc=hogwarts,dc=edu',
     'bindpw' => 'goodpwd',
     'user_dn_expression' => NULL,
     'user_attr'  => 'samaccountname',
@@ -246,6 +264,23 @@ $conf['activedirectory1']['search_results']['(samaccountname=hpotter)']['dc=ldap
   'count' => 1,
 );
 
+$conf['activedirectory1']['search_results']['(samaccountname=ssnape)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array(
+    'count' => 1,
+    'dn' => 'cn=ssnape,ou=people,dc=hogwarts,dc=edu',
+    'FULLENTRY' => TRUE,
+  ),
+  'count' => 1,
+);
+
+$conf['activedirectory1']['search_results']['(samaccountname=adumbledore)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
+  0 => array(
+    'count' => 1,
+    'dn' => 'cn=adumbledore,ou=people,dc=hogwarts,dc=edu',
+    'FULLENTRY' => TRUE,
+  ),
+  'count' => 1,
+);
 $conf['activedirectory1']['search_results']['(samaccountname=hpotter-granger)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
   0 => array(
     'count' => 1,

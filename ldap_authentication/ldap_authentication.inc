@@ -130,7 +130,7 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
   * @return NULL (form_set_error() calls throw validation errors)
   */
 function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
-
+  
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $authname = $form_state['values']['name']; // $name = $form_state['values']['name']; // patch 1599632
   $pass = $form_state['values']['pass'];

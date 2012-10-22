@@ -256,7 +256,7 @@ class LdapServersTestCase extends LdapTestCasev3 {
       'port'       => array(389, 7000),
       'tls'        => array(TRUE, FALSE),
       'bind_method' => array(1, 3),
-      'binddn'  => array('cn=service-account,ou=service-accounts, dc=ldap,dc=hogwarts,dc=edu', ''),
+      'binddn'  => array('cn=service-account,ou=people,dc=hogwarts,dc=edu', ''),
       'bindpw'  => array('sdfsdafsdfasdf', 'sdfsdafsdfasdf'),
       'basedn' => array('dc=ldap,dc=hogwarts,dc=edu', 'ou=users,dc=ldap,dc=hogwarts,dc=edu'),
       'user_attr' => array('sAMAccountName', 'blah'),

@@ -24,7 +24,6 @@ define('LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE',         2);
 define('LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE',        3);
 define('LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DEFAULT',        1);
 
-define('LDAP_AUTHENTICATION_EMAIL_ALLOW_DRUPAL_EMAIL', 1);
 define('LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE',       2);
 define('LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE',      3);
 define('LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW',        4);
@@ -336,15 +335,6 @@ function ldap_authentication_form_user_login_block_alter(&$form, &$form_state) {
 function ldap_authentication_user_login_authenticate_validate($form, &$form_state) {
   ldap_servers_module_load_include('inc', 'ldap_authentication', 'ldap_authentication');
   return _ldap_authentication_user_login_authenticate_validate($form_state);
-}
-
-/**
- * submit function for user logon forms
- */
-function ldap_authentication_login_form_submit(&$form, $form_state) {
-  ldap_servers_module_load_include('inc', 'ldap_authentication', 'ldap_authentication');
-  _ldap_authentication_login_form_submit($form, $form_state);
-
 }
 
 
