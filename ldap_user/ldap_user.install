@@ -413,3 +413,5 @@ function ldap_user_update_7202() {
 /**
  * next update should check that all fields exis
  * it should also move user->data['ldap_authentication'] to user->data['ldap_user']
+ *
+ */
