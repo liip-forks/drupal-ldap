@@ -191,6 +191,26 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
 
     ldap_authorization_maps_alter_invoke($user, $ldap_user, $ldap_server, $consumer->consumerConf, $proposed_ldap_authorizations, $op);
 
+    /** make sure keys of array are lower case and values are mixed case
+      and strip to first attribute is configured
+    **/
+    foreach ($proposed_ldap_authorizations as $key => $authorization_id) {
+      if ($consumer->consumerConf->useFirstAttrAsGroupId) {
+        $attr_parts = ldap_explode_dn($authorization_id, 0);
+        if (count($attr_parts) > 0) {
+          $first_part = explode('=', $attr_parts[0]);
+          if (count($first_part) > 1) {
+            $authorization_id = ldap_pear_unescape_dn_value(trim($first_part[1]));
+          }
+        }
+      }
+      
+      $proposed_ldap_authorizations[drupal_strtolower($key)] = $authorization_id;
+      if ($key != drupal_strtolower($key)) {
+        unset($proposed_ldap_authorizations[$key]);
+      }
+    }
+    
     if ($detailed_watchdog_log || $debug) {
       $_proposed_ldap_authorizations = is_array($proposed_ldap_authorizations) ? $proposed_ldap_authorizations : array();
       $watchdog_tokens['%proposed_authorizations'] = join(', ', $_proposed_ldap_authorizations);
@@ -204,13 +224,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $watchdog_tokens));
     }
 
-    /** make sure keys of array are lower case and values are mixed case **/
-    foreach ($proposed_ldap_authorizations as $key => $value) {
-      if ($key != drupal_strtolower($key)) {
-        $proposed_ldap_authorizations[drupal_strtolower($key)] = $value;
-        unset($proposed_ldap_authorizations[$key]);
-      }
-    }
+
 
     /**
      * 2.  filter can be both a whitelist and a mapping of an ldap results to an authorization id.

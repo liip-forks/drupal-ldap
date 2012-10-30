@@ -192,7 +192,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
       }
 			if ($create_consumers && $this->allowConsumerObjectCreation) {
 				$message_type = 'warning';
-        $message_text .= t('It will be created when needed.  If "!map_to" is not intentional, please fix it', $tokens);
+        $message_text .= t('!map_to will be created when needed.  If "!map_to" is not intentional, please fix it', $tokens);
 			}
       elseif (!$this->allowConsumerObjectCreation) {
         $message_type = 'error';
