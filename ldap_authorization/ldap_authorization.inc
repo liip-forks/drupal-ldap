@@ -85,11 +85,12 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
    * determine if user is ldap authenticated
    */
   if ($context == 'test_if_authorizations_granted' || ($op == 'test_query' && @$user->ldap_test == TRUE)) {
-    $ldap_authenticated = $user->ldap_authenticated;  // property 'ldap_authenticated' only exists for fake user objects
+    $ldap_authenticated = $user->ldap_authenticated;  // property 'ldap_authenticated' only exists for fake user objects submitted from testing form
   }
   else {
     $ldap_authenticated = (boolean)(module_exists('ldap_authentication') && ldap_authentication_ldap_authenticated($user));
   }
+  //debug("_ldap_authorizations_user_authorizations" . $user->name .",ldap_authenticated=$ldap_authenticated");
   $watchdog_tokens['%ldap_authenticated'] = ($ldap_authenticated) ? 'yes' : 'no';
   
   foreach ($consumers as $consumer_type => $consumer) {

@@ -273,6 +273,17 @@ function ldap_servers_theme() {
   );
 }
 
+
+/**
+ * implements hook_cron()
+ */
+function ldap_servers_cron() {
+  // if any modules implement hook_ldap_servers_user_cron()
+  // user entity query to find most recent 100 entries that have not been processed
+  // query for these and pass to modules implementing hook_ldap_server_maintenance()
+  // update user field to have current date as date most recently checked
+}
+
   /** get mixed case match from case insensitive search
    * 
    * @param string mixed case $key

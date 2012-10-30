@@ -3,19 +3,38 @@
 
 /**
  * @file
- * see getInfo() for test summary
+ * ldap_authentication simpletests
+ *
  */
+ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestCasev3.class');
 
-require_once(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapAuthorizationTestCase.class.php');
-
-class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
+class LdapAuthorizationBasicTests extends LdapTestCasev3 {
   public static function getInfo() {
     return array(
-      'name' => 'LDAP Authorization Tests: Basic Tests',
-      'description' => 'Test ldap authorization.  Basic functionality tests.',
+      'name' => 'LDAP Authorization Basic Tests',
+      'description' => 'Test ldap authorization.',
       'group' => 'LDAP Authorization'
     );
   }
+
+  function __construct($test_id = NULL) {
+    parent::__construct($test_id);
+  }
+  
+  public $module_name = 'ldap_authorization';
+  protected $ldap_test_data;
+  
+  function setUp() {
+    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role')); // don't need any real servers, configured, just ldap_servers code base
+    variable_set('ldap_simpletest', 2);
+  }
+
+  function tearDown() {
+    parent::tearDown();
+    variable_del('ldap_help_watchdog_detail');
+    variable_del('ldap_simpletest');
+  }
+  
 
   /**
    * just make sure install succeeds.  doesn't really need to be tested
@@ -60,25 +79,79 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
     * this is geared toward testing logon functionality
     */
 
-    $this->ldapTestId = 'DeriveFromEntry';
-    $this->serversData = 'ldapauthor1.ldap_server.test_data.inc';
-    $this->authorizationData = 'Derivations.ldap_authorization.DeriveFromEntry.inc';
-    $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
-    $this->consumerType = 'drupal_role';
-    $this->prepTestData('ad_authorization');
+    $sid = 'activedirectory1';
+    $testid = 'ExclusiveModeUserLogon3';
+    $sids = array($sid);
+    $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default', 'drupal_role_default');
 
-    // test for same role mapped multiple times:  issue #1174332
+    /**
+    
+    relevant test setttings:
+    
+    LdapServer::groupUserMembershipsAttrExists' = TRUE
+    LdapServer::groupUserMembershipsAttr' = 'memberof'
+    LdapServer::groupMembershipsAttr' = 'member'
+    LdapServer::groupMembershipsAttrMatchingUserAttr' = 'dn'
+    
+    LdapConsumerConf::drupalAcctProvisionServer' = 'activedirectory1'
+    LdapConsumerConf::ldapEntryProvisionServer' = LDAP_USER_NO_SERVER_SID
+    LdapConsumerConf::drupalAcctProvisionTriggers' = array(
+      LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE,
+      LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE,
+      )
+    LdapConsumerConf::ldapEntryProvisionTriggers = array()
+    LdapConsumerConf::userConflictResolve = LDAP_USER_CONFLICT_LOG
+    LdapConsumerConf::acctCreation = LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR
+    
+    LdapAuthenticationConf::sids => array('activedirectory1' => 'activedirectory1')
+    LdapAuthenticationConf::authenticationMode = LDAP_AUTHENTICATION_MIXED
+    LdapAuthenticationConf::allowOnlyIfTextInDn = NULL
+    LdapAuthenticationConf::excludeIfTextInDn =  NULL
+    LdapAuthenticationConf::excludeIfNoAuthorizations = LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT
+    
+    LdapAuthorizationConf::sid = activedirectory1
+    LdapAuthorizationConf::consumerType = drupal_role
+    LdapAuthorizationConf::consumerModule = ldap_authorization_drupal_role
+    LdapAuthorizationConf::onlyApplyToLdapAuthenticated = 1
+  
+    LdapAuthorizationConf::mappings = array(
+      array('cn=students,ou=groups,dc=hogwarts,dc=edu', 'students'),
+      array('cn=faculty,ou=groups,dc=hogwarts,dc=edu', 'administrator'),
+      array('gryffindor', 'gryffindor'),
+      array('cn=users,ou=groups,dc=hogwarts,dc=edu', 'users'),
+    )
+    
+    LdapAuthorizationConf::useMappingsAsFilter = 0
+    LdapAuthorizationConf::synchOnLogon = 1
+    LdapAuthorizationConf::revokeLdapProvisioned = 1
+    LdapAuthorizationConf::createConsumers = 1
+    LdapAuthorizationConf::regrantLdapProvisioned = 1
+  
+     */
+    
+    
     $edit = array(
-      'name' => 'verykool',
+      'name' => 'hpotter',
       'pass' => 'goodpwd',
     );
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', $this->ldapTestId);
-    $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('verykool'), 'Ldap user properly authmapped.', $this->ldapTestId);
+    $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('hpotter'), 'Ldap user properly authmapped.', $this->ldapTestId);
 
-    $verykool = user_load_by_name('verykool');
-    $correct_roles = in_array('content editors', array_values($verykool->roles)) && in_array('content approvers', array_values($verykool->roles));
-    $this->assertTrue($correct_roles, 'verykool granted 2 roles on actual logon "content editors" and "content approvers" drupal roles ', $this->ldapTestId . '.duplicate_entry');
+    $hpotter = user_load_by_name('hpotter');
+    $roles = array_values($hpotter->roles);
+    $desired_roles = array('students','authenticated user','cn=gryffindor,ou=groups,dc=hogwarts,dc=edu','cn=honors students,ou=groups,dc=hogwarts,dc=edu','students');
+    $diff1 = array_diff($roles, $desired_roles);
+    $diff2 = array_diff($desired_roles, $roles);
+    $correct_roles = (count($diff1) == 0 && count($diff2) == 0);
+    $roles_display = join(', ', $roles);
+    if (!$correct_roles) {
+      debug('hpotter roles'); debug($roles); debug('desired roles'); debug($desired_roles);
+    }
+    else {
+      debug("passed hpotter user object for reference"); debug($hpotter);
+    }
+    $this->assertTrue($correct_roles, t('hpotter granted correct roles on actual logon: %roles ', array('%roles' => $roles_display)), $this->ldapTestId);
 
     $this->drupalGet('user/logout');
 
@@ -90,92 +163,202 @@ class LdapAuthorizationBasicTests  extends LdapAuthorizationTestCase {
  */
 function testFlags() {
 
-  $this->ldapTestId = 'Flags';
-  $this->serversData = 'ldapauthor1.ldap_server.test_data.inc';
-  $this->authorizationData = 'Basic.Flags.ldap_authorization.test_data.inc';
-  $this->authenticationData = 'ldapauthor1.ldap_authentication.test_data.inc';
-  $this->consumerType = 'drupal_role';
-  $this->prepTestData();
-
+  $sid = 'activedirectory1';
+  $this->prepTestData('hogwarts', array($sid), 'provisionToDrupal', 'default', 'drupal_role_default');
+  $this->ldapTestId = 'testFlags';
+ // $this->consumerAdminConf = 
   /**
-   * test:  LDAP_authorz.Flags.enable
+   * LDAP_authorz.Flags.enable: Disable ldap_authorization_drupal_role configuration and make sure no authorizations performed 
    */
+  
   $user = $this->drupalCreateUser(array());
-  $jkool = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'), TRUE, $user);
-  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
-  $roles1 = $new_authorizations[$this->consumerType];
+  $hpotter = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hpotter', 'mail' =>  'hpotter@hogwarts.edu'), TRUE, $user);
+  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hpotter, 'query');  // just see if the correct ones are derived.
+  $roles1 = $new_authorizations['drupal_role'];
 
-  $consumer_conf_admin = ldap_authorization_get_consumer_admin_object($this->consumerType);
-  $consumer_conf_admin->status = 0;
-  $consumer_conf_admin->save();
-  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
-  $roles2 = isset($new_authorizations[$this->consumerType]) ? $new_authorizations[$this->consumerType] : array();
-  $this->assertTrue((count($roles1) == 1 && count($roles2) == 0), 'disable consumer configuration disallows authorizations.', $this->ldapTestId . '.enable');
+
+  $consumer_conf_admin = ldap_authorization_get_consumer_admin_object('drupal_role', FALSE);
+  $this->consumerAdminConf['drupal_role']->status = 0;
+  $this->consumerAdminConf['drupal_role']->save();
+
+  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hpotter, 'query', 'drupal_role');  // just see if the correct ones are derived.
+  $roles2 = isset($new_authorizations['drupal_role']) ? $new_authorizations['drupal_role'] : array();
+  $correct_roles = (count($roles1) > 0 && count($roles2) == 0); // not worried about which roles here, just that some are granted
+  $this->assertTrue($correct_roles, 'disable consumer configuration disallows authorizations.', 'LDAP_authorz.Flags.enable.0');
+  if (!$correct_roles) {
+    debug('LDAP_authorz.Flags.enable.0 roles with enabled'); debug($roles1);
+    debug('LDAP_authorz.Flags.enable.0 roles with disabled'); debug($roles2);
+  }
 
 
   /**
-   * LDAP_authorz.Flags.onlyLdapAuthenticated (I) - create normal user and apply authorization query
+   * LDAP_authorz.onlyLdapAuthenticated: create normal user and apply authorization query.  should return no roles
    */
   $consumer_conf_admin->onlyApplyToLdapAuthenticated = 1;
   $consumer_conf_admin->status = 1;
   $consumer_conf_admin->save();
 
-  // remove authmap for jkool then test
-  $jkool = user_save($user, array('name' => 'jkool', 'mail' =>  'jkool@guests.myuniversity.edu'));
-  user_set_authmaps($jkool, array('authname_ldap_user' => NULL));
-  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'query');  // just see if the correct ones are derived.
+  $user = $this->drupalCreateUser(array());
+  $hgrainger = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hgrainger', 'mail' =>  'hgrainger@hogwarts.edu'), TRUE, $user);
+  debug("LDAP_authorz.onlyLdapAuthenticated hgrainger"); debug($hgrainger);
+  debug("authmapped?"); debug($this->testFunctions->ldapUserIsAuthmapped('hgrainger'));
+  
+  // remove authmap in case it exists so test will work
+  db_delete('authmap')
+    ->condition('uid', $user->uid)
+    ->condition('module', 'ldap_user')
+    ->execute();
+    
+  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hgrainger, 'query');  // just see if the correct ones are derived.
   $roles = isset($new_authorizations['drupal_role']) ? $new_authorizations['drupal_role'] : array();
-  $this->assertTrue((count($roles) == 0), ' only apply to ldap authenticated grants no roles for non ldap user.', $this->ldapTestId . '.enable');
-  user_set_authmaps($jkool, array('authname_ldap_user' => 'jkool'));
-
+  $success = (count($roles) == 0);
+  $this->assertTrue($success, ' only apply to ldap authenticated grants no roles for non ldap user.', 'LDAP_authorz.onlyLdapAuthenticated.1');
+  if (!$success) {
+    debug('LDAP_authorz.onlyLdapAuthenticated.1');
+    debug($roles);
+    debug($this->testFunctions->ldapUserIsAuthmapped('hgrainger'));
+    debug($new_authorizations);
+    debug($notifications);
+  }
   /**
-   * LDAP_authorz.Flags.applyOnLogon  (IV.B) - execute logon and check that roles are applied
+   * LDAP_authorz.Flags.synchOnLogon - execute logon and check that no roles are applied if disabled
    */
-
-
-
-   /**
-   * LDAP_authorz.Flags.revokeRoles (IV.C) - select this option, grant user role not deserved, and execute manual call
-   */
-
-  // set correct roles
-  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'set');
-  $consumer_conf_admin->onlyApplyToLdapAuthenticated = 0;
-  $consumer_conf_admin->revokeLdapProvisioned = 1;
+  
+  $this->consumerAdminConf['drupal_role']->synchOnLogon = 0;
+  $this->consumerAdminConf['drupal_role']->save();
+  $edit = array(
+    'name' => 'hgrainger',
+    'pass' => 'goodpwd',
+  );
+  $this->drupalPost('user', $edit, t('Log in'));
+  $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', 'LDAP_authorz.Flags.synchOnLogon.0');
+  $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('hgrainger'), 'Ldap user properly authmapped.', 'LDAP_authorz.Flags.synchOnLogon.0');
+  $hgrainger = user_load_by_name('hgrainger');
+  debug('hgrainger roles in LDAP_authorz.Flags.synchOnLogon.0'); debug($hgrainger->roles);
+  $this->drupalGet('user/logout');
+  
+  $consumer_conf_admin->synchOnLogon = 1;
   $consumer_conf_admin->save();
+  $edit = array(
+    'name' => 'hgrainger',
+    'pass' => 'goodpwd',
+  );
+  $this->drupalPost('user', $edit, t('Log in'));
+  $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', $this->ldapTestId);
+  $hgrainger = user_load_by_name('hgrainger');
+  debug('hgrainger roles in LDAP_authorz.Flags.synchOnLogon.1'); debug($hgrainger->roles);
+  $this->drupalGet('user/logout');
+  
+  // create a couple roles for next 2 tests
+  $troublemaker = new stdClass();
+  $troublemaker->name = 'troublemaker';
+  user_role_save($troublemaker);
+  $troublemaker = user_role_load_by_name('troublemaker');
+  
+  $superadmin = new stdClass();
+  $superadmin->name = 'superadmin';
+  user_role_save($superadmin);
+  $superadmin = user_role_load_by_name('superadmin');
+  
+   /**
+   * LDAP_authorz.Flags.revokeLdapProvisioned: test flag for
+   *   removing manually granted roles
+   *
+   *   $this->revokeLdapProvisioned == 1 : Revoke !consumer_namePlural previously granted by LDAP Authorization but no longer valid.
+   *
+   *   grant roles via ldap and some not vai ldap manually,
+   *   then alter ldap so they are no longer valid,
+   *   then logon again and make sure the ldap provided roles are revoked and the drupal ones are not revoked
+   *   
+   */
+   
+  $this->consumerAdminConf['drupal_role']->onlyApplyToLdapAuthenticated = 0;
+  $this->consumerAdminConf['drupal_role']->revokeLdapProvisioned = 1;
+  $this->consumerAdminConf['drupal_role']->createConsumers = 1;
+  $this->consumerAdminConf['drupal_role']->save();
+  // set correct roles manually
+  $hpotter = user_load_by_name('hpotter');
+  user_delete($hpotter->uid);
+  $user = $this->drupalCreateUser(array());
+  $hpotter = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hpotter', 'mail' =>  'hpotter@hogwarts.edu'), TRUE, $user);
+  $edit = array(
+    'name' => 'hpotter',
+    'pass' => 'goodpwd',
+  );
+  $this->drupalPost('user', $edit, t('Log in'));
+  $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', 'LDAP_authorz.Flags.revokeLdapProvisioned');  
+  $hpotter = user_load_by_name('hpotter');
+  debug("revokeLdapProvisioned with ldap provisioned roles"); debug($hpotter);
+  
 
-  // add an underserved, ldap granted drupal role
-  $jkool = user_load($jkool->uid);
+  // add an underserved, ldap granted drupal role superadmin
+  // and an undeserved, non ldap granted role troublemaker
+  $hpotter = user_load($hpotter->uid, TRUE);
+  $roles = $hpotter->roles;
+  $roles[$troublemaker->rid] = $troublemaker->name;
+  $roles[$superadmin->rid] = $superadmin->name;
+
   $data = array(
-    'roles' =>  array(3 => 'administrator'),
+    'roles' =>  $roles,
     'data' => array('ldap_authorizations' =>
       array(
         'drupal_role' =>
         array(
-          'administrator' =>
+          $superadmin->name =>
           array('date_granted' => 1304216778),
         ),
       ),
     ),
   );
-  $jkool = user_save($jkool, $data);
-  $was_set = isset($jkool->roles[3]);
-  // apply correct authorizations.  should remove the administrator role.
-  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'set', $this->consumerType, 'logon');
-  $jkool = user_load($jkool->uid);
-  $this->assertTrue(($was_set && !isset($jkool->roles[3])), ' revoke ldap granted roles when no longer deserved.', $this->ldapTestId . '.revokeRoles');
+  $hpotter = user_save($hpotter, $data);
+  debug("setup hpotter in LDAP_authorz.Flags.revokeLdapProvisioned");
+  debug($hpotter);
+  
+  // apply correct authorizations.  should remove the administrator role but not the manually created 'troublemaker' role
+  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hpotter, 'set', 'drupal_role', 'logon');
+  
+  $hpotter = user_load($hpotter->uid, TRUE);
+  debug("after ldap_authorizations_user_authorizations, hpotter:");
+  debug($hpotter);
+  debug(array($new_authorizations, $notifications));
+  $this->assertTrue((!isset($new_authorizations['drupal_role'][$superadmin->rid])), ' revoke superadmin ldap granted roles when no longer deserved.',  'LDAP_authorz.Flags.revokeLdapProvisioned');
 
 
    /**
-   * LDAP_authorz.Flags.regrantRoles IV.C) - select this option, execute manual call to get deserved roles, remove a role, execute manual call to get deserved roles, make sure role regranted
+   * LDAP_authorz.Flags.regrantRoles
+   * $this->regrantLdapProvisioned == 1 :
+   *   Re grant !consumer_namePlural previously granted
+   *   by LDAP Authorization but removed manually.
+   *
+   * - manually remove ldap granted role
+   * - logon
+   * - check if regranted
    */
+  $this->drupalGet('user/logout');
+  $this->consumerAdminConf['drupal_role']->regrantLdapProvisioned = 1;
+  $this->consumerAdminConf['drupal_role']->save();
+  $hpotter = user_load($hpotter->uid, TRUE);
+  $roles = $hpotter->roles;
+  debug("hpotter roles0"); debug($roles);
+  unset($roles[$superadmin->rid]);
+  user_save($hpotter, array('roles' => $roles));
+  $hpotter = user_load($hpotter->uid, TRUE);
+  debug("hpotter roles1"); debug($hpotter->roles);
+  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hpotter, 'set', 'drupal_role', 'logon');
+  $hpotter = user_load($hpotter->uid, TRUE);
+  debug("hpotter roles2"); debug($hpotter->roles);
+  debug(array($new_authorizations, $notifications));
+  $success = !in_array('administrator', array_values($hpotter->roles));
 
+  $this->assertTrue($success, ' regrant Ldap Provisioned roles that were manually revoked',  'LDAP_authorz.Flags.regrantRoles');
 
    /**
    * LDAP_authorz.Flags.createRoles IV.C) - select this option, delete some roles or make sure they don't exist.  manually execute.  check role created and granted to user
+   *  $this->createConsumers == 1 : Create !consumer_namePlural if they do not exist.
    */
 
   // take roles away from user
+  /**
   $jkool = user_load($jkool->uid);
   $data = array(
     'roles' =>  array(),
@@ -194,13 +377,13 @@ function testFlags() {
 
   // set authorizations for user.  this should create role
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($jkool, 'set', 'drupal_role', 'logon');
-
   $jkool = user_load($jkool->uid);
   $guest_role_recreated = in_array('guests', array_values(user_roles()));
   $roles_by_name = array_flip(user_roles());
+  debug('roles_by_name'); debug($roles_by_name);
   $jkool_granted_guest = isset($jkool->roles[$roles_by_name['guests']]);
   $this->assertTrue(($guest_role_deleted && $guest_role_recreated && $jkool_granted_guest), ' create consumers (e.g. roles)', $this->ldapTestId . '.createRoles');
-
+**/
 }
 
 

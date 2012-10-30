@@ -155,7 +155,10 @@ function ldap_authorization_ldap_attributes_needed_alter(&$attribute_maps, $para
       $consumer_type = $parts[1];
       $consumer_conf = ldap_authorization_get_consumer_conf($consumer_type);
       if ($consumer_conf->server->groupUserMembershipsAttrExists) {
-        $attribute_maps[$attribute_name] = ldap_servers_set_attribute_map(@$attribute_maps[$consumer_conf->server->groupUserMembershipsAttr]); //array($attribute_name, 0, NULL);
+        $attribute_name = $consumer_conf->server->groupUserMembershipsAttr;
+        if ($attribute_name) {
+          $attribute_maps[$attribute_name] = ldap_servers_set_attribute_map($attribute_name); //array($attribute_name, 0, NULL);
+        }
       }
      // dpm('ldap_authorization_ldap_attributes_needed_alter, consumer_conf'); dpm($consumer_conf); dpm($attribute_maps);
     }

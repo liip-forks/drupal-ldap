@@ -80,3 +80,56 @@
   member = cn=faculty,ou=groups,dc=hogwarts,dc=edu
   member = cn=staff,ou=groups,dc=hogwarts,dc=edu
 
+=======================
+Group Hierarchy
+=======================
+cn=users,ou=groups,dc=hogwarts,dc=edu
+  cn=students,ou=groups,dc=hogwarts,dc=edu
+  cn=faculty,ou=groups,dc=hogwarts,dc=edu
+  cn=staff,ou=groups,dc=hogwarts,dc=edu
+
+cn=faculty,ou=groups,dc=hogwarts,dc=edu
+  ssnape
+  adumbledore
+  mmcgonagall
+  spomana
+  
+cn=staff,ou=groups,dc=hogwarts,dc=edu
+  ggoyle
+  
+cn=students,ou=groups,dc=hogwarts,dc=edu
+  hpotter
+  hgrainger
+  rweasley
+  fweasley
+  gweasley
+  dmalfoy
+  ggoyle
+  
+cn=honors students,ou=groups,dc=hogwarts,dc=edu
+  hpotter
+  hgrainger
+  
+cn=probation students,ou=groups,dc=hogwarts,dc=edu 
+  dmalfoy
+  ggoyle
+  
+cn=gryffindor,ou=groups,dc=hogwarts,dc=edu
+  hpotter
+  hgrainger
+  rweasley
+  fweasley
+  gweasley
+  dmalfoy
+  triddle
+  
+cn=hufflepuff,ou=groups,dc=hogwarts,dc=edu
+  rhagrid
+  
+cn=slytherin,ou=groups,dc=hogwarts,dc=edu
+  dmalfoy
+  triddle
+  adumbledore
+  mmcgonagall
+  spomana
+

@@ -150,35 +150,10 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
     $form['status']['only_ldap_authenticated'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Only apply the following LDAP to !consumer_name configuration to users authenticated via LDAP.', $consumer_tokens),
+      '#title' => t('Only apply the following LDAP to !consumer_name configuration to users authenticated via LDAP.  On uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.', $consumer_tokens),
       '#default_value' =>  $this->onlyApplyToLdapAuthenticated,
     );
 
-
-
-    $form['groups'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Part II. How are group DNs related to !consumer_namePlural ?', $consumer_tokens),
-      '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
-    );
-
-    $form['groups']['useFirstAttrAsGroupId'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Convert full dn to value of first attribute.  e.g.  <code>cn=admin group,ou=it,dc=ad,dc=nebraska,dc=edu</code> would be converted to <code>admin group</code>', $consumer_tokens),
-      '#default_value' => $this->useFirstAttrAsGroupId,
-    );
-
-     /**
-     *  filter and whitelist
-     */
-
-   // $form['filter_intro'] = array(
-   //   '#type' => 'item',
-   //   '#title' => t('Part III.  Mapping and White List.', $consumer_tokens),
-    //  '#markup' => t('The rules in Part I. and II. will create a list of "raw authorization ids".
-    //    Part III. determines how these are mapped to!consumer_namePlural.', $consumer_tokens),
-    //  );
 
     if (method_exists($this->consumer, 'mappingExamples')) {
       $consumer_tokens['!examples'] = '<fieldset class="collapsible collapsed form-wrapper" id="authorization-mappings">
@@ -191,17 +166,17 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     }
     $form['filter_and_mappings'] = array(
       '#type' => 'fieldset',
-      '#title' => t('III. LDAP to !consumer_name mapping and filtering', $consumer_tokens),
+      '#title' => t('II. LDAP to !consumer_name mapping and filtering', $consumer_tokens),
       '#description' => t('
 Representations of groups derived from LDAP might initially look like:
 <ul>
-<li><code>Campus Accounts</code></li>
-<li><code>ou=Underlings,dc=myorg,dc=mytld,dc=edu</code></li>
-<li><code>ou=IT,dc=myorg,dc=mytld,dc=edu</code></li>
-<li><code>IT</code></li>
+<li><code>cn=students,ou=groups,dc=hogwarts,dc=edu</code></li>
+<li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
+<li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
+<li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
 </ul>
 
-<p><strong>Mappings are often needed to convert these group representations to !consumer_namePlural.</strong></p>
+<p><strong>Mappings are used to convert and filter these group representations to !consumer_namePlural.</strong></p>
 
 !consumer_mappingDirections
 
@@ -209,9 +184,14 @@ Representations of groups derived from LDAP might initially look like:
 
 ', $consumer_tokens),
       '#collapsible' => TRUE,
-      '#collapsed' => !($this->mappings || $this->useMappingsAsFilter),
+      '#collapsed' => !($this->mappings || $this->useMappingsAsFilter || $this->useFirstAttrAsGroupId),
     );
 
+    $form['filter_and_mappings']['useFirstAttrAsGroupId'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Convert full dn to value of first attribute before mapping.  e.g.  <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>', $consumer_tokens),
+      '#default_value' => $this->useFirstAttrAsGroupId,
+    );
     $form['filter_and_mappings']['mappings'] = array(
       '#type' => 'textarea',
       '#title' => t('Mapping of LDAP to !consumer_name (one per line)', $consumer_tokens),
@@ -221,16 +201,17 @@ Representations of groups derived from LDAP might initially look like:
     );
     $form['filter_and_mappings']['use_filter'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Use LDAP group to !consumer_namePlural filtering', $consumer_tokens),
+      '#title' => t('Only grant !consumer_namePlural that match a filter above.', $consumer_tokens),
       '#default_value' => $this->useMappingsAsFilter,
-      '#description' => t('If enabled, only above mapped !consumer_namePlural will be assigned.
-        <strong>If not checked, many !consumer_namePlural may be created.</strong>', $consumer_tokens)
+      '#description' => t('If enabled, only above mapped !consumer_namePlural will be assigned (e.g. students and administrator).
+        <strong>If not checked, !consumer_namePlural not mapped above also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of !consumer_namePlural being created if "Create !consumer_namePlural if they do not exist" is enabled below.
+        </strong>', $consumer_tokens)
     );
 
 
     $form['more'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Part IV.  Even More Settings.'),
+      '#title' => t('Part III.  Even More Settings.'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
@@ -241,13 +222,12 @@ Representations of groups derived from LDAP might initially look like:
     }
     $form['more']['synchronization_modes'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('IV.B. When should !consumer_namePlural be granted/revoked from user?', $consumer_tokens),
+      '#title' => t('When should !consumer_namePlural be granted/revoked from user?', $consumer_tokens),
       '#options' => array(
-          'user_logon' => t('When a user logs on'),
-          'manually' => t('Manually or via another module')
+          'user_logon' => t('When a user logs on.'),
       ),
       '#default_value' => $synchronization_modes,
-      '#description' => t('<p>"When a user logs on" is the common way to do this.</p>', $consumer_tokens),
+      '#description' => '',
     );
 
     $synchronization_actions = array();
@@ -265,14 +245,13 @@ Representations of groups derived from LDAP might initially look like:
       'revoke_ldap_provisioned' => t('Revoke !consumer_namePlural previously granted by LDAP Authorization but no longer valid.', $consumer_tokens),
       'regrant_ldap_provisioned' => t('Re grant !consumer_namePlural previously granted by LDAP Authorization but removed manually.', $consumer_tokens),
     );
-
     if ($this->consumer->allowConsumerObjectCreation) {
       $options['create_consumers'] = t('Create !consumer_namePlural if they do not exist.', $consumer_tokens);
     }
 
     $form['more']['synchronization_actions'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('IV.C. What actions would you like performed when !consumer_namePlural are granted/revoked from user?', $consumer_tokens),
+      '#title' => t('What actions would you like performed when !consumer_namePlural are granted/revoked from user?', $consumer_tokens),
       '#options' => $options,
       '#default_value' => $synchronization_actions,
     );
@@ -375,7 +354,7 @@ Representations of groups derived from LDAP might initially look like:
       }
     }
     if ($this->useMappingsAsFilter && !count($this->mappings)) {
-      $errors['mappings'] = t('Mappings are missing.');
+      $errors['mappings'] = t('Mappings are missing.  Mappings muse be supplied if filtering is enabled.');
     }
     return $errors;
   }

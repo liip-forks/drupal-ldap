@@ -1,6 +1,105 @@
 
 provisioning = creating or synching ... to drupal or to ldap
 
+
+
+==========================================
+LDAP User Data Structures in Drupal User Object
+==========================================
+
+
+'data' => 
+  array (
+    'ldap_user' => 
+    array (
+      'init' => 
+      array (
+        'sid' => 'activedirectory1',
+        'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+        'mail' => 'hpotter@hogwarts.edu',
+      ),
+    ),
+    'ldap_authorizations' => 
+    array (
+      'drupal_role' => 
+      array (
+        'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu' => 
+        array (
+          'date_granted' => 1351194052,
+        ),
+        'cn=honors students,ou=groups,dc=hogwarts,dc=edu' => 
+        array (
+          'date_granted' => 1351194052,
+        ),
+        'students' => 
+        array (
+          'date_granted' => 1351194052,
+        ),
+      ),
+    ),
+  ),
+
+ 'ldap_user_puid_sid' => 
+  array (
+    'und' => 
+    array (
+      0 => 
+      array (
+        'value' => 'activedirectory1',
+        'format' => NULL,
+        'safe_value' => 'activedirectory1',
+      ),
+    ),
+  ),
+   'ldap_user_puid' => 
+  array (
+    'und' => 
+    array (
+      0 => 
+      array (
+        'value' => '101',
+        'format' => NULL,
+        'safe_value' => '101',
+      ),
+    ),
+  ),
+   'ldap_user_puid_property' => 
+  array (
+    'und' => 
+    array (
+      0 => 
+      array (
+        'value' => 'guid',
+        'format' => NULL,
+        'safe_value' => 'guid',
+      ),
+    ),
+  ),
+   'ldap_user_current_dn' => 
+  array (
+    'und' => 
+    array (
+      0 => 
+      array (
+        'value' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+        'format' => NULL,
+        'safe_value' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+      ),
+    ),
+  ),
+   'ldap_user_prov_entries' => 
+  array (
+  ),
+   'ldap_user_last_checked' => 
+  array (
+  ),
+   'ldap_authorizations' => 
+  array (
+  ),
+
+
+
+
 ==========================================
 Rough Summary of provisioning configuration and controls
 ==========================================

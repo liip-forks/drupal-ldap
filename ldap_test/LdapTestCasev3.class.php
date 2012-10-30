@@ -18,6 +18,7 @@ class LdapTestCasev3 extends DrupalWebTestCase {
   public $useFeatureData;
   public $featurePath;
   public $featureName;
+  public $consumerAdminConf;
 
   public $ldapTestId;
   public $authorizationData;
@@ -92,6 +93,9 @@ class LdapTestCasev3 extends DrupalWebTestCase {
       $authorization_data = ldap_test_ldap_authorization_data();
       if (!empty($authorization_data[$ldap_authorization_conf_id])) {
         $this->testFunctions->prepConsumerConf($authorization_data[$ldap_authorization_conf_id]);
+        foreach($authorization_data[$ldap_authorization_conf_id] as $consumer_type => $discard) {
+          $this->consumerAdminConf[$consumer_type] = ldap_authorization_get_consumer_admin_object($consumer_type);
+        }
       }
     }
   }

@@ -3,30 +3,26 @@
 function ldap_test_ldap_authorization_data() {
 
 
-$conf['ldapauthen1']['drupal_role'] = array(
-  'sid' => 'ldapauthen1',
+$conf['drupal_role_default']['drupal_role'] = array(
+  'sid' => 'activedirectory1',
   'consumerType' => 'drupal_role',
   'consumerModule' => 'ldap_authorization_drupal_role',
   
-  'description' => 'UIUC AD',
+  'description' => 'Hogwards AD',
   'status' => 1,
   'onlyApplyToLdapAuthenticated' => 1,
 
-  'deriveFromDn' => 1,
-  'deriveFromDnAttr' => 'ou',
-
   'mappings' => array(
-    array('Campus Accounts', 'campus accounts'),
-    array('guest accounts', 'guests'),
-    array('special guests', 'special guests'),
-    array('cn=sysadmins,ou=it,dc=ad,dc=myuniversity,dc=edu', 'sysadmins'),
+    array('cn=students,ou=groups,dc=hogwarts,dc=edu', 'students'),
+    array('cn=faculty,ou=groups,dc=hogwarts,dc=edu', 'administrator'),
+    array('gryffindor', 'gryffindor'),
+    array('cn=users,ou=groups,dc=hogwarts,dc=edu', 'users'),
   ),
   
-  'useMappingsAsFilter' => 1,
+  'useMappingsAsFilter' => 0,
   
   'synchOnLogon' => 1,
-  'synchManually' => 1,
-  
+
   'revokeLdapProvisioned' => 1,
   'createConsumers' => 1,
   'regrantLdapProvisioned' => 1,

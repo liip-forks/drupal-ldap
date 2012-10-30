@@ -92,6 +92,39 @@ $conf['ldapauthen1']['search_results']['member=cn=jkool,ou=guest accounts,dc=ad,
     'count' => 1,
   );
 
+$servers['ldapauthor1']['properties']  = array(
+    'sid' => 'openldap1',
+    'name'  => 'Test LDAP Server LDAP Authorization' ,
+    'inDatabase' => TRUE,
+    'status'  => 1,
+    'ldap_type'  => 'openldap',
+    'address'  => 'ldap.hogwarts.edu',
+    'port'  => 389,
+    'tls'  => FALSE,
+    'bind_method' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
+    'basedn'  => array(
+       'dc=ldap,dc=hogwarts,dc=edu',
+      ),
+    'binddn'  => 'cn=service-account,ou=people,dc=hogwarts,dc=edu',
+    'bindpw' => 'goodpwd',
+    'user_dn_expression' => NULL,
+    'user_attr'  => 'cn',
+    'mail_attr'  => 'mail',
+    'mail_template'  => NULL,
+    'unique_persistent_attr' => 'guid',
+    'ldap_to_drupal_user' => FALSE,
+    'ldapToDrupalUserPhp'  => NULL,
+    'groupFunctionalityUnused' => FALSE,
+    'groupObjectClass' => 'groupofnames',
+    'groupUserMembershipsAttrExists' => FALSE,
+    'groupUserMembershipsAttr' => NULL,
+    'groupMembershipsAttr' => 'member',
+    'groupMembershipsAttrMatchingUserAttr' => 'dn',
+    'search_pagination' => 0,
+    'searchPageSize' => NULL,
+  );
+
+
 
 $conf['openldap1']['properties']  = array(
     'sid' => 'openldap1',
@@ -220,6 +253,7 @@ $conf['activedirectory1']['properties']  = array(
     'ldap_to_drupal_user' => FALSE,
     'ldapToDrupalUserPhp'  => NULL,
     'groupFunctionalityUnused' => FALSE,
+    'groupNested' => 0,
     'groupObjectClass' => 'group',
     'groupUserMembershipsAttrExists' => TRUE,
     'groupUserMembershipsAttr' => 'memberof',
@@ -246,41 +280,29 @@ $conf['activedirectory1']['search_results']['(&(objectClass=group)(|(member=cn=g
   'count' => 1,
 );
 
-$conf['activedirectory1']['search_results']['(cn=hpotter)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
-  0 => array(
-    'count' => 1,
-    'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
-    'FULLENTRY' => TRUE,
-  ),
-  'count' => 1,
-);
+foreach (array('hpotter','hgrainger','ssnape') as $cn) {
 
-$conf['activedirectory1']['search_results']['(samaccountname=hpotter)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
-  0 => array(
+  $conf['activedirectory1']['search_results']["(cn=$cn)"]['dc=ldap,dc=hogwarts,dc=edu'] = array(
+    0 => array(
+      'count' => 1,
+      'dn' => "cn=$cn,ou=people,dc=hogwarts,dc=edu",
+      'FULLENTRY' => TRUE,
+    ),
     'count' => 1,
-    'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
-    'FULLENTRY' => TRUE,
-  ),
-  'count' => 1,
-);
+  );
+  
+  $conf['activedirectory1']['search_results']["(samaccountname=$cn)"]['dc=ldap,dc=hogwarts,dc=edu'] = array(
+    0 => array(
+      'count' => 1,
+      'dn' => "cn=$cn,ou=people,dc=hogwarts,dc=edu",
+      'FULLENTRY' => TRUE,
+    ),
+    'count' => 1,
+  );
 
-$conf['activedirectory1']['search_results']['(samaccountname=ssnape)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
-  0 => array(
-    'count' => 1,
-    'dn' => 'cn=ssnape,ou=people,dc=hogwarts,dc=edu',
-    'FULLENTRY' => TRUE,
-  ),
-  'count' => 1,
-);
+}
 
-$conf['activedirectory1']['search_results']['(samaccountname=adumbledore)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
-  0 => array(
-    'count' => 1,
-    'dn' => 'cn=adumbledore,ou=people,dc=hogwarts,dc=edu',
-    'FULLENTRY' => TRUE,
-  ),
-  'count' => 1,
-);
+
 $conf['activedirectory1']['search_results']['(samaccountname=hpotter-granger)']['dc=ldap,dc=hogwarts,dc=edu'] = array(
   0 => array(
     'count' => 1,

@@ -26,9 +26,13 @@ function ldap_authorization_drupal_role_ldap_authorization_consumer() {
     'consumer_mapping_directions' => '<p>Mappings should be of form:<br/>
 <code>[ldap group representation]|[role name]</code>
 <br/>such as:<br/>
-<code>Campus Accounts|authenticated user<br/>
-ou=Underlings,dc=myorg,dc=mytld|underlings<br/>
-ou=IT,dc=myorg,dc=mytld,dc=edu|administrator
+<code>cn=students,ou=groups,dc=hogwarts,dc=edu|students<br/>
+cn=faculty,ou=groups,dc=hogwarts,dc=edu|administrator
+</code><br/>
+or if "Convert full dn" is selected below, they should look like:
+<br/>
+<code>students|students<br/>
+faculty|administrator
 </code><br/>',
   );
 

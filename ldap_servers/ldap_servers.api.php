@@ -7,6 +7,39 @@
 
 
 /**
+ * Allows other modules to periodically affect an ldap associated user
+ * or its corresponding ldap entry.
+ *
+ * when cron runs a batch of ldap associated drupal accounts
+ * will be looked at and marked as tested.  over the course
+ * of time all ldap related users will be looked at
+ *
+ * Each module implementing this hook is responsible for
+ * altering ldap entries and drupal user objects; simply
+ * altering the variables will have no affect on the actual
+ * ldap entry or drupal user
+ */
+
+function hook_ldap_servers_user_cron(&$users) {
+  
+  
+  
+}
+
+/**
+ * helper hook to see if a batch of ldap users
+ * needs to be queried
+ *
+ * if a module implements hook_ldap_servers_user_cron,
+ * but currently does not need to process user cron batches,
+ * it should return FALSE
+ */
+
+function hook_ldap_servers_user_cron_needed() {
+  return TRUE;
+}
+
+/**
  * Allows other modules to alter ldap entry or perform other necessary
  *   LDAP operations before entires are provisioned.
  * This should be invoked before provisioning ldap entries
