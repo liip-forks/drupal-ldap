@@ -1594,7 +1594,30 @@ class LdapServer {
   }
   
 
-
+ /**
+   *  get "groups" from derived from DN.  Has limited usefulness
+   *  
+   *  @param mixed
+   *    - drupal user object (stdClass Object)
+   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
+   *    - ldap dn of user (array)
+   *    - drupal username of user (string)
+   *    
+   *  @return array of group strings
+   */
+  public function groupUserMembershipsFromDn($user) {
+   
+    if (!$this->groupDeriveFromDn || !$this->groupDeriveFromDnAttr) {
+      return FALSE;
+    }
+    elseif ($user_ldap_entry = $this->userUserToExistingLdapEntry($user)) {
+      return ldap_servers_get_all_rdn_values_from_dn($user_ldap_entry['dn'], $this->groupDeriveFromDnAttr);
+    }
+    else {
+      return FALSE;
+    }
+    
+  }
   /**
    * Error methods and properties.
    */

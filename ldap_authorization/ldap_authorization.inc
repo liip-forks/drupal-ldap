@@ -407,99 +407,41 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $watchdog_tokens = array();
 
-  // Strategy 1: group extracted from user's DN.
+  // groups extracted from user's DN. such as ou=IT => group = "IT"
   $derive_from_dn_authorizations = array();
-  if ($consumer_conf->server->groupDeriveFromDn) {
-    $rdn_values = ldap_servers_get_all_rdn_values_from_dn($user_ldap_entry['dn'], $consumer_conf->server->groupDeriveFromDnAttr);
+  if ($rdn_values = $consumer_conf->server->groupUserMembershipsFromDn($user)) {
     $derive_from_dn_authorizations = array_combine($rdn_values, $rdn_values);
-  //  debug($derive_from_dn_authorizations);
+  }
+  else {
+    $derive_from_dn_authorizations = array();
   }
   if ($op == 'test_query') {
-    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 1. Derive from DN'] = ($consumer_conf->server->groupDeriveFromDn) ? $derive_from_dn_authorizations : t('disabled');
+    $_SESSION['ldap_authorization_test_query']['maps']['Derive from DN'] = ($rdn_values) ? $derive_from_dn_authorizations : t('disabled');
   }
 
-  // Strategy 2: groups in user attributes
-  $derive_from_attr_authorizations = array();
-  if ($consumer_conf->server->groupUserMembershipsAttrExists) {
-    $authorizations = $ldap_server->groupUserMembershipsFromUserAttr($user_ldap_entry);
-    foreach ($authorizations as $id => $authorization) {
-      if ($consumer_conf->useFirstAttrAsGroupId) {
-        $attr_parts = ldap_explode_dn($authorization, 0); // explode_dn escapes attribute values, so must be unescaped later!
-        $first_part = explode('=', $attr_parts[0]);
-        $derive_from_attr_authorizations[] = ldap_pear_unescape_filter_value(trim($first_part[1]));
-      }
-      else {
-        $derive_from_attr_authorizations[] = $authorization;
-      }
-    }
-  }
-  if (count($derive_from_attr_authorizations)) {
-
-   // array_walk($derive_from_attr_authorizations, 'drupal_strtolower');
-    $derive_from_attr_authorizations = array_unique($derive_from_attr_authorizations);
-    $derive_from_attr_authorizations = array_combine($derive_from_attr_authorizations, $derive_from_attr_authorizations);
+  // traditional groups (dns)
+  $group_dns = $consumer_conf->server->groupMembershipsFromUser($user, 'group_dns');
+  if (count($group_dns)) {
+    $group_dns = array_unique($group_dns);
 
   }
   if ($op == 'test_query') {
-    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 2. Groups in User Attributes'] = ($consumer_conf->server->groupUserMembershipsAttrExists) ? $derive_from_attr_authorizations : t('disabled');
+    $_SESSION['ldap_authorization_test_query']['maps']['Groups DNs'] = $group_dns;
   }
-
-/**
- *
- *  Strategy 3: groups as entries.
- *
- *  given:
- *  - user dn = cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu
- *
- * search on member=cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu within basedn cn=content editors,ou=groups,dc=ad,dc=myuniversity,dc=edu
- *
- * returned entries dn or cn should be used to derive authorization mappings
- *
- * see
- *   ldap_authorization/tests/DeriveFromEntry/DeriveFromEntry.openLdap.notnested.notes.txt
- * and
- *   ldap_authorization/tests/DeriveFromEntry/DeriveFromEntry.openLdap.nested.notes.txt
- *
- */
-
-  $derive_from_entry_authorizations = array();
-  if (!$consumer_conf->server->groupUserMembershipsAttrExists && $consumer_conf->server->groupGroupEntryMembershipsConfigured) {
-    $derive_from_entry_authorizations = $ldap_server->groupUserMembershipsFromEntry($user_ldap_entry);
-    if (count($derive_from_entry_authorizations)) {
-      foreach ($derive_from_entry_authorizations as $i => $authorization) {
-        if ($consumer_conf->useFirstAttrAsGroupId) {
-          $attr_parts = ldap_explode_dn($authorization, 0); // escapes attribute values, need to be unescaped later
-          $first_part = explode('=', $attr_parts[0]);
-          $derive_from_entry_authorizations[$i] = ldap_pear_unescape_dn_value(trim($first_part[1]));
-        }
-        else {
-          $derive_from_entry_authorizations[$i] = $authorization;
-        }
-      }
-      $derive_from_entry_authorizations = array_unique($derive_from_entry_authorizations);
-      $derive_from_entry_authorizations = array_combine($derive_from_entry_authorizations, $derive_from_entry_authorizations);
-    }
-  }
-  if ($op == 'test_query') {
-    $_SESSION['ldap_authorization_test_query']['maps']['Strategy 3. groups  as entries'] =
-      (!$consumer_conf->server->groupUserMembershipsAttrExists && $consumer_conf->server->groupGroupEntryMembershipsConfigured) ? $derive_from_entry_authorizations  : t('disabled');
-  }
-
-  $values = array_merge(array_values($derive_from_dn_authorizations), array_values($derive_from_attr_authorizations), array_values($derive_from_entry_authorizations));
+  
+  $values = array_merge($derive_from_dn_authorizations, $group_dns);
   $values = array_unique($values);
   $authz_ids = (count($values)) ? array_combine($values, $values) : array();
   if ($detailed_watchdog_log) {
     $watchdog_tokens['%username'] = $user->name;
     $watchdog_tokens['%ldap_server'] = $ldap_server->sid;
-    $watchdog_tokens['%deriveFromDn'] = join(', ', array_keys($derive_from_dn_authorizations));
-    $watchdog_tokens['%deriveFromAttr'] = join(', ', array_keys($derive_from_attr_authorizations));
-    $watchdog_tokens['%deriveFromEntry'] = 'authorizations: ' . join(', ', array_keys($derive_from_entry_authorizations));
+    $watchdog_tokens['%deriveFromDn'] = join(', ', $derive_from_dn_authorizations);
+    $watchdog_tokens['%deriveFromGroups'] = join(', ', $group_dns);
     $watchdog_tokens['%authz_ids'] =  join(', ', array_keys($authz_ids));
 
     watchdog('ldap_authorization', '%username :_ldap_authorization_ldap_authorization_maps_alter:
       <hr/>deriveFromDn authorization ids: %deriveFromDn
-      <hr/>deriveFromAttr authorization ids: %deriveFromAttr
-      <hr/>deriveFromEntry authorization ids: %deriveFromEntry
+      <hr/>deriveFromAttr authorization ids: %deriveFromGroups
       <hr/>merged authz_ids authorization ids: %authz_ids
       ',
       $watchdog_tokens, WATCHDOG_DEBUG);

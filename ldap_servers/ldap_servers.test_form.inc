@@ -121,6 +121,7 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
       'group1' => 'Group Create, Delete, Add Member, Remove Member Tests',
       'group2' => 'User Group Membership Functions Test',
       'tokens' => 'User Token Samples',
+      'groupfromDN' => 'Groups Derived From User DN',
     );
     foreach ($test_data['results_tables'] as $table_name => $table_data) {
       $form['#prefix'] .= '<h2>' . $titles[$table_name] . '</h2>' . theme('table', array('header' => array('Test', 'Result'), 'rows' => $table_data));
@@ -318,6 +319,11 @@ function ldap_servers_test_form_submit($form, &$form_state) {
           $results_tables['group2'][] = array("FromUserAttr and groupUserMembershipsFromEntry Diff)", $result2);
         }
       }
+    }
+    
+
+    if ($groups_from_dn = $ldap_server->groupUserMembershipsFromDn($user)) {
+      $results_tables['groupfromDN'][] = array( "Groups from DN" ,theme('item_list', array('items' => $groups_from_dn, 'type' => 'ul')));
     }
 
     list($has_errors, $more_results, $ldap_user) = ldap_servers_test_user_mapping($values['testing_drupal_username'], $ldap_server);

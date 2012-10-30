@@ -1071,7 +1071,10 @@ public function drupalFormSubmit($op, $values) {
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'checkbox',
-          '#title' => t('Groups are derived from user\'s LDAP entry DN.'),
+          '#title' => t('Groups are derived from user\'s LDAP entry DN.') . '<em>' .
+            t('This
+            group definition has very limited functionality and most modules will
+            not take this into account.  LDAP Authorization will.') . '</em>',
           '#disabled' => FALSE,
           '#states' => array(
              'visible' => array(   // action to take.
