@@ -621,7 +621,7 @@ function ldap_servers_disable_http_check(&$form) {
       'site_mail' =>  variable_get('site_mail', ''),
       );
 
-    $form['#prefix'] = theme('ldap_servers_https_required', $tokens);
+    drupal_set_message(t(theme('ldap_servers_https_required', $tokens)), 'error');
     $form['#disabled'] = TRUE;
   }
 }
