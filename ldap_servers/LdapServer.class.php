@@ -179,11 +179,14 @@ class LdapServer {
       }
     }
     
-    $this->initDerivedProperties();
+    $this->initDerivedProperties($server_record);
 //    dpm($this);
   }
   
-  protected function initDerivedProperties() {
+  /**
+   * this method sets properties that don't directly map from db record
+   */
+  protected function initDerivedProperties($server_record) {
 
     if (is_scalar($this->basedn)) {
       $this->basedn = unserialize($this->basedn);
