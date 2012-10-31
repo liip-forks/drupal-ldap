@@ -1,5 +1,5 @@
 <?php
-// $Id: ldap_help.resources.inc,v 1.1 2011/02/07 23:12:23 johnbarclay Exp $
+
 /**
  * @file
  * The ldap_help resources are just links.

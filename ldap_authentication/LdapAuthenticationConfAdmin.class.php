@@ -95,7 +95,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
         + array(-1 => t('Never'));
 
       $values['ssoEnabledDescription'] = '<strong>' . t('Single Sign on is enabled.') .
-        '</strong> ' . t('To disable it, disable the LDAP SSO Module on the ') .  l('Modules Form', 'admin/modules') . '.<p>' .
+        '</strong> ' . t('To disable it, disable the LDAP SSO Module on the') . ' ' . l(t('Modules Form'), 'admin/modules') . '.<p>' .
         t('Single Sign-On enables ' .
         'users of this site to be authenticated by visiting the URL ' .
         '"user/login/sso, or automatically if selecting "automated ' .
@@ -386,13 +386,13 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     }
     else {
       $form['sso']['disabled'] = array(
-       '#type' => 'markup',
-       '#markup' => '<p><em>' . t('LDAP Single Sign-On module must be enabled for options below to work.')
-       . ' ' . t('It is currently disabled.')
-        . ' ' .  l('Modules Form', 'admin/modules') . '</p></em>',
+        '#type' => 'markup',
+        '#markup' => '<p><em>' . t('LDAP Single Sign-On module must be enabled for options below to work.')
+        . ' ' . t('It is currently disabled.')
+        . ' ' . l(t('Modules Form'), 'admin/modules') . '</p></em>',
       );
     }
-    
+
     $form['sso']['ssoRemoteUserStripDomainName'] = array(
       '#type' => 'checkbox',
       '#title' => t('Strip REMOTE_USER domain name'),

@@ -89,7 +89,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
   *
   * @param array $form array from user profile
   * @param array $form_state from user profile
-  * 
+  *
   * @return NULL (alters $form by reference)
   */
 function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) {
@@ -130,7 +130,7 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
   * @return NULL (form_set_error() calls throw validation errors)
   */
 function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
-  
+
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $authname = $form_state['values']['name']; // $name = $form_state['values']['name']; // patch 1599632
   $pass = $form_state['values']['pass'];
@@ -241,23 +241,25 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     }
 
 /**
-*
-LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT => t('Service Account Bind.  Use credentials in following section to
-bind to ldap.  This option is usually a best practice. Service account is entered in next section.'),
+  *
+  LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT => t('Service Account Bind.  Use credentials in following section to
+  bind to ldap.  This option is usually a best practice. Service account is entered in next section.'),
 
-LDAP_SERVERS_BIND_METHOD_USER => t('Bind with Users Credentials.  Use users\' entered credentials
-to bind to LDAP.  This is only useful for modules that work during user logon such
-as ldap authentication and ldap authorization.  This option is not a best practice in most cases.
-The users dn must be of the form "cn=[username],[base dn]" for this option to work.'),
+  LDAP_SERVERS_BIND_METHOD_USER => t('Bind with Users Credentials.  Use users\' entered credentials
+  to bind to LDAP.  This is only useful for modules that work during user logon such
+  as ldap authentication and ldap authorization.  This option is not a best practice in most cases.
+  The users dn must be of the form "cn=[username],[base dn]" for this option to work.'),
 
-LDAP_SERVERS_BIND_METHOD_ANON_USER => t('Anonymous Bind for search, then Bind with Users Credentials.
-Searches for user DN then uses users\' entered credentials to bind to LDAP.  This is only useful for
-modules that work during user logon such as ldap authentication and ldap authorization.
-The users dn must be discovered by an anonymous search for this option to work.'),
+  LDAP_SERVERS_BIND_METHOD_ANON_USER => t('Anonymous Bind for search, then Bind with Users Credentials.
+  Searches for user DN then uses users\' entered credentials to bind to LDAP.  This is only useful for
+  modules that work during user logon such as ldap authentication and ldap authorization.
+  The users dn must be discovered by an anonymous search for this option to work.'),
 
-LDAP_SERVERS_BIND_METHOD_ANON => t('Anonymous Bind. Use no credentials to bind to ldap server.
-Will not work on most ldaps.'),
-**/
+  LDAP_SERVERS_BIND_METHOD_ANON => t('Anonymous Bind. Use no credentials to bind to ldap server.
+  Will not work on most ldaps.'),
+
+  */
+
     $bind_success = FALSE;
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
         $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
@@ -334,9 +336,9 @@ Will not work on most ldaps.'),
     /**
     * #4 CHECK ALLOWED AND EXCLUDED LIST AND PHP FOR ALLOWED USERS
     */
-    
+
     $allow = $auth_conf->allowUser($authname, $ldap_user, $account_exists);
-    
+
     if (!$allow) {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED;
       break;  // regardless of how many servers, disallowed user fails
@@ -454,7 +456,7 @@ Will not work on most ldaps.'),
       }
     }
   }
-  
+
   /**
    * case 1: previously drupal authenticated user authenticated successfully on ldap
    *
@@ -478,12 +480,12 @@ Will not work on most ldaps.'),
       drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
       return FALSE;
     }
-    
+
     if (!$auth_conf->ldapUser->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE)) {
       watchdog('ldap_user', 'Drupal account for %authname does not exists and provisioning of Drupal accounts on authentication is not enabled', array('%authname' => $accountname));
       return FALSE;
     }
-    
+
     /**
      *
      * new ldap_authentication provisioned account could let user_external_login_register create the account and set authmaps, but would need
@@ -503,8 +505,8 @@ Will not work on most ldaps.'),
     $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
     if ($auth_conf->ldapUser->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP && $user_register == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
       $user_edit['status'] = 0; // if admin approval required, set status to 1.
-    }   
-    
+    }
+
     // don't pass in ldap user, because want to requery with correct attributes needed
     // this may be a case where efficiency dictates querying for all attributes
     $account = $auth_conf->ldapUser->provisionDrupalAccount($account, $user_edit, NULL, TRUE);

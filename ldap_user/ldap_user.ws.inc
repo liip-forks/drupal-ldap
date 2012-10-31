@@ -14,7 +14,7 @@
  * e.g.
  * https://intranet.mycompany.com/ldap/user/ws/create/todrupal/jdoe/dsfew32423rewr3224243
  * https://intranet.mycompany.com/ldap/user/ws/synch/todrupal/jdoe/dsfew32423rewr3224243
- * 
+ *
  */
 
 function _ldap_user_ws_urls_item_list() {
@@ -29,7 +29,7 @@ function _ldap_user_ws_urls_item_list() {
     'Delete:  Drupal User: ' . $base . "/delete/todrupal/[username]|[dn]/$key",
     'Create:  LDAP Entry based on Drupal User: ' . $base . "/create/toldap/[username]/$key",
     'Synch:  Drupal User to LDAP Entry: ' . $base . "/synch/toldap/[username]/$key",
-    'Query: LDAP Associated Drupal User Exists: ' . $base . "/query/none/[username]|[dn]/$key", 
+    'Query: LDAP Associated Drupal User Exists: ' . $base . "/query/none/[username]|[dn]/$key",
   );
   return $item_list;
 }
@@ -83,7 +83,7 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
 
   ldap_servers_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
   $ldap_user_conf = new LdapUserConf();
-  
+
   $drupal_user = ($action == 'create' || $drupal_user_name === FALSE) ? FALSE : user_load_by_name($drupal_user_name);
   $user_edit = array();
   $account = array();
@@ -99,8 +99,8 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
       }
       elseif ($direction = LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
         $provision_result = $ldap_user_conf->provisionLdapEntry($drupal_user_name); // no need for ldap_user_ldap_provision_semaphore call with webservice since not tied to single user like logon process
-        // @todo turn result array into response 
-      }        
+        // @todo turn result array into response
+      }
     break;
 
     case 'synch':
@@ -111,8 +111,8 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
       }
       elseif ($direction = LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
         $boolean_result = $ldap_user_conf->synchToLdapEntry($drupal_user_name);
-        // @todo turn result array into response 
-      }  
+        // @todo turn result array into response
+      }
     break;
 
     case 'disable':
@@ -121,7 +121,7 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
         $edit = array('status' => 0);
         $saved_account = user_save($drupal_user, array('status' => 0));
         return ldap_user_ws_out(array((boolean)($saved_account), 'Disabled Account ' . $drupal_user_name));
-      } 
+      }
     break;
 
     case 'delete':
@@ -131,7 +131,7 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
       }
       elseif ($direction = LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
         // @todo implement delete ldap record and call ldap_user event handler for delete account
-      } 
+      }
     break;
   }
   return $out;

@@ -1,5 +1,4 @@
 <?php
-// $Id: LdapServer.class.php,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file
@@ -61,27 +60,27 @@ class LdapServer {
   public $groupMembershipsAttr = NULL;  //lowercase // members, uniquemember, memberUid
   public $groupMembershipsAttrMatchingUserAttr = NULL; //lowercase // dn, cn, etc contained in groupMembershipsAttr
   public $groupGroupEntryMembershipsConfigured = FALSE; // are groupMembershipsAttrMatchingUserAttr and groupGroupEntryMembershipsConfigured populated
-  
+
   public $groupTestGroupDn = NULL;
   public $groupTestGroupDnWriteable = NULL;
-  
+
   private $group_properties = array(
     'groupObjectClass', 'groupNested', 'groupDeriveFromDn', 'groupDeriveFromDnAttr', 'groupUserMembershipsAttrExists',
     'groupUserMembershipsAttr', 'groupMembershipsAttrMatchingUserAttr', 'groupTestGroupDn', 'groupTestGroupDnWriteable'
   );
-   
+
   public $paginationEnabled = FALSE; // (boolean)(function_exists('ldap_control_paged_result_response') && function_exists('ldap_control_paged_result'));
   public $searchPagination = FALSE;
   public $searchPageSize = 1000;
   public $searchPageStart = 0;
   public $searchPageEnd = NULL;
-  
+
   public $inDatabase = FALSE;
   public $connection;
-  
 
 
-  
+
+
   // direct mapping of db to object properties
   public static function field_to_properties_map() {
     return array( 'sid' => 'sid',
@@ -104,12 +103,12 @@ class LdapServer {
     'ldap_to_drupal_user'  => 'ldapToDrupalUserPhp',
     'testing_drupal_username'  => 'testingDrupalUsername',
     'testingDrupalUserDn'  => 'testingDrupalUserDn',
-    
+
     'groupFunctionalityUnused' => 'groupFunctionalityUnused',
     'group_object_category' => 'groupObjectClass',
     'groupNested' => 'groupNested',
     'groupUserMembershipsAttrExists' => 'groupUserMembershipsAttrExists',
-    'groupUserMembershipsAttr'=> 'groupUserMembershipsAttr',
+    'groupUserMembershipsAttr' => 'groupUserMembershipsAttr',
     'groupMembershipsAttr' => 'groupMembershipsAttr',
     'groupMembershipsAttrMatchingUserAttr' => 'groupMembershipsAttrMatchingUserAttr',
     'groupDeriveFromDn' => 'groupDeriveFromDn',
@@ -119,7 +118,7 @@ class LdapServer {
 
     'search_pagination' => 'searchPagination',
     'search_page_size' => 'searchPageSize',
-    
+
     );
 
   }
@@ -165,8 +164,8 @@ class LdapServer {
     else {
       // @todo throw error
     }
-    
-   
+
+
     $this->groupFunctionalityUnused = (isset($server_record->groupFunctionalityUnused) && $server_record->groupFunctionalityUnused);
     foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
       if (isset($server_record->$db_field_name)) {
@@ -178,24 +177,23 @@ class LdapServer {
         }
       }
     }
-    
-    $this->initDerivedProperties($server_record);
+
+    $this->initDerivedProperties($server_record->bindpw);
 //    dpm($this);
   }
-  
+
   /**
    * this method sets properties that don't directly map from db record
    */
-  protected function initDerivedProperties($server_record) {
+  protected function initDerivedProperties($bindpw) {
 
     if (is_scalar($this->basedn)) {
       $this->basedn = unserialize($this->basedn);
     }
-    if (isset($server_record->bindpw) && $server_record->bindpw != '') {
-      $this->bindpw = $server_record->bindpw;
-      $this->bindpw = ldap_servers_decrypt($this->bindpw);
+    if ($bindpw != '') {
+      $this->bindpw = ldap_servers_decrypt($bindpw);
     }
-    
+
     $this->paginationEnabled = (boolean)(ldap_servers_php_supports_pagination() && $this->searchPagination);
 
     $this->queriableWithoutUserCredentials = (boolean)(
@@ -203,7 +201,7 @@ class LdapServer {
       $this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
     );
     $this->editPath = 'admin/config/people/ldap/servers/edit/' . $this->sid;
-    
+
     $this->groupGroupEntryMembershipsConfigured = ($this->groupMembershipsAttrMatchingUserAttr && $this->groupMembershipsAttr);
     $this->groupUserMembershipsConfigured = ($this->groupUserMembershipsAttrExists && $this->groupUserMembershipsAttr);
   }
@@ -321,9 +319,9 @@ class LdapServer {
     if (! $this->connection) {
       $this->connect();
       $this->bind();
-    } 
+    }
   }
-  
+
 /**
  * does dn exist for this server?
  * [ ] Finished
@@ -333,7 +331,7 @@ class LdapServer {
  * @param string $dn
  * @param enum $return = 'boolean' or 'ldap_entry'
  * @param array $attributes in same form as ldap_read $attributes parameter
- * 
+ *
  * @param return FALSE or ldap entry array
  */
   function dnExists($dn, $return = 'boolean', $attributes = NULL) {
@@ -347,14 +345,14 @@ class LdapServer {
       'timelimit' => 0,
       'deref' => NULL,
     );
-    
+
     if ($return == 'boolean' || !is_array($attributes)) {
       $params['attributes'] = array('objectclass');
     }
     else {
       $params['attributes'] = $attributes;
     }
-    
+
     $result = $this->ldapQuery(LDAP_SCOPE_BASE, $params);
     if ($result !== FALSE) {
       if ($return == 'boolean') {
@@ -370,12 +368,12 @@ class LdapServer {
     return FALSE;
 
   }
-    
-  
+
+
   public function countEntries($ldap_result) {
     return ldap_count_entries($this->connection, $ldap_result);
   }
-  
+
 
 
   /**
@@ -402,9 +400,9 @@ class LdapServer {
     elseif (!$dn) {
       return FALSE;
     }
-    
+
    // debug("createLdapEntry, dn=$dn, entry:"); debug($attributes);
-    $result = @ldap_add($this->connection, $dn, $attributes); 
+    $result = @ldap_add($this->connection, $dn, $attributes);
     if (!$result) {
       $error = "LDAP Server ldap_add(%dn) Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
       $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
@@ -443,7 +441,7 @@ class LdapServer {
           $old_value_is_scalar = FALSE;
         }
       }
-      
+
       // identical multivalued attributes
       if (is_array($new_val) && is_array($old_value) && count(array_diff($new_val, $old_value)) == 0) {
         unset($new_entry[$key]);
@@ -454,9 +452,9 @@ class LdapServer {
     }
     return $new_entry;
   }
-  
-     
-    
+
+
+
 
 
   /**
@@ -468,14 +466,14 @@ class LdapServer {
         $attributes["attribute1"] = "value";
         $attributes["attribute2"][0] = "value1";
         $attributes["attribute2"][1] = "value2";
-        
+
     @return TRUE on success FALSE on error
    */
 
   function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
-    
+
     $this->connectAndBindIfNotAlready();
-    
+
     if (!$old_attributes) {
       $result = @ldap_read($this->connection, $dn, 'objectClass=*');
       if (!$result) {
@@ -484,7 +482,7 @@ class LdapServer {
         watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
         return FALSE;
       }
-    
+
       $entries = ldap_get_entries($this->connection, $result);
       if (is_array($entries) && $entries['count'] == 1) {
         $old_attributes =  $entries[0];
@@ -600,15 +598,15 @@ class LdapServer {
     }
 
     $attr_display =  is_array($attributes) ? join(',', $attributes) : 'none';
-    $query = 'ldap_search() call: '. join(",\n", array(
+    $query = 'ldap_search() call: ' . join(",\n", array(
       'base_dn: ' . $base_dn,
       'filter = ' . $filter,
       'attributes: ' . $attr_display,
-      'attrsonly = ' .  $attrsonly,
-      'sizelimit = ' .  $sizelimit,
-      'timelimit = ' .  $timelimit,
-      'deref = ' .  $deref,
-      'scope = ' .  $scope,
+      'attrsonly = ' . $attrsonly,
+      'sizelimit = ' . $sizelimit,
+      'timelimit = ' . $timelimit,
+      'deref = ' . $deref,
+      'scope = ' . $scope,
       )
     );
     if ($this->detailed_watchdog_log) {
@@ -699,7 +697,7 @@ class LdapServer {
     $has_page_results = FALSE;
 
     do {
-      ldap_control_paged_result($this->connection, $this->searchPageSize, true, $page_token);
+      ldap_control_paged_result($this->connection, $this->searchPageSize, TRUE, $page_token);
       $result = $this->ldapQuery($ldap_query_params['scope'], $ldap_query_params);
 
       if ($page >= $this->searchPageStart) {
@@ -754,9 +752,9 @@ class LdapServer {
   }
 
   function ldapQuery($scope, $params) {
-    
+
     $this->connectAndBindIfNotAlready();
-    
+
     switch ($scope) {
       case LDAP_SCOPE_SUBTREE:
         $result = @ldap_search($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
@@ -773,20 +771,20 @@ class LdapServer {
 
       case LDAP_SCOPE_BASE:
         $result = @ldap_read($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
-           $params['sizelimit'], $params['timelimit'], $params['deref']);
+          $params['sizelimit'], $params['timelimit'], $params['deref']);
         if ($params['sizelimit'] && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
           // false positive error thrown.  do not result limit error when $sizelimit specified
         }
         elseif ($this->hasError()) {
           watchdog('ldap_server', 'ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query',
-            array('%message' => $this->errorMsg('ldap'), '%query' =>@$params['query_display']),
+            array('%message' => $this->errorMsg('ldap'), '%query' => @$params['query_display']),
             WATCHDOG_ERROR);
         }
         break;
 
       case LDAP_SCOPE_ONELEVEL:
         $result = @ldap_list($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
-           $params['sizelimit'], $params['timelimit'], $params['deref']);
+          $params['sizelimit'], $params['timelimit'], $params['deref']);
         if ($params['sizelimit'] && $this->ldapErrorNumber() == LDAP_SIZELIMIT_EXCEEDED) {
           // false positive error thrown.  do not result limit error when $sizelimit specified
         }
@@ -799,26 +797,26 @@ class LdapServer {
     }
     return $result;
   }
-  
+
   /**
    * @param array $dns Mixed Case
    * @return array $dns Lower Case
    */
-  
+
   public function dnArrayToLowerCase($dns) {
     return array_keys(array_change_key_case(array_flip($dns), CASE_LOWER));
   }
-  
+
   /**
    * @param binary or string $puid as returned from ldap_read or other ldap function
    *
    */
   public function userUserEntityFromPuid($puid) {
-    
+
     if ($this->unique_persistent_attr_binary) {
       $puid = ldap_servers_binary($puid);
     }
-    
+
    // list($account, $user_entity) = ldap_user_load_user_acct_and_entity('jkeats');
     //debug('userUserEntityFromPuid:account and user entity'); debug($account); debug($user_entity);
     $query = new EntityFieldQuery();
@@ -837,7 +835,7 @@ class LdapServer {
         return $user[$uids[0]];
       }
       else {
-        $uids = join(',',$uids);
+        $uids = join(',', $uids);
         $tokens = array('%uids' => $uids, '%puid' => $puid, '%sid' =>  $this->sid, '%ldap_user_puid_property' =>  $this->unique_persistent_attr);
         watchdog('ldap_server', 'multiple users (uids: %uids) with same puid (puid=%puid, sid=%sid, ldap_user_puid_property=%ldap_user_puid_property)', $tokens, WATCHDOG_ERROR);
         return FALSE;
@@ -848,13 +846,13 @@ class LdapServer {
     }
 
   }
-  
+
   function userUsernameToLdapNameTransform($drupal_username, &$watchdog_tokens) {
     if ($this->ldapToDrupalUserPhp && module_exists('php')) {
       global $name;
       $old_name_value = $name;
       $name = $drupal_username;
-      $code = "<?php global \$name; \n". $this->ldapToDrupalUserPhp . "; \n ?>";
+      $code = "<?php global \$name; \n" . $this->ldapToDrupalUserPhp . "; \n ?>";
       $watchdog_tokens['%code'] = $this->ldapToDrupalUserPhp;
       $code_result = php_eval($code);
       $watchdog_tokens['%code_result'] = $code_result;
@@ -872,15 +870,15 @@ class LdapServer {
     return $ldap_username;
 
   }
-  
-  
+
+
  /**
    * @param ldap entry array $ldap_entry
    *
    * @return string user's username value
    */
   public function userUsernameFromLdapEntry($ldap_entry) {
-    
+
     $accountname = FALSE;
     if ($this->account_name_attr) {
       $accountname = (empty($ldap_entry[$this->user_attr][0])) ? FALSE : $ldap_entry[$this->account_name_attr][0];
@@ -898,7 +896,7 @@ class LdapServer {
    * @return mixed string user's username value of FALSE
    */
   public function userUsernameFromDn($dn) {
-    
+
     $ldap_entry = @$this->dnExists($dn, 'ldap_entry', array());
     if (!$ldap_entry || !is_array($ldap_entry)) {
       return FALSE;
@@ -906,16 +904,16 @@ class LdapServer {
     else {
       return $this->userUsernameFromLdapEntry($ldap_entry);
     }
-  
+
   }
-  
+
   /**
    * @param ldap entry array $ldap_entry
    *
    * @return string user's mail value
    */
   public function userEmailFromLdapEntry($ldap_entry) {
- 
+
     if ($this->mail_attr) { // not using template
       $mail = $ldap_entry[$this->mail_attr][0];
       return $mail;
@@ -936,7 +934,7 @@ class LdapServer {
    * @return string user's PUID or permanent user id (within ldap) in native ldap format (no binary conversions applied)
    */
   public function userPuidFromLdapEntry($ldap_entry) {
-  
+
     if ($this->unique_persistent_attr
         && isset($ldap_entry[$this->unique_persistent_attr][0])
         && is_scalar($ldap_entry[$this->unique_persistent_attr][0])
@@ -955,12 +953,12 @@ class LdapServer {
    *    - ldap entry of user (array)
    *    - ldap dn of user (string)
    *    - drupal username of user (string)
-   *    
+   *
    *  @return array $ldap_user_entry (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
   */
- 
+
   public function userUserToExistingLdapEntry($user) {
-    
+
     if (is_object($user)) {
       $user_ldap_entry = $this->userUserNameToExistingLdapEntry($user->name);
     }
@@ -971,13 +969,13 @@ class LdapServer {
       if (strpos($user, '=') === FALSE) { // username
         $user_ldap_entry = $this->userUserNameToExistingLdapEntry($user);
       }
-      else { 
+      else {
         $user_ldap_entry = $this->dnExists($user, 'ldap_entry');
       }
     }
-    return $user_ldap_entry;  
+    return $user_ldap_entry;
   }
-  
+
   /**
    * Queries LDAP server for the user.
    *
@@ -1007,10 +1005,10 @@ class LdapServer {
     else {
       $attribute_maps = ldap_servers_attributes_needed($this->sid, $ldap_context);
     }
-    
+
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
-      $filter = '('. $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)   . ')';
+      $filter = '(' . $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ')';
       $result = $this->search($basedn, $filter, array_keys($attribute_maps));
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
@@ -1085,16 +1083,16 @@ class LdapServer {
    * @param enum $nested = NULL (default to server configuration), TRUE, or FALSE indicating to test for nested groups
    */
   public function groupIsMember($group_dn, $user, $nested = NULL) {
-    
+
     $nested = ($nested === TRUE || $nested === FALSE) ? $nested : $this->groupNested;
     $group_dns = $this->groupMembershipsFromUser($user, 'group_dns', $nested);
     // while list of group dns is going to be in correct mixed case, $group_dn may not since it may be derived from user entered values
     // so make sure in_array() is case insensitive
     return (is_array($group_dns) && in_array(drupal_strtolower($group_dn), $this->dnArrayToLowerCase($group_dns)));
   }
-  
 
-  
+
+
   /**
    * NOT TESTED
    * add a group entry
@@ -1114,11 +1112,11 @@ class LdapServer {
     if ($this->dnExists($group_dn, 'boolean')) {
       return FALSE;
     }
-    
+
     $attributes = array_change_key_case($attributes, CASE_LOWER);
     $objectclass = (empty($attributes['objectclass'])) ? $this->groupObjectClass : $attributes['objectclass'];
     $attributes['objectclass'] = $objectclass;
-    
+
     /**
      * 2. give other modules a chance to add or alter attributes
      */
@@ -1131,28 +1129,28 @@ class LdapServer {
     drupal_alter('ldap_entry_pre_provision', $ldap_entries, $this, $context);
     $attributes = $ldap_entries[$group_dn];
 
-    
+
      /**
      * 4. provision ldap entry
      *   @todo how is error handling done here?
-     */  
+     */
     $ldap_entry_created = $this->createLdapEntry($attributes, $group_dn);
-    
+
 
      /**
      * 5. allow other modules to react to provisioned ldap entry
      *   @todo how is error handling done here?
-     */    
+     */
     if ($ldap_entry_created) {
       module_invoke_all('ldap_entry_post_provision', $ldap_entries, $this, $context);
       return TRUE;
     }
-    else { 
-      return FALSE; 
+    else {
+      return FALSE;
     }
 
   }
-  
+
   /**
    * NOT TESTED
    * remove a group entry
@@ -1187,7 +1185,7 @@ class LdapServer {
    *    - drupal username of user (string)
    */
   public function groupAddMember($group_dn, $user) {
-    
+
     $user_ldap_entry = $this->userUserToExistingLdapEntry($user);
     $result = FALSE;
     if ($user_ldap_entry && $this->groupGroupEntryMembershipsConfigured) {
@@ -1199,7 +1197,7 @@ class LdapServer {
 
     return $result;
   }
-    
+
   /**
    * NOT TESTED
    * remove a member from a group
@@ -1212,7 +1210,7 @@ class LdapServer {
    *    - drupal username of user (string)
    */
   public function groupRemoveMember($group_dn, $user) {
- 
+
     $user_ldap_entry = $this->userUserToExistingLdapEntry($user);
     $result = FALSE;
     if ($user_ldap_entry && $this->groupGroupEntryMembershipsConfigured) {
@@ -1223,8 +1221,8 @@ class LdapServer {
     }
     return $result;
   }
- 
- 
+
+
   /**
    *
    * @todo: NOT IMPLEMENTED: nested groups
@@ -1234,7 +1232,7 @@ class LdapServer {
    * @param string $group_dn as ldap dn
    *
    * @return FALSE on error otherwise array of group members (could be users or groups)
-   */  
+   */
   public function groupAllMembers($group_dn) {
    // debug("groupAllMembers $group_dn, this->groupMembershipsAttr=". $this->groupMembershipsAttr . 'this->groupGroupEntryMembershipsConfigured=' . $this->groupGroupEntryMembershipsConfigured);
     if (!$this->groupGroupEntryMembershipsConfigured) {
@@ -1259,18 +1257,18 @@ class LdapServer {
       return $members;
     }
 
-    
-    
+
+
     $this->groupMembersResursive($current_group_entries, $all_group_dns, $tested_group_ids, 0, $max_levels, $object_classes);
-    
+
   //  dpm('all_group_dns'); dpm($all_group_dns);
     return $all_group_dns;
-    
+
   }
 
 /**
    *   NOT IMPLEMENTED
-   * recurse through all child groups and add members. 
+   * recurse through all child groups and add members.
    *
    * @param array $current_group_entries of ldap group entries that are starting point.  should include at least 1 entry.
    * @param array $all_group_dns as array of all groups user is a member of.  MIXED CASE VALUES
@@ -1281,7 +1279,7 @@ class LdapServer {
    * @param int $max_levels as max recursion allowed
    *
    */
-  
+
   public function groupMembersResursive($current_member_entries, &$all_member_dns, &$tested_group_ids, $level, $max_levels, $object_classes = FALSE) {
    // dpm("group membership recursive"); dpm($current_entries);
     if (!$this->groupGroupEntryMembershipsConfigured || !is_array($current_member_entries) || count($current_member_entries) == 0) {
@@ -1290,7 +1288,7 @@ class LdapServer {
     if (isset($current_member_entries['count'])) {
       unset($current_member_entries['count']);
     };
-    
+
     foreach ($current_member_entries as $i => $member_entry) {
       //dpm("groupMembersResursive:member_entry $i, level=$level < max_levels=$max_levels"); dpm($member_entry);
       // 1.  Add entry itself if of the correct type to $all_member_dns
@@ -1323,11 +1321,11 @@ class LdapServer {
           if (count($ors)) {
             $query_for_child_members = '(|(' . join(")(", $ors) . '))';  // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
             if (count($object_classes)) { // add or on object classe, otherwise get all object classes
-              $object_classes_ors = array('(objectClass=' . $this->groupObjectClass .')');
+              $object_classes_ors = array('(objectClass=' . $this->groupObjectClass . ')');
               foreach ($object_classes as $object_class) {
-                $object_classes_ors[] = '(objectClass=' . $object_class .')';
+                $object_classes_ors[] = '(objectClass=' . $object_class . ')';
               }
-              $query_for_child_members = '&(|' . join($object_classes_ors) .  ')(' . $query_for_child_members . ')';
+              $query_for_child_members = '&(|' . join($object_classes_ors) . ')(' . $query_for_child_members . ')';
             }
             foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
               $child_member_entries = $this->search($base_dn, $query_for_child_members, array('objectclass', $this->groupMembershipsAttr, $this->groupMembershipsAttrMatchingUserAttr));
@@ -1344,7 +1342,7 @@ class LdapServer {
 
  /**
   /**
-   *  get list of all groups that a user is a member of.  
+   *  get list of all groups that a user is a member of.
    *
    *    If $nested = TRUE,
    *    list will include all parent group.  That is if user is a member of "programmer" group
@@ -1352,7 +1350,7 @@ class LdapServer {
    *    both "programmer" and "it" groups.
    *
    *    If $nested = FALSE, list will only include groups user is in directly.
-   *    
+   *
    *  @param mixed
    *    - drupal user object (stdClass Object)
    *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
@@ -1364,15 +1362,14 @@ class LdapServer {
    *  @return array of groups dns in mixed case or FALSE on error
    */
 
-  public function groupMembershipsFromUser($user, $return = 'group_dns', $nested = 'default') {
+  public function groupMembershipsFromUser($user, $return = 'group_dns', $nested = NULL) {
 
     $group_dns = FALSE;
     $user_ldap_entry = @$this->userUserToExistingLdapEntry($user);
-
     if (!$user_ldap_entry || $this->groupFunctionalityUnused) {
       return FALSE;
     }
-    if ($nested == 'default') {
+    if ($nested === NULL) {
       $nested = $this->groupNested;
     }
 
@@ -1388,8 +1385,8 @@ class LdapServer {
     }
 
   }
-  
-  
+
+
   /**
    *  get list of all groups that a user is a member of by using memberOf attribute first,
    *    then if nesting is true, using group entries to find parent groups
@@ -1400,7 +1397,7 @@ class LdapServer {
    *    both "programmer" and "it" groups.
    *
    *    If $nested = FALSE, list will only include groups user is in directly.
-   *    
+   *
    *  @param mixed
    *    - drupal user object (stdClass Object)
    *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
@@ -1411,12 +1408,12 @@ class LdapServer {
    *  @return array of group dns
    */
 
-  public function groupUserMembershipsFromUserAttr($user, $nested = 'default') {
-   
+  public function groupUserMembershipsFromUserAttr($user, $nested = NULL) {
+
     if (!$this->groupUserMembershipsConfigured) {
       return FALSE;
     }
-    if ($nested == 'default') {
+    if ($nested === NULL) {
       $nested = $this->groupNested;
     }
 
@@ -1429,7 +1426,7 @@ class LdapServer {
     else {
       $user_ldap_entry = $user;
     }
-    
+
     $all_group_dns = array();
     $tested_group_ids = array();
     $level = 0;
@@ -1448,7 +1445,7 @@ class LdapServer {
         else {
           $member_value = ldap_servers_get_first_rdn_value_from_dn($member_group_dn, $this->groupMembershipsAttrMatchingUserAttr);
         }
-        $ors[] =  $this->groupMembershipsAttr .'=' . $member_value;
+        $ors[] =  $this->groupMembershipsAttr . '=' . $member_value;
       }
     }
 
@@ -1473,7 +1470,7 @@ class LdapServer {
   }
 
   /**
-   *  get list of all groups that a user is a member of by querying groups 
+   *  get list of all groups that a user is a member of by querying groups
    *
    *    If $nested = TRUE,
    *    list will include all parent group.  That is if user is a member of "programmer" group
@@ -1481,7 +1478,7 @@ class LdapServer {
    *    both "programmer" and "it" groups.
    *
    *    If $nested = FALSE, list will only include groups user is in directly.
-   *    
+   *
    *  @param mixed
    *    - drupal user object (stdClass Object)
    *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
@@ -1493,21 +1490,21 @@ class LdapServer {
    *
    *  @see tests/DeriveFromEntry/ldap_servers.inc for fuller notes and test example
    */
-  public function groupUserMembershipsFromEntry($user, $nested = 'default') {
-   
+  public function groupUserMembershipsFromEntry($user, $nested = NULL) {
+
     if (!$this->groupGroupEntryMembershipsConfigured) {
       return FALSE;
     }
-    if ($nested == 'default') {
+    if ($nested === NULL) {
       $nested = $this->groupNested;
     }
 
     $user_ldap_entry = $this->userUserToExistingLdapEntry($user);
-    
+
     $all_group_dns = array(); // MIXED CASE VALUES
     $tested_group_ids = array(); // array of dns already tested to avoid excess queries MIXED CASE VALUES
     $level = 0;
-  
+
     if ($this->groupMembershipsAttrMatchingUserAttr == 'dn') {
       $member_value = $user_ldap_entry['dn'];
     }
@@ -1515,8 +1512,8 @@ class LdapServer {
       $member_value = $user_ldap_entry['attr'][$this->groupMembershipsAttrMatchingUserAttr][0];
     }
 
-    $group_query = '(&(objectClass=' . $this->groupObjectClass . ')(' . $this->groupMembershipsAttr ."=$member_value))";
-    
+    $group_query = '(&(objectClass=' . $this->groupObjectClass . ')(' . $this->groupMembershipsAttr . "=$member_value))";
+
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
       $group_entries = $this->search($base_dn, $group_query, array()); // only need dn, so empty array forces return of no attributes
       if ($group_entries !== FALSE) {
@@ -1527,7 +1524,7 @@ class LdapServer {
 
     return $all_group_dns;
   }
-  
+
   /**
    * recurse through all groups, adding parent groups to $all_group_dns array.
    *
@@ -1546,7 +1543,7 @@ class LdapServer {
    *
    * @return FALSE for error or misconfiguration, otherwise TRUE.  results are passed by reference.
    */
-  
+
   public function groupMembershipsFromEntryResursive($current_group_entries, &$all_group_dns, &$tested_group_ids, $level, $max_levels) {
 
     if (!$this->groupGroupEntryMembershipsConfigured || !is_array($current_group_entries) || count($current_group_entries) == 0) {
@@ -1555,7 +1552,7 @@ class LdapServer {
     if (isset($current_group_entries['count'])) {
       unset($current_group_entries['count']);
     };
-    
+
     $ors = array();
     foreach ($current_group_entries as $i => $group_entry) {
       if ($this->groupMembershipsAttrMatchingUserAttr == 'dn') {
@@ -1569,7 +1566,7 @@ class LdapServer {
         $tested_group_ids[] = $member_id;
         $all_group_dns[] = $group_entry['dn'];
         // add $group_id (dn, cn, uid) to query
-        $ors[] =  $this->groupMembershipsAttr .'=' . $member_id;
+        $ors[] =  $this->groupMembershipsAttr . '=' . $member_id;
       }
     }
 
@@ -1580,7 +1577,7 @@ class LdapServer {
         //dpm("current_ors $i," . LDAP_SERVER_LDAP_QUERY_CHUNK); dpm($current_ors);
         $or = '(|(' . join(")(", $current_ors) . '))';  // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
         $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass . ')' . $or . ')';
-     
+
 
         // debug('query_for_parent_groups'); debug($query_for_parent_groups);
         foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
@@ -1592,21 +1589,21 @@ class LdapServer {
       }
     }
   }
-  
+
 
  /**
    *  get "groups" from derived from DN.  Has limited usefulness
-   *  
+   *
    *  @param mixed
    *    - drupal user object (stdClass Object)
    *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
    *    - ldap dn of user (array)
    *    - drupal username of user (string)
-   *    
+   *
    *  @return array of group strings
    */
   public function groupUserMembershipsFromDn($user) {
-   
+
     if (!$this->groupDeriveFromDn || !$this->groupDeriveFromDnAttr) {
       return FALSE;
     }
@@ -1616,7 +1613,7 @@ class LdapServer {
     else {
       return FALSE;
     }
-    
+
   }
   /**
    * Error methods and properties.

@@ -1,5 +1,4 @@
 <?php
-// $Id: ldap_servers.functions.inc,v 1.3.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file
@@ -111,7 +110,7 @@ function ldap_badattr($attr, $attr_name) {
 
  * @param string $sid server id or ldap server object being used
  * @param string $direction LDAP_USER_PROV_DIRECTION_* constant
- * @param string $ldap_context 
+ * @param string $ldap_context
  * @param boolean $reset cache
  *
  */
@@ -150,9 +149,9 @@ function ldap_servers_attributes_needed($sid, $ldap_context = 'all', $reset = TR
  */
 function ldap_server_massage_text($value, $value_type, $context) {
 
-   $scalar = is_scalar($value);
+  $scalar = is_scalar($value);
 
-   if ($value_type == 'attr_value') {
+  if ($value_type == 'attr_value') {
 
     if ($context == LDAP_SERVER_MASSAGE_QUERY_LDAP) {
       $value = ldap_pear_escape_filter_value($value);
@@ -178,10 +177,10 @@ function ldap_server_massage_text($value, $value_type, $context) {
 
       break;
 
-     }
-   }
-   elseif ($value_type == 'attr_name') { // attr_name
-     switch ($context) {
+    }
+  }
+  elseif ($value_type == 'attr_name') { // attr_name
+    switch ($context) {
 
       case LDAP_SERVER_MASSAGE_DISPLAY:
       break;
@@ -210,10 +209,10 @@ function ldap_server_massage_text($value, $value_type, $context) {
         }
       break;
 
-     }
-   }
+    }
+  }
 
-   return $value;
+  return $value;
 
 }
 

@@ -1,6 +1,4 @@
 <?php
-// $Id: ldap_servers.test_form.inc,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
-
 
 /**
  * @file
@@ -49,7 +47,7 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
         'execute' => t('Execute Action.  Will perform provisioning configured for events below.  If this is selected only one action should be selected below'),
       ),
     );
-    
+
   $synch_trigger_options = ldap_user_synch_triggers_key_values();
 
   $selected_actions = isset($_SESSION['ldap_user_test_form']['action']) ? $_SESSION['ldap_user_test_form']['action'] : array();
@@ -80,20 +78,20 @@ function ldap_user_test_form_validate($form, &$form_state) {
     count(array_filter($form_state['values']['action'])) > 1 ) {
     form_set_error('test_mode', t('Only one action may be selected for "Execute Action" testing mode.'));
   }
-  
-  
+
+
 }
 
 /**
  * Submit hook for the LDAP server form.
  */
 function ldap_user_test_form_submit($form, &$form_state) {
-  
+
   $username = $form_state['values']['testing_drupal_username'];
   $selected_actions = $form_state['values']['action'];
-  
- if ($username && count($selected_actions) > 0) {
-  
+
+  if ($username && count($selected_actions) > 0) {
+
     $synch_trigger_options = ldap_user_synch_triggers_key_values();
 
     $user_object = user_load_by_name($username);
@@ -135,11 +133,11 @@ function ldap_user_test_form_submit($form, &$form_state) {
     }
     $results['User Authmap'] = $authmaps;
     $results['LDAP User Configuration Object'] = $ldap_user_conf;
-  
+
     $save = ($form_state['values']['test_mode'] == 'execute');
     $test_query = ($form_state['values']['test_mode'] != 'execute');
     $user_edit = array('name' => $username);
-    
+
     foreach (array_filter($selected_actions) as $i => $synch_trigger) {
       $synch_trigger_description = $synch_trigger_options[$synch_trigger];
       foreach (array(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) as $direction) {
@@ -170,7 +168,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
       foreach (array(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) as $direction) {
         if ($ldap_user_conf->provisionEnabled($direction, $synch_trigger)) {
           if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
-            $discard = $ldap_user_conf->synchToDrupalAccount(NULL, $user_edit, NULL, $test_query); 
+            $discard = $ldap_user_conf->synchToDrupalAccount(NULL, $user_edit, NULL, $test_query);
             $results['synchToDrupalAccount method results']["context = $synch_trigger_description"]['proposed'] = $user_edit;
           }
           else {
@@ -188,20 +186,20 @@ function ldap_user_test_form_submit($form, &$form_state) {
         }
       }
     }
-    
+
 
     if (function_exists('dpm')) {
       dpm($results);
     }
     else {
-      drupal_set_message(t('This form will not display results unless the devel module is enabled.'), 'warning');  
+      drupal_set_message(t('This form will not display results unless the devel module is enabled.'), 'warning');
     }
   }
-  
+
   $_SESSION['ldap_user_test_form']['action'] = $form_state['values']['action'];
   $_SESSION['ldap_user_test_form']['test_mode'] = $form_state['values']['test_mode'];
   $_SESSION['ldap_user_test_form']['testing_drupal_username'] = $username;
-  
+
   $form_state['redirect'] =  LDAP_USER_TEST_FORM_PATH;
 
 }

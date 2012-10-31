@@ -1,9 +1,9 @@
 <?php
-// $Id: LdapServerAdmin.class.php,v 1.6 2011/01/12 21:51:37 npiacentine Exp $
 
 /**
  * @file
  * LDAP Server Admin Class
+ *
  *
  */
 
@@ -73,24 +73,24 @@ class LdapServerAdmin extends LdapServer {
     $this->unique_persistent_attr_binary = trim($values['unique_persistent_attr_binary']);
     $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
     $this->testingDrupalUsername = trim($values['testing_drupal_username']);
-    $this->testingDrupalUserDn = trim($values['testingDrupalUserDn']);   
-    
+    $this->testingDrupalUserDn = trim($values['testingDrupalUserDn']);
+
     $this->groupFunctionalityUnused = trim($values['groupFunctionalityUnused']);
     $this->groupObjectClass = drupal_strtolower(trim($values['group_object_category']));
     $this->groupNested = trim($values['groupNested']);
-    
+
     $this->groupUserMembershipsAttrExists = trim($values['groupUserMembershipsAttrExists']);
     $this->groupUserMembershipsAttr =  drupal_strtolower(trim($values['groupUserMembershipsAttr']));
-    
+
     $this->groupMembershipsAttr = drupal_strtolower(trim($values['groupMembershipsAttr']));
     $this->groupMembershipsAttrMatchingUserAttr =  drupal_strtolower(trim($values['groupMembershipsAttrMatchingUserAttr']));
-    
+
     $this->groupDeriveFromDn = trim($values['groupDeriveFromDn']);
     $this->groupDeriveFromDnAttr = drupal_strtolower(trim($values['groupDeriveFromDnAttr']));
     $this->groupTestGroupDn = trim($values['groupTestGroupDn']);
     $this->groupTestGroupDnWriteable = trim($values['groupTestGroupDnWriteable']);
-    
-    
+
+
     $this->searchPagination = ($values['search_pagination']) ? 1 : 0;
     $this->searchPageSize = trim($values['search_page_size']);
 
@@ -124,7 +124,7 @@ class LdapServerAdmin extends LdapServer {
       if (module_exists('ctools')) {
         ctools_include('export');
         $result = ctools_export_crud_save('ldap_servers', $entry);
-         ctools_export_load_object_reset('ldap_servers'); // ctools_export_crud_save doesn't invalidate cache
+          ctools_export_load_object_reset('ldap_servers'); // ctools_export_crud_save doesn't invalidate cache
       }
       else {
         $result = drupal_write_record('ldap_servers', $entry, 'sid');
@@ -240,7 +240,7 @@ EOF;
     '#title' => t('LDAP Pagination'),
     '#description' => t('In PHP 5.4, pagination is supported in ldap queries.
       A patch to earlier versions of PHP also supports this.')
-      . ' <strong>' . t('This PHP installation appears to ') . $supports . '</strong> '
+      . ' <strong>' . t('This PHP installation appears to') . ' ' . $supports . '</strong> '
       . '<p>' . t('The advantage to pagination support is that if an ldap server is setup to return only
       1000 entries at a time,
       you can use page through 1000 records at a time;
@@ -516,7 +516,7 @@ public function drupalFormSubmit($op, $values) {
   }
 
 
-   public static function fields() {
+  public static function fields() {
 
      /**
      * consumer_type is tag (unique alphanumeric id) of consuming authorization such as
@@ -677,7 +677,7 @@ public function drupalFormSubmit($op, $values) {
       'form' => array(
         'fieldset' => 'bind_method',
         '#type' => 'markup',
-        '#markup' => t('<label>Service Account</label> Some LDAP configurations 
+        '#markup' => t('<label>Service Account</label> Some LDAP configurations
           prohibit or restrict results of anonymous searches. These LDAPs require a DN//password pair
           for binding. For security reasons, this pair should belong to an
           LDAP account with stripped down permissions.'),
@@ -694,8 +694,8 @@ public function drupalFormSubmit($op, $values) {
           '#states' => array(
              'enabled' => array(   // action to take.
                ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
-             ),
-           ),
+              ),
+            ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -712,8 +712,8 @@ public function drupalFormSubmit($op, $values) {
           '#states' => array(
              'enabled' => array(   // action to take.
                ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
-             ),
-           ),
+              ),
+            ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -773,7 +773,7 @@ public function drupalFormSubmit($op, $values) {
           '#description' => t('The attribute that holds the unique account name. Defaults to the same as the AuthName attribute.'),
         ),
         'schema' => array(
-      	  'type' => 'varchar',
+          'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
           'default' => '',
@@ -939,7 +939,7 @@ public function drupalFormSubmit($op, $values) {
           'default' => 0,
         ),
       ),
-      
+
      'group_object_category' =>  array(
         'form' => array(
           'fieldset' => 'groups',
@@ -948,10 +948,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('Name of Group Object Class'),
           '#description' => t('e.g. groupOfNames, groupOfUniqueNames, group.'),
           '#states' => array(
-             'visible' => array(   // action to take.
-               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
-             ),
-           ),
+              'visible' => array(   // action to take.
+                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+              ),
+            ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -959,7 +959,7 @@ public function drupalFormSubmit($op, $values) {
           'not null' => FALSE,
         ),
       ),
-  
+
       'groupNested' => array(
         'form' => array(
           'fieldset' => 'groups',
@@ -970,10 +970,10 @@ public function drupalFormSubmit($op, $values) {
              user should be considered to be in group A and B.  If your LDAP has nested groups, but you
              want to ignore nesting, leave this unchecked.'),
           '#states' => array(
-             'visible' => array(   // action to take.
-               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
-             ),
-           ),
+              'visible' => array(   // action to take.
+                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+              ),
+            ),
         ),
         'schema' => array(
           'type' => 'int',
@@ -982,7 +982,7 @@ public function drupalFormSubmit($op, $values) {
           'default' => 0,
         ),
       ),
-      
+
       'groupUserMembershipsAttrExists' => array(
         'form' => array(
           'fieldset' => 'groups',
@@ -993,8 +993,8 @@ public function drupalFormSubmit($op, $values) {
           '#states' => array(
              'visible' => array(   // action to take.
                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
-             ),
-           ),
+              ),
+            ),
         ),
         'schema' => array(
           'type' => 'int',
@@ -1003,7 +1003,7 @@ public function drupalFormSubmit($op, $values) {
           'default' => 0,
         ),
       ),
-      
+
       'groupUserMembershipsAttr' =>  array(
         'form' => array(
           'fieldset' => 'groups',
@@ -1015,7 +1015,7 @@ public function drupalFormSubmit($op, $values) {
             'enabled' => array(   // action to take.
               ':input[name=groupUserMembershipsAttrExists]' => array('checked' => TRUE),
             ),
-             'visible' => array(   // action to take.
+              'visible' => array(   // action to take.
               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
             ),
           ),
@@ -1026,7 +1026,7 @@ public function drupalFormSubmit($op, $values) {
           'not null' => FALSE,
         ),
       ),
-      
+
       'groupMembershipsAttr' =>  array(
         'form' => array(
           'fieldset' => 'groups',
@@ -1035,17 +1035,17 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('LDAP Group Entry Attribute Holding User\'s DN, CN, etc.'),
           '#description' => t('e.g uniquemember, memberUid'),
           '#states' => array(
-             'visible' => array(   // action to take.
-               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
-             ),
-           ),
+              'visible' => array(   // action to take.
+                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+              ),
+            ),
         ),
         'schema' => array(
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
         ),
-      ),      
+      ),
 
       'groupMembershipsAttrMatchingUserAttr' =>  array(
         'form' => array(
@@ -1055,10 +1055,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('User attribute held in "LDAP Group Entry Attribute Holding..."'),
           '#description' => t('This is almost always "dn" (which technically isn\'t an attribute).  Sometimes its "cn".'),
           '#states' => array(
-             'visible' => array(   // action to take.
-               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
-             ),
-           ),
+              'visible' => array(   // action to take.
+                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+              ),
+            ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -1077,10 +1077,10 @@ public function drupalFormSubmit($op, $values) {
             not take this into account.  LDAP Authorization will.') . '</em>',
           '#disabled' => FALSE,
           '#states' => array(
-             'visible' => array(   // action to take.
-               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
-             ),
-           ),
+              'visible' => array(   // action to take.
+                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+              ),
+            ),
         ),
         'schema' => array(
           'type' => 'int',
@@ -1089,7 +1089,7 @@ public function drupalFormSubmit($op, $values) {
           'default' => 0,
         ),
       ),
-    
+
       'groupDeriveFromDnAttr' =>  array(
         'form' => array(
           'fieldset' => 'groups',
@@ -1101,7 +1101,7 @@ public function drupalFormSubmit($op, $values) {
             'enabled' => array(   // action to take.
               ':input[name=groupDeriveFromDn]' => array('checked' => TRUE),
             ),
-             'visible' => array(   // action to take.
+              'visible' => array(   // action to take.
               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
             ),
           ),
@@ -1121,10 +1121,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('Testing LDAP Group DN'),
           '#description' => t('This is optional and can be useful for debugging and validating forms.'),
           '#states' => array(
-             'visible' => array(   // action to take.
-               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
-             ),
-           ),
+              'visible' => array(   // action to take.
+                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+              ),
+            ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -1141,10 +1141,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('Testing LDAP Group DN that is writable.  WARNING the test script for the server will create, delete, and add members to this group!'),
           '#description' => t('This is optional and can be useful for debugging and validating forms.'),
           '#states' => array(
-             'visible' => array(   // action to take.
-               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
-             ),
-           ),
+              'visible' => array(   // action to take.
+                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+              ),
+            ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -1152,7 +1152,7 @@ public function drupalFormSubmit($op, $values) {
           'not null' => FALSE,
         ),
       ),
-     
+
       'search_pagination' => array(
         'form' => array(
           'fieldset' => 'pagination',

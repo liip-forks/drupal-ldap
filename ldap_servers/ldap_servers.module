@@ -1,6 +1,4 @@
 <?php
-// $Id: ldap_servers.module,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
-
 
 define('LDAP_SERVER_LDAP_QUERY_CHUNK', 50);
 define('LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT', 10);
@@ -235,13 +233,13 @@ function ldap_servers_menu() {
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_servers.admin.inc',
   );
-  
+
   return $items;
 }
 
 
 /**
- * implements hook_theme()
+ * Implements hook_theme().
  */
 function ldap_servers_theme() {
   return array(
@@ -274,18 +272,18 @@ function ldap_servers_theme() {
 }
 
 
-/**
- * implements hook_cron()
- */
-function ldap_servers_cron() {
-  // if any modules implement hook_ldap_servers_user_cron()
-  // user entity query to find most recent 100 entries that have not been processed
-  // query for these and pass to modules implementing hook_ldap_server_maintenance()
-  // update user field to have current date as date most recently checked
-}
+  /**
+    * Implements hook_cron().
+    */
+  function ldap_servers_cron() {
+    // if any modules implement hook_ldap_servers_user_cron().
+    // user entity query to find most recent 100 entries that have not been processed
+    // query for these and pass to modules implementing hook_ldap_server_maintenance()
+    // update user field to have current date as date most recently checked
+  }
 
   /** get mixed case match from case insensitive search
-   * 
+   *
    * @param string mixed case $key
    * @param array mixed case $array
    * @return string matching key in mixed case or FALSE
@@ -299,9 +297,9 @@ function ldap_servers_cron() {
       return FALSE;
     }
   }
-  
+
   /**
-   * implements hook_ldap_attributes_needed_alter()
+   * Implements hook_ldap_attributes_needed_alter().
    */
   function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
 
@@ -324,26 +322,23 @@ function ldap_servers_cron() {
       if ($ldap_server->user_dn_expression) {
         ldap_servers_token_extract_attributes($attributes,  $ldap_server->user_dn_expression, TRUE);
       }
-      
       if ($ldap_server->mail_template) {
         ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);
       }
       if (!isset($attributes[$ldap_server->user_attr])) {
         $attributes[$ldap_server->user_attr] = ldap_servers_set_attribute_map();
-      }     
-          
+      }
     }
-
   }
 
 
 /**
- * implements hook_ldap_user_attrs_list_alter().
+ * Implements hook_ldap_user_attrs_list_alter().
  */
 
 function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
   //debug('ldap_servers_ldap_user_attrs_list_alter'); debug($available_user_attrs); debug($params);
-  
+
   if (isset($params['ldap_server']) && $params['ldap_server']) {
     $ldap_server = $params['ldap_server'];
   }
@@ -352,7 +347,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
   }
   $ldap_user_conf  = $params['ldap_user_conf'];
   $direction = $params['direction'];
-  
+
   $tokens = array(
     '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
     '!sid' => $ldap_server->sid,
@@ -361,12 +356,12 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
   $server_edit_path = 'admin/config/people/ldap/servers/edit/' . $ldap_server->sid;
 
   if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
-    
+
     /** these 4 user fields indentify where in ldap and which ldap server they are associated with.
      they are required for a Drupal account to be "ldap associated" regardless of if any other
      fields/properties are provisioned or synched
     */
-    
+
     foreach (array(
       'field.ldap_user_puid_sid',
       'field.ldap_user_puid',
@@ -433,7 +428,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'config_module' => 'ldap_server',
       'prov_module' => 'ldap_user',
     ) + $available_user_attrs['[field.ldap_user_current_dn]'];
-  
+
     if ($ldap_user_conf->provisionsDrupalAccountsFromLdap) {
       if (!isset($available_user_attrs['[property.name]']) || !is_array($available_user_attrs['[property.name]'])) {
         $available_user_attrs['[property.name]'] = array();
@@ -486,7 +481,6 @@ function ldap_servers_flush_server_cache() {
  *         - single server conf object (if flatten == TRUE)
  */
 function ldap_servers_get_servers($sid = NULL, $type = NULL, $flatten = FALSE, $reset = FALSE) {
-  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers');
   if (variable_get('ldap_simpletest', FALSE)) {
     return _ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset);
   }
@@ -495,6 +489,74 @@ function ldap_servers_get_servers($sid = NULL, $type = NULL, $flatten = FALSE, $
   }
 }
 
+/**
+ * see ldap_servers_get_servers()
+ */
+function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
+ // dpm('_ldap_servers_get_servers params'); dpm(array($sid, $type, $flatten, $reset));
+  ldap_servers_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
+  static $servers;
+  $type = ($type) ? $type : 'all';
+  if ($reset) {
+    $servers = array();
+  }
+  if (!isset($servers['all'])) {
+    $servers['all'] = LdapServerAdmin::getLdapServerObjects('all', NULL, 'LdapServer', $reset);
+  }
+
+  if (!isset($servers['enabled'])) {
+    $servers['enabled'] = array();
+    foreach ($servers['all'] as $_sid => $ldap_server) {
+      if ($ldap_server->status == 1) {
+        $servers['enabled'][$_sid] = $ldap_server;
+      }
+    }
+  }
+
+  if ($sid) {
+    if (!isset($servers[$type][$sid])) {
+      return FALSE;
+    }
+    return ($flatten) ? $servers[$type][$sid] : array($sid => $servers[$type][$sid]);
+  }
+
+  if (isset($servers[$type])) {
+    return $servers[$type];
+  }
+}
+
+/**
+ * see ldap_servers_get_servers()
+ */
+function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $reset = TRUE) {
+
+  if (!$type) {
+    $type = 'all';
+  }
+
+  //two flavors of mock servers exist.  ultimately v2 will be used in all simpletests
+  if (variable_get('ldap_simpletest', 0) == 2) {
+    ldap_servers_module_load_include('php', 'ldap_test', 'LdapServerTest.class');
+    $servers['all'] = LdapServerTest::getLdapServerObjects(NULL, 'all', FALSE);
+    foreach ($servers['all'] as $_sid => $ldap_server) {
+      if ($ldap_server->status == 1) {
+        $servers['enabled'][$_sid] = $ldap_server;
+      }
+    }
+    // dpm('servers'); dpm($servers);
+  }
+ 
+  if ($sid) {
+    if (!isset($servers[$type][$sid])) {
+      return FALSE;
+    }
+    return ($flatten) ? $servers[$type][$sid] : array($sid => $servers[$type][$sid]);
+  }
+
+  if (isset($servers[$type])) {
+    return $servers[$type];
+  }
+}
 function ldap_servers_debug($variable) {
   if (variable_get('ldap_simpletest', FALSE) && function_exists('dpm')) {
     dpm($variable);
@@ -511,7 +573,7 @@ function ldap_servers_cache_clear() {
  * function to convert microsoft style guids to strings
  */
 function ldap_servers_msguid($value) {
-  
+
   $hex_string = bin2hex($value);
   // (MS?) GUID are displayed with first three GUID parts as "big endian"
   // Doing this so String value matches what other LDAP tool displays for AD.
@@ -520,7 +582,7 @@ function ldap_servers_msguid($value) {
   substr( $hex_string, 10, 2) . substr( $hex_string, 8, 2) . '-' .
   substr( $hex_string, 14, 2) . substr( $hex_string, 12, 2) . '-' .
   substr( $hex_string, 16, 4) . '-' . substr( $hex_string, 20, 12));
-  
+
   return $value;
 }
 
@@ -538,6 +600,7 @@ function ldap_servers_binary($value) {
   }
   return $value;
 }
+
 /**
  * @todo needs caching element.  several modules could potentially call this in the same
  * page request.
@@ -584,19 +647,19 @@ function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_contex
  */
 
 function ldap_servers_set_attribute_map($attribute_map = NULL, $source_data_type = NULL, $target_data_type = NULL, $values = NULL) {
-  
+
   $attribute_map = (is_array($attribute_map)) ? $attribute_map : array();
 
-  if (!isset($attribute_map['source_data_type']) || $source_data_type) { 
-   $attribute_map['source_data_type'] = ($source_data_type) ? $source_data_type : NULL;
+  if (!isset($attribute_map['source_data_type']) || $source_data_type) {
+    $attribute_map['source_data_type'] = ($source_data_type) ? $source_data_type : NULL;
   }
 
-  if (!isset($attribute_map['target_data_type']) || $target_data_type) { 
-   $attribute_map['target_data_type'] = ($target_data_type) ? $target_data_type : NULL;
+  if (!isset($attribute_map['target_data_type']) || $target_data_type) {
+    $attribute_map['target_data_type'] = ($target_data_type) ? $target_data_type : NULL;
   }
-  
+
   if (!$values && (!isset($attribute_map['values']) || !is_array($attribute_map['values']))) {
-   $attribute_map['values'] = array(0 => NULL);
+    $attribute_map['values'] = array(0 => NULL);
   }
   elseif (is_array($values)) { //merge into array overwriting ordinals
     foreach ($values as $ordinal => $value) {

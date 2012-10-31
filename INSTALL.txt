@@ -16,7 +16,7 @@ Note:  This does not automatically upgrade for Drupal 6 LDAP Integration Modules
 
 4) Enable and configure ldap servers and configure at least one server.
 
-5) Enable and configure ldap authentication and/or ldap authorization
+5) Enable the other LDAP modules you need.
 
 6) LDAP Help is just for debugging and administrator help.  Use it if you have problems.
 Disable it in production; it adds no functionality or end user help.

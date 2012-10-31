@@ -29,9 +29,9 @@ function theme_ldap_user_conf_form($variables) {
 
   foreach ($tables as $direction => $table) {
     if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
-      
+
       $direction_text = 'todrupal';
-      
+
       $header = array(
         array(
           'data' => t('Remove'),
@@ -54,9 +54,9 @@ function theme_ldap_user_conf_form($variables) {
           'rowspan' => 1,
           'class' => 'mixedcase'
         ),
-        
+
       );
-      
+
       $second_header = array(
         array('data' => t(''),
               'header' => TRUE,
@@ -75,15 +75,15 @@ function theme_ldap_user_conf_form($variables) {
               'header' => TRUE,
               ),
       );
-    
+
       foreach ($ldap_user_conf_admin->provisionsDrupalEvents as $col_id => $col_name) {
         $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase');
       }
     }
     else { // to ldap
-      
+
       $direction_text = 'toldap';
-      
+
       $header = array(
         array(
           'data' => t('Remove'),

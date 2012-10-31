@@ -1,8 +1,4 @@
 <?php
-// $Id: ldap_authorization_og.module,v 1.2 2010/12/13 02:28:51 johnbarclay Exp $
-
-
-
 
 /** @file
  *
@@ -66,7 +62,7 @@ function ldap_authorization_og1_entity_id_to_gid($entity_id) {
   $gid = db_select('og', 'og')
         ->fields('og', array('gid'))
         ->condition('og.etid', $entity_id, '=')
-        ->range(0,1)
+        ->range(0, 1)
         ->execute()
         ->fetchField();
   return ($gid && is_scalar($gid)) ? $gid : FALSE;
@@ -204,7 +200,7 @@ function ldap_authorization_og2_rid_from_role_name($entity_type, $gid, $role_nam
 
 
 /**
- * implements hook_form_alter()
+ * Implements hook_form_alter().
  */
 function ldap_authorization_og_form_ldap_authorization_admin_form_alter(&$form, $form_state) {
   if ($form['status']['consumer_type']['#value'] == 'og_group') {

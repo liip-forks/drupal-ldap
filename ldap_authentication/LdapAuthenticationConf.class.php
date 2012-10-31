@@ -28,37 +28,38 @@ class LdapAuthenticationConf {
    * @see LdapServer
    */
   public $enabledAuthenticationServers = array();
-  
+
+
   /**
    * LdapUser configuration object
    *
    * @var LdapUser object
    */
   public $ldapUser = NULL; // ldap_user configuration object
-  
+
   /**
    * Has current object been saved to the database?
    *
    * @var boolean
    */
   public $inDatabase = FALSE;
-  
-   /**
-   * Choice of authentication modes
-   *
-   * @var integer
-   *   LDAP_AUTHENTICATION_MODE_DEFAULT (LDAP_AUTHENTICATION_MIXED)
-   *   LDAP_AUTHENTICATION_MIXED - signifies both LDAP and Drupal authentication are allowed
-   *     Drupal authentication is attempted first.
-   *   LDAP_AUTHENTICATION_EXCLUSIVE - signifies only LDAP authenication is allowed
-   */ 
+
+  /**
+    * Choice of authentication modes
+    *
+    * @var integer
+    *   LDAP_AUTHENTICATION_MODE_DEFAULT (LDAP_AUTHENTICATION_MIXED)
+    *   LDAP_AUTHENTICATION_MIXED - signifies both LDAP and Drupal authentication are allowed
+    *     Drupal authentication is attempted first.
+    *   LDAP_AUTHENTICATION_EXCLUSIVE - signifies only LDAP authenication is allowed
+    */
   public $authenticationMode = LDAP_AUTHENTICATION_MODE_DEFAULT;
-  
+
   /**
    * The following are used to alter the logon interface to direct users
    * to local LDAP specific authentication help
    */
-  
+
   /**
    * Text describing username to use, such as "Hogwarts Username"
    *  which will be inserted on logon forms to help users figure out which
@@ -67,7 +68,7 @@ class LdapAuthenticationConf {
    * @var string
    */
   public $loginUIUsernameTxt;
-  
+
   /**
    * Text describing password to use, such as "Hogwards LDAP Password"
    *  which will be inserted on logon forms.  Useful in organizations with
@@ -76,12 +77,12 @@ class LdapAuthenticationConf {
    * @var string
    */
   public $loginUIPasswordTxt;
-  
+
   /**
    * Text and Url to provide help link for password such as:
    *   ldapUserHelpLinkUrl:    https://passwords.hogwarts.edu
    *   ldapUserHelpLinkText:  Hogwarts IT Password Support Page
-   * 
+   *
    * @var string
    */
   public $ldapUserHelpLinkUrl;
@@ -92,19 +93,19 @@ class LdapAuthenticationConf {
    *   LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE -- don't show email on user forms
    *   LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE (default) -- disable email on user forms
    *   LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW -- allow editing of email on user forms
-   * 
+   *
    * @var int
    */
   public $emailOption = LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT;
-  
+
    /**
    * Email handling option
    *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY -- (default) Update stored email if LDAP email differs at login and notify user
    *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE  -- Update stored email if LDAP email differs at login but don\'t notify user
    *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE -- Don\'t update stored email if LDAP email differs at login
-   * 
+   *
    * @var int
-   */ 
+   */
   public $emailUpdate = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DEFAULT;
 
   public $ssoEnabled = FALSE;
@@ -126,34 +127,34 @@ class LdapAuthenticationConf {
   /**
    * text which must be present in user's LDAP entry's DN for user to authenticate with LDAP
    *   e.g. "ou=people"
-   * 
+   *
    * @var string
    */
   public $allowOnlyIfTextInDn = array(); // eg ou=education that must be met to allow ldap authentication
-  
+
   /**
    * text which prohibits logon if found in user's LDAP entry's DN for user to authenticate with LDAP
    *   e.g. "ou=guest accounts"
-   * 
+   *
    * @var string
    */
   public $excludeIfTextInDn = array();
-  
+
   /**
    * code that prints 1 or 0 signifying if user is allowed
    *   should not start with <?php
-   * 
+   *
    * @var string of php
-   */  
+   */
   public $allowTestPhp = NULL;
-  
+
   /**
    * if at least 1 ldap authorization must exist for user to be allowed
    *   True signfies disallow if no authorizations.
    *   False signifies don't consider authorizations.
-   *   
+   *
    * @var boolean.
-   */  
+   */
   public $excludeIfNoAuthorizations = LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT;
 
   public $saveable = array(
@@ -178,15 +179,14 @@ class LdapAuthenticationConf {
   public function hasEnabledAuthenticationServers() {
     return !(count($this->enabledAuthenticationServers) == 0);
   }
-  
+
   public function enabled_servers() {
     return $this->hasEnabledAuthenticationServers();
   }
-   
+
   function __construct() {
     $this->load();
   }
-
 
   function load() {
 
@@ -197,11 +197,11 @@ class LdapAuthenticationConf {
           $this->{$property} = $saved[$property];
         }
       }
-     $enabled_ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
+      $enabled_ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
       foreach ($this->sids as $sid => $enabled) {
         if ($enabled && isset($enabled_ldap_servers[$sid])) {
           $this->enabledAuthenticationServers[$sid] = $enabled_ldap_servers[$sid];
-         }
+        }
       }
     }
     else {
@@ -232,18 +232,18 @@ class LdapAuthenticationConf {
    *   and most of this function should go in ldap_authentication_allowuser_results_alter
    */
   public function allowUser($name, $ldap_user, $account_exists = NULL) {
-    
+
     /**
      * do one of the exclude attribute pairs match
      */
     $exclude = FALSE;
     $ldap_user_conf = ldap_user_conf();
-    // if user does not already exists and deferring to user settings AND user settings only allow 
+    // if user does not already exists and deferring to user settings AND user settings only allow
     $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
     if (!$account_exists && $ldap_user_conf->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP && $user_register == USER_REGISTER_ADMINISTRATORS_ONLY) {
       return FALSE;
     }
-    
+
     foreach ($this->excludeIfTextInDn as $test) {
       if (stripos($ldap_user['dn'], $test) !== FALSE) {
         return FALSE;//  if a match, return FALSE;
@@ -306,7 +306,7 @@ class LdapAuthenticationConf {
       $user->ldap_authenticated = TRUE; // fake user property added for query
       $consumers = ldap_authorization_get_consumers();
       $has_enabled_consumers = FALSE;
-      
+
       foreach ($consumers as $consumer_type => $consumer_config) {
         $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
         if ($consumer_obj->consumerConf->status) {

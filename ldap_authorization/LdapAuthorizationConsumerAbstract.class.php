@@ -1,5 +1,4 @@
 <?php
-// $Id: LdapAuthorizationConsumerAbstract.class.php,v 1.2.2.1 2011/02/08 20:05:41 johnbarclay Exp $
 
 /**
  * @file
@@ -229,15 +228,19 @@ class LdapAuthorizationConsumerAbstract {
     $consumer_ids_log = array();
     $users_authorization_ids = $this->usersAuthorizations($user);
     $watchdog_tokens['%users_authorization_ids'] = join(', ', $users_authorization_ids);
-    if ($detailed_watchdog_log) {watchdog('ldap_authorization', "on call of grantsAndRevokes: user_auth_data=" . print_r($user_auth_data, TRUE), $watchdog_tokens, WATCHDOG_DEBUG);}
+    if ($detailed_watchdog_log) {
+      watchdog('ldap_authorization', "on call of grantsAndRevokes: user_auth_data=" . print_r($user_auth_data, TRUE), $watchdog_tokens, WATCHDOG_DEBUG);
+    }
 
     foreach ($consumer_ids as $consumer_id) {
-      if ($detailed_watchdog_log) {watchdog('ldap_authorization', "consumer_id=$consumer_id, user_save=$user_save, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
+      if ($detailed_watchdog_log) {
+        watchdog('ldap_authorization', "consumer_id=$consumer_id, user_save=$user_save, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);
+      }
       $log = "consumer_id=$consumer_id, op=$op,";
       $results[$consumer_id] = TRUE;
       if ($op == 'grant' && in_array($consumer_id, $users_authorization_ids) && !isset($user_auth_data[$consumer_id])) {
-         // authorization id already exists for user, but is not ldap provisioned.  mark as ldap provisioned, but don't regrant
-         $user_auth_data[$consumer_id] = array('date_granted' => time() );
+        // authorization id already exists for user, but is not ldap provisioned.  mark as ldap provisioned, but don't regrant
+        $user_auth_data[$consumer_id] = array('date_granted' => time() );
       }
       elseif ($op == 'grant' && !in_array($consumer_id, $users_authorization_ids)) {
         $log .=" grant existing consumer id ($consumer_id), ";
@@ -247,7 +250,9 @@ class LdapAuthorizationConsumerAbstract {
 
             $this->createConsumers(array($consumer_id));
             if (in_array($consumer_id, $this->availableConsumerIDs(TRUE))) {
-              if ($detailed_watchdog_log) {watchdog('ldap_authorization', "grantSingleAuthorization : consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
+              if ($detailed_watchdog_log) {
+                watchdog('ldap_authorization', "grantSingleAuthorization : consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);
+              }
               $this->grantSingleAuthorization($user, $consumer_id, $user_auth_data);  // allow consuming module to add additional data to $user_auth_data
               $user_auth_data[$consumer_id] = array('date_granted' => time() );
               $log .= "created consumer object, ";
@@ -266,7 +271,9 @@ class LdapAuthorizationConsumerAbstract {
         }
 
         if ($results[$consumer_id]) {
-          if ($detailed_watchdog_log) {watchdog('ldap_authorization', "grantSingleAuthorization : consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);}
+          if ($detailed_watchdog_log) {
+            watchdog('ldap_authorization', "grantSingleAuthorization : consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);
+          }
           $log .= "granting existing consumer object, ";
           $results[$consumer_id] = $this->grantSingleAuthorization($user, $consumer_id, $user_auth_data); // allow consuming module to add additional data to $user_auth_data
           if ($results[$consumer_id]) {
@@ -292,7 +299,9 @@ class LdapAuthorizationConsumerAbstract {
         }
       }
       $consumer_ids_log[] = $log;
-      if ($detailed_watchdog_log) {watchdog('ldap_authorization', "user_auth_data after consumer $consumer_id" . print_r($user_auth_data, TRUE), $watchdog_tokens, WATCHDOG_DEBUG);}
+      if ($detailed_watchdog_log) {
+        watchdog('ldap_authorization', "user_auth_data after consumer $consumer_id" . print_r($user_auth_data, TRUE), $watchdog_tokens, WATCHDOG_DEBUG);
+      }
 
       $watchdog_tokens['%consumer_ids_log'] = (count($consumer_ids_log)) ? join('<hr/>', $consumer_ids_log) : t('no actions');
     }
@@ -361,11 +370,12 @@ class LdapAuthorizationConsumerAbstract {
    * @return array with validation type ('error', 'warning', 'status')
    *   and message text
    */
+
   public function validateAuthorizationMappingTarget($map_to, $form_values = NULL, $clear_cache = FALSE) {
     $message_type = NULL;
     $message_text = NULL;
-		return array($message_type, $message_text);
-	}
+    return array($message_type, $message_text);
+  }
 
 
 }

@@ -1,5 +1,4 @@
 <?php
-// $Id: ldap_authorization.admin.inc,v 1.1.4.2 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file

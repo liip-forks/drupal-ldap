@@ -1,5 +1,4 @@
 <?php
-// $Id: LdapQueryAdmin.class.php,v 1.6 2011/01/12 21:51:37 npiacentine Exp $
 
 /**
  * @file
@@ -41,8 +40,7 @@ class LdapQueryAdmin extends LdapQuery {
           ($sid == 'all' || $query->sid == $sid)
           &&
           (!$type || $type == 'all' || ($query->status = 1 && $type == 'enabled'))
-        )
-      {
+        ) {
         $queries[$result->qid] = $query;
       }
     }
@@ -289,7 +287,7 @@ class LdapQueryAdmin extends LdapQuery {
 
 
   protected function arrayToCsv($array) {
-    return join(",",$array);
+    return join(",", $array);
   }
 
 }

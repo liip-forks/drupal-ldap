@@ -1,8 +1,4 @@
 <?php
-// $Id: ldap_authorization_drupal_role.module,v 1.2 2010/12/13 02:28:51 johnbarclay Exp $
-
-
-
 
 /** @file
  *
@@ -40,7 +36,7 @@ faculty|administrator
 }
 
 /**
- * implements hook_ldap_user_attrs_list_alter().
+ * Implements hook_ldap_user_attrs_list_alter().
  *
  */
 

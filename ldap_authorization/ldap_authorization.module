@@ -1,5 +1,4 @@
 <?php
-// $Id: ldap_authorization.module,v 1.1.4.3 2011/02/08 20:05:41 johnbarclay Exp $
 
 /**
  * @file
@@ -119,7 +118,7 @@ function ldap_authorization_ldap_server_in_use($sid, $server_name) {
 
   $use_warnings = array();
   $consumers = ldap_authorization_get_consumers();
-  foreach(ldap_authorization_get_consumers() as $consumer_type => $consumer_conf) {
+  foreach (ldap_authorization_get_consumers() as $consumer_type => $consumer_conf) {
     $consumer_conf['%server_name'] = $server_name;
     $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
     if ($sid == $consumer_obj->consumerConf->sid) {
@@ -132,7 +131,7 @@ function ldap_authorization_ldap_server_in_use($sid, $server_name) {
 }
 
 /**
- * implements hook_ldap_attributes_needed_alter().
+ * Implements hook_ldap_attributes_needed_alter().
  */
 function ldap_authorization_ldap_attributes_needed_alter(&$attribute_maps, $params) {
  // dpm('ldap_authorization_ldap_attributes_needed_alter'); dpm($params);
@@ -147,7 +146,7 @@ function ldap_authorization_ldap_attributes_needed_alter(&$attribute_maps, $para
   else {
     return;
   }
-  
+
   if (isset($params['ldap_context'])) {
     //  'ldap_authorization__' . $consumer_type
     $parts = explode('__', $params['ldap_context']);
@@ -163,7 +162,7 @@ function ldap_authorization_ldap_attributes_needed_alter(&$attribute_maps, $para
      // dpm('ldap_authorization_ldap_attributes_needed_alter, consumer_conf'); dpm($consumer_conf); dpm($attribute_maps);
     }
   }
-  
+
 }
 
 /**
@@ -341,15 +340,14 @@ function ldap_authorization_get_consumer_conf($consumer_type, $type = 'default',
   }
   else {
     ldap_servers_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConf.class');
-    $consumer_conf = new LdapAuthorizationConsumerConf($consumer_object, $new);    
+    $consumer_conf = new LdapAuthorizationConsumerConf($consumer_object, $new);
   }
   return $consumer_conf;
 }
 
 
 /**
- * implements hook_ldap_user_attrs_list_alter().
- *
+ * Implements hook_ldap_user_attrs_list_alter().
  */
 
 function ldap_authorization_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {

@@ -24,8 +24,8 @@ function _ldap_user_orphans($ldap_user_conf) {
   ->range(0, $qty)
   ->addMetaData('account', user_load(1)); // run the query as user 1
   $result = $query->execute();
-  
-  
+
+
   // loop through all $qty and generate single ldap query for each 50 entries only returning dn
   $ldap_entries = array();
   $drupal_users = array();
@@ -58,12 +58,11 @@ function _ldap_user_orphans($ldap_user_conf) {
          //   else remove/cancel
          //     if $ldap_user_conf->orphanedDrupalAcctBehavior starts with user_cancel, call   user_cancel($edit, $uid, $method) (.e.g user_cancel_block, user_cancel_block_unpublish, user_cancel_reassign, user_cancel_delete)
          //     elsif $ldap_user_conf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_email' add to list of $orphans to email about
-        //    
+        //
         }
       }
     }
     // if $orphans generate email to sys admin listing orphans
-  } 
+  }
 
 }
-

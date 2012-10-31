@@ -1,12 +1,9 @@
 <?php
-// $Id: ldap_query.inc,v 1.4.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file
  *
  */
-
-
 
 /**
  * see ldap_query_get_servers()

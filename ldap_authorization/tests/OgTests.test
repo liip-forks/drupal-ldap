@@ -1,7 +1,9 @@
 <?php
 
 /**
- * @file simpletest for Ldap Authorization OG Module
+ * @file
+ * simpletest for Ldap Authorization OG Module
+ *
  */
 
 require_once(drupal_get_path('module', 'ldap_authorization') . '/tests/LdapAuthorizationTestCase.class.php');
@@ -43,7 +45,7 @@ class LdapAuthorizationOgBasicTests extends LdapAuthorizationTestCase {
           'og_group' => array(
             LANGUAGE_NONE => array(
               0 => array(
-                'value' =>TRUE)))));
+                'value' => TRUE)))));
         $group = og_create_group(array(
           'entity_type' => 'node',
           'etid' => $group_node->nid,
@@ -82,9 +84,9 @@ class LdapAuthorizationOgBasicTests extends LdapAuthorizationTestCase {
     $web_user = $this->drupalCreateUser();
     $this->ldapTestId = $this->module_name . ': og functions';
 
-    list($og_knitters, $og_knitters_node) = ldap_authorization_og_get_group('knitters', 'group_name','object');
-    list($og_bakers, $og_bakers_node) = ldap_authorization_og_get_group('bakers', 'group_name','object');
-    list($og_butchers, $og_butchers_node) = ldap_authorization_og_get_group('butchers', 'group_name','object');
+    list($og_knitters, $og_knitters_node) = ldap_authorization_og_get_group('knitters', 'group_name', 'object');
+    list($og_bakers, $og_bakers_node) = ldap_authorization_og_get_group('bakers', 'group_name', 'object');
+    list($og_butchers, $og_butchers_node) = ldap_authorization_og_get_group('butchers', 'group_name', 'object');
     $anonymous_rid = ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE );
     $member_rid = ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE );
     $admin_rid = ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
@@ -131,13 +133,13 @@ class LdapAuthorizationOgBasicTests extends LdapAuthorizationTestCase {
       'LdapAuthorizationConsumerOG ConsumerType set properly', $this->ldapTestId);
 
     $consumer_ids = $og_auth->availableConsumerIDs();
-    $should_haves = array('1-1','1-2','1-3','2-1','2-2','2-3','3-1','3-2','3-3');
+    $should_haves = array('1-1', '1-2', '1-3', '2-1', '2-2', '2-3', '3-1', '3-2', '3-3');
     $match = (boolean)(count(array_intersect($consumer_ids, $should_haves)) == count($should_haves));
     $this->assertTrue($match,
       'LdapAuthorizationConsumerOG availableConsumerIDs()', $this->ldapTestId);
   //  debug($consumer_ids);
 
-    $should_haves = array('1-1','1-2','2-1','2-3');
+    $should_haves = array('1-1', '1-2', '2-1', '2-3');
     $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
     $match = (boolean)(count(array_intersect($web_user_authorizations, $should_haves)) == count($should_haves));
     $this->assertTrue($match,
@@ -250,9 +252,9 @@ class LdapAuthorizationOgBasicTests extends LdapAuthorizationTestCase {
     $this->assertTrue(is_object($og_auth),
      'Successfully instantiated LdapAuthorizationConsumerOG', $this->ldapTestId);
 
-    list($og_knitters, $og_knitters_node) = ldap_authorization_og_get_group('knitters', 'group_name','object');
-    list($og_bakers, $og_bakers_node) = ldap_authorization_og_get_group('bakers', 'group_name','object');
-    list($og_butchers, $og_butchers_node) = ldap_authorization_og_get_group('butchers', 'group_name','object');
+    list($og_knitters, $og_knitters_node) = ldap_authorization_og_get_group('knitters', 'group_name', 'object');
+    list($og_bakers, $og_bakers_node) = ldap_authorization_og_get_group('bakers', 'group_name', 'object');
+    list($og_butchers, $og_butchers_node) = ldap_authorization_og_get_group('butchers', 'group_name', 'object');
     $anonymous_rid = ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE);
     $member_rid = ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE);
     $admin_rid = ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
@@ -340,9 +342,9 @@ class LdapAuthorizationOgBasicTests extends LdapAuthorizationTestCase {
     $this->assertTrue(is_object($og_auth),
      'Successfully instantiated LdapAuthorizationConsumerOG', $this->ldapTestId);
 
-    list($og_knitters, $og_knitters_node) = ldap_authorization_og_get_group('knitters', 'group_name','object');
-    list($og_bakers, $og_bakers_node) = ldap_authorization_og_get_group('bakers', 'group_name','object');
-    list($og_butchers, $og_butchers_node) = ldap_authorization_og_get_group('butchers', 'group_name','object');
+    list($og_knitters, $og_knitters_node) = ldap_authorization_og_get_group('knitters', 'group_name', 'object');
+    list($og_bakers, $og_bakers_node) = ldap_authorization_og_get_group('bakers', 'group_name', 'object');
+    list($og_butchers, $og_butchers_node) = ldap_authorization_og_get_group('butchers', 'group_name', 'object');
     $anonymous_rid = ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE);
     $member_rid = ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE);
     $admin_rid = ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
@@ -356,7 +358,7 @@ class LdapAuthorizationOgBasicTests extends LdapAuthorizationTestCase {
      */
     $verykool = user_load_by_name('verykool');
     if (is_object($verykool)) {
-     user_delete($verykool->uid);
+      user_delete($verykool->uid);
     }
 
     $edit = array(
@@ -416,6 +418,6 @@ class LdapAuthorizationOgBasicTests extends LdapAuthorizationTestCase {
     $this->drupalGet('user/logout');
 
 
- }
+  }
 
 }

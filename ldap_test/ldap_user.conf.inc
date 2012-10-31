@@ -1,9 +1,8 @@
 <?php
-// $Id$
 
 /**
  * @file
- * simpltest ldap user config
+ * simpletest ldap user config
  *
  * should only contain saveable properties of ldapUserConf class.
  */
@@ -69,7 +68,7 @@ $conf['ad_authentication'] = array(
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
     )
   );
-  
+
   $conf['provisionToDrupal']  = array(
     'drupalAcctProvisionServer' => 'activedirectory1',
     'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,
@@ -90,7 +89,7 @@ $conf['ad_authentication'] = array(
   );
 
 
- $conf['provisionToDrupalWithMappings']  = array(
+  $conf['provisionToDrupalWithMappings']  = array(
     'drupalAcctProvisionServer' => 'activedirectory1',
     'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,
     'drupalAcctProvisionTriggers' => array(
@@ -117,7 +116,7 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),  
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
         ),
        '[field.field_lname]' => array(
             'sid' => 'activedirectory1',
@@ -129,7 +128,7 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),  
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
         ),
        '[field.field_fname]' => array(
             'sid' => 'activedirectory1',
@@ -141,7 +140,7 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),  
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
         ),
         '[field.field_department]' => array(
             'sid' => 'activedirectory1',
@@ -153,13 +152,13 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),  
-        ),        
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
+        ),
       ),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
     ),
   );
- 
+
   $conf['provisionToLdap_activedirectory1']  = array(
     'drupalAcctProvisionServer' => LDAP_USER_NO_SERVER_SID,
     'ldapEntryProvisionServer' => 'activedirectory1',
@@ -188,7 +187,7 @@ $conf['ad_authentication'] = array(
             'enabled' => 1,
             'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
           ),
-          '[cn]' => array (
+          '[cn]' => array(
             'sid' =>  'activedirectory1',
             'ldap_attr' => '[cn]',
             'user_attr' => '[property.name]',
@@ -210,7 +209,7 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),  
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
           ),
           '[samaccountname]' => array(
             'sid' => 'activedirectory1',
@@ -221,7 +220,7 @@ $conf['ad_authentication'] = array(
             'user_tokens' => '',
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY),  
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY),
           ),
           '[sn]' => array(
             'sid' => 'activedirectory1',
@@ -233,7 +232,7 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY), 
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
           ),
           '[givenname]' => array(
             'sid' => 'activedirectory1',
@@ -245,8 +244,8 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY), 
-          ), 
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
+          ),
           '[guid]' => array(
             'sid' => 'activedirectory1',
             'ldap_attr' => '[guid]',
@@ -257,7 +256,7 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY), 
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY),
           ),
           '[provisionsource]' => array(
             'sid' => 'activedirectory1',
@@ -269,12 +268,12 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY), 
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY),
           ),
         ),
       )
     );
-  
+
   $conf['provisionToLdap_openldap1']  = array(
     'drupalAcctProvisionServer' => LDAP_USER_NO_SERVER_SID,
     'ldapEntryProvisionServer' => 'openldap1',
@@ -313,7 +312,7 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),  
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
           ),
           '[cn]' => array(
             'sid' => 'openldap1',
@@ -324,7 +323,7 @@ $conf['ad_authentication'] = array(
             'user_tokens' => '',
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY),  
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY),
           ),
           '[sn]' => array(
             'sid' => 'openldap1',
@@ -336,7 +335,7 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY), 
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
           ),
           '[givenname]' => array(
             'sid' => 'openldap1',
@@ -348,8 +347,8 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY), 
-          ), 
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
+          ),
           '[guid]' => array(
             'sid' => 'openldap1',
             'ldap_attr' => '[guid]',
@@ -360,7 +359,7 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY), 
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY),
           ),
           '[provisionsource]' => array(
             'sid' => 'openldap1',
@@ -372,7 +371,7 @@ $conf['ad_authentication'] = array(
             'config_module' => 'ldap_user',
             'synch_module' => 'ldap_user',
             'enabled' => 1,
-            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY), 
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY),
           ),
         ),
       )

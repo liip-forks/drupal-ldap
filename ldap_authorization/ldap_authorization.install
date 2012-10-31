@@ -1,5 +1,4 @@
 <?php
-// $Id: ldap_authorization.install,v 1.1.4.2 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file
@@ -143,7 +142,7 @@ function ldap_authorization_schema() {
     ),
   );
 
-  module_load_include('inc', 'ldap_servers','ldap_servers.functions');
+  module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
   ldap_servers_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
 
   $fields = LdapAuthorizationConsumerConfAdmin::fields();
@@ -223,7 +222,7 @@ function ldap_authorization_update_7102() {
 function ldap_authorization_update_7103() {
 
   foreach (array('derive_from_dn_attr', 'derive_from_attr_attr', 'derive_from_entry_entries') as $field_name) {
-   db_change_field('ldap_authorization', $field_name, $field_name, array(
+    db_change_field('ldap_authorization', $field_name, $field_name, array(
     'type' => 'text',
     'not null' => FALSE,
     ));
@@ -238,7 +237,7 @@ function ldap_authorization_update_7103() {
 function ldap_authorization_update_7104() {
 
   foreach (array('derive_from_dn_attr', 'derive_from_attr_attr', 'derive_from_entry_entries') as $field_name) {
-   db_change_field('ldap_authorization', $field_name, $field_name, array(
+    db_change_field('ldap_authorization', $field_name, $field_name, array(
     'type' => 'text',
     'not null' => FALSE,
     ));
@@ -347,7 +346,7 @@ function ldap_authorization_update_7109() {
 
 // need to merge 2 table fields (derive_from_entry_use_first_attr and derive_from_attr_use_first_attr into one field useFirstAttrAsGroupId)
   $results = '';
-  
+
   if (!db_field_exists('ldap_authorization', 'useFirstAttrAsGroupId')) {
     db_add_field('ldap_authorization', 'useFirstAttrAsGroupId', array(
       'type' => 'int',
@@ -367,17 +366,17 @@ function ldap_authorization_update_7109() {
     ));
     $results .= t('"searchAll" field added to ldap_authorization table');
   }
-  
+
   $ldap_authorization_remove = array(
-'derive_from_attr', 'derive_from_attr_attr', 'derive_from_attr_nested','derive_from_entry', 'derive_from_entry_nested',
-'derive_from_entry_attr','derive_from_entry_search_all', 
-'derive_from_entry_user_ldap_attr','derive_from_entry_use_first_attr', 'derive_from_attr_use_first_attr');
-  
+'derive_from_attr', 'derive_from_attr_attr', 'derive_from_attr_nested', 'derive_from_entry', 'derive_from_entry_nested',
+'derive_from_entry_attr', 'derive_from_entry_search_all',
+'derive_from_entry_user_ldap_attr', 'derive_from_entry_use_first_attr', 'derive_from_attr_use_first_attr');
+
   foreach ($ldap_authorization_remove as $ldap_authorization_field) {
     if (db_field_exists('ldap_authorization', $ldap_authorization_field)) {
       db_drop_field('ldap_authorization', $ldap_authorization_field);
       $changes .=  $ldap_authorization_field . t('field dropped from to ldap_authorization table');
-    }    
+    }
   }
 
 }

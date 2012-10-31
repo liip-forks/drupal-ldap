@@ -10,8 +10,9 @@ files[] = ldap_servers.conf.inc
 files[] = ldap_user.conf.inc
 files[] = ldap_authentication.conf.inc
 files[] = ldap_authorization.conf.inc
+
 files[] = ldap_test.module
-files[] = LdapAuthorizationTestCasev2.class.php
-files[] = LdapServerTestv2.class.php
-files[] = LdapTestFunctionsv2.class.php
+
+files[] = LdapServerTest.class.php
+files[] = LdapTestFunctions.class.php
 files[] = LdapUserTestCase.class.php

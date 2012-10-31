@@ -1,7 +1,4 @@
 <?php
-// $Id:  $
-
-
 
 /**
  * @file
@@ -11,7 +8,6 @@
  */
 
 module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerAbstract.class');
-
 
 class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstract {
 
@@ -77,7 +73,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
 
     // 2. create each role that is needed
     foreach ($roles_to_create as $i => $role_name_lowercase) {
-      if (strlen($role_name_lowercase) > 63) {
+      if (drupal_strlen($role_name_lowercase) > 63) {
         watchdog('ldap_authorization_drupal_role', 'Tried to create drupal role with name of over 63 characters (%group_name).  Please correct your drupal ldap_authorization settings', array('%group_name' => $role_name_lowercase));
         continue;
       }
@@ -179,21 +175,21 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     if (is_array($normalized) && isset($normalized[0][1]) && $normalized[0][1] !== FALSE ) {
       $available_authorization_ids = $this->availableConsumerIDs($clear_cache);
       $available_authorization_ids = array_map('drupal_strtolower', $available_authorization_ids);
-			$pass = (in_array(drupal_strtolower($normalized[0]), $available_authorization_ids));
-		}
+      $pass = (in_array(drupal_strtolower($normalized[0]), $available_authorization_ids));
+    }
 
-		if (!$pass) {
-			$message_text = '<code>"' . t('!map_to', $tokens) . '</code>" ' . t('does not map to any existing Drupal roles. ');
+    if (!$pass) {
+      $message_text = '<code>"' . t('!map_to', $tokens) . '</code>" ' . t('does not map to any existing Drupal roles.');
       if ($has_form_values) {
         $create_consumers = (isset($form_values['synchronization_actions']['create_consumers']) && $form_values['synchronization_actions']['create_consumers']);
       }
       else {
         $create_consumers = $this->consumerConf->create_consumers;
       }
-			if ($create_consumers && $this->allowConsumerObjectCreation) {
-				$message_type = 'warning';
+      if ($create_consumers && $this->allowConsumerObjectCreation) {
+        $message_type = 'warning';
         $message_text .= t('!map_to will be created when needed.  If "!map_to" is not intentional, please fix it', $tokens);
-			}
+      }
       elseif (!$this->allowConsumerObjectCreation) {
         $message_type = 'error';
         $message_text .= t('Since automatic Drupal role creation is not possible with this module, an existing role must be mapped to.');
@@ -202,14 +198,13 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
         $message_type = 'error';
         $message_text .= t('Since automatic Drupal role creation is disabled, an existing role must be mapped to.  Either enable role creation or map to an existing role.');
       }
-		}
-		return array($message_type, $message_text);
-	}
-  
+    }
+    return array($message_type, $message_text);
+  }
+
   private function getDrupalRoleByName($role_name) {
-  	$role_name_lowercase = drupal_strtolower($role_name);
-  	return (isset($this->drupalRolesByName[$role_name_lowercase]) ? $this->drupalRolesByName[$role_name_lowercase] : NULL);
-  }  
-  
-  
+    $role_name_lowercase = drupal_strtolower($role_name);
+    return (isset($this->drupalRolesByName[$role_name_lowercase]) ? $this->drupalRolesByName[$role_name_lowercase] : NULL);
+  }
+
 }

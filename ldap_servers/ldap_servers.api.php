@@ -21,9 +21,9 @@
  */
 
 function hook_ldap_servers_user_cron(&$users) {
-  
-  
-  
+
+
+
 }
 
 /**
@@ -54,33 +54,33 @@ function hook_ldap_servers_user_cron_needed() {
  *
  * @param LdapServer $ldap_server as ldap server configuration object that is
  *   performing provisioning
- *   
+ *
  * @param array $context with the following key/values:
  *   'action' => add|modify|delete
- *   
+ *
  *   'corresponding_drupal_data' => if ldap entries have corresponding drupal objects, such
  *     as ldap user entries and drupal user objects; ldap groups and drupal roles; etc
  *     this will be array keyed on lowercase dn with values of objects
- *     e.g. 
+ *     e.g.
  *     $context['corresponding_drupal_data'] = array(
  *      'cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu' => drupal user object1,
  *      'cn=jfun,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu'  => drupal user object2,
  *     )
- *     
+ *
  *    'corresponding_drupal_data_type' => 'user', 'role', etc.
- *     
+ *
  *  );
  */
 
 function hook_ldap_entry_pre_provision_alter(&$ldap_entries, $ldap_server, $context) {
-  
-  
-  
+
+
+
 }
 
 /**
  * Allows modules to react to provisioning of ldap entries.
- * 
+ *
  * This should be invoked after provisioning ldap entries
  *
  * -- same signature as hook_ldap_entry_pre_provision_alter with ldap entries not passed by reference
@@ -92,9 +92,9 @@ function hook_ldap_entry_pre_provision_alter(&$ldap_entries, $ldap_server, $cont
  */
 
 function hook_ldap_entry_post_provision(&$ldap_entries, $ldap_server, $context) {
-  
-  
-  
+
+
+
 }
 
 
@@ -111,16 +111,16 @@ function hook_ldap_entry_post_provision(&$ldap_entries, $ldap_server, $context) 
  *     - each value is associative array of form:
  *       - 'source_data_type' => NULL,
  *       - 'target_data_type' => NULL,
- *       - 'values' => 
+ *       - 'values' =>
  *
  * @param array $params context array with some or all of the following key/values
  *   'sid' => drupal account object,
  *   'ldap_context' => ,
- *   'direction' => 
+ *   'direction' =>
  *
  */
 function hook_ldap_attributes_needed_alter(&$attributes, $params) {
-  
+
   $attributes['dn'] = ldap_servers_set_attribute_map(@$attributes['dn'], NULL, 'ldap_dn') ;
   if ($params['sid']) { // puid attributes are server specific
     $ldap_server = (is_object($params['sid'])) ? $params['sid'] : ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
@@ -141,15 +141,13 @@ function hook_ldap_attributes_needed_alter(&$attributes, $params) {
         $attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->unique_persistent_attr]);
 
       break;
-
     }
   }
-
 }
 
 
 /**
- * Perform alterations of $ldap_user variable.  
+ * Perform alterations of $ldap_user variable.
  *
  *
  * @param array $ldap_user see README.developers.txt for structure

@@ -28,7 +28,4 @@ class LdapTypeNovell extends LdapTypeAbstract {
   public $groupUserMembershipsAttrExistsEntryAttrDefault = 'members';
   public $groupUserMembershipsAttrExistsEntryUserIdDefault = 'dn';
 
-
-
-
 }

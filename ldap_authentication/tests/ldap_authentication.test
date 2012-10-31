@@ -1,15 +1,14 @@
 <?php
-// $Id$
 
 /**
  * @file
  * ldap_authentication simpletests
  *
  */
-ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestCasev3.class');
+ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestCase.class');
 module_load_include('module', 'ldap_authentication', 'ldap_authentication');
 
-class LdapAuthenticationTestCase extends LdapTestCasev3 {
+class LdapAuthenticationTestCase extends LdapTestCase {
   public static function getInfo() {
     return array(
       'name' => 'LDAP Authentication Tests',
@@ -21,10 +20,10 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
   function __construct($test_id = NULL) {
     parent::__construct($test_id);
   }
-  
+
   public $module_name = 'ldap_authentication';
   protected $ldap_test_data;
-  
+
   function setUp() {
     parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role')); // don't need any real servers, configured, just ldap_servers code base
     variable_set('ldap_simpletest', 2);
@@ -35,7 +34,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     variable_del('ldap_help_watchdog_detail');
     variable_del('ldap_simpletest');
   }
-  
+
   /**
    * difficult to test install and uninstall since setUp does module enabling and installing.
    */
@@ -99,8 +98,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Sorry, unrecognized username or password'), 'User 1 failed with bad password', $testid);
     $this->drupalLogout();
-    
-    
+
     /** LDAP_authen.MM.ULT.drupal.goodpwd - result: Successful logon **/
 
     $drupal_user = $this->drupalCreateUser();
@@ -112,8 +110,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Member for'), 'Drupal user (not ldap associated) successfully authenticated', $testid);
     $this->drupalGet('user/logout');
-    
-    
+
     /** LDAP_authen.MM.ULT.drupal.badpwd - result: Drupal logon error message. **/
     $edit = array(
       'name' => $drupal_user->name,
@@ -122,8 +119,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Sorry, unrecognized username or password'), 'Drupal user  (not ldap associated) with bad password failed to authenticate.', $testid);
     $this->drupalGet('user/logout');
-    
-    
+
     /** LDAP_authen.MM.ULT.ldap.newaccount.badpwd - result: Drupal logon error message. **/
     $edit = array(
       'name' => 'hpotter',
@@ -132,7 +128,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Sorry, unrecognized username or password'), 'New Ldap user with bad password failed to authenticate.', $testid);
     $this->drupalGet('user/logout');
-    
+
 
     /** LDAP_authen.MM.ULT.ldap.newaccount.goodpwd - result: Successful logon, with user record created and authmapped to ldap **/
     $edit = array(
@@ -143,7 +139,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.');
     $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('hpotter'), 'Ldap user properly authmapped.', $testid);
     $this->drupalGet('user/logout');
-    
+
     /** LDAP_authen.MM.ULT.existingacct.badpwd - result: Drupal logon error message. **/
     $edit = array(
       'name' => 'hpotter',
@@ -152,8 +148,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Sorry, unrecognized username or password'), 'Existing Ldap user with bad password failed to authenticate.', $testid);
     $this->drupalGet('user/logout');
-    
-    
+
     /** LDAP_authen.MM.ULT.existingacct.goodpwd - result: Successful logon. **/
     $edit = array(
       'name' => 'hpotter',
@@ -163,7 +158,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->assertText(t('Member for'), 'Existing Ldap user with good password authenticated.');
     $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('hpotter'), 'Existing Ldap user still properly authmapped.', $testid);
     $this->drupalGet('user/logout');
-    
+
   }
 
 
@@ -203,8 +198,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Member for'), 'User 1 successfully authenticated', $testid);
     $this->drupalGet('user/logout');
-    
-    
+
     /** LDAP_authen.EM.ULT.user1.badpwd  -- result: Drupal logon error message. **/
 
     $edit = array(
@@ -215,8 +209,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Sorry, unrecognized username or password'),  'User 1 failed with bad password', $testid );
     $this->drupalLogout();
-    
-    
+
     /** LDAP_authen.EM.ULT.drupal.goodpwd - result: failed logon **/
 
     $drupal_user = $this->drupalCreateUser();
@@ -228,8 +221,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Sorry, unrecognized username or password'), 'Drupal user successfully authenticated', $testid );
     $this->drupalGet('user/logout');
-    
-    
+
     /** LDAP_authen.EM.ULT.drupal.badpwd - result: Drupal logon error message. **/
     $edit = array(
       'name' => $drupal_user->name,
@@ -238,9 +230,8 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Sorry, unrecognized username or password'), 'Drupal user with bad password failed to authenticate.', $testid );
     $this->drupalGet('user/logout');
-    
-    
-    
+
+
     /** LDAP_authen.EM.ULT.ldap.newaccount.badpwd - result: Drupal logon error message. **/
     $edit = array(
       'name' => 'hpotter',
@@ -249,8 +240,8 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Sorry, unrecognized username or password'), 'New Ldap user with bad password failed to authenticate.', $testid );
     $this->drupalGet('user/logout');
-    
-    
+
+
 
     /** LDAP_authen.EM.ULT.ldap.newaccount.goodpwd - result: Successful logon, with user record created and authmapped to ldap **/
     $edit = array(
@@ -261,7 +252,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.');
     $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('hpotter'), 'Ldap user properly authmapped.', $testid );
     $this->drupalGet('user/logout');
-    
+
 
     /** LDAP_authen.EM.ULT.existingacct.badpwd - result: Drupal logon error message. **/
     $edit = array(
@@ -271,7 +262,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Sorry, unrecognized username or password'), 'Existing Ldap user with bad password failed to authenticate.', $testid );
     $this->drupalGet('user/logout');
-    
+
     /** LDAP_authen.MM.ULT.existingacct.goodpwd - result: Successful logon. **/
     $edit = array(
       'name' => 'hpotter',
@@ -281,7 +272,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->assertText(t('Member for'), 'Existing Ldap user with good password authenticated.');
     $this->assertTrue($this->testFunctions->ldapUserIsAuthmapped('hpotter'), 'Existing Ldap user still properly authmapped.', $testid );
     $this->drupalGet('user/logout');
-    
+
   }
 
   function testAuthenticationWhitelistTests() {
@@ -323,16 +314,15 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Member for'), 'User 1 successfully authenticated in LDAP_authen.WL.user1', $testid);
     $this->drupalGet('user/logout');
-    
-    
-    
+
+
     module_enable(array('ldap_authorization'));
     module_enable(array('ldap_authorization_drupal_role'));
 
 
     /**
-    * prep LDAP_authen.WL.allow
-    */
+     * prep LDAP_authen.WL.allow
+     */
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowOnlyIfTextInDn = array('pot');
     $authenticationConf->save();
@@ -344,14 +334,14 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
 
     $this->AttemptLogonNewUser('hpotter');
     $this->assertText(t('Member for'), 'User able to authenticate because in white list (allowOnlyIfTextInDn).', $testid);
-    
+
    /**
     *  LDAP_authen.WL.allow.miss -- desirect_result: authenticate fail
     */
 
     $this->AttemptLogonNewUser('ssnape');
     $this->assertText(t('User disallowed'), 'User unable to authenticate because not in white list (allowOnlyIfTextInDn).', $testid);
-    
+
 
     /**
     * undo LDAP_authen.WL.allow settings
@@ -375,14 +365,14 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
 
     $this->AttemptLogonNewUser('ssnape');
     $this->assertText(t('User disallowed'), 'User unable to authenticate in exclude list (excludeIfTextInDn).', $testid);
-    
+
    /**
     *  LDAP_authen.WL.exclude.miss-- desirect_result: authenticate success
     */
 
     $this->AttemptLogonNewUser('hpotter');
     $this->assertText(t('Member for'), 'Able to authenticate because not in exclude list (allowOnlyIfTextInDn).', $testid);
-    
+
     /**
     * undo LDAP_authen.WL.allow settings
     */
@@ -390,7 +380,7 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfTextInDn = array();
     $authenticationConf->save();
-    
+
 
     /**
     * prep LDAP_authen.WL.php
@@ -437,8 +427,8 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowTestPhp = '';
     $authenticationConf->save();
-  
-  
+
+
   /**
    * need to test username changes with PUID
    *   - given a user exists
@@ -447,8 +437,8 @@ class LdapAuthenticationTestCase extends LdapTestCasev3 {
    *   - make sure old user and new user have same puid
    *
    */
-  
-  
+
+
   /***  multiple options used in whitelist **/
 
 

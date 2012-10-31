@@ -1,5 +1,4 @@
 <?php
-// $Id: ldap_help.module,v 1.1.2.1 2011/02/08 06:14:20 johnbarclay Exp $
 
 /**
  * @file

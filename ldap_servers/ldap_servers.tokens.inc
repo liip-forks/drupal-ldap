@@ -41,7 +41,7 @@ function ldap_servers_parse_user_attr_name($user_attr_key) {
   $attr_type = $parts[0];
   $attr_name = (isset($parts[1])) ? $parts[1] : FALSE;
   $attr_ordinal = FALSE;
-  
+
   if ($attr_name) {
     $attr_name_parts = explode(':', $attr_name);
     if (isset($attr_name_parts[1])) {
@@ -65,10 +65,10 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
     case 'ldap_entry':
     $tokens = ldap_servers_token_tokenize_entry($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
     break;
-  
+
     case 'user_account':
     $tokens = ldap_servers_token_tokenize_user_account($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
-    break;  
+    break;
   }
   //
   foreach ($tokens as $key => $value) {
@@ -94,7 +94,7 @@ function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
     $ordinal = (isset($parts[1]) && $parts[1]) ? $parts[1] : 0;
     $attr_name = $parts[0];
     $source_data_type = NULL;
-  
+
     $parts2 = explode(LDAP_SERVERS_TOKEN_MODIFIER_DEL, $attr_name);
     if (count($parts2) > 1) {
       $attr_name = $parts2[0];
@@ -166,7 +166,7 @@ should return tokens such as:
     [samaccountname] = jdoe
     [samaccountname:0] = jdoe
     [samaccountname:last] = jdoe
-    
+
     [guid:0;base64_encode] = apply base64_encode() function to value
     [guid:0;bin2hex] = apply bin2hex() function to value
     [guid:0;msguid] = apply ldap_servers_msguid() function to value
@@ -175,11 +175,11 @@ should return tokens such as:
  */
 
 function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
-  
+
   //debug('ldap_servers_token_tokenize_entry'); debug($token_keys);
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
-  
+
   // add lowercase keyed entries to ldap array
   foreach ($ldap_entry as $key => $values) {
     $ldap_entry[drupal_strtolower($key)] = $values;
@@ -201,7 +201,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
         $watchdog_tokens = array('%attr_name' => $attr_name);
         watchdog('ldap_servers', 'skipped tokenization of attribute %attr_name because the value would not pass check_plain function.', $watchdog_tokens, WATCHDOG_DEBUG);
       }
-       continue; // don't tokenize data that can't pass check_plain
+      continue; // don't tokenize data that can't pass check_plain
     }
     if (!isset($parts_count[$attr_name])) {
       $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = $attr_value;
@@ -212,7 +212,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
     $parts_last_value[$attr_name] = $attr_value;
     $parts_count[$attr_name]++;
   }
-  
+
   foreach ($parts_count as $attr_name => $count) {
     $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = $parts_last_value[$attr_name];
   }
@@ -237,7 +237,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
       elseif (is_scalar($attr_value)) {
         $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = check_plain($attr_value);
         $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = check_plain($attr_value);
-        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value); 
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value);
       }
     }
   }
@@ -245,7 +245,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
     foreach ($token_keys as $full_token_key) {
       // $token_key = 'dn', 'mail', 'mail:0', 'mail:last', 'dept:1', 'guid:0;tobase64etc.
       $value = NULL;
-      
+
       $conversion = FALSE;
       $parts = explode(';', $full_token_key);
       if (count($parts) == 2) {
@@ -255,13 +255,13 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
       else {
         $token_key = $full_token_key;
       }
-      
+
       $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token_key);
       $attr_name = $parts[0];
       $ordinal_key = isset($parts[1]) ? $parts[1] : 0;
       // debug("conversion=$conversion, attr_name=$attr_name, ordinal_key=$ordinal_key");
       $i = NULL;
-      
+
       if ($attr_name == 'dn' || !isset($ldap_entry[$attr_name])) { // don't use empty() since a 0, "", etc value may be a desired value
         continue;
       }
@@ -281,26 +281,26 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
 
       if ($conversion) {
         switch ($conversion) {
-        
+
           case 'base64_encode':
             $value = base64_encode($value);
             break;
-          
+
           case 'bin2hex':
             $value = bin2hex($value);
             break;
-          
+
           case 'msguid':
             $value = ldap_servers_msguid($value);
             break;
-          
+
           case 'binary':
             $value = ldap_servers_binary($value);
             break;
         }
       }
 
-      
+
       $tokens[$pre . $full_token_key . $post] = check_plain($value);
       if ($full_token_key != drupal_strtolower($full_token_key)) {
         $tokens[$pre . drupal_strtolower($full_token_key) . $post] = check_plain($value);
@@ -322,7 +322,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
  * @param string $pre prefix of token
  * @param string $post suffix of token
  *
- * 
+ *
  * @return should return token/value pairs in array such as
  *   'status' => 1
  *   'uid' => 17
@@ -332,7 +332,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
   //dpm('ldap_servers_token_tokenize_user_account, $user_account'); dpm($user_account);
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
-  
+
   $user_entered_password_available = (boolean)ldap_user_ldap_provision_pwd('get');
   // ldapUserPwd((property_exists($user_account, 'ldapUserPwd') && $user_account->ldapUserPwd));
 
@@ -373,13 +373,13 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
       case 'field':
         $value = @is_scalar($user_account->{$attr_name}['und'][0]['value']) ? $user_account->{$attr_name}['und'][0]['value'] : '';
       break;
-      
+
       case 'property':
         $value = @is_scalar($user_account->{$attr_name}) ? $user_account->{$attr_name} : '';
       break;
 
       case 'password':
-        
+
         if ($user_entered_password_available && $attr_name == 'user-random') {
           $value = ldap_user_ldap_provision_pwd('get');
         }
@@ -423,10 +423,10 @@ function ldap_servers_token_show_sample_user_tokens($sid) {
   $ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
   $test_username = $ldap_server->testingDrupalUsername;
   if (!$test_username || ! (
-     $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
-     $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON
-    )
-   ) {
+    $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
+    $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON
+      )
+    ) {
     return FALSE;
   }
 
@@ -443,4 +443,3 @@ function ldap_servers_token_show_sample_user_tokens($sid) {
 
   return $table;
 }
-

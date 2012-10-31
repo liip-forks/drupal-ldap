@@ -1,4 +1,3 @@
-// $Id: README.txt,v 1.2 2010/12/29 01:37:46 johnbarclay Exp $
 
 Vocubulary of LDAP Authorization and its Code
 

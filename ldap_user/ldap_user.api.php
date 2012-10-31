@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Hooks and functions relevant to developers
+ *
+ */
 
 /**
  * hook_ldap_user_attrs_alter().
@@ -22,7 +27,7 @@
  *   'prov_events' => array( of LDAP_USER_EVENT_* constants indicating during which synch actions field should be synched)
  *         - four permutations available
  *            to ldap:   LDAP_USER_EVENT_CREATE_LDAP_ENTRY,  LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY,
- *            to drupal: LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER     
+ *            to drupal: LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER
  *   )
  *
  * where
@@ -59,12 +64,9 @@ function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
  * @param object $ldap_server
  *   The LdapServer object from which the ldap entry was fetched
  * @param int $prov_event
- *   
  *
-*/
+ *
+ */
 function hook_ldap_user_edit_user_alter(&$edit, &$ldap_user, $ldap_server, $prov_event) {
   $edit['myfield'] = $ldap_server->getAttributeValue($ldap_user, 'myfield');
 }
-
-
-

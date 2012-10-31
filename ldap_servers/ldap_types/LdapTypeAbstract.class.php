@@ -12,8 +12,8 @@ abstract class LdapTypeAbstract {
   public $name;
   public $typeId;
   public $description;
-  
-  // ldap_servers configuration 
+
+  // ldap_servers configuration
   public $port = 389;
   public $tls = 0;
   public $encrypted = 0;
@@ -29,7 +29,6 @@ abstract class LdapTypeAbstract {
   public $groupMembershipsAttr = NULL;
   public $groupMembershipsAttrMatchingUserAttr = FALSE; // can be removed in 2.0 branch
 
-  
  /**
    * Constructor Method
    *

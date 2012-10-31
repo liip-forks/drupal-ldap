@@ -1,5 +1,4 @@
 <?php
-// $Id: LdapServer.class.php,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file
@@ -202,7 +201,7 @@ class LdapQuery {
     foreach ($items as $i => $item) {
       $items[$i] = trim($item);
       if ($strip_quotes) {
-        $items[$i] = trim($items[$i],'"');
+        $items[$i] = trim($items[$i], '"');
       }
     }
     return $items;

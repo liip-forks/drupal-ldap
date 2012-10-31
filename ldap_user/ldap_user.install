@@ -57,7 +57,7 @@ function _ldap_user_install_update_authmap() {
   )
   ->condition('module', 'ldap_authentication')
   ->execute();
-  
+
 }
 
 /**
@@ -272,7 +272,7 @@ function ldap_user_user_entity_fields() {
           'type' => 'hidden',
         ),
       ));
-  
+
   $field_name = 'ldap_user_prov_entries';
   $fields[$field_name]['field'] = array(
     'field_name' => $field_name,
@@ -316,7 +316,7 @@ function ldap_user_user_entity_fields() {
           'type' => 'hidden',
         ),
       ));
-  
+
   $field_name = 'ldap_user_last_checked';
   $fields[$field_name]['field'] = array(
     'field_name' => $field_name,
@@ -359,7 +359,6 @@ function ldap_user_user_entity_fields() {
           'type' => 'hidden',
         ),
       ));
-
 
   return $fields;
 

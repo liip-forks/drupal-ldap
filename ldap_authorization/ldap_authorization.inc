@@ -1,5 +1,4 @@
 <?php
-// $Id: ldap_authorization.inc,v 1.3.2.3 2011/02/18 15:06:09 johnbarclay Exp $
 
 /**
  * @file
@@ -92,7 +91,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
   }
   //debug("_ldap_authorizations_user_authorizations" . $user->name .",ldap_authenticated=$ldap_authenticated");
   $watchdog_tokens['%ldap_authenticated'] = ($ldap_authenticated) ? 'yes' : 'no';
-  
+
   foreach ($consumers as $consumer_type => $consumer) {
   //  dpm($consumer);
     $authorizations[$consumer_type] = array();
@@ -193,7 +192,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
 
     /** make sure keys of array are lower case and values are mixed case
       and strip to first attribute is configured
-    **/
+    */
     foreach ($proposed_ldap_authorizations as $key => $authorization_id) {
       if ($consumer->consumerConf->useFirstAttrAsGroupId) {
         $attr_parts = ldap_explode_dn($authorization_id, 0);
@@ -204,13 +203,16 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
           }
         }
       }
-      
       $proposed_ldap_authorizations[drupal_strtolower($key)] = $authorization_id;
       if ($key != drupal_strtolower($key)) {
         unset($proposed_ldap_authorizations[$key]);
       }
     }
-    
+
+    if ($op == 'test_query') {
+      $_SESSION['ldap_authorization_test_query']['useFirstAttrAsGroupId'] = $proposed_ldap_authorizations;
+    }
+
     if ($detailed_watchdog_log || $debug) {
       $_proposed_ldap_authorizations = is_array($proposed_ldap_authorizations) ? $proposed_ldap_authorizations : array();
       $watchdog_tokens['%proposed_authorizations'] = join(', ', $_proposed_ldap_authorizations);
@@ -263,7 +265,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     }
 
     $filtered_ldap_authorizations = array_unique($filtered_ldap_authorizations);
- 
+
     $watchdog_tokens['%filtered_ldap_authorizations'] = join(', ', $filtered_ldap_authorizations);
     if ($detailed_watchdog_log) {
       watchdog('ldap_authorization', '%username : filtered authorization for %consumer_type: %filtered_ldap_authorizations.',
@@ -272,6 +274,10 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     if ($debug) {
       debug(t('%username : filtered authorization for %consumer_type: %filtered_ldap_authorizations.',
         $watchdog_tokens));
+    }
+
+    if ($op == 'test_query') {
+      $_SESSION['ldap_authorization_test_query']['post mappings'] = $filtered_ldap_authorizations;
     }
 
     /**
@@ -371,10 +377,10 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
    *      but previously granted by ldap
    */
   $watchdog_tokens['%revokes'] = t('none');
- 
+
   if ($consumer->consumerConf->revokeLdapProvisioned) {
     $revokes = array_diff($initial_existing_ldap_authorizations, $filtered_ldap_authorizations);
-    
+
     if (count($revokes)) {
       $consumer->authorizationRevoke($user, $user_auth_data, $revokes, $ldap_entry, FALSE);
       $watchdog_tokens['%revokes'] = join(', ', $revokes);
@@ -442,7 +448,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   if ($op == 'test_query') {
     $_SESSION['ldap_authorization_test_query']['maps']['Groups DNs'] = $group_dns;
   }
-  
+
   $values = array_merge($derive_from_dn_authorizations, $group_dns);
   $values = array_unique($values);
   $authz_ids = (count($values)) ? array_combine($values, $values) : array();

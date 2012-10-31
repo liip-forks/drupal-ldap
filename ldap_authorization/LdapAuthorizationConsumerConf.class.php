@@ -1,5 +1,5 @@
 <?php
-// $Id$
+
 /**
  * @file
  * class to encapsulate an ldap entry to authorization consumer ids mapping configuration
@@ -74,7 +74,7 @@ class LdapAuthorizationConsumerConf {
   }
 
   protected function loadFromDb() {
-     if (module_exists('ctools')) {
+    if (module_exists('ctools')) {
       ctools_include('export');
       $result = ctools_export_load_object('ldap_authorization', 'names', array($this->consumerType));
 
@@ -104,7 +104,7 @@ class LdapAuthorizationConsumerConf {
     $this->useFirstAttrAsGroupId  = (bool)(@$consumer_conf->useFirstAttrAsGroupId);
 
     $this->searchAll = (bool)(@$consumer_conf->searchAll);
-   
+
     $this->mappings = $this->pipeListToArray($consumer_conf->mappings, FALSE);
     $this->useMappingsAsFilter = (bool)(@$consumer_conf->use_filter);
 

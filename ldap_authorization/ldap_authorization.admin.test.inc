@@ -1,5 +1,4 @@
 <?php
-// $Id: ldap_authorization.admin.test.inc,v 1.3 2010/12/29 01:37:46 johnbarclay Exp $
 
 /**
  * @file
@@ -46,6 +45,69 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
         );
       }
     }
+
+    $form['useFirstAttrAsGroupId'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('After "Convert full dn to value of first attribute before mapping"'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+
+    if ($consumer->consumerConf->useFirstAttrAsGroupId) {
+      if (isset($_SESSION['ldap_authorization_test_query']['useFirstAttrAsGroupId'])) {
+        $form['useFirstAttrAsGroupId']['data'] = array(
+         '#type' => 'item',
+         '#markup' => theme('item_list', array('items' => $_SESSION['ldap_authorization_test_query']['useFirstAttrAsGroupId'], 'type' => 'ul', 'title' => "Convert full dn to value of first attribute before mapping")),
+        );
+      }
+    }
+    else {
+      $form['useFirstAttrAsGroupId']['data'] = array(
+       '#type' => 'item',
+       '#markup' => "Convert full dn to value of first attribute before mapping. NOT enabled",
+      );
+    }
+
+    $form['post mappings'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('After Mappings and Filters Applied'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+
+    $form['post mappings']['conf'] = array(
+      '#type' => 'item',
+      '#markup' => 'Use Mappings as Filter = ' . (int)$consumer->consumerConf->useMappingsAsFilter .
+          theme('item_list', array(
+          'items' =>  $consumer->consumerConf->mappings,
+          'type' => 'ul',
+          'title' => 'Configured Mappings',
+        )
+      )
+    );
+    if ($consumer->consumerConf->mappings) {
+      $form['post mappings']['conf']['#markup'] =
+      'Use Mappings as Filter = ' . (int)$consumer->consumerConf->useMappingsAsFilter .
+          theme('item_list', array(
+          'items' =>  $consumer->consumerConf->mappings,
+          'type' => 'ul',
+          'title' => 'Configured Mappings',
+        )
+      );
+    }
+    else {
+      $form['post mappings']['conf']['#markup'] =
+      'Use Mappings as Filter = ' .
+      (int)$consumer->consumerConf->useMappingsAsFilter .
+      '<br/>No Mappings Configured';
+    }
+
+    if (isset($_SESSION['ldap_authorization_test_query']['post mappings'])) {
+      $form['post mappings']['data'] = array(
+       '#type' => 'item',
+       '#markup' => theme('item_list', array('items' => $_SESSION['ldap_authorization_test_query']['post mappings'], 'type' => 'ul', 'title' => "Results after any filtering and mappings applied")),
+      );
+    }
   }
 
   $form['intro'] = array(
@@ -66,7 +128,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
     '#default_value' => @$_SESSION['ldap_authorization_test_query']['usernames'] ,
     '#cols' => 50,
     '#rows' => 6,
-    '#description' => t('', $consumer_tokens),
+    '#description' => '',
   );
 
   $form['random_users'] = array(

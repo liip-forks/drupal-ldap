@@ -1,11 +1,10 @@
 <?php
-// $Id: LdapAuthorizationConsumerConfAdmin.class.php,v 1.6.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
-  /**
-   * @file
-   * class to encapsulate an ldap authorization ldap entry to authorization ids mapping
-   *
-   */
+/**
+ * @file
+ * class to encapsulate an ldap authorization ldap entry to authorization ids mapping
+ *
+ */
 
 module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConf.class');
   /**
@@ -215,7 +214,7 @@ Representations of groups derived from LDAP might initially look like:
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
-    
+
     $synchronization_modes = array();
     if ($this->synchOnLogon)  {
       $synchronization_modes[] = 'user_logon';
@@ -349,12 +348,12 @@ Representations of groups derived from LDAP might initially look like:
           $errors['mappings'] = $text;
         }
         elseif ($type == 'warning' ||  $type == 'status') {
-          drupal_set_message($text, $type);
+          drupal_set_message(check_plain($text), $type);
         }
       }
     }
     if ($this->useMappingsAsFilter && !count($this->mappings)) {
-      $errors['mappings'] = t('Mappings are missing.  Mappings muse be supplied if filtering is enabled.');
+      $errors['mappings'] = t('Mappings are missing.  Mappings must be supplied if filtering is enabled.');
     }
     return $errors;
   }
@@ -464,7 +463,7 @@ Representations of groups derived from LDAP might initially look like:
           'default' => 0,
         )
       ),
-      
+
       'mappings'  => array(
         'form_default' => array(),
         'schema' => array(

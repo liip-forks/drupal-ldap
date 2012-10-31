@@ -1,9 +1,14 @@
 <?php
 
 /**
+ * @file
+ * summary of hooks and other developer related functions
+ */
+
+/**
  * Allow a custom module to examine the user's ldap details
- * and refuse authentication.  See also: http://drupal.org/node/1634930 
- *  
+ * and refuse authentication.  See also: http://drupal.org/node/1634930
+ *
  *  @param array $ldap_user
  *    See README.developers.txt for structure
  *  @param string $name
@@ -17,7 +22,7 @@
  */
 
 function hook_ldap_authentication_allowuser_results_alter($ldap_user, $name, &$hook_result) {
-  
+
   if ($hook_result === FALSE) { // other module has denied user, should not override
     return;
   }
