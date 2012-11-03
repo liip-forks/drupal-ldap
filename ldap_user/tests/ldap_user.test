@@ -17,7 +17,7 @@ module_load_include('php', 'ldap_test', 'LdapTestCase.class');
 class LdapUserUnitTests extends LdapTestCase {
   public static function getInfo() {
     return array(
-      'name' => '1. LDAP User Unit Tests V3',
+      'name' => '1. LDAP User Unit Tests',
       'description' => 'Test functions outside of real contexts.',
       'group' => 'LDAP User'
     );

@@ -85,12 +85,7 @@ function ldap_authorization_menu() {
   return $items;
 }
 
-/**
- * @return default value for field user->ldap_authorizations
- */
-function ldap_authorization_ldap_authorizations_default($entity_type, $entity, $field, $instance, $langcode) {
-  return NULL;
-}
+
 /**
  * Implements hook_user_login() login operation.
  */

@@ -54,11 +54,7 @@ username to an ldap user entry.
 LDAP Authorization data storage:
 ---------------------
 
-Authorization data is stored in user->ldap_authorizations field.
-
-
-*** the following is out of date @todo *****
-$user->data['ldap_authorizations'][<consumerType>][<authorization_id>] => attributes
+Authorization data is stored in user->data array
 
 such as:
 

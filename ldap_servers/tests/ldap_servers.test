@@ -11,7 +11,7 @@ module_load_include('php', 'ldap_test', 'LdapTestCase.class');
 class LdapServersTestCase extends LdapTestCase {
   public static function getInfo() {
     return array(
-      'name' => 'LDAP Servers Tests v3',
+      'name' => 'LDAP Servers Tests',
       'description' => 'Test ldap servers.  Servers module is primarily a storage
         tool for ldap server configuration, so most of testing is just form and db testing.
         there are some api like functions that are also tested.',
