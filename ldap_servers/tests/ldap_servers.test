@@ -6,7 +6,7 @@
  */
 
 
-ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestCase.class');
+module_load_include('php', 'ldap_test', 'LdapTestCase.class');
 
 class LdapServersTestCase extends LdapTestCase {
   public static function getInfo() {

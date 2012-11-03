@@ -411,12 +411,6 @@ function ldap_user_help($path, $arg) {
   }
 }
 
-function ldap_user_form_alter(&$form, $form_state, $form_id) {
-  //dpm($form_id); dpm($form); dpm($form_state);
-  // form_id == 'user_pass_reset'  $uid = arg(0); --- submit will log user in.
-
-  // sends user to user_profile_form to reset password
-}
 
 /**
  * Implements hook_form_FORM_ID_alter(). for user_register_form

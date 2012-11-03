@@ -292,13 +292,6 @@ function ldap_authentication_user_pass_validate(&$form_state) {
     form_set_error('name', theme('ldap_authentication_user_pass_validate_ldap_authenticated', $vars));
   }
 }
-/**
- * Implements hook_form_FORM_ID_alter().
- */
-
-function ldap_authentication_form_user_register_alter(&$form, $form_state) {
-
-}
 
 
 /**

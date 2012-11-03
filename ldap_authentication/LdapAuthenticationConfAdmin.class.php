@@ -338,7 +338,9 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
     $form['restrictions']['excludeIfNoAuthorizations'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Requires LDAP Authorization to be enabled and configured.  Deny access to users without Ldap Authorization Module authorization mappings such as Drupal roles.'),
+      '#title' => t('Deny access to users without Ldap Authorization Module
+        authorization mappings such as Drupal roles.
+        Requires LDAP Authorization to be enabled and configured!'),
       '#default_value' =>  $this->excludeIfNoAuthorizations,
       '#description' => t($this->excludeIfNoAuthorizationsDescription, $tokens),
       '#disabled' => (boolean)(!module_exists('ldap_authorization')),

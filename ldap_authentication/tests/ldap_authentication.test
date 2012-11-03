@@ -5,7 +5,7 @@
  * ldap_authentication simpletests
  *
  */
-ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestCase.class');
+module_load_include('php', 'ldap_test', 'LdapTestCase.class');
 module_load_include('module', 'ldap_authentication', 'ldap_authentication');
 
 class LdapAuthenticationTestCase extends LdapTestCase {
@@ -554,7 +554,177 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     module_disable(array('ldap_authorization_drupal_role', 'ldap_authorization'));
 
 
-}
+  }
 
+  /**
+   * make sure user admin interface works.
+   */
+  function testUI() {
+
+    // just to give warning if setup doesn't succeed.  may want to take these out at some point.
+    $setup_success = (
+        module_exists('ldap_user') &&
+        module_exists('ldap_servers') &&
+        module_exists('ldap_authentication') &&
+        (variable_get('ldap_simpletest', 0) > 0)
+      );
+    $this->assertTrue($setup_success, ' ldap_authentication UI setup successful',  $this->testId('user interface tests'));
+
+    $sid = 'activedirectory1';
+    $sids = array('activedirectory1');
+    $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default');
+
+    $this->privileged_user = $this->drupalCreateUser(array(
+      'administer site configuration',
+      ));
+
+    $this->drupalLogin($this->privileged_user);
+
+    $ldap_authentication_conf_pre = ldap_authentication_get_valid_conf();
+
+    $this->drupalGet('admin/config/people/ldap/authentication');
+
+    $form_tests = array(
+      'authenticationMode' => array(
+        'property' => 'authenticationMode',
+        'values' => array(
+          LDAP_AUTHENTICATION_MIXED,
+          LDAP_AUTHENTICATION_EXCLUSIVE
+        ),
+        'required' => TRUE,
+      ),
+      'authenticationServers[' . $sid . ']' => array(
+        'property' => 'enabledAuthenticationServers',
+        'values' => array(
+          TRUE,
+          TRUE,
+        ),
+        'desired_result' => array(
+          array($sid),
+          array($sid),
+        )
+      ),
+      'loginUIUsernameTxt' =>
+        array(
+          'property' => 'loginUIUsernameTxt',
+          'values' => array(
+            '',
+            'Hogwarts UserID',
+          ),
+        ),
+      'loginUIPasswordTxt' =>
+        array(
+          'property' => 'loginUIPasswordTxt',
+          'values' => array(
+            '',
+            'Hogwarts UserID Password',
+          ),
+        ),
+      'ldapUserHelpLinkUrl' =>
+        array(
+          'property' => 'ldapUserHelpLinkUrl',
+          'values' => array(
+            '',
+            'http://passwords.hogwarts.edu',
+          ),
+        ),
+      'ldapUserHelpLinkText' =>
+        array(
+          'property' => 'ldapUserHelpLinkText',
+          'values' => array(
+            'Hogwarts Password Management Page',
+            'Hogwarts Password Management Page'
+          ),
+        ),
+      'allowOnlyIfTextInDn' => array(
+        'property' => 'allowOnlyIfTextInDn',
+        'values' => array(
+          'witch\nwarlord\nwisecracker',
+          "witch\nwarlord\nwisecracker"
+        ),
+        'desired_result' => array(
+          array('witch','warlord','wisecracker'),
+          array('witch','warlord','wisecracker'),
+        )
+      ),
+      'excludeIfTextInDn' => array(
+        'property' => 'excludeIfTextInDn',
+        'values' => array(
+          "muggle\nmuddle\nmummy",
+          "muggle\nmuddle\nmummy"
+        ),
+        'desired_result' => array(
+          array('muggle','muddle','mummy'),
+          array('muggle','muddle','mummy'),
+        )
+      ),
+      'excludeIfNoAuthorizations' => array(
+        'property' => 'excludeIfNoAuthorizations',
+        'values' => array(
+          array(TRUE),
+          array(TRUE),
+        ),
+      ),
+      'emailOption' => array(
+        'property' => 'emailOption',
+        'values' => array(
+          LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE,
+          LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
+        ),
+        'required' => TRUE,
+      ),
+      'emailUpdate' => array(
+        'property' => 'emailUpdate',
+        'values' => array(
+          LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE,
+          LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE,
+        ),
+        'required' => TRUE,
+      ),
+      'allowTestPhp' => array(
+        'property' => 'allowTestPhp',
+        'values' => array(
+          'pretend php',
+          'pretend php',
+        ),
+      ),
+    );
+
+    module_enable(array('php'));
+    foreach (array(0, 1) as $i) {
+      $edit = array();
+      foreach ($form_tests as $field_name => $conf) {
+        $value = $conf['values'][$i];
+        $property = isset($conf['property']) ? $conf['property'] : $field_name;
+        $edit[$field_name] = $value;
+      //  debug("$field_name $value"); debug($conf);debug($edit);
+      }
+     // debug($edit);
+      $this->drupalPost('admin/config/people/ldap/authentication', $edit, t('Save'));
+      $ldap_authentication_conf_post = ldap_authentication_get_valid_conf(TRUE);
+
+      foreach ($form_tests as $field_name => $conf) {
+        $property = isset($conf['property']) ? $conf['property'] : $field_name;
+        $desired = isset($conf['desired_result']) ? isset($conf['desired_result'][$i]) : $conf['values'][$i];
+
+        if (is_array($desired)) {
+          $success = count($desired) == count($ldap_authentication_conf_post->{$property});
+        }
+        else {
+          $success = ($ldap_authentication_conf_post->{$property} == $desired);
+        }
+        $this->assertTrue(
+          $success,
+          $property . ' ' . t('field set correctly'),
+          $this->testId('ldap authentication user interface tests')
+        );
+        if (!$success) {
+          debug("fail $i $property");
+          debug("desired:"); debug($desired);
+          debug("actual:");  debug($ldap_authentication_conf_post->{$property});
+        }
+      }
+    }
+  }
 
 }

@@ -5,7 +5,7 @@
  * ldap_authentication simpletests
  *
  */
-ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestCase.class');
+module_load_include('php', 'ldap_test', 'LdapTestCase.class');
 
 class LdapAuthorizationBasicTests extends LdapTestCase {
   public static function getInfo() {

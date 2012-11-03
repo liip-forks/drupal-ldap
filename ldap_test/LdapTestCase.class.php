@@ -8,7 +8,7 @@
  *
  */
 
-ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
+module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
 
 class LdapTestCase extends DrupalWebTestCase {
 
