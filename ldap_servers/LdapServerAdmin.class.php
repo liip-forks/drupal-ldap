@@ -680,7 +680,8 @@ public function drupalFormSubmit($op, $values) {
         '#markup' => t('<label>Service Account</label> Some LDAP configurations
           prohibit or restrict results of anonymous searches. These LDAPs require a DN//password pair
           for binding. For security reasons, this pair should belong to an
-          LDAP account with stripped down permissions.'),
+          LDAP account with stripped down permissions.
+          This is also required for provisioning LDAP accounts and groups!'),
         ),
       ),
 
