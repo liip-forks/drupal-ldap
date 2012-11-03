@@ -635,10 +635,14 @@ class LdapUserConf {
     );
     if (!$test_query && isset($result['status'])) {
       if ($result['status'] == 'success') {
-        watchdog('ldap_user', 'LDAP entry on server %sid created dn=%dn.  %description. username=%username, uid=%uid', $tokens, WATCHDOG_INFO);
+        if ($this->detailedWatchdog) {
+          watchdog('ldap_user', 'LDAP entry on server %sid created dn=%dn.  %description. username=%username, uid=%uid', $tokens, WATCHDOG_INFO);
+        }
       }
       elseif ($result['status'] == 'conflict') {
-        watchdog('ldap_user', 'LDAP entry on server %sid not created because of existing ldap entry. %description. username=%username, uid=%uid', $tokens, WATCHDOG_WARNING);
+        if ($this->detailedWatchdog) {
+          watchdog('ldap_user', 'LDAP entry on server %sid not created because of existing ldap entry. %description. username=%username, uid=%uid', $tokens, WATCHDOG_WARNING);
+        }
       }
       elseif ($result['status'] == 'fail') {
         watchdog('ldap_user', 'LDAP entry on server %sid not created because error.  %description. username=%username, uid=%uid', $tokens, WATCHDOG_ERROR);

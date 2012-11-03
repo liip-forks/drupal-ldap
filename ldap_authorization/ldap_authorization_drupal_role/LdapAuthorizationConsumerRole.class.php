@@ -88,7 +88,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
       }
       else {
         $created[] = $role->name;
-        watchdog('user', 'drupal role %role in ldap_authorizations module', array('%role' => $role->name));
+        watchdog('user', 'created drupal role %role in ldap_authorizations module', array('%role' => $role->name));
       }
     }
     // 3. return all existing user roles and flush cache of consumer ids.

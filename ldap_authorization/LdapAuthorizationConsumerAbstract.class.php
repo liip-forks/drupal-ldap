@@ -325,11 +325,12 @@ class LdapAuthorizationConsumerAbstract {
       $user = user_save($user, $user_edit);
     }
 
-
-    watchdog('ldap_authorization', '%username:
-      <hr/>LdapAuthorizationConsumerAbstract grantsAndRevokes() method log.  action=%action:<br/> %consumer_ids_log
-      ',
-      $watchdog_tokens, WATCHDOG_DEBUG);
+    if ($detailed_watchdog_log) {
+      watchdog('ldap_authorization', '%username:
+        <hr/>LdapAuthorizationConsumerAbstract grantsAndRevokes() method log.  action=%action:<br/> %consumer_ids_log
+        ',
+        $watchdog_tokens, WATCHDOG_DEBUG);
+    }
 
   }
 

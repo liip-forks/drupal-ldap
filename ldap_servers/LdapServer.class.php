@@ -285,15 +285,19 @@ class LdapServer {
     }
     if ($anon_bind) {
       if (@!ldap_bind($this->connection)) {
-        watchdog('ldap', "LDAP anonymous bind error. Error %errno: %error", array('%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
-        return ldap_errno($this->connection);
+        if ($this->detailedWatchdogLog) {
+          watchdog('ldap', "LDAP anonymous bind error. Error %errno: %error", array('%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
+        }
+         return ldap_errno($this->connection);
       }
     }
     else {
       $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
       $pass = ($pass != NULL) ? $pass : $this->bindpw;
       if (@!ldap_bind($this->connection, $userdn, $pass)) {
-        watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", array('%user' => $userdn, '%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
+        if ($this->detailedWatchdogLog) {
+          watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", array('%user' => $userdn, '%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
+        }
         return ldap_errno($this->connection);
       }
     }

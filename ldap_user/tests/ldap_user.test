@@ -996,26 +996,6 @@ class LdapUserIntegrationTests extends LdapTestCase {
       }
 
     }
-
-
-
-    /**
-     *   tests for manual creation of ldap accounts
-     *
-     * A. setup: turn off all automated triggers for provisioning ldap accounts
-     *
-     * 1.  manualAccountOptionsNoOptions (pass) X
-     *     create account with no ldap options checked in admin/people/create
-     *     confirm that no ldap account created manualAccountOptionsNoOptions
-     *
-     * 2.  manualAccountOptionsCreateEntry X
-     *     select "create corresponding ldap entry"
-     *     check that entry is there
-     *
-     * 3.  manualAccountExistingLdapAssociate X
-     *     select "make this an ldap associated account" with known ldap user
-     *     should work, test ldap associated user fields
-     */
   }
 }
 
