@@ -144,7 +144,6 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
    */
   $sso_login = (isset($form_state['sso_login']) && $form_state['sso_login']) ? TRUE : FALSE;
 
-
   $watchdog_tokens = array('%username' => $authname); // $watchdog_tokens = array('%username' => $name); // patch 1599632
   if ($detailed_watchdog_log) {
     watchdog('ldap_authentication', '%username : Beginning authentification....', $watchdog_tokens, WATCHDOG_DEBUG);
@@ -629,5 +628,3 @@ function _ldap_authentication_err_text($error) {
 
   return $msg;
 }
-
-

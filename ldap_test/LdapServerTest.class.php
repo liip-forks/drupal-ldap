@@ -84,7 +84,6 @@ class LdapServerTest extends LdapServer {
     $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
     $pass = ($pass != NULL) ? $pass : $this->bindpw;
 
-    //debug("bind userdn=$userdn, pass=$pass, anon_bind=$anon_bind ");
     if (! isset($this->entries[$userdn])) {
       $ldap_errno = LDAP_NO_SUCH_OBJECT;  // 0x20 or 32
       if (function_exists('ldap_err2str')) {
@@ -93,10 +92,8 @@ class LdapServerTest extends LdapServer {
       else {
         $ldap_error = "Failed to find $userdn in LdapServerTest.class.php";
       }
-      debug("failed to find $userdn in"); debug($this->entries);
     }
     elseif (isset($this->entries[$userdn]['password'][0]) && $this->entries[$userdn]['password'][0] == $pass && $pass) {
-     // debug("bind success");
       return LDAP_SUCCESS;
     }
     else {
@@ -181,10 +178,8 @@ class LdapServerTest extends LdapServer {
 
     list($filter_attribute, $filter_value) = explode('=', $filter);
     $filter_attribute =  drupal_strtolower($filter_attribute);
-  //  debug("filter attribute, $filter_attribute, filter value $filter_value");
     // need to perform feaux ldap search here with data in
     $results = array();
-   //debug('this->entries');
     foreach ($this->entries as $dn => $entry) {
       $dn_lcase = drupal_strtolower($dn);
 

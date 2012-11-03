@@ -112,7 +112,7 @@ class LdapQuery {
     $results = array();
 
     $count = 0;
-    // for debugging paginations, set: $ldap_server->searchPageStart = NULL, 0, 1, ... ; $ldap_server->searchPageEnd = NULL, 0, 1, ...;
+
     foreach ($this->baseDn as $base_dn) {
       $result = $ldap_server->search($base_dn, $this->filter, $this->attributes, 0, $this->sizelimit, $this->timelimit, $this->deref, $this->scope);
       if ($result !== FALSE && $result['count'] > 0) {
@@ -302,7 +302,7 @@ class LdapQuery {
           'field_group' => 'query',
           '#type' => 'textarea',
           '#title' => t('Base DNs to search in query.'),
-          '#description' => t('Each Base DN will be queried and results merged. e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>') . t('Enter one per line in case if you need more than one.'),
+          '#description' => t('Each Base DN will be queried and results merged. e.g. <code>ou=groups,dc=hogwarts,dc=edu</code>') . t('Enter one per line in case if you need more than one.'),
           '#cols' => 50,
           '#rows' => 6,
           '#required' => TRUE,

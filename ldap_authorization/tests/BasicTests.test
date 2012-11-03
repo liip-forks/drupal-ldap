@@ -123,7 +123,13 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
 function testFlags() {
 
   $sid = 'activedirectory1';
-  $this->prepTestData('hogwarts', array($sid), 'provisionToDrupal', 'default', 'drupal_role_default');
+  $this->prepTestData(
+    'hogwarts',
+    array($sid),
+    'provisionToDrupal',
+    'default',
+    'drupal_role_default'
+    );
 
   /**
    * LDAP_authorz.Flags.status=0: Disable ldap_authorization_drupal_role configuration and make sure no authorizations performed
@@ -344,7 +350,7 @@ function testFlags() {
   $this->consumerAdminConf['drupal_role']->createConsumers = 1;
   $this->consumerAdminConf['drupal_role']->mappings[] = array('cn=students,ou=groups,dc=hogwarts,dc=edu', $new_role);
   $this->consumerAdminConf['drupal_role']->save();
-  debug('mappings'); debug($this->consumerAdminConf['drupal_role']->mappings);
+ // debug('mappings'); debug($this->consumerAdminConf['drupal_role']->mappings);
 
   $edit = array(
     'name' => 'hpotter',
@@ -355,11 +361,12 @@ function testFlags() {
   $new_role_created = in_array($new_role, array_values(user_roles()));
   $roles_by_name = array_flip(user_roles());
   $hpotter = user_load_by_name('hpotter');
+  $hpotter = user_load($hpotter->uid, TRUE);
   $role_granted = isset($hpotter->roles[$roles_by_name[$new_role]]);
-  debug('roles'); debug(user_roles());
-  debug('roles by name'); debug($roles_by_name);
-  debug('hpotter->roles'); debug($hpotter->roles);
-  debug("$new_role_created AND $role_granted");
+ // debug('roles'); debug(user_roles());
+ // debug('roles by name'); debug($roles_by_name);
+ // debug('hpotter->roles'); debug($hpotter->roles);
+ // debug("$new_role_created AND $role_granted");
 
   $this->assertTrue(
     ($new_role_created && $role_granted),

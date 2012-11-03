@@ -227,7 +227,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     foreach ($this->build_ldap_basedn($ldap_data->baseDn) as $basedn) {
 
       $result = $ldap_server->search($basedn, $this->build_ldap_filter($ldap_data->filter), array_values($attributes), 0, $ldap_data->sizelimit, $ldap_data->timelimit, $ldap_data->deref, $ldap_data->scope);
-/***
+/**
     // ldap_sort can't be used because there's no DESC option
     if (!empty($this->orderby)) {
       // Array reverse, because the most specific are first - PHP works the opposite way of SQL.
@@ -235,7 +235,8 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
         @ldap_sort($ldap_server->connection, $result, $field['field']);
       }
     }
- */   if ($result !== FALSE) { // not an error
+ */
+    if ($result !== FALSE) { // not an error
         $entries = array_merge($entries, $result);
         $num_entries += array_shift($result);
       }
@@ -255,7 +256,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
 
     foreach ($entries as $key => &$entry) {
       if (isset($entry['jpegphoto'])) {
-        $entry['jpegphoto'][0] = "<img src='data:image/jpeg;base64,".base64_encode($entry['jpegphoto'][0])."' alt='photo' />";
+        $entry['jpegphoto'][0] = "<img src='data:image/jpeg;base64," . base64_encode($entry['jpegphoto'][0]) . "' alt='photo' />";
       }
       foreach ($view->field as $field) {
         if (! isset($field_alias[$field->field_alias])) {
@@ -347,13 +348,13 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   }
 
   function options_form(&$form, &$form_state) {
-/*
+/**
     $ldap_data = entity_load('ldap_data', FALSE);
     $options   = array();
     foreach ($ldap_data as $data) {
         $options[$data->qid] = $data->name;
     }
-*/
+ */
     $queries = array();
     $queries['all'] = LdapQueryAdmin::getLdapQueryObjects();
 

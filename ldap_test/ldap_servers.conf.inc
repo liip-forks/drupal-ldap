@@ -196,7 +196,7 @@ $conf['activedirectory1']['search_results']['(&(objectClass=group)(|(member=cn=g
   'count' => 1,
 );
 
-foreach (array('hpotter', 'hgrainger', 'ssnape') as $cn) {
+foreach (array('hpotter', 'hgrainger', 'ssnape', 'adumbledore') as $cn) {
 
   $conf['activedirectory1']['search_results']["(cn=$cn)"]['dc=ldap,dc=hogwarts,dc=edu'] = array(
     0 => array(

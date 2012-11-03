@@ -41,10 +41,15 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     }
     $this->_availableConsumerIDs = array(); // array_values(user_roles(TRUE));
     foreach (array_values(user_roles(TRUE)) as $role_name) {
-      $this->_availableConsumerIDs[] = $role_name;
+      $this->_availableConsumerIDs[drupal_strtolower($role_name)] = $role_name;
     }
 
   }
+
+  /**
+   * return array with lowercase consumer ids as keys
+   * and mixed case consumer ids as values
+   */
 
   public function availableConsumerIDs($reset = FALSE) {
     if ($reset || ! is_array($this->_availableConsumerIDs)) {
@@ -62,23 +67,21 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
    *
    * **/
 
-  public function createConsumers($creates_mixed_case) {
+  public function createConsumers($roles_to_create) {
 
     // 1. determins difference between existing drupal roles and ones that are requested to be created
-    $existing_roles_mixed_case = $this->availableConsumerIDs();
-    $creates_lower_case = array_map('drupal_strtolower', $creates_mixed_case);
-    $existing_roles_lower_case = array_map('drupal_strtolower', $existing_roles_mixed_case);
-    $roles_map_lc_to_mixed_case = array_combine($creates_lower_case, $creates_mixed_case);
-    $roles_to_create =  array_unique(array_diff($creates_lower_case, $existing_roles_lower_case));
+    $existing_roles_lower_case = array_keys($this->availableConsumerIDs());
+    $roles_to_create_lcase =  array_unique(array_diff(array_keys($roles_to_create), $existing_roles_lower_case));
 
     // 2. create each role that is needed
-    foreach ($roles_to_create as $i => $role_name_lowercase) {
+    foreach ($roles_to_create_lcase as $i => $role_name_lowercase) {
+      $role_name = $roles_to_create[$role_name_lowercase];
       if (drupal_strlen($role_name_lowercase) > 63) {
         watchdog('ldap_authorization_drupal_role', 'Tried to create drupal role with name of over 63 characters (%group_name).  Please correct your drupal ldap_authorization settings', array('%group_name' => $role_name_lowercase));
         continue;
       }
       $role = new stdClass();
-      $role->name = $roles_map_lc_to_mixed_case[$role_name_lowercase];
+      $role->name = $role_name;
       if (! ($status = user_role_save($role))) {
         // if role is not created, remove from array to user object doesn't have it stored as granted
         watchdog('user', 'failed to create drupal role %role in ldap_authorizations module', array('%role' => $role->name));
@@ -91,9 +94,9 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     // 3. return all existing user roles and flush cache of consumer ids.
     $refreshed_available_consumer_ids = $this->availableConsumerIDs(TRUE);
     if ($this->detailedWatchdogLog) {
-      $watchdog_tokens = array('%roles_to_create' => join(", ", $roles_to_create));
-      $watchdog_tokens = array('%existing_roles' => join(", ", $existing_roles_mixed_case));
-      $watchdog_tokens = array('%refreshed_available_consumer_ids' => join(", ", $refreshed_available_consumer_ids));
+      $watchdog_tokens = array('%roles_to_create' => join(", ", $roles_to_create_lcase));
+      $watchdog_tokens = array('%existing_roles' => join(", ", $existing_roles_lower_case));
+      $watchdog_tokens = array('%refreshed_available_consumer_ids' => join(", ", array_keys($refreshed_available_consumer_ids)));
       watchdog('ldap_authorization',
         'LdapAuthorizationConsumerDrupalRole.createConsumers()
         roles to create: %roles_to_create;
@@ -128,15 +131,16 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
 
   /**
    * extends grantSingleAuthorization()
+   *
    */
 
   public function grantSingleAuthorization(&$user, $role_name, &$user_auth_data) {
     if (is_null($this->getDrupalRoleByName($role_name))) {
-        watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.grantSingleAuthorization()
-        failed to grant %username the role %role_name because role does not exist',
-        array('%role_name' => $role_name, '%username' => $user->name),
-        WATCHDOG_ERROR);
-        return FALSE;
+      watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.grantSingleAuthorization()
+      failed to grant %username the role %role_name because role does not exist',
+      array('%role_name' => $role_name, '%username' => $user->name),
+      WATCHDOG_ERROR);
+      return FALSE;
     }
 
     $new_roles = $user->roles + array($this->getDrupalRoleByName($role_name) => $role_name);
@@ -179,7 +183,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     }
 
     if (!$pass) {
-      $message_text = '<code>"' . t('!map_to', $tokens) . '</code>" ' . t('does not map to any existing Drupal roles.');
+      $message_text = '"' . t('!map_to', $tokens) . '" ' . t('does not map to any existing Drupal roles.');
       if ($has_form_values) {
         $create_consumers = (isset($form_values['synchronization_actions']['create_consumers']) && $form_values['synchronization_actions']['create_consumers']);
       }
@@ -188,15 +192,15 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
       }
       if ($create_consumers && $this->allowConsumerObjectCreation) {
         $message_type = 'warning';
-        $message_text .= t('!map_to will be created when needed.  If "!map_to" is not intentional, please fix it', $tokens);
+        $message_text .= ' ' . t('!map_to will be created when needed.  If "!map_to" is not intentional, please fix it', $tokens);
       }
       elseif (!$this->allowConsumerObjectCreation) {
         $message_type = 'error';
-        $message_text .= t('Since automatic Drupal role creation is not possible with this module, an existing role must be mapped to.');
+        $message_text .= ' ' . t('Since automatic Drupal role creation is not possible with this module, an existing role must be mapped to.');
       }
       elseif (!$create_consumers) {
         $message_type = 'error';
-        $message_text .= t('Since automatic Drupal role creation is disabled, an existing role must be mapped to.  Either enable role creation or map to an existing role.');
+        $message_text .= ' ' . t('Since automatic Drupal role creation is disabled, an existing role must be mapped to.  Either enable role creation or map to an existing role.');
       }
     }
     return array($message_type, $message_text);

@@ -134,7 +134,7 @@ function ldap_authentication_theme() {
 function ldap_authentication_help($path, $arg) {
 
   $authentication_help = t('LDAP authentication allows authentication against an LDAP server.  It
-        may be used alongside other authentication means such as built in drupal authentication,
+        may be used alongside other authentication means such as built in Drupal authentication,
         open id, etc.  More detailed help is available on drupal.org at !helplink.',
           array(
             '!helplink' => l(LDAP_SERVERS_DRUPAL_HELP_URL, LDAP_SERVERS_DRUPAL_HELP_URL),
@@ -206,10 +206,10 @@ function _ldap_authentication_user_access() {
  *
  */
 
-function ldap_authentication_get_valid_conf() {
+function ldap_authentication_get_valid_conf($reset = FALSE) {
 
   static $auth_conf;
-  if (is_object($auth_conf)) {
+  if (!$reset && is_object($auth_conf)) {
     return $auth_conf;
   }
   ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConf.class');

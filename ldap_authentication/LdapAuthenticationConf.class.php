@@ -226,7 +226,7 @@ class LdapAuthenticationConf {
    *
    * @param string $name as proposed drupal username
    * @param array $ldap_user where top level keys are 'dn','attr','mail'
-   * @return boolean
+   * @return boolean FALSE means NOT allow; TRUE means allow
    *
    * @todo.  this function should simply invoke hook_ldap_authentication_allowuser_results_alter
    *   and most of this function should go in ldap_authentication_allowuser_results_alter
@@ -236,7 +236,6 @@ class LdapAuthenticationConf {
     /**
      * do one of the exclude attribute pairs match
      */
-    $exclude = FALSE;
     $ldap_user_conf = ldap_user_conf();
     // if user does not already exists and deferring to user settings AND user settings only allow
     $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
@@ -250,10 +249,10 @@ class LdapAuthenticationConf {
       }
     }
 
-
     /**
      * evaluate php if it exists
      */
+
     if ($this->allowTestPhp) {
       if (module_exists('php')) {
         global $_name, $_ldap_user_entry;
@@ -295,25 +294,31 @@ class LdapAuthenticationConf {
      */
 
     if ($this->excludeIfNoAuthorizations) {
+
       if (!module_exists('ldap_authorization')) {
         drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
         $tokens = array('!ldap_authentication_config' => l(t('LDAP Authentication Configuration'), 'admin/config/people/ldap/authentication'));
         watchdog('ldap_authentication', 'LDAP Authentication is configured to deny users without LDAP Authorization mappings, but LDAP Authorization module is not enabled.  Please enable and configure LDAP Authorization or disable this option at !ldap_authentication_config .', $tokens);
         return FALSE;
       }
+
       $user = new stdClass();
       $user->name = $name;
       $user->ldap_authenticated = TRUE; // fake user property added for query
       $consumers = ldap_authorization_get_consumers();
       $has_enabled_consumers = FALSE;
+      $has_ldap_authorizations = FALSE;
 
       foreach ($consumers as $consumer_type => $consumer_config) {
         $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
         if ($consumer_obj->consumerConf->status) {
           $has_enabled_consumers = TRUE;
           list($authorizations, $notifications) = ldap_authorizations_user_authorizations($user, 'query', $consumer_type, 'test_if_authorizations_granted');
-          if (count(array_filter(array_values($authorizations))) > 0) {
-            return TRUE;
+          if (
+            isset($authorizations[$consumer_type]) &&
+            count($authorizations[$consumer_type]) > 0
+            ) {
+            $has_ldap_authorizations = TRUE;
           }
         }
       }
@@ -324,13 +329,16 @@ class LdapAuthenticationConf {
         watchdog('ldap_authentication', 'LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured:  !ldap_consumer_config .', $tokens);
         return FALSE;
       }
+      elseif (!$has_ldap_authorizations) {
+        return FALSE;
+      }
 
-      return FALSE;
     }
 
     // allow other modules to hook in and refuse if they like
     $hook_result = TRUE;
     drupal_alter('ldap_authentication_allowuser_results', $ldap_user, $name, $hook_result);
+
     if ($hook_result === FALSE) {
       watchdog('ldap_authentication', "Authentication Allow User Result=refused for %name", array('%name' => $name), WATCHDOG_NOTICE);
       return FALSE;

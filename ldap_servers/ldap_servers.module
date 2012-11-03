@@ -545,7 +545,7 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
     }
     // dpm('servers'); dpm($servers);
   }
- 
+
   if ($sid) {
     if (!isset($servers[$type][$sid])) {
       return FALSE;
@@ -612,14 +612,35 @@ function ldap_servers_binary($value) {
 
 function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_context = NULL) {
   //dpm("_ldap_servers_get_user_ldap_data, sid=$sid, ldap_context=$ldap_context"); dpm($drupal_user);
+
   if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = db_query("SELECT authname FROM {authmap} WHERE uid = :uid AND module = 'ldap_user'", array(':uid' => $drupal_user->uid))->fetchColumn()) {
     $drupal_username = $authname;
   }
   else {
     $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
   }
+  // if no explicit $sid, find most appropriate one
+  if (!$sid && module_exists('ldap_user')) {
+    if (property_exists($drupal_user, 'ldap_user_puid_sid') &&
+        !empty($drupal_user->ldap_user_puid_sid['und'][0]['value'])
+      ) {
+      $sid = $drupal_user->ldap_user_puid_sid['und'][0]['value'];
+    }
+    else {
+      $ldap_user_conf = ldap_user_conf();
+      $sid = $ldap_user_conf->drupalAcctProvisionServer;
+    }
+  }
+  elseif (!$sid) {
+    $ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
+    if (count($ldap_servers) == 1) {
+      $sids = array_keys($ldap_servers);
+      $sid = $sids[0];
+    }
+  }
 
-  $ldap_server = ldap_servers_get_servers($sid, 'enabled', TRUE);
+  $ldap_server = ($sid) ? ldap_servers_get_servers($sid, 'enabled', TRUE) : FALSE;
+
  // debug("ldap_servers_get_user_ldap_data,sid=$sid"); debug($ldap_server->entries['cn=hpotter,ou=people,dc=hogwarts,dc=edu']);
   if ($ldap_server === FALSE) {
     watchdog('ldap_servers', 'Failed to load server object %sid in _ldap_servers_get_user_ldap_data', array('%sid' => $sid), WATCHDOG_ERROR);

@@ -126,3 +126,22 @@ function ldap_query_fields() {
   ldap_servers_module_load_include('php', 'ldap_query', 'LdapQuery.class');
   return LdapQuery::fields();
 }
+
+
+function ldap_query_help($path, $arg) {
+
+  $help = '<h3>' . t('LDAP Query Module') . '</h3><p>' .
+  t('This module does nothing in and of itself.  It should only be
+    enabled and configured if another module requires it.') . '</p>';
+
+  switch ($path) {
+    case 'admin/config/people/ldap/query':
+      $output = '<p>' . $help . '</p>';
+      return $output;
+
+    case 'admin/help#ldap_query':
+      $output = '<p>' . $help . '</p>';
+      return $output;
+  }
+
+}

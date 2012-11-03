@@ -338,7 +338,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
     $form['restrictions']['excludeIfNoAuthorizations'] = array(
       '#type' => 'checkbox',
-      '#title' => t('New and lightly tested feature. Use with caution!  Requires LDAP Authorization to be enabled and configured.  Deny access to users without Ldap Authorization Module authorization mappings such as Drupal roles.'),
+      '#title' => t('Requires LDAP Authorization to be enabled and configured.  Deny access to users without Ldap Authorization Module authorization mappings such as Drupal roles.'),
       '#default_value' =>  $this->excludeIfNoAuthorizations,
       '#description' => t($this->excludeIfNoAuthorizationsDescription, $tokens),
       '#disabled' => (boolean)(!module_exists('ldap_authorization')),
@@ -389,7 +389,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
         '#type' => 'markup',
         '#markup' => '<p><em>' . t('LDAP Single Sign-On module must be enabled for options below to work.')
         . ' ' . t('It is currently disabled.')
-        . ' ' . l(t('Modules Form'), 'admin/modules') . '</p></em>',
+        . ' ' . l(t('See modules form'), 'admin/modules') . '</p></em>',
       );
     }
 

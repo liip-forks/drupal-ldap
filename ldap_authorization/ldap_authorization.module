@@ -95,7 +95,10 @@ function ldap_authorization_ldap_authorizations_default($entity_type, $entity, $
  * Implements hook_user_login() login operation.
  */
 function ldap_authorization_user_login(&$edit, $user) {
+
   list($authorizations, $notifications) = ldap_authorizations_user_authorizations($user, 'set', NULL, 'logon');
+ // dpm('ldap_authorization_user_login'); dpm($user); dpm($authorizations);
+
 }
 
 /**
@@ -135,17 +138,6 @@ function ldap_authorization_ldap_server_in_use($sid, $server_name) {
  */
 function ldap_authorization_ldap_attributes_needed_alter(&$attribute_maps, $params) {
  // dpm('ldap_authorization_ldap_attributes_needed_alter'); dpm($params);
-  if (isset($params['sid'])) { // puid attributes are server specific
-    if (is_scalar($params['sid'])) {
-      $ldap_server = ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
-    }
-    else {
-      $ldap_server = $params['sid'];
-    }
-  }
-  else {
-    return;
-  }
 
   if (isset($params['ldap_context'])) {
     //  'ldap_authorization__' . $consumer_type
@@ -286,8 +278,8 @@ function ldap_authorizations_user_authorizations(&$user, $op = 'query', $consume
 function ldap_authorization_help($path, $arg) {
 
   $authorization_help = t('LDAP authorization allows LDAP data such as group memberships,
-    user attributes, etc to determine user authorization (drupal roles, organic group memberships,
-    etc.  Without additional modules, it only works with Drupal roles.
+    user attributes, etc to determine user authorization (Drupal roles, organic group memberships,
+    etc.)
     More detailed help is available on drupal.org at !helplink.',
           array(
             '!helplink' => l(LDAP_SERVERS_DRUPAL_HELP_URL, LDAP_SERVERS_DRUPAL_HELP_URL),

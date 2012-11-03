@@ -32,6 +32,29 @@ $conf['drupal_role_default']['drupal_role'] = array(
   'regrantLdapProvisioned' => 1,
   );
 
+$conf['drupal_role_authentication_test']['drupal_role'] = array(
+  'sid' => 'activedirectory1',
+  'consumerType' => 'drupal_role',
+  'consumerModule' => 'ldap_authorization_drupal_role',
+
+  'description' => 'Hogwarts AD',
+  'status' => 1,
+  'onlyApplyToLdapAuthenticated' => 1,
+
+  'mappings' => array(
+    array('cn=students,ou=groups,dc=hogwarts,dc=edu', 'students'),
+    array('gryffindor', 'gryffindor'),
+    array('cn=users,ou=groups,dc=hogwarts,dc=edu', 'users'),
+  ),
+
+  'useMappingsAsFilter' => 1,
+
+  'synchOnLogon' => 1,
+
+  'revokeLdapProvisioned' => 1,
+  'createConsumers' => 1,
+  'regrantLdapProvisioned' => 1,
+  );
 
 
 $conf['og_group']['og_group'] = array(

@@ -232,69 +232,81 @@ class LdapAuthorizationConsumerAbstract {
       watchdog('ldap_authorization', "on call of grantsAndRevokes: user_auth_data=" . print_r($user_auth_data, TRUE), $watchdog_tokens, WATCHDOG_DEBUG);
     }
 
-    foreach ($consumer_ids as $consumer_id) {
+    foreach ($consumer_ids as $consumer_id_lcase => $consumer_id) {
+      $available_consumer_ids = $this->availableConsumerIDs(TRUE);
+
       if ($detailed_watchdog_log) {
         watchdog('ldap_authorization', "consumer_id=$consumer_id, user_save=$user_save, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);
       }
       $log = "consumer_id=$consumer_id, op=$op,";
-      $results[$consumer_id] = TRUE;
-      if ($op == 'grant' && in_array($consumer_id, $users_authorization_ids) && !isset($user_auth_data[$consumer_id])) {
+      $results[$consumer_id_lcase] = TRUE;
+      if ($op == 'grant' && in_array($consumer_id, $users_authorization_ids) && !isset($user_auth_data[$consumer_id_lcase])) {
         // authorization id already exists for user, but is not ldap provisioned.  mark as ldap provisioned, but don't regrant
-        $user_auth_data[$consumer_id] = array('date_granted' => time() );
+        $user_auth_data[$consumer_id_lcase] = array(
+          'date_granted' => time(),
+          'consumer_id_mixed_case' => $consumer_id,
+        );
       }
-      elseif ($op == 'grant' && !in_array($consumer_id, $users_authorization_ids)) {
+      elseif ($op == 'grant' && !in_array($consumer_id_lcase, $users_authorization_ids)) {
         $log .=" grant existing consumer id ($consumer_id), ";
-        if (!in_array($consumer_id, $this->availableConsumerIDs(TRUE))) {
+        if (!isset($available_consumer_ids[$consumer_id_lcase])) {
           $log .= "consumer id not available for $op, ";
           if ($this->allowConsumerObjectCreation) {
 
-            $this->createConsumers(array($consumer_id));
-            if (in_array($consumer_id, $this->availableConsumerIDs(TRUE))) {
+            $this->createConsumers(array($consumer_id)); // mixed case
+            if (isset($available_consumer_ids[$consumer_id_lcase])) {
               if ($detailed_watchdog_log) {
                 watchdog('ldap_authorization', "grantSingleAuthorization : consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);
               }
               $this->grantSingleAuthorization($user, $consumer_id, $user_auth_data);  // allow consuming module to add additional data to $user_auth_data
-              $user_auth_data[$consumer_id] = array('date_granted' => time() );
+              $user_auth_data[$consumer_id_lcase] = array(
+                'date_granted' => time(),
+                'consumer_id_mixed_case' => $consumer_id,
+              );
+
               $log .= "created consumer object, ";
             }
             else {
               $log .= "tried and failed to create consumer object, ";
-              $results[$consumer_id] = FALSE;
+              $results[$consumer_id_lcase] = FALSE;
                // out of luck, failed to create consumer id
             }
           }
           else {
             $log .= "consumer does not support creating consumer object, ";
             // out of luck. can't create new consumer id.
-            $results[$consumer_id] = FALSE;
+            $results[$consumer_id_lcase] = FALSE;
           }
         }
 
-        if ($results[$consumer_id]) {
+        if ($results[$consumer_id_lcase]) {
           if ($detailed_watchdog_log) {
             watchdog('ldap_authorization', "grantSingleAuthorization : consumer_id=$consumer_id, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);
           }
           $log .= "granting existing consumer object, ";
-          $results[$consumer_id] = $this->grantSingleAuthorization($user, $consumer_id, $user_auth_data); // allow consuming module to add additional data to $user_auth_data
-          if ($results[$consumer_id]) {
-            $user_auth_data[$consumer_id] = array('date_granted' => time() );
+          $results[$consumer_id_lcase] = $this->grantSingleAuthorization($user, $consumer_id, $user_auth_data); // allow consuming module to add additional data to $user_auth_data
+          if ($results[$consumer_id_lcase]) {
+            $user_auth_data[$consumer_id_lcase] = array(
+              'date_granted' => time(),
+              'consumer_id_mixed_case' => $consumer_id,
+            );
           }
-          $log .= t(',result=') . (boolean)($results[$consumer_id]);
+          $log .= t(',result=') . (boolean)($results[$consumer_id_lcase]);
         }
 
       }
       elseif ($op == 'revoke') {
-        if (isset($user_auth_data[$consumer_id])) {
+        if (isset($user_auth_data[$consumer_id_lcase])) {
           $log .= "revoking existing consumer object, ";
-          if (in_array($consumer_id, $users_authorization_ids)) {
-            $results[$consumer_id] = $this->revokeSingleAuthorization($user, $consumer_id, $user_auth_data);  // defer to default for $user_save param
-            if ($results[$consumer_id]) {
-              unset($user_auth_data[$consumer_id]);
+          if (in_array($consumer_id_lcase, $users_authorization_ids)) {
+            $results[$consumer_id_lcase] = $this->revokeSingleAuthorization($user, $consumer_id, $user_auth_data);  // defer to default for $user_save param
+            if ($results[$consumer_id_lcase]) {
+              unset($user_auth_data[$consumer_id_lcase]);
             }
-            $log .= t(',result=') . (boolean)($results[$consumer_id]);
+            $log .= t(',result=') . (boolean)($results[$consumer_id_lcase]);
           }
           else {
-            unset($user_auth_data[$consumer_id]);
+            unset($user_auth_data[$consumer_id_lcase]);
           }
         }
       }
@@ -323,7 +335,7 @@ class LdapAuthorizationConsumerAbstract {
 
   /**
    * @param drupal user object $user to have $consumer_id revoked
-   * @param string $consumer_id $consumer_id such as drupal role name, og group name, etc.
+   * @param string mixed case $consumer_id $consumer_id such as drupal role name, og group name, etc.
    * @param array $user_auth_data array of $user data specific to this consumer type.
    *   stored in $user->data['ldap_authorization'][<consumer_type>] array
    *
@@ -335,6 +347,18 @@ class LdapAuthorizationConsumerAbstract {
      // method must be overridden
   }
 
+  /**
+   * @param stdClass $user as drupal user object to have $consumer_id granted
+   * @param string mixed case $role_name
+   * @param array $user_auth_data in form
+   *   array('my drupal role' =>
+   *     'date_granted' => 1351814718,
+   *     'consumer_id_mixed_case' => 'My Drupal Role',
+   *     )
+   */
+  public function grantSingleAuthorization(&$user, $role_name, &$user_auth_data) {
+     // method must be overridden
+  }
   /**
    * put authorization ids in displayable format
    */
@@ -356,11 +380,25 @@ class LdapAuthorizationConsumerAbstract {
 
   }
 
+  /**
+  * @param drupal user object $user
+  * @param string mixed case $consumer_id such as drupal role name, og group name, etc.
+  *
+  * @return boolean if an ldap_authorization_* module granted the authorization id
+  */
   public function hasLdapGrantedAuthorization(&$user, $authorization_id) {
-    // @todo load user and check field ldap_authorizations
-    return @$user->data['ldap_authorizations'][$this->consumerType][$authorization_id];
+    return (!empty($user->data['ldap_authorizations'][$this->consumerType][drupal_strtolower($authorization_id)]));
   }
 
+  /**
+   * NOTE this is in mixed case, since we must rely on whatever module is storing
+   * the authorization id
+   *
+   * @param drupal user object $user
+   * @param string mixed case $consumer_id such as drupal role name, og group name, etc.
+   *
+   * @return param boolean is user has authorization id, regardless of what module granted it.
+   */
   public function hasAuthorization(&$user, $authorization_id) {
     return @in_array($authorization_id, $this->usersAuthorizations($user));
   }

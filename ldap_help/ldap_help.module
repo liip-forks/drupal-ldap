@@ -81,3 +81,24 @@ function ldap_help_watchdog_detail_submit($form, &$form_state) {
     }
   }
 }
+
+function ldap_help_help($path, $arg) {
+
+  $help = '<h3>' . t('LDAP Help Module') . '</h3><p>' .
+  t('This module assists Drupal admins in configuring, debugging, sharing, and submitting
+  support and bug request related to LDAP modules.') . '<strong><em> ' .
+  t('LDAP Help Module should be disabled unless you are debugging or configuring
+    LDAP problems.') . ' </em></strong>' .
+  t('It adds no functionality to the LDAP modules.') . '</p>';
+
+  switch ($path) {
+    case 'admin/config/people/ldap/help':
+      $output = '<p>' . $help . '</p>';
+      return $output;
+
+    case 'admin/help#ldap_help':
+      $output = '<p>' . $help . '</p>';
+      return $output;
+  }
+
+}

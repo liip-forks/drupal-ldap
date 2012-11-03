@@ -20,15 +20,16 @@ $conf['default']  = array(
       ),
     'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
     'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
-    'wsEnabled'  => 0,
-    'wsUserIps' => array('1.2.3.4'),
-    'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
     )
   );
-
+/**
+ *    'wsEnabled'  => 0,
+    'wsUserIps' => array('1.2.3.4'),
+    'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
+**/
 $conf['ad_authentication'] = array(
     'drupalAcctProvisionServer' => 'activedirectory1',
     'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,
@@ -40,9 +41,6 @@ $conf['ad_authentication'] = array(
       ),
     'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
     'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
-    'wsEnabled'  => 0,
-    'wsUserIps' => array('1.2.3.4'),
-    'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
@@ -60,9 +58,7 @@ $conf['ad_authentication'] = array(
       ),
     'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
     'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
-    'wsEnabled'  => 0,
-    'wsUserIps' => array('1.2.3.4'),
-    'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
+
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
@@ -79,9 +75,6 @@ $conf['ad_authentication'] = array(
     'ldapEntryProvisionTriggers' => array(),
     'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
     'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
-    'wsEnabled'  => 0,
-    'wsUserIps' => array('1.2.3.4'),
-    'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
@@ -101,9 +94,6 @@ $conf['ad_authentication'] = array(
     ),
     'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
     'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
-    'wsEnabled'  => 0,
-    'wsUserIps' => array('1.2.3.4'),
-    'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(
         '[field.field_display_name]' => array(
@@ -169,9 +159,6 @@ $conf['ad_authentication'] = array(
       ),
     'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
     'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
-    'wsEnabled'  => 0,
-    'wsUserIps' => array('1.2.3.4'),
-    'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(
@@ -284,9 +271,6 @@ $conf['ad_authentication'] = array(
       ),
     'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
     'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
-    'wsEnabled'  => 0,
-    'wsUserIps' => array('1.2.3.4'),
-    'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(

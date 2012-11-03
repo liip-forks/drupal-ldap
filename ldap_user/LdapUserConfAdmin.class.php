@@ -219,6 +219,7 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#description' => $this->ldapEntryProvisionTriggersDescription
     );
 
+/**
     $form['ws'] = array(
       '#type' => 'fieldset',
       '#title' => t('[Untested and Unfinished Code] REST Webservice for Provisioning and Synching.'),
@@ -273,6 +274,7 @@ class LdapUserConfAdmin extends LdapUserConf {
         ),
       ),
     );
+**/
 
     $form['server_mapping_preamble'] = array(
       '#type' => 'markup',
@@ -580,13 +582,13 @@ EOT;
     $this->manualAccountConflict = $values['manualAccountConflict'];
     $this->userConflictResolve  = ($values['userConflictResolve']) ? (int)$values['userConflictResolve'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;
-    $this->wsKey  = ($values['wsKey']) ? $values['wsKey'] : NULL;
+   // $this->wsKey  = ($values['wsKey']) ? $values['wsKey'] : NULL;
 
-    $this->wsUserIps  = ($values['wsUserIps']) ? explode("\n", $values['wsUserIps']) : array();
-    foreach ($this->wsUserIps as $i => $ip) {
-      $this->wsUserIps[$i] = trim($ip);
-    }
-    $this->wsEnabled  = ($values['wsEnabled']) ? (int)$values['wsEnabled'] : 0;
+   // $this->wsUserIps  = ($values['wsUserIps']) ? explode("\n", $values['wsUserIps']) : array();
+  //  foreach ($this->wsUserIps as $i => $ip) {
+  //    $this->wsUserIps[$i] = trim($ip);
+  //  }
+   // $this->wsEnabled  = ($values['wsEnabled']) ? (int)$values['wsEnabled'] : 0;
 
     $this->ldapUserSynchMappings = $this->synchMappingsFromForm($values, $storage);
 

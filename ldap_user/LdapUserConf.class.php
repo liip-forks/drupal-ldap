@@ -165,9 +165,9 @@ class LdapUserConf {
 
   public $orphanedCheckQty = 100;
 
-  public $wsKey = NULL;
-  public $wsEnabled = 0;
-  public $wsUserIps = array();
+// public $wsKey = NULL;
+//  public $wsEnabled = 0;
+//  public $wsUserIps = array();
 
   public $provisionsLdapEvents = array();
   public $provisionsDrupalEvents = array();
@@ -183,11 +183,9 @@ class LdapUserConf {
     'manualAccountConflict',
     'acctCreation',
     'ldapUserSynchMappings',
-    'wsKey',
-    'wsEnabled',
-    'wsUserIps',
-  );
 
+  );
+// 'wsKey','wsEnabled','wsUserIps',
   function __construct() {
     $this->load();
 

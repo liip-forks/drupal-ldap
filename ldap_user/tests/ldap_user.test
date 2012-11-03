@@ -1082,8 +1082,8 @@ class LdapUserUITests extends LdapTestCase {
 
     // Populate the field settings with new settings.
     $sid = 'activedirectory1';
-    $wsKey = 'sdafjlksjadsdafjkksdafjsdfsdjfsdf';
-    $wsUserIps = array('1.2.3.4', '5.6.7.8');
+   // $wsKey = 'sdafjlksjadsdafjkksdafjsdfsdjfsdf';
+   // $wsUserIps = array('1.2.3.4', '5.6.7.8');
 
     $edit_direct_map = array(
 
@@ -1094,14 +1094,12 @@ class LdapUserUITests extends LdapTestCase {
       'orphanedDrupalAcctBehavior' => 'ldap_user_orphan_email',
       'orphanedCheckQty' => '50',
       'ldapEntryProvisionServer' => $sid,
-      'wsEnabled' => TRUE,
-
-      'wsKey' => $wsKey,
     );
+    // 'wsEnabled' => TRUE, 'wsKey' => $wsKey,
 
+
+// 'wsUserIps' => join("\n", $wsUserIps),
     $edit = $edit_direct_map + array(
-      'wsUserIps' => join("\n", $wsUserIps),
-
       'drupalAcctProvisionTriggers[' . LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE . ']' => TRUE,
       'drupalAcctProvisionTriggers[' . LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE . ']' => TRUE,
 
@@ -1152,9 +1150,9 @@ class LdapUserUITests extends LdapTestCase {
       $this->assertTrue($ldap_user_conf->{$property} == $value, $property . ' ' . t('field set correctly'), $this->testId('user interface tests'));
     }
 
-    $this->assertTrue(
-      ($ldap_user_conf->wsUserIps[0] == $wsUserIps[0] && $ldap_user_conf->wsUserIps[1] == $wsUserIps[1])
-      , t('webserice ips set correctly'), $this->testId('user interface tests'));
+   // $this->assertTrue(
+   //   ($ldap_user_conf->wsUserIps[0] == $wsUserIps[0] && $ldap_user_conf->wsUserIps[1] == $wsUserIps[1])
+    //  , t('webserice ips set correctly'), $this->testId('user interface tests'));
 
     $this->assertTrue(
       isset($ldap_user_conf->drupalAcctProvisionTriggers[LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE]) &&

@@ -25,7 +25,11 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   protected $ldap_test_data;
 
   function setUp() {
-    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role')); // don't need any real servers, configured, just ldap_servers code base
+    parent::setUp(array(
+      'ldap_authentication',
+      'ldap_authorization',
+      'ldap_authorization_drupal_role'
+      )); // don't need any real servers, configured, just ldap_servers code base
     variable_set('ldap_simpletest', 2);
   }
 
@@ -58,7 +62,13 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $sid = 'activedirectory1';
     $testid = 'MixedModeUserLogon3';
     $sids = array($sid);
-    $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'MixedModeUserLogon3');
+    $this->prepTestData(
+      'hogwarts',
+      $sids,
+      'provisionToDrupal',
+      'MixedModeUserLogon3',
+      'drupal_role_authentication_test'
+    );
 
     $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
@@ -170,7 +180,14 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $sid = 'activedirectory1';
     $testid = 'ExclusiveModeUserLogon3';
     $sids = array($sid);
-    $this->prepTestData('hogwarts', $sids, 'ad_authentication', 'ExclusiveModeUserLogon3');
+    $this->prepTestData(
+      'hogwarts',
+      $sids,
+      'ad_authentication',
+      'ExclusiveModeUserLogon3',
+      'drupal_role_authentication_test'
+      );
+
     $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
 
@@ -281,7 +298,13 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $sid = 'activedirectory1';
     $testid = 'WL3';
     $sids = array($sid);
-    $this->prepTestData('hogwarts', array($sid), 'provisionToDrupal', 'WL3');
+    $this->prepTestData(
+      'hogwarts',
+      array($sid),
+      'provisionToDrupal',
+      'WL3',
+      'drupal_role_authentication_test'
+      );
 
     //debug($this->testFunctions);
     $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
@@ -326,7 +349,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowOnlyIfTextInDn = array('pot');
     $authenticationConf->save();
-
+    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
 
    /**
     * LDAP_authen.WL.allow.match -- desirect_result: authenticate success
@@ -350,14 +373,14 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowOnlyIfTextInDn = array();
     $authenticationConf->save();
-
+    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
     /**
     * prep LDAP_authen.WL.exclude
     */
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfTextInDn = array('cn=ssnape');
     $authenticationConf->save();
-
+    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
 
    /**
     * LDAP_authen.WL.exclude.match -- desirect_result: authenticate fail
@@ -380,7 +403,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfTextInDn = array();
     $authenticationConf->save();
-
+    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
 
     /**
     * prep LDAP_authen.WL.php
@@ -397,13 +420,17 @@ class LdapAuthenticationTestCase extends LdapTestCase {
       ";
 
     $authenticationConf->save();
-
+    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
    /**
     * LDAP_authen.WL.php.php disabled -- desired result: authenticate fail with warning the authentication disabled
     */
     module_disable(array('php'));
     $this->AttemptLogonNewUser('adumbledore');
-    $this->assertText(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG, 'With php disabled and php code in whitelist, refuse authentication. (allowTestPhp).', $testid);
+    $this->assertText(
+      LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG,
+      'With php disabled and php code in whitelist, refuse authentication. (allowTestPhp).',
+      $testid
+    );
     module_enable(array('php'));
 
 
@@ -418,7 +445,11 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     */
 
     $this->AttemptLogonNewUser('adumbledore');
-    $this->assertText(t('User disallowed'), 'User unable to authenticate  because php returned false (allowTestPhp).', $testid);
+    $this->assertText(
+      t('User disallowed'),
+      'User unable to authenticate because php returned false (allowTestPhp).',
+      $testid
+    );
 
 
   /**
@@ -427,7 +458,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowTestPhp = '';
     $authenticationConf->save();
-
+    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
 
   /**
    * need to test username changes with PUID
@@ -475,7 +506,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfNoAuthorizations = 1;
     $authenticationConf->save();
-
+    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
     /**
      * LDAP_authen.WL1.excludeIfNoAuthorizations.failsafe
      * test for excludeIfNoAuthorizations set to true and ldap_authorization disabled
@@ -484,23 +515,42 @@ class LdapAuthenticationTestCase extends LdapTestCase {
 
 
     $this->AttemptLogonNewUser('hpotter');
-    $this->assertText(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG, t('Authentication prohibited when excludeIfNoAuthorizations = true and LDAP Authorization disabled. LDAP_authen.WL1.excludeIfNoAuthorizations.failsafe'), $testid);
+    $this->assertText(
+      LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG,
+      t('Authentication prohibited when excludeIfNoAuthorizations =
+        true and LDAP Authorization disabled.
+        LDAP_authen.WL1.excludeIfNoAuthorizations.failsafe'),
+      $testid
+    );
 
+    module_enable(array('ldap_authorization'), TRUE);
     module_enable(array('ldap_authorization_drupal_role'), TRUE);
+    $consumer = ldap_authorization_get_consumers('drupal_role', TRUE, TRUE); // clear static cache
+
     $this->AttemptLogonNewUser('hpotter');
-    $this->assertText(t('Member for'), 'User able to authenticate because of excludeIfNoAuthorizations setting.', $testid);
+    $this->assertText(
+      t('Member for'),
+      'User able to authenticate because of excludeIfNoAuthorizations setting.',
+      $testid
+    );
 
     /**
      * LDAP_authen.WL1.excludeIfNoAuthorizations.hasNoAuthorizations
-     * test for excludeIfNoAuthorizations set to true and No consumer granted authorizations
+     * test for excludeIfNoAuthorizations set to true and No consumer
+     * granted authorizations
      */
 
     $this->AttemptLogonNewUser('ssnape');
-    $this->assertText(t('Sorry, unrecognized username or password'), 'User unable to authenticate because of excludeIfNoAuthorizations setting.', $testid);
+    $this->assertText(
+      t('User disallowed'),
+      'User unable to authenticate because of excludeIfNoAuthorizations setting.',
+      $testid
+    );
 
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfNoAuthorizations = 0;
     $authenticationConf->save();
+    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
     module_disable(array('ldap_authorization_drupal_role', 'ldap_authorization'));
 
 

@@ -87,24 +87,25 @@ function ldap_user_menu() {
     'type' => MENU_LOCAL_ACTION,
   );
 
-  $ws_arg_start = count(explode('/', LDAP_USER_WS_USER_PATH));
-  $items[LDAP_USER_WS_USER_PATH] = array(
-    'title' => 'Webservice Path',
-    'page callback' => 'ldap_user_ws',
-    'page arguments' => array($ws_arg_start, $ws_arg_start + 1, $ws_arg_start + 2, $ws_arg_start + 3),
-    'access arguments' => array('view content'),
-    'file' => 'ldap_user.ws.inc',
-  );
+ // $ws_arg_start = count(explode('/', LDAP_USER_WS_USER_PATH));
+// $items[LDAP_USER_WS_USER_PATH] = array(
+//   'title' => 'Webservice Path',
+ //   'page callback' => 'ldap_user_ws',
+ //   'page arguments' => array($ws_arg_start, $ws_arg_start + 1, $ws_arg_start + 2, $ws_arg_start + 3),
+ //   'access arguments' => array('view content'),
+ //   'file' => 'ldap_user.ws.inc',
+ // );
 
   return $items;
 }
 
-function ldap_user_ws_urls_item_list() {
+/**
+ * function ldap_user_ws_urls_item_list() {
   module_load_include('inc', 'ldap_user', 'ldap_user.ws');
   return _ldap_user_ws_urls_item_list();
-
-
 }
+**/
+
 /**
  * Implements hook_init().
  */
@@ -185,6 +186,10 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
     }
     else {
       $ldap_server = $params['sid'];
+    }
+
+    if ($ldap_server === FALSE) { // failed to find enabled server
+      return;
     }
 
     $ldap_user_conf = ldap_user_conf();
@@ -678,7 +683,7 @@ function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL, $reset 
  */
 function ldap_user_user_login(&$edit, $account) {
 
- // dpm('ldap_user_user_login'); dpm($edit); dpm($account);
+  //dpm('ldap_user_user_login'); dpm($edit); dpm($account);
 
   if ($account->uid == 1) {
     return; // do not provision or synch user 1
@@ -726,7 +731,9 @@ function ldap_user_user_login(&$edit, $account) {
     $ldap_user = ldap_servers_get_user_ldap_data($account->name, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
     $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE);
     $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
+ //dpm('ldap_user_user_login.user_save');  dpm($account); dpm($user_edit);
     $account = user_save($account, $user_edit, 'ldap_user');
+   // dpm('ldap_user_user_login.post user_save');  dpm($account);
   }
 
 

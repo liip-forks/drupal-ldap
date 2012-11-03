@@ -287,7 +287,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
    * extends grantSingleAuthorization()
    *
    * @param drupal user objet $user
-   * @param string $authorization_id in form organic group gid-rid such as 7-2
+   * @param string mixed case $authorization_id in form organic group gid-rid such as 7-2
    * @param array $user_auth_data is array specific to this consumer_type.  Stored in $user->data['ldap_authorizations']['og_group']
    *
    * @return TRUE if granted or grant exists, FALSE if not grantable or failed.

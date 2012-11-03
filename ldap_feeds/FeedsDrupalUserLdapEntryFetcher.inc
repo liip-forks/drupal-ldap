@@ -39,8 +39,14 @@ class FeedsDrupalUserLdapEntryFetcherResult extends FeedsFetcherResult {
       ->entityCondition('entity_type', 'user')
       ->execute();
     $users = entity_load('user', array_keys($entities['user']));
-    $selectedRoles = array_filter($this->filterRoles);
-    $filterOnRoles = (boolean)(count($selectedRoles));
+    if ($this->filterRoles) {
+      $selectedRoles = array_filter($this->filterRoles);
+      $filterOnRoles = (boolean)(count($selectedRoles));
+    }
+    else {
+      $filterOnRoles = FALSE;
+    }
+
 
     foreach ($users as $uid => $user) {
       if (

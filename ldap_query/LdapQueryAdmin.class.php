@@ -157,7 +157,8 @@ class LdapQueryAdmin extends LdapQuery {
   }
 
   public function drupalForm($op) {
-    $form['#prefix'] = t('<p>Setup an LDAP query to be used by other modules such as LDAP Feeds, LDAP Provision, etc.</p>');
+    $form['#prefix'] = t('<p>Setup an LDAP query to be used by other modules
+      such as LDAP Feeds.</p>');
 
     $form['basic'] = array(
       '#type' => 'fieldset',
