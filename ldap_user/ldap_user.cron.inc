@@ -10,13 +10,15 @@ function _ldap_user_orphans($ldap_user_conf) {
 
   return; // this is unfinished code
 
-  if (!$ldap_user_conf->orphanedDrupalAcctBehavior || $ldap_user_conf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_do_not_check') {
+  if (!$ldap_user_conf->orphanedDrupalAcctBehavior ||
+    $ldap_user_conf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_do_not_check') {
     return;
   }
 
   $qty = ((int)($ldap_user_conf->orphanedCheckQty) > 0) ? $ldap_user_conf->orphanedCheckQty : 50;
 
-  // query $qty ldap associated drupal accounts (ldap_user_current_dn not null) ordered by ldap_user_last_checked
+  // query $qty ldap associated drupal accounts (ldap_user_current_dn not null)
+  // ordered by ldap_user_last_checked
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'user')
   ->fieldCondition('ldap_user_current_dn', 'value', 'NULL', '!=')
@@ -26,17 +28,22 @@ function _ldap_user_orphans($ldap_user_conf) {
   $result = $query->execute();
 
 
-  // loop through all $qty and generate single ldap query for each 50 entries only returning dn
+  // loop through all $qty and generate single ldap query for each 50 entries
+  // only returning dn
+
+  
   $ldap_entries = array();
   $drupal_users = array();
   $orphans = array();
+  $ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
+  $watchdogs_sids_missing = array();
   if (isset($result['user']) && count($result['user']) > 0) {
     $batch = 1;
     $uids = array_keys($result['user']);
-    $batches = (int)(count($uids) / 50) + 1;
+    $batches = (int)(count($uids) / LDAP_SERVERS_MAXFILTER_ORS) + 1;
     for ($batch=1; $batch <= $batches; $batch++) {
       $filters = array();
-      for ($i = ($batch - 1)* 50; $i < ($batch)* 50; $i++ ) {
+      for ($i = ($batch - 1)* LDAP_SERVERS_MAXFILTER_ORS; $i < ($batch)* LDAP_SERVERS_MAXFILTER_ORS; $i++ ) {
         $uid = $uids[$i];
         $user = $result['user'][$uid];
         $sid = $user['ldap_user_puid_sid'][0]['values'];
@@ -48,6 +55,13 @@ function _ldap_user_orphans($ldap_user_conf) {
         }
       }
       foreach ($filters as $sid => $puid_attrs) {
+        if (!isset($ldap_servers[$sid])) {
+          if (!isset($watchdogs_sids_missing[$sid])) {
+            watchdog('ldap_user', 'Server %sid not enabled, but needed to remove orphaned ldap users', array('%sid' => $sid), WATCHDOG_ERROR);
+            $watchdogs_sids_missing[$sid] = TRUE;
+          }
+          continue;
+        }
         foreach ($puid_attrs as $puid_attr => $ors) {
           $query = "|" . join('', $ors);
           // check that server with sid still exists and is enabled

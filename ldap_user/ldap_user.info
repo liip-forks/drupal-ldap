@@ -4,6 +4,7 @@ Configures synching of ldap entries to drupal user properties, fields and the op
 package = "Lightweight Directory Access Protocol"
 dependencies[] = ldap_servers
 dependencies[] = entity
+dependencies[] = number
 core = 7.x
 
 files[] = ldap_user.api.php

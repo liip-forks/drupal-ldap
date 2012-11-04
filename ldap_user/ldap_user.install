@@ -396,7 +396,7 @@ function ldap_user_update_7201() {
  */
 
 function ldap_user_update_7202() {
-
+  module_enable(array('number'));
   $field_info = field_info_field('ldap_user_last_checked');
   if (!$field_info) {
     $field_confs = ldap_user_user_entity_fields();
@@ -414,3 +414,37 @@ function ldap_user_update_7202() {
  * it should also move user->data['ldap_authentication'] to user->data['ldap_user']
  *
  */
+
+/**
+ * make sure all user entity fields are created
+ */
+
+function ldap_user_update_7203() {
+  module_enable(array('number'));
+
+  $fields_added = ldap_user_update_check_user_fields();
+  
+  if (count($fields_added)) {
+    $fields = join(', ', $fields_added);
+    return t('%fields added to user entity.', array('%fields' => $fields));
+  }
+  else {
+    return t('no fields needed to be added to user entity.');
+  }
+
+}
+
+function ldap_user_update_check_user_fields() {
+
+  $fields_added = array();
+  foreach (ldap_user_user_entity_fields() as $field_id => $field_conf) {
+    $field_info = field_info_field($field_id);
+    if (!$field_info) {
+      $fields_added[] = $field_id;
+      field_create_field($field_conf['field']);
+      field_create_instance($field_conf['instance']);
+    }
+  }
+  return $fields_added;
+
+}

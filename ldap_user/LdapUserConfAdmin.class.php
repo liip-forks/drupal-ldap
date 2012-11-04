@@ -167,7 +167,7 @@ class LdapUserConfAdmin extends LdapUserConf {
     );
 
     $account_options = array();
-    $account_options['ldap_user_orphan_do_not_check'] = t('Do not check for orphaned Drupal accounts.)');
+    $account_options['ldap_user_orphan_do_not_check'] = t('Do not check for orphaned Drupal accounts.');
     $account_options['ldap_user_orphan_email'] = t('Perform no action, but email list of orphaned accounts. (All the other options will send email summaries also.)');
     foreach (user_cancel_methods() as $option_name => $option) {
       $account_options[$option_name] = $option['#title'];
