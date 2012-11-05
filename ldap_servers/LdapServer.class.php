@@ -373,7 +373,12 @@ class LdapServer {
 
   }
 
-
+  /**
+   * @param $ldap_result as ldap link identifier
+   *
+   * @return FALSE on error or number of entries.
+   *   (if 0 entries will return 0)
+   */
   public function countEntries($ldap_result) {
     return ldap_count_entries($this->connection, $ldap_result);
   }
@@ -564,6 +569,58 @@ class LdapServer {
     }
     return $result;
   }
+
+  /**
+   * Perform an LDAP search on all base dns and aggregate into one result
+   *
+   * @param string $filter
+   *   The search filter. such as sAMAccountName=jbarclay.  attribute values (e.g. jbarclay) should be esacaped before calling
+
+   * @param array $attributes
+   *   List of desired attributes. If omitted, we only return "dn".
+   *
+   * @remaining params mimick ldap_search() function params
+   *
+   * @return
+   *   An array of matching entries->attributes (will have 0
+   *   elements if search returns no results),
+   *   or FALSE on error on any of the basedn queries
+   */
+
+  public function searchAllBaseDns(
+    $filter,
+    $attributes = array(),
+    $attrsonly = 0,
+    $sizelimit = 0,
+    $timelimit = 0,
+    $deref = NULL,
+    $scope = LDAP_SCOPE_SUBTREE
+    ) {
+
+    $all_entries = array();
+    foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
+      $entries = $this->search($base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref, $scope);  // no attributes, just dns needed
+      if ($entries === FALSE) {
+        return FALSE;
+      }
+      if (count($all_entries) == 0) {
+        $all_entries = $entries;
+      }
+      else {
+        $existing_count = $all_entries['count'];
+        unset($entries['count']);
+        foreach ($entries as $i => $entry) {
+          $all_entries[$existing_count + $i] = $entry;
+        }
+        $all_entries['count'] = count($all_entries);
+      }
+    }
+
+    return $all_entries;
+
+  }
+
+
   /**
    * Perform an LDAP search.
    * @param string $basedn
@@ -578,7 +635,9 @@ class LdapServer {
    * @remaining params mimick ldap_search() function params
    *
    * @return
-   *   An array of matching entries->attributes, or FALSE if the search is empty.
+   *   An array of matching entries->attributes (will have 0
+   *   elements if search returns no results),
+   *   or FALSE on error.
    */
 
   function search($base_dn = NULL, $filter, $attributes = array(),
@@ -755,6 +814,14 @@ class LdapServer {
     return $aggregated_entries;
   }
 
+  /**
+   * execute ldap query and return ldap records
+   *
+   * @param scope
+   * @params see pagedLdapQuery $params
+   *
+   * @return array of ldap entries
+   */
   function ldapQuery($scope, $params) {
 
     $this->connectAndBindIfNotAlready();

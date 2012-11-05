@@ -131,9 +131,27 @@ function ldap_user_cron() {
   $ldap_user_conf = ldap_user_conf();
   if ($ldap_user_conf->orphanedDrupalAcctBehavior != 'ldap_user_orphan_do_not_check') {
     module_load_include('inc', 'ldap_user', 'ldap_user.cron');
-    _ldap_user_orphans($ldap_user_conf);
+    $result = _ldap_user_orphans($ldap_user_conf);
+    if ($result !== TRUE) {
+      watchdog('ldap_user', 'LDAP User check for orphaned ldap provisioned Drupal accounts failed', array(), WATCHDOG_ERROR);
+    }
   }
 }
+
+/**
+ * Implements hook_mail().
+ */
+function ldap_user_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'orphaned_accounts':
+      $message['subject'] =  variable_get('site_name') . ' ' . t('Orphaned LDAP Users');
+      $message['body'][] =  t('The following Drupal users no longer have corresponding LDAP Entries.  Perhaps they have been removed from the LDAP and should be removed:')
+        . "\n\n" . t('username,mail,edit url') . "\n" .
+        join("\n", $params['accounts']);
+      break;
+  }
+}
+
 
 /**
  * Implements hook_ldap_derived_user_name_alter().

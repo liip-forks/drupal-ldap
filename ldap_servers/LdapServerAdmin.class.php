@@ -737,7 +737,7 @@ public function drupalFormSubmit($op, $values) {
           '#type' => 'textarea',
           '#cols' => 50,
           '#rows' => 6,
-          '#title' => t('Base DNs for LDAP users, groups, and other entries this server configuration.'),
+          '#title' => t('Base DNs for LDAP users, groups, and other entries.'),
           '#description' => '<div>' . t('What DNs have entries relavant to this configuration?
             e.g. <code>ou=campus accounts,dc=ad,dc=uiuc,dc=edu</code>
             Keep in mind that every additional basedn likely doubles the number of queries.  Place the

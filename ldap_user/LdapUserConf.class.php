@@ -98,7 +98,6 @@ class LdapUserConf {
 
   public $setsLdapPassword = TRUE; // @todo default to FALSE and check for mapping to set to true
 
-
   public $loginConflictResolve = FALSE;
   /**
    * array of field synch mappings provided by all modules (via hook_ldap_user_attrs_list_alter())
