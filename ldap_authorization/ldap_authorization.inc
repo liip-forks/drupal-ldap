@@ -234,9 +234,9 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
      * an array of filtered and mapped authorization ids
      */
 
+    $filtered_ldap_authorizations = array();
 
     if ($consumer->consumerConf->useMappingsAsFilter) { // filter + map
-      $filtered_ldap_authorizations = array();
       foreach ($consumer->consumerConf->normalizedMappings as $mapping_filter) {
         $map_from = $mapping_filter[0];
         $map_to = $mapping_filter[1];
@@ -266,8 +266,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $filtered_ldap_authorizations[drupal_strtolower($authorization_id)] = $authorization_id;
       }
     }
-
-    //$filtered_ldap_authorizations = array_unique($filtered_ldap_authorizations);
 
     $watchdog_tokens['%filtered_ldap_authorizations'] = join(', ', array_keys($filtered_ldap_authorizations));
     if ($detailed_watchdog_log) {
