@@ -180,7 +180,8 @@ class LdapUserConfAdmin extends LdapUserConf {
 
     $form['basic_to_drupal']['orphanedDrupalAcctBehavior'] = array(
       '#type' => 'radios',
-      '#title' => t('Action to perform on Drupal account that no longer has a corresponding LDAP entry'),
+      '#title' => t('Action to perform on Drupal account that no longer has a
+        corresponding LDAP entry'),
       '#required' => 0,
       '#default_value' => $this->orphanedDrupalAcctBehavior,
       '#options' => $account_options,
@@ -982,10 +983,24 @@ EOT;
       LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE => t('Delete LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
     );
 
-    $values['orphanedDrupalAcctBehaviorDescription'] = t('These actions will only occur if the query to server is successful
-      and does not return a user entry.  If the ldap server is down, all LDAP associated users will not be deleted.  When
-      initially using this option, its best to simply check email and delete the accounts by hand.  When you are happy with the
-      behavior, switch to one of the automated options.');
+    $values['orphanedDrupalAcctBehaviorDescription'] = '<ul>' .
+       '<li style="color: red">'. t('This is a new feature as of 11/7/2012!
+        It is highly recommended to use the "Perform no action,
+        but email list of orphaned accounts" for some time before using the
+        "Disable the account" options.') . '</li>' .
+
+      '<li>'. t('These actions will only occur if the query to server is successful
+      and does not return a user entry.  If the ldap server is down or otherwise
+      cannot be connected to, no actions
+      will be performed.') . '</li>' .
+
+      '<li>' .
+      t('When initially using this option, its best to simply check email and
+        delete the accounts by hand.  When you are happy with the
+      behavior, switch to one of the automated options.') . '</li>' .
+
+      '</ul>';
+
 
     $values['manualAccountConflictOptions'] =  array(
       LDAP_USER_MANUAL_ACCT_CONFLICT_REJECT => t('Reject manual creation of Drupal accounts that conflict with LDAP Accounts.'),

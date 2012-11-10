@@ -1080,7 +1080,7 @@ class LdapServer {
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '(' . $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ')';
-      $result = $this->search($basedn, $filter, array_keys($attributes));
+      $result = $this->search($basedn, $filter, $attributes);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.
@@ -1099,11 +1099,11 @@ class LdapServer {
       $name_attr = $this->user_attr;
 
       if (isset($match[$name_attr][0])) {
-        // leave $name_attr as is if matched
+        // leave name
       }
       elseif (isset($match[drupal_strtolower($name_attr)][0])) {
-        // if lowercase version of $name_attr  found use it
         $name_attr = drupal_strtolower($name_attr);
+
       }
       else {
         if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {

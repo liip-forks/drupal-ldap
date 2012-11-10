@@ -21,6 +21,8 @@
 
 function _ldap_user_orphans($ldap_user_conf) {
 
+  // return TRUE; // this is untested code
+
   if (!$ldap_user_conf->orphanedDrupalAcctBehavior ||
     $ldap_user_conf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_do_not_check') {
     return TRUE;
@@ -46,11 +48,13 @@ function _ldap_user_orphans($ldap_user_conf) {
     ->addMetaData('account', user_load(1)); // run the query as user 1
   $result = $query->execute();
 
+  //debug("ldap_user_orphan: "); debug(count(array_keys($result['user'])));
   // if maxed out reset uid check counter
   if (count($result) < $ldap_user_conf->orphanedCheckQty) {
     variable_set('ldap_user_cron_last_orphan_checked', 0);
   }
-
+  //dpm($result);  dpm(variable_get('ldap_user_cron_last_orphan_checked', 0));
+// debug($result);  debug("_ldap_user_orphans, last orphan checked=" . variable_get('ldap_user_cron_last_orphan_checked', 0));
   $drupal_users = array();
   $ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
   $watchdogs_sids_missing_watchdogged = array();
@@ -140,6 +144,7 @@ function _ldap_user_orphans($ldap_user_conf) {
         }
 
         unset($ldap_entries['count']);
+       // dpm("ldap_entries"); dpm($ldap_entries);
         foreach ($ldap_entries as $i => $ldap_entry) {
           $puid = $ldap_entry[$puid_attr][0];
           $drupal_users[$sid][$puid_attr][$puid]['exists'] = TRUE;
@@ -147,7 +152,6 @@ function _ldap_user_orphans($ldap_user_conf) {
       }
     }
   }
-
   //3. we now have $drupal_users[$sid][$puid_attr][$puid]['exists'] = FALSE | TRUE;
   if ($ldap_user_conf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_email') {
     $email_list = array();
@@ -157,6 +161,7 @@ function _ldap_user_orphans($ldap_user_conf) {
   $email_list = array();
   foreach ($drupal_users as $sid => $puid_x_puid_attrs) {
     foreach ($puid_x_puid_attrs as $puid_attr => $puids) {
+      // debug("orphaned puid data"); debug($puids);
       foreach ($puids as $puid => $user_data) {
         $account = $accounts[$user_data['uid']];
         $user_edit['ldap_user_last_checked'][LANGUAGE_NONE][0]['value'] = $check_time;
@@ -169,7 +174,7 @@ function _ldap_user_orphans($ldap_user_conf) {
            *     user_cancel_reassign, user_cancel_delete
            */
           if ($ldap_user_conf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_email') {
-            $email_list[] = $account->name . "," . $account->mail . "," . $base_url . "/user/" . $account->uid . "/edit";
+            $email_list[] = $account->name . "," . $account->mail . "," . $base_url . "/user/$uid/edit";
           }
           else {
             _user_cancel(array(), $account, $ldap_user_conf->orphanedDrupalAcctBehavior);

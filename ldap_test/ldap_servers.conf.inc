@@ -180,7 +180,7 @@ $conf['activedirectory1']['properties']  = array(
   );
 
 $conf['activedirectory1']['methodResponses']['connect'] = LDAP_SUCCESS;
-$conf['activedirectory1']['clones'] = 12;
+$conf['activedirectory1']['clones'] = LDAP_TEST_USER_ORPHAN_CLONE_COUNT;
 
 $conf['activedirectory1']['search_results'] = array();
 
