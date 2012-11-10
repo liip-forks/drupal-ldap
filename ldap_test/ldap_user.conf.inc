@@ -23,7 +23,8 @@ $conf['default']  = array(
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
-    )
+    ),
+   'orphanedCheckQty' => 50,
   );
 /**
  *    'wsEnabled'  => 0,
@@ -44,7 +45,8 @@ $conf['ad_authentication'] = array(
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
-    )
+    ),
+   'orphanedCheckQty' => 50,
   );
 
   $conf['ad_authorization'] = array(
@@ -62,7 +64,8 @@ $conf['ad_authentication'] = array(
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
-    )
+    ),
+   'orphanedCheckQty' => 50,
   );
 
   $conf['provisionToDrupal']  = array(
@@ -78,7 +81,8 @@ $conf['ad_authentication'] = array(
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
-    )
+    ),
+   'orphanedCheckQty' => 50,
   );
 
 
@@ -147,6 +151,7 @@ $conf['ad_authentication'] = array(
       ),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
     ),
+   'orphanedCheckQty' => 50,
   );
 
   $conf['provisionToLdap_activedirectory1']  = array(

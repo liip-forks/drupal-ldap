@@ -141,7 +141,8 @@ class LdapServerTest extends LdapServer {
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
 
-    // debug("ldap test server search base_dn=$base_dn, filter=$filter");
+  //  debug("ldap test server search base_dn=$base_dn, filter=$filter");
+
     $lcase_attribute = array();
     foreach ($attributes as $i => $attribute_name) {
       $lcase_attribute[] = drupal_strtolower($attribute_name);
@@ -155,12 +156,17 @@ class LdapServerTest extends LdapServer {
         $base_dn = $this->basedn[0];
       }
       else {
+        // debug("fail basedn: ldap test server search base_dn=$base_dn, filter=$filter");
         return FALSE;
       }
     }
 
-    // return prepolulated search results in test data array if present
+    /**
+     * Search CASE 1: for some mock ldap servers, a set of fixed ldap filters
+     * are prepolulated in test data
+     */
     if (isset($this->searchResults[$filter][$base_dn])) {
+    //  debug('case1');
       $results = $this->searchResults[$filter][$base_dn];
       foreach ($results as $i => $entry) {
         if (is_array($entry) && isset($entry['FULLENTRY'])) {
@@ -173,57 +179,165 @@ class LdapServerTest extends LdapServer {
       return $results;
     }
 
+    /**
+     * Search CASE 2: attempt to programmatically evaluate ldap filter
+     * by looping through fake ldap entries
+     */
     $base_dn = drupal_strtolower($base_dn);
     $filter = trim($filter, "()");
+   // debug("trimmed filter=$filter");
+    $subqueries = array();
+    $operand = FALSE;
 
-    list($filter_attribute, $filter_value) = explode('=', $filter);
-    $filter_attribute =  drupal_strtolower($filter_attribute);
+    if (strpos($filter, '&') === 0) {
+     // debug('2.A.');
+     /**
+     * case 2.A.: filter of form (&(<attribute>=<value>)(<attribute>=<value>)(<attribute>=<value>))
+     *  such as (&(samaccountname=hpotter)(samaccountname=hpotter)(samaccountname=hpotter))
+     */
+      $operand = '&';
+      $filter = substr($filter, 1);
+      $filter = trim($filter, "()");
+      $parts = explode(')(', $filter);
+      foreach ($parts as $i => $pair) {
+        $subqueries[] = explode('=', $pair);
+      }
+    }
+    elseif (strpos($filter, '|') === 0) {
+      //debug('2.B.');
+     /**
+     * case 2.B: filter of form (|(<attribute>=<value>)(<attribute>=<value>)(<attribute>=<value>))
+     *  such as (|(samaccountname=hpotter)(samaccountname=hpotter)(samaccountname=hpotter))
+     */
+      $operand = '|';
+      $filter = substr($filter, 1);
+      $filter = trim($filter, "()");
+      $parts = explode(')(', $filter);
+      $parts = explode(')(', $filter);
+      foreach ($parts as $i => $pair) {
+        $subqueries[] = explode('=', $pair);
+      }
+         // debug("operand=$operand, filter=$filter subqueries"); debug($subqueries);
+   // debug($this->entries['cn=hpotter,ou=people,dc=hogwarts,dc=edu']);
+   // debug($this->entries['cn=clone0,ou=people,dc=hogwarts,dc=edu']);
+    }
+    elseif (count(explode('=', $filter)) == 2) {
+     // debug('2.C.');
+     /**
+     * case 2.C.: filter of form (<attribute>=<value>)
+     *  such as (samaccountname=hpotter)
+     */
+      $operand = '|';
+      $subqueries[] = explode('=', $filter);
+    }
+    else {
+      debug('no case');
+      return FALSE;
+    }
+
+
+
+
     // need to perform feaux ldap search here with data in
     $results = array();
-    foreach ($this->entries as $dn => $entry) {
-      $dn_lcase = drupal_strtolower($dn);
 
-      // if not in basedn, skip
-      // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
-      // should be leftmost string in:
-      // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
-      //$pos = strpos($dn_lcase, $base_dn);
-      $substring = strrev(substr(strrev($dn_lcase), 0, strlen($base_dn)));
-      $cascmp =  strcasecmp($base_dn, $substring);
-      //debug("dn_lcase=$dn_lcase, base_dn=$base_dn,pos=$pos,substring=$substring,cascmp=$cascmp");
-      if ($cascmp !== 0) {
-        continue; // not in basedn
-      }
-      // if doesn't filter attribute has no data, continue
-      $attr_value_to_compare = FALSE;
-      foreach ($entry as $attr_name => $attr_value) {
-        if (drupal_strtolower($attr_name) == $filter_attribute) {
-          $attr_value_to_compare = $attr_value;
-          break;
+    if ($operand == '|') {
+      foreach ($subqueries as $i => $subquery) {
+        $filter_attribute = drupal_strtolower($subquery[0]);
+        $filter_value = $subquery[1];
+      //  debug("filter_attribute=$filter_attribute, filter_value=$filter_value");
+        foreach ($this->entries as $dn => $entry) {
+          $dn_lcase = drupal_strtolower($dn);
+
+          // if not in basedn, skip
+          // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
+          // should be leftmost string in:
+          // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
+          //$pos = strpos($dn_lcase, $base_dn);
+          $substring = strrev(substr(strrev($dn_lcase), 0, strlen($base_dn)));
+          $cascmp =  strcasecmp($base_dn, $substring);
+          //debug("dn_lcase=$dn_lcase, base_dn=$base_dn,pos=$pos,substring=$substring,cascmp=$cascmp");
+          if ($cascmp !== 0) {
+
+            continue; // not in basedn
+          }
+          // if doesn't filter attribute has no data, continue
+          $attr_value_to_compare = FALSE;
+          foreach ($entry as $attr_name => $attr_value) {
+            if (drupal_strtolower($attr_name) == $filter_attribute) {
+              $attr_value_to_compare = $attr_value;
+              break;
+            }
+          }
+         // debug("filter value=$filter_value, attr_value_to_compare="); debug($attr_value_to_compare);
+          if (!$attr_value_to_compare || drupal_strtolower($attr_value_to_compare[0]) != $filter_value) {
+            continue;
+          }
+
+          // match!
+         // debug("match"); debug($attr_value); debug($attributes);
+          $entry['dn'] = $dn;
+          if ($attributes) {
+            $selected_data = array();
+            foreach ($attributes as $i => $attr_name) {
+              $selected_data[$attr_name] = (isset($entry[$attr_name])) ? $entry[$attr_name] : NULL;
+            }
+            $results[] = $selected_data;
+          }
+          else {
+            $results[] = $entry;
+          }
         }
       }
-     // debug("filter value=$filter_value, attr_value_to_compare="); debug($attr_value_to_compare);
-      if (!$attr_value_to_compare || drupal_strtolower($attr_value_to_compare[0]) != $filter_value) {
-        continue;
-      }
+    }
+    elseif ($operand == '&') { // reverse the loops
+      foreach ($this->entries as $dn => $entry) {
+        $dn_lcase = drupal_strtolower($dn);
+        $match = TRUE; // until 1 subquery fails
+        foreach ($subqueries as $i => $subquery) {
+          $filter_attribute = drupal_strtolower($subquery[0]);
+          $filter_value = $subquery[1];
 
-      // match!
-     // debug("match"); debug($attr_value); debug($attributes);
-      $entry['dn'] = $dn;
-      if ($attributes) {
-        $selected_data = array();
-        foreach ($attributes as $i => $attr_name) {
-          $selected_data[$attr_name] = (isset($entry[$attr_name])) ? $entry[$attr_name] : NULL;
+          $substring = strrev(substr(strrev($dn_lcase), 0, strlen($base_dn)));
+          $cascmp =  strcasecmp($base_dn, $substring);
+          //debug("dn_lcase=$dn_lcase, base_dn=$base_dn,pos=$pos,substring=$substring,cascmp=$cascmp");
+          if ($cascmp !== 0) {
+            $match = FALSE;
+            break; // not in basedn
+          }
+          // if doesn't filter attribute has no data, continue
+          $attr_value_to_compare = FALSE;
+          foreach ($entry as $attr_name => $attr_value) {
+            if (drupal_strtolower($attr_name) == $filter_attribute) {
+              $attr_value_to_compare = $attr_value;
+              break;
+            }
+          }
+         // debug("filter value=$filter_value, attr_value_to_compare="); debug($attr_value_to_compare);
+          if (!$attr_value_to_compare || drupal_strtolower($attr_value_to_compare[0]) != $filter_value) {
+            $match = FALSE;
+            break; // not in basedn
+          }
+
         }
-        $results[] = $selected_data;
-      }
-      else {
-        $results[] = $entry;
+        if ($match === TRUE) {
+          $entry['dn'] = $dn;
+          if ($attributes) {
+            $selected_data = array();
+            foreach ($attributes as $i => $attr_name) {
+              $selected_data[$attr_name] = (isset($entry[$attr_name])) ? $entry[$attr_name] : NULL;
+            }
+            $results[] = $selected_data;
+          }
+          else {
+            $results[] = $entry;
+          }
+        }
       }
     }
 
     $results['count'] = count($results);
-    //debug("ldap test server search results"); debug($results);
+   // debug("ldap test server search results"); debug($results);
     return $results;
   }
 
@@ -364,9 +478,15 @@ class LdapServerTest extends LdapServer {
   public function delete($dn) {
 
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
-    if (isset($test_data['entries'][$dn])) {
-      unset($test_data['entries'][$dn]);
-      unset($test_data['ldap'][$dn]);
+   // debug("test ldap server, delete=$dn, test data="); debug(array_keys($test_data['users']));
+    $deleted = FALSE;
+    foreach (array('entries', 'users', 'groups', 'ldap') as $test_data_sub_array) {
+       if (isset($test_data[$test_data_sub_array][$dn])) {
+         unset($test_data[$test_data_sub_array][$dn]);
+         $deleted = TRUE;
+       }
+    }
+    if ($deleted) {
       variable_set('ldap_test_server__' . $this->sid, $test_data);
       $this->refreshFakeData();
       return TRUE;

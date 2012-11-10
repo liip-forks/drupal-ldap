@@ -115,86 +115,45 @@ class LdapTestFunctions  {
 
     // read csvs into key/value array
     // create fake ldap data array
-
+    $clones = empty($this->data['ldap_servers'][$sid]['clones']) ? FALSE : $this->data['ldap_servers'][$sid]['clones'];
     $server_properties = $this->data['ldap_servers'][$sid]['properties'];
     $this->getCsvLdapData($test_ldap_id);
     foreach ($this->csvTables['users'] as $guid => $user) {
       $dn = 'cn=' . $user['cn'] . ',' . $this->csvTables['conf'][$test_ldap_id]['userbasedn'];
       $this->csvTables['users'][$guid]['dn'] = $dn;
-      $attributes = array(
-        'cn' => array(
-          0 => $user['cn'],
-          'count' => 1,
-        ),
-        'mail' => array(
-          0 => $user['cn'] . '@' . $this->csvTables['conf'][$test_ldap_id]['mailhostname'],
-          'count' => 1,
-        ),
-        'uid' => array(
-          0 => $user['uid'],
-          'count' => 1,
-        ),
-        'guid' => array(
-          0 => $user['guid'],
-          'count' => 1,
-        ),
-        'sn' => array(
-          0 => $user['lname'],
-          'count' => 1,
-        ),
-        'givenname' => array(
-          0 => $user['fname'],
-          'count' => 1,
-        ),
-        'house' => array(
-          0 => $user['house'],
-          'count' => 1,
-        ),
-        'department' => array(
-          0 => $user['department'],
-          'count' => 1,
-        ),
-        'faculty' => array(
-          0 => (int)(boolean)$user['faculty'],
-          'count' => 1,
-        ),
-        'staff' => array(
-          0 => (int)(boolean)$user['staff'],
-          'count' => 1,
-        ),
-        'student' => array(
-          0 => (int)(boolean)$user['student'],
-          'count' => 1,
-        ),
-        'gpa' => array(
-          0 => $user['gpa'],
-          'count' => 1,
-        ),
-        'probation' => array(
-          0 => (int)(boolean)$user['probation'],
-          'count' => 1,
-        ),
-        'password'  => array(
-          0 => 'goodpwd',
-          'count' => 1,
-        ),
-      );
-      if ($server_properties['ldap_type']  == 'activedirectory') {
-        $attributes[$server_properties['user_attr']] =  array( 0 => $user['cn'], 'count' => 1);
-        $attributes['distinguishedname'] =  array( 0 => $dn, 'count' => 1);
-      }
-      elseif ($server_properties['ldap_type']  == 'openldap') {
-
-      }
-
-      $this->data['ldap_servers'][$sid]['users'][$dn]['attr'] = $attributes;
-      $this->data['ldap_servers_by_guid'][$sid][$user['guid']]['attr'] = $attributes;
-      $this->data['ldap_servers_by_guid'][$sid][$user['guid']]['dn'] = $dn;
-      $this->ldapData['ldap_servers'][$sid][$dn] = $attributes;
-      $this->ldapData['ldap_servers'][$sid][$dn]['count'] = count($attributes);
-
+      $attributes = $this->generateUserLDAPAttributes($test_ldap_id, $user);
+      $this->addLDAPUserToLDAPArraysFromAttributes(
+        $user,
+        $sid,
+        $dn,
+        $attributes,
+        $server_properties['ldap_type'],
+        $server_properties['user_attr']
+      ) ;
     }
 
+    if ($clones) {
+      $clonable_user = $this->csvTables['users'][101];
+      for ($i=0; $i < $clones; $i++) {
+        $user = $clonable_user;
+        $cn = "clone" . $i;
+        $dn = 'cn=' . $cn . ',' . $this->csvTables['conf'][$test_ldap_id]['userbasedn'];
+        $user['cn'] = $cn;
+        $user['dn'] = $dn;
+        $user['uid'] = 20 + $i;
+        $user['guid'] = 120 + $i;
+        $user['lname'] = $user['lname'] . "_$i";
+        $attributes = $this->generateUserLDAPAttributes($test_ldap_id, $user);
+        $this->addLDAPUserToLDAPArraysFromAttributes(
+          $user,
+          $sid,
+          $dn,
+          $attributes,
+          $server_properties['ldap_type'],
+          $server_properties['user_attr']
+        );
+      }
+    }
 
     foreach ($this->csvTables['groups'] as $guid => $group) {
       $dn = 'cn=' . $group['cn'] . ',' . $this->csvTables['conf'][$test_ldap_id]['groupbasedn'];
@@ -263,6 +222,85 @@ class LdapTestFunctions  {
     $current_sids = variable_get('ldap_test_servers', array());
     $current_sids[] = $sid;
     variable_set('ldap_test_servers', array_unique($current_sids));
+  }
+
+  public function generateUserLDAPAttributes($test_ldap_id, $user) {
+    $attributes = array(
+      'cn' => array(
+        0 => $user['cn'],
+        'count' => 1,
+      ),
+      'mail' => array(
+        0 => $user['cn'] . '@' . $this->csvTables['conf'][$test_ldap_id]['mailhostname'],
+        'count' => 1,
+      ),
+      'uid' => array(
+        0 => $user['uid'],
+        'count' => 1,
+      ),
+      'guid' => array(
+        0 => $user['guid'],
+        'count' => 1,
+      ),
+      'sn' => array(
+        0 => $user['lname'],
+        'count' => 1,
+      ),
+      'givenname' => array(
+        0 => $user['fname'],
+        'count' => 1,
+      ),
+      'house' => array(
+        0 => $user['house'],
+        'count' => 1,
+      ),
+      'department' => array(
+        0 => $user['department'],
+        'count' => 1,
+      ),
+      'faculty' => array(
+        0 => (int)(boolean)$user['faculty'],
+        'count' => 1,
+      ),
+      'staff' => array(
+        0 => (int)(boolean)$user['staff'],
+        'count' => 1,
+      ),
+      'student' => array(
+        0 => (int)(boolean)$user['student'],
+        'count' => 1,
+      ),
+      'gpa' => array(
+        0 => $user['gpa'],
+        'count' => 1,
+      ),
+      'probation' => array(
+        0 => (int)(boolean)$user['probation'],
+        'count' => 1,
+      ),
+      'password'  => array(
+        0 => 'goodpwd',
+        'count' => 1,
+      ),
+    );
+    return $attributes;
+  }
+
+  public function addLDAPUserToLDAPArraysFromAttributes($user, $sid, $dn, $attributes, $ldap_type, $user_attr) {
+
+    if ($ldap_type == 'activedirectory') {
+      $attributes[$user_attr] =  array(0 => $user['cn'], 'count' => 1);
+      $attributes['distinguishedname'] =  array( 0 => $dn, 'count' => 1);
+    }
+    elseif ($ldap_type == 'openldap') {
+
+    }
+
+    $this->data['ldap_servers'][$sid]['users'][$dn]['attr'] = $attributes;
+    $this->data['ldap_servers_by_guid'][$sid][$user['guid']]['attr'] = $attributes;
+    $this->data['ldap_servers_by_guid'][$sid][$user['guid']]['dn'] = $dn;
+    $this->ldapData['ldap_servers'][$sid][$dn] = $attributes;
+    $this->ldapData['ldap_servers'][$sid][$dn]['count'] = count($attributes);
   }
 
   public function getCsvLdapData($test_ldap_id) {

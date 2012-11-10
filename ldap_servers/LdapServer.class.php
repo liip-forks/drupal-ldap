@@ -596,11 +596,10 @@ class LdapServer {
     $deref = NULL,
     $scope = LDAP_SCOPE_SUBTREE
     ) {
-
     $all_entries = array();
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
       $entries = $this->search($base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref, $scope);  // no attributes, just dns needed
-      if ($entries === FALSE) {
+      if ($entries === FALSE) { // if error in any search, return false
         return FALSE;
       }
       if (count($all_entries) == 0) {
@@ -1071,16 +1070,17 @@ class LdapServer {
       return FALSE;
     }
     if (!$ldap_context) {
-      $attribute_maps = array();
+      $attributes = array();
     }
     else {
       $attribute_maps = ldap_servers_attributes_needed($this->sid, $ldap_context);
+      $attributes = array_keys($attribute_maps);
     }
 
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '(' . $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ')';
-      $result = $this->search($basedn, $filter, array_keys($attribute_maps));
+      $result = $this->search($basedn, $filter, array_keys($attributes));
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
       // Must find exactly one user for authentication to work.
@@ -1099,11 +1099,11 @@ class LdapServer {
       $name_attr = $this->user_attr;
 
       if (isset($match[$name_attr][0])) {
-
+        // leave $name_attr as is if matched
       }
       elseif (isset($match[drupal_strtolower($name_attr)][0])) {
+        // if lowercase version of $name_attr  found use it
         $name_attr = drupal_strtolower($name_attr);
-
       }
       else {
         if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {

@@ -101,41 +101,6 @@ class LdapTestCase extends DrupalWebTestCase {
     }
   }
 
- /**
-   * @param string $test_ldap_data_id base data to populate ldap, e.g. hogwarts
-   * @param string $test_ldap_conf_id ldap configuration, e.g. TestOpenLdap1
-   * @param array $sids server ids to populate with fake data
-   */
-
-  function prepTestLdapData($test_ldap_data_id, $sids = array('default')) {
-
-    foreach ($sids as $sid) {
-      $this->populateFakeLdapServerData($test_ldap_id, $sid);
-    }
-
-    if ($ldap_conf->moduleLdapUser) {
-      $this->configureLdapUser();
-    }
-
-    if ($ldap_conf->moduleLdapAuthentication) {
-      $this->configureLdapAuthentication();
-    }
-
-    if ($ldap_conf->moduleLdapGroup) {
-      $this->configureLdapGroup();
-    }
-
-    if ($ldap_conf->moduleLdapAuthorization) {
-      $this->prepConsumerConf();
-      $consumer_conf_admin = ldap_authorization_get_consumer_admin_object('drupal_role');
-      $consumer_conf_admin->status = 1;
-      $consumer_conf_admin->save();
-    }
-
-  }
-
-
-
   /**
    * attempt to derive a testid from backtrace
    */

@@ -6,3 +6,6 @@
  *
  */
 
+define('LDAP_TEST_BATCH_SIZE', 10);
+define('LDAP_TEST_CLONE_COUNT', 7);
+define('LDAP_TEST_CLONE_REMOVE_COUNT', 2);

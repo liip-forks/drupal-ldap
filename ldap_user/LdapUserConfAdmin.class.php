@@ -173,6 +173,11 @@ class LdapUserConfAdmin extends LdapUserConf {
       $account_options[$option_name] = $option['#title'];
     }
 
+    //@todo these 2 options are removed until this feature is better tested in
+    // actual production environments; it has potentially disastrous effects
+    unset($account_options['user_cancel_reassign']);
+    unset($account_options['user_cancel_delete']);
+
     $form['basic_to_drupal']['orphanedDrupalAcctBehavior'] = array(
       '#type' => 'radios',
       '#title' => t('Action to perform on Drupal account that no longer has a corresponding LDAP entry'),

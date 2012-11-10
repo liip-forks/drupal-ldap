@@ -145,7 +145,9 @@ function ldap_user_mail($key, &$message, $params) {
   switch ($key) {
     case 'orphaned_accounts':
       $message['subject'] =  variable_get('site_name') . ' ' . t('Orphaned LDAP Users');
-      $message['body'][] =  t('The following Drupal users no longer have corresponding LDAP Entries.  Perhaps they have been removed from the LDAP and should be removed:')
+      $message['body'][] =  t('The following !count Drupal users no longer have
+        corresponding LDAP Entries.  Perhaps they have been removed from the LDAP
+        and should be removed:', array('!count' => count($params['accounts'])))
         . "\n\n" . t('username,mail,edit url') . "\n" .
         join("\n", $params['accounts']);
       break;

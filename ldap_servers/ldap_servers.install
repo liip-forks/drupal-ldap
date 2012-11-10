@@ -483,3 +483,24 @@ function ldap_servers_update_7112() {
   }
 
 }
+
+
+/**
+ * upgrade as much as feasible for 7.1 to 7.2 branch
+ */
+function ldap_servers_update_7201() {
+  // warn of manual changes and need to test
+  // suggest schema module after update
+  /**
+  $msg = 'add all changes that need to be done manually.  make sure ldap server update runs first';
+  if (!db_field_exists('ldap_servers', 'testingDrupalUserDn')) {
+    db_add_field('ldap_servers', 'testingDrupalUserDn', array(
+      'type' => 'varchar',
+      'length' => '255',
+      'not null' => FALSE,
+    ));
+    $msg = t('"testingDrupalUserDn" field added to ldap_servers table');
+  }
+  **/
+
+}

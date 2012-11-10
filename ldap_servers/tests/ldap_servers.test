@@ -234,7 +234,7 @@ class LdapServersTestCase extends LdapTestCase {
       'bind_method' => array(1, 3),
       'binddn'  => array('cn=service-account,ou=people,dc=hogwarts,dc=edu', ''),
       'bindpw'  => array('sdfsdafsdfasdf', 'sdfsdafsdfasdf'),
-      'basedn' => array('dc=ldap,dc=hogwarts,dc=edu', 'ou=users,dc=ldap,dc=hogwarts,dc=edu'),
+      'basedn' => array('dc=hogwarts,dc=edu', 'ou=users,dc=hogwarts,dc=edu'),
       'user_attr' => array('sAMAccountName', 'blah'),
       'account_name_attr' => array('sAMAccountName', 'blah'),
       'mail_attr' => array('mail', ''),

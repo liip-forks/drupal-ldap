@@ -12,4 +12,4 @@ guid,uid,cn,lname,fname,house,department,faculty,staff,student,gpa,probation
 111,11,mmcgonagall,McGonagall,Minerva,Gryffindor,Tranfiguration/ Deputy Head Mistress,Y,Y,N,,
 112,12,spomana,Pomona,Sprout,Hufflepuff,Herbology,Y,Y,N,,
 113,13,rhagrid,Hagrid,Rubeus,Gryffindor,,N,Y,N,,
-150,50,service-account,Service,Account,,,,,,,
+119,19,service-account,Service,Account,,,,,,,
