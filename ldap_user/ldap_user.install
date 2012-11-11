@@ -11,6 +11,33 @@
  */
 function ldap_user_requirements($phase) {
 
+  $requirements = array();
+
+  if ($phase == 'runtime') {
+
+    // check for all $user->* fields created
+    $missing_fields = ldap_user_update_check_user_fields(TRUE);
+    if (count($missing_fields)) {
+      $requirements['ldap_user']['title'] = t('User Fields for LDAP User Module Missing');
+      $requirements['ldap_user']['severity'] = REQUIREMENT_ERROR;
+      $requirements['ldap_user']['value'] = NULL;
+
+      $requirements['ldap_user']['description'] = t('Fields are added to the
+        Drupal User entity for LDAP User module functionality.  These fields should
+        have been created in LDAP User update 7203. The following userfields are missing:') .
+        theme('item_list', array(
+          'items' => $missing_fields,
+          'type' => 'ul',
+          'title' => NULL,
+        )) .
+        t('Rerun update 7203 to correct this; it will not write over destroy existing fields.');
+    }
+  }
+
+
+  // check that ldapauth not installed.
+  return $requirements;
+
 }
 
 /**
@@ -423,7 +450,7 @@ function ldap_user_update_7203() {
   module_enable(array('number'));
 
   $fields_added = ldap_user_update_check_user_fields();
-  
+
   if (count($fields_added)) {
     $fields = join(', ', $fields_added);
     return t('%fields added to user entity.', array('%fields' => $fields));
@@ -434,15 +461,17 @@ function ldap_user_update_7203() {
 
 }
 
-function ldap_user_update_check_user_fields() {
+function ldap_user_update_check_user_fields($query = FALSE) {
 
   $fields_added = array();
   foreach (ldap_user_user_entity_fields() as $field_id => $field_conf) {
     $field_info = field_info_field($field_id);
     if (!$field_info) {
       $fields_added[] = $field_id;
-      field_create_field($field_conf['field']);
-      field_create_instance($field_conf['instance']);
+      if (!$query) {
+        field_create_field($field_conf['field']);
+        field_create_instance($field_conf['instance']);
+      }
     }
   }
   return $fields_added;
