@@ -687,7 +687,7 @@ function ldap_servers_update_7201() {
   $summary = '<h2>' . t('Please check through all the LDAP module configuration pages.
     The update from 7.x-1.x to 7.x-2.x is not automatable!  The configuration pages
     must be read through and configured.') . '</h2>' .
-    theme('items_list', array(
+    theme('item_list', array(
       'items' => $change_log,
       'type' => 'ul',
       'title' => 'Changes in 7.x-1.x to 7.x-2.x update')
