@@ -402,7 +402,10 @@ function ldap_user_update_7200() {
     $field_confs = ldap_user_user_entity_fields();
     $field_conf = $field_confs['ldap_user_prov_entries'];
     field_create_field($field_conf['field']);
-    field_create_instance($field_conf['instance']);
+    $instance = field_info_instance('user', 'ldap_user_prov_entries', 'user');
+    if (!$instance) {
+      field_create_instance($field_conf['instance']);
+    }
   }
 
   return t('ldap_user_prov_entries field added to user entity.');
