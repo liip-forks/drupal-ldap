@@ -165,9 +165,10 @@ class LdapServer {
       // @todo throw error
     }
 
-
     $this->groupFunctionalityUnused = (isset($server_record->groupFunctionalityUnused) && $server_record->groupFunctionalityUnused);
+
     foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
+      $db_field_name = drupal_strtolower($db_field_name);
       if (isset($server_record->$db_field_name)) {
         if ($this->groupFunctionalityUnused && in_array($db_field_name, $this->group_properties)) {
           // leave group properties as default if groups are set as unused
@@ -177,9 +178,8 @@ class LdapServer {
         }
       }
     }
-
     $this->initDerivedProperties($server_record->bindpw);
-//    dpm($this);
+
   }
 
   /**

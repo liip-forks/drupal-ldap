@@ -391,26 +391,6 @@ function ldap_user_user_entity_fields() {
 
 }
 
-/**
- * attach ldap_user_prov_entries field to user entity to make deleting provisioned ldap entries plausible
- */
-
-function ldap_user_update_7200() {
-
-  $field_info = field_info_field('ldap_user_prov_entries');
-  if (!$field_info) {
-    $field_confs = ldap_user_user_entity_fields();
-    $field_conf = $field_confs['ldap_user_prov_entries'];
-    field_create_field($field_conf['field']);
-    $instance = field_info_instance('user', 'ldap_user_prov_entries', 'user');
-    if (!$instance) {
-      field_create_instance($field_conf['instance']);
-    }
-  }
-
-  return t('ldap_user_prov_entries field added to user entity.');
-
-}
 
 /**
  * update authmap table, changing ldap_authentication to ldap_user
@@ -426,31 +406,18 @@ function ldap_user_update_7201() {
  */
 
 function ldap_user_update_7202() {
-  module_enable(array('number'));
-  $field_info = field_info_field('ldap_user_last_checked');
-  if (!$field_info) {
-    $field_confs = ldap_user_user_entity_fields();
-    $field_conf = $field_confs['ldap_user_last_checked'];
-    field_create_field($field_conf['field']);
-    field_create_instance($field_conf['instance']);
-  }
 
   return t('ldap_user_last_checked field added to user entity.');
 
 }
 
-/**
- * next update should check that all fields exis
- * it should also move user->data['ldap_authentication'] to user->data['ldap_user']
- *
- */
+
 
 /**
  * make sure all user entity fields are created
  */
 
 function ldap_user_update_7203() {
-  module_enable(array('number'));
 
   $fields_added = ldap_user_update_check_user_fields();
 
@@ -465,7 +432,9 @@ function ldap_user_update_7203() {
 }
 
 function ldap_user_update_check_user_fields($query = FALSE) {
-
+  if (!$query) {
+    module_enable(array('number'));
+  }
   $fields_added = array();
   foreach (ldap_user_user_entity_fields() as $field_id => $field_conf) {
     $field_info = field_info_field($field_id);

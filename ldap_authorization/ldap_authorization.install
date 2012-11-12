@@ -298,7 +298,7 @@ function ldap_authorization_update_7108() {
 /**
  * moving some groups related fields into ldap server module
  */
-function ldap_authorization_update_7109() {
+function ldap_authorization_update_7201() {
 
 // need to merge 2 table fields (derive_from_entry_use_first_attr and derive_from_attr_use_first_attr into one field useFirstAttrAsGroupId)
   $results = '';
@@ -322,26 +322,13 @@ function ldap_authorization_update_7109() {
     ));
     $results .= t('"searchAll" field added to ldap_authorization table');
   }
-
-  $ldap_authorization_remove = array(
-'derive_from_attr', 'derive_from_attr_attr', 'derive_from_attr_nested', 'derive_from_entry', 'derive_from_entry_nested',
-'derive_from_entry_attr', 'derive_from_entry_search_all',
-'derive_from_entry_user_ldap_attr', 'derive_from_entry_use_first_attr', 'derive_from_attr_use_first_attr');
-
-  foreach ($ldap_authorization_remove as $ldap_authorization_field) {
-    if (db_field_exists('ldap_authorization', $ldap_authorization_field)) {
-      db_drop_field('ldap_authorization', $ldap_authorization_field);
-      $changes .=  $ldap_authorization_field . t('field dropped from to ldap_authorization table');
-    }
-  }
-
 }
 
 
 /**
  * remove user ldap authorizations field.  its in $user->data now
  */
-function ldap_authorization_update_7110() {
+function ldap_authorization_update_7202() {
 
     $instance = array(
       'field_name' => 'ldap_authorizations',

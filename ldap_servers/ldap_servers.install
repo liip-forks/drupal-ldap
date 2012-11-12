@@ -563,41 +563,52 @@ function ldap_servers_update_7201() {
   foreach ($select as $record) {
     $ldap_server_records[$record->sid] = $record;
   }
+  //dpm("ldap_server_records"); dpm($ldap_server_records);
 
   if (db_table_exists('ldap_authorization')) {
-    $ldap_authorization_records = array();
-    $select = db_select('ldap_authorization')
-      ->fields('ldap_authorization')
+    $ldap_authorization_record = NULL;
+    $select = db_select('ldap_authorization', 'authz')
+      ->fields('authz')
       ->execute();
+    // pick best ldap authorization conf to use to configure ldap server
+    $max_weight = -1;
     foreach ($select as $record) {
-      $ldap_authorization_records[$record->sid] = $record;
+      $weight = (int)($record->status) + (int)($record->consumer_type == 'drupal_role');
+      if ($weight > $max_weight) {
+        $max_weight = $weight;
+        $ldap_authorization_record = $record;
+      }
     }
-
+    //dpm("ldap_authorization_record"); dpm($ldap_authorization_record);
     foreach ($ldap_server_records as $sid => $ldap_server_record) {
-      if (isset($ldap_authorization_records[$sid])) {
-        $field_changes['ldap_servers'][$sid]['groupFunctionalityUnused'] = 1;
-        if ($ldap_authorization_records[$sid]->derive_from_dn) {
+      if ($ldap_authorization_record && $ldap_authorization_record->sid == $sid) {
+        $consumer_type = $ldap_authorization_record->consumer_type;
+        $field_changes['ldap_servers'][$sid]['groupFunctionalityUnused'] = 0;
+        if ($ldap_authorization_record->derive_from_dn) {
           $field_changes['ldap_servers'][$sid]['groupDeriveFromDn'] = 1;
-          $field_changes['ldap_servers'][$sid]['groupDeriveFromDnAttr'] = $ldap_authorization_records[$sid]->derive_from_dn_attr;
+          $field_changes['ldap_servers'][$sid]['groupDeriveFromDnAttr'] = $ldap_authorization_record->derive_from_dn_attr;
         }
-        if ($ldap_authorization_records[$sid]->derive_from_attr) {
+        if ($ldap_authorization_record->derive_from_attr) {
           $field_changes['ldap_servers'][$sid]['groupUserMembershipsAttrExists'] = 1;
-          $field_changes['ldap_servers'][$sid]['groupUserMembershipsAttr'] = $ldap_authorization_records[$sid]->derive_from_attr_attr;
+          $field_changes['ldap_servers'][$sid]['groupUserMembershipsAttr'] = $ldap_authorization_record->derive_from_attr_attr;
         }
-        if ($ldap_authorization_records[$sid]->derive_from_entry) {
-          $field_changes['ldap_servers'][$sid]['groupMembershipsAttr'] = $ldap_authorization_records[$sid]->derive_from_entry_attr; // eg members
-          $field_changes['ldap_servers'][$sid]['groupMembershipsAttrMatchingUserAttr'] = $ldap_authorization_records[$sid]->derive_from_entry_entries_attr; // eg dn
+        if ($ldap_authorization_record->derive_from_entry) {
+          $field_changes['ldap_servers'][$sid]['groupMembershipsAttr'] = $ldap_authorization_record->derive_from_entry_attr; // eg members
+          $field_changes['ldap_servers'][$sid]['groupMembershipsAttrMatchingUserAttr'] = $ldap_authorization_record->derive_from_entry_entries_attr; // eg dn
         }
-        if ($ldap_authorization_records[$sid]->derive_from_entry_nested) {
+        if ($ldap_authorization_record->derive_from_entry_nested) {
           $field_changes['ldap_servers'][$sid]['groupNested'] = 1;
         }
-        if ($ldap_authorization_records[$sid]->derive_from_attr_use_first_attr || $ldap_authorization_records[$sid]->derive_from_entry_use_first_attr) {
-          $field_changes['ldap_authorization'][$sid]['useFirstAttrAsGroupId'] = 1;
+        if ($ldap_authorization_record->derive_from_attr_use_first_attr || $ldap_authorization_record->derive_from_entry_use_first_attr) {
+          $field_changes['ldap_authorization'][$consumer_type]['useFirstAttrAsGroupId'] = 1;
         }
+      }
+      else {
+        $field_changes['ldap_servers'][$sid]['groupFunctionalityUnused'] = 1;
       }
     }
   }
-
+//  dpm("field_changes"); dpm($field_changes);
   foreach ($field_changes as $table_name => $record) {
     foreach ($record as $id => $field_data) {
       if ($table_name == 'ldap_servers' || $table_name == 'ldap_authorization') {
@@ -619,6 +630,7 @@ function ldap_servers_update_7201() {
       }
     }
   }
+
   // 4.  remove ldap_authorization fields that are unused
   $ldap_authorization_fields_to_remove = array(
     'derive_from_dn',
@@ -646,22 +658,27 @@ function ldap_servers_update_7201() {
   $ldap_authentication_conf_data = variable_get('ldap_authentication_conf', array());
   $ldap_user_conf_data = variable_get('ldap_user_conf', array());
 
+  $ldap_authentication_sids = array_keys($ldap_authentication_conf_data['sids']);
+  if (count($ldap_authentication_sids) == 1) {
+    $ldap_user_conf_data['drupalAcctProvisionServer'] = $ldap_authentication_sids[0];
+  }
+
   // conflict log vs resolve moved from ldap_authentication to ldap_user
   if (!empty($ldap_authentication_conf_data['authenticationMode'])) {
-    if ($ldap_authentication_conf_data['authenticationMode'] == LDAP_AUTHENTICATION_CONFLICT_LOG) {
+    if ($ldap_authentication_conf_data['loginConflictResolve'] == LDAP_AUTHENTICATION_CONFLICT_LOG) {
       $ldap_user_conf_data['userConflictResolve'] = LDAP_USER_CONFLICT_LOG;
       $change_log[] = t('ldap_authentication_conf -> userConflictResolve set to') . LDAP_USER_CONFLICT_LOG;
     }
-    elseif ($ldap_authentication_conf_data['authenticationMode'] == LDAP_AUTHENTICATION_CONFLICT_RESOLVE) {
+    elseif ($ldap_authentication_conf_data['loginConflictResolve'] == LDAP_AUTHENTICATION_CONFLICT_RESOLVE) {
       $ldap_user_conf_data['userConflictResolve'] = LDAP_USER_CONFLICT_RESOLVE;
-      $change_log[] = t('ldap_authentication_conf -> userConflictResolve set to') . LDAP_USER_CONFLICT_LOG;
+      $change_log[] = t('ldap_authentication_conf -> userConflictResolve set to') . LDAP_USER_CONFLICT_RESOLVE;
     }
-    unset($ldap_authentication_conf_data['authenticationMode']);
-    $change_log[] = t('ldap_authentication_conf -> authenticationMode value removed');
+    unset($ldap_authentication_conf_data['loginConflictResolve']);
+    $change_log[] = t('ldap_authentication_conf -> loginConflictResolve value removed');
   }
   else {
     $ldap_user_conf_data['userConflictResolve'] = LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
-     $change_log[] = t('ldap_authentication_conf -> userConflictResolve set to') . LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
+    $change_log[] = t('ldap_authentication_conf -> userConflictResolve set to') . LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
   }
 
 
