@@ -56,10 +56,10 @@ function ldap_servers_requirements($phase) {
   }
 
   if ($phase != "install" && db_table_exists('ldapauth')) {
-    $requirements['ldap_servers_ldap_integration']['title'] = t('LDAP Integration LDAP Auth to LDAP Servers Upgrade Concern');
-    $requirements['ldap_servers_ldap_integration']['severity'] = REQUIREMENT_WARNING;
-    $requirements['ldap_servers_ldap_integration']['value'] = NULL;
-    $requirements['ldap_servers_ldap_integration']['description'] = t('Upgrade from Drupal 6 LDAP Auth to Drupal 7
+    $requirements['ldap_servers']['title'] = t('LDAP Integration LDAP Auth to LDAP Servers Upgrade Concern');
+    $requirements['ldap_servers']['severity'] = REQUIREMENT_WARNING;
+    $requirements['ldap_servers']['value'] = NULL;
+    $requirements['ldap_servers']['description'] = t('Upgrade from Drupal 6 LDAP Auth to Drupal 7
       LDAP Servers is not automatic.  LDAP Servers will need to be configured by hand.
       See http://drupal.org/node/1023016. This message will go away when the ldapauth database table is removed.');
   }
@@ -489,18 +489,223 @@ function ldap_servers_update_7112() {
  * upgrade as much as feasible for 7.1 to 7.2 branch
  */
 function ldap_servers_update_7201() {
-  // warn of manual changes and need to test
-  // suggest schema module after update
-  /**
-  $msg = 'add all changes that need to be done manually.  make sure ldap server update runs first';
-  if (!db_field_exists('ldap_servers', 'testingDrupalUserDn')) {
-    db_add_field('ldap_servers', 'testingDrupalUserDn', array(
-      'type' => 'varchar',
-      'length' => '255',
-      'not null' => FALSE,
-    ));
-    $msg = t('"testingDrupalUserDn" field added to ldap_servers table');
-  }
-  **/
 
+  $change_log = array();
+
+  // 1. ldap_user is now required for ldap_authentication and ldap_authorization
+  if (module_exists('ldap_authentication') || module_exists('ldap_authorization')) {
+    module_enable(array('ldap_user'), TRUE);
+    $change_log[] = t('LDAP User Module Enabled');
+  }
+
+  /**
+   * ldap_servers and ldap_authorization tables in 7.x-1.x to 7.x-2.x update
+   *
+   * LDAP_SERVERS fields that don't change:
+   *  sid, numeric_sid, name, status, ldap_type, address, port, tls, bind_method,
+   *  binding_service_acct, binddn, bindpw, basedn, user_attr, account_name_attr,
+   *  mail_attr, mail_template, unique_persistent_attr, user_dn_expression,
+   *  testing_drupal_username, group_object_category
+   *  search_pagination, search_page_size, ldap_to_drupal_user,
+   *
+   * LDAP_SERVERS fields not populated in update:
+   *   unique_persistent_attr_binary
+   *   testingDrupalUserDn
+   *   groupTestGroupDn - new no value in it and not important
+   *   groupTestGroupDnWriteable - new no value in it and not important
+   *
+   * LDAP_SERVERS fields set/adjusted in update:
+   *   groupNested
+   *   groupFunctionalityUnused = 1 if ldap authorization tables exist
+   *   groupDeriveFromDn from option IIA of ldap authorization
+   *   groupDeriveFromDnAttr from option IIA of ldap authorization
+   *   groupUserMembershipsAttrExists = 1 if option IIB used in ldap authorization
+   *   groupUserMembershipsAttr  get from ldap authorization  IIB
+   *   groupMembershipsAttr from option IIC in ldap authorization derive from entry
+   *   groupMembershipsAttrMatchingUserAttr from option IIC
+   *
+   *
+   * LDAP_AUTHORIZATION fields that don't change:
+   *   numeric_consumer_conf_id, sid, consumer_type, consumer_module
+   *   status, only_ldap_authenticated, mappings, use_filter,
+   *   synchronization_modes, synchronization_actions, synch_to_ldap,
+   *   synch_on_logon, revoke_ldap_provisioned, create_consumers,
+   *   regrant_ldap_provisioned
+   *
+   * LDAP_AUTHORIZATION fields populated in update:
+   *   useFirstAttrAsGroupId = derive_from_attr_use_first_attr || derive_from_entry_use_first_attr
+   *
+   * LDAP_AUTHORIZATION fields to remove in update
+   *    derive_from_dn, derive_from_dn_attr, derive_from_entry, derive_from_attr
+   *    derive_from_attr_attr, derive_from_entry, derive_from_entry_attr,
+   *    derive_from_entry_entries_attr, derive_from_entry_nested,
+   *    derive_from_attr_use_first_attr, derive_from_entry_search_all
+   *    derive_from_entry_use_first_attr
+   *
+   */
+
+
+  // 2.  add any missing fields from schema
+  ldap_servers_install_update_schema(ldap_servers_schema(), $change_log);
+  if (module_exists('ldap_authorization')) {
+    ldap_servers_install_update_schema(ldap_authorization_schema(), $change_log);
+  }
+  if (module_exists('ldap_query')) {
+    ldap_servers_install_update_schema(ldap_query_schema(), $change_log);
+  }
+
+  // 3.  move configuration data that has changed location within ldap modules
+  $field_changes = array();
+  $ldap_server_records = array();
+  $select = db_select('ldap_servers')
+    ->fields('ldap_servers')
+    ->execute();
+  foreach ($select as $record) {
+    $ldap_server_records[$record->sid] = $record;
+  }
+
+  if (db_table_exists('ldap_authorization')) {
+    $ldap_authorization_records = array();
+    $select = db_select('ldap_authorization')
+      ->fields('ldap_authorization')
+      ->execute();
+    foreach ($select as $record) {
+      $ldap_authorization_records[$record->sid] = $record;
+    }
+
+    foreach ($ldap_server_records as $sid => $ldap_server_record) {
+      if (isset($ldap_authorization_records[$sid])) {
+        $field_changes['ldap_servers'][$sid]['groupFunctionalityUnused'] = 1;
+        if ($ldap_authorization_records[$sid]->derive_from_dn) {
+          $field_changes['ldap_servers'][$sid]['groupDeriveFromDn'] = 1;
+          $field_changes['ldap_servers'][$sid]['groupDeriveFromDnAttr'] = $ldap_authorization_records[$sid]->derive_from_dn_attr;
+        }
+        if ($ldap_authorization_records[$sid]->derive_from_attr) {
+          $field_changes['ldap_servers'][$sid]['groupUserMembershipsAttrExists'] = 1;
+          $field_changes['ldap_servers'][$sid]['groupUserMembershipsAttr'] = $ldap_authorization_records[$sid]->derive_from_attr_attr;
+        }
+        if ($ldap_authorization_records[$sid]->derive_from_entry) {
+          $field_changes['ldap_servers'][$sid]['groupMembershipsAttr'] = $ldap_authorization_records[$sid]->derive_from_entry_attr; // eg members
+          $field_changes['ldap_servers'][$sid]['groupMembershipsAttrMatchingUserAttr'] = $ldap_authorization_records[$sid]->derive_from_entry_entries_attr; // eg dn
+        }
+        if ($ldap_authorization_records[$sid]->derive_from_entry_nested) {
+          $field_changes['ldap_servers'][$sid]['groupNested'] = 1;
+        }
+        if ($ldap_authorization_records[$sid]->derive_from_attr_use_first_attr || $ldap_authorization_records[$sid]->derive_from_entry_use_first_attr) {
+          $field_changes['ldap_authorization'][$sid]['useFirstAttrAsGroupId'] = 1;
+        }
+      }
+    }
+  }
+
+  foreach ($field_changes as $table_name => $record) {
+    foreach ($record as $id => $field_data) {
+      if ($table_name == 'ldap_servers' || $table_name == 'ldap_authorization') {
+        $id_field_name = 'sid';
+      }
+      else {
+        continue;
+      }
+      if (count($field_data)) {
+        $change_log[] = t("!table_name where !id_field_name = !id values updated", array(
+          '!table_name' => $table_name,
+          '!id_field_name' => $id_field_name,
+          '!id' => $id,
+          ));
+        $num_updated = db_update($table_name)
+          ->fields($field_data)
+          ->condition($id_field_name, $id, '=')
+          ->execute();
+      }
+    }
+  }
+  // 4.  remove ldap_authorization fields that are unused
+  $ldap_authorization_fields_to_remove = array(
+    'derive_from_dn',
+    'derive_from_dn_attr',
+    'derive_from_attr',
+    'derive_from_entry',
+    'derive_from_attr_attr',
+    'derive_from_entry_attr',
+    'derive_from_entry_entries_attr',
+    'derive_from_entry_nested',
+    'derive_from_entry_search_all',
+    'derive_from_entry_use_first_attr',
+    'derive_from_attr_use_first_attr',
+  );
+
+  foreach ($ldap_authorization_fields_to_remove as $ldap_authorization_field) {
+    db_drop_field('ldap_authorization', $ldap_authorization_field);
+  }
+  $change_log[] = t("ldap_authorization table fields removed: !fields_removed", array('!fields_removed' => join(', ',$ldap_authorization_fields_to_remove)));
+
+
+  //5. ldap_authentication and ldap_user changes are in variables, not tables
+
+
+  $ldap_authentication_conf_data = variable_get('ldap_authentication_conf', array());
+  $ldap_user_conf_data = variable_get('ldap_user_conf', array());
+
+  // conflict log vs resolve moved from ldap_authentication to ldap_user
+  if (!empty($ldap_authentication_conf_data['authenticationMode'])) {
+    if ($ldap_authentication_conf_data['authenticationMode'] == LDAP_AUTHENTICATION_CONFLICT_LOG) {
+      $ldap_user_conf_data['userConflictResolve'] = LDAP_USER_CONFLICT_LOG;
+      $change_log[] = t('ldap_authentication_conf -> userConflictResolve set to') . LDAP_USER_CONFLICT_LOG;
+    }
+    elseif ($ldap_authentication_conf_data['authenticationMode'] == LDAP_AUTHENTICATION_CONFLICT_RESOLVE) {
+      $ldap_user_conf_data['userConflictResolve'] = LDAP_USER_CONFLICT_RESOLVE;
+      $change_log[] = t('ldap_authentication_conf -> userConflictResolve set to') . LDAP_USER_CONFLICT_LOG;
+    }
+    unset($ldap_authentication_conf_data['authenticationMode']);
+    $change_log[] = t('ldap_authentication_conf -> authenticationMode value removed');
+  }
+  else {
+    $ldap_user_conf_data['userConflictResolve'] = LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
+     $change_log[] = t('ldap_authentication_conf -> userConflictResolve set to') . LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
+  }
+
+
+  if (isset($ldap_authentication_conf_data['acctCreation'])) {
+    $ldap_user_conf_data['acctCreation'] = $ldap_authentication_conf_data['acctCreation'];
+    $change_log[] = t('ldap_user_conf -> acctCreation set to value in ldap_authentication_conf -> acctCreation');
+    unset($ldap_authentication_conf_data['acctCreation']);
+    $change_log[] = t('ldap_authentication_conf -> acctCreation value removed');
+  }
+  else {
+    $ldap_user_conf_data['acctCreation'] = LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT;
+    $change_log[] = t('ldap_user_conf -> acctCreation set to default:') . ' ' . LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT;
+  }
+
+  $ldap_user_conf_data['manualAccountConflict'] = LDAP_USER_MANUAL_ACCT_CONFLICT_REJECT;
+   $change_log[] = t('ldap_user_conf -> manualAccountConflict set to default:') . ' ' . LDAP_USER_MANUAL_ACCT_CONFLICT_REJECT;
+
+  $change_log[] = t('LDAP User configuration populated.');
+  $change_log[] = t('LDAP Authentication configuration updated.');
+  variable_set('ldap_authentication_conf', $ldap_authentication_conf_data);
+  variable_set('ldap_user_conf', $ldap_user_conf_data);
+
+  $summary = '<h2>' . t('Please check through all the LDAP module configuration pages.
+    The update from 7.x-1.x to 7.x-2.x is not automatable!  The configuration pages
+    must be read through and configured.') . '</h2>' .
+    theme('items_list', array(
+      'items' => $change_log,
+      'type' => 'ul',
+      'title' => 'Changes in 7.x-1.x to 7.x-2.x update')
+    );
+
+  watchdog('ldap_servers', $summary, WATCHDOG_INFO);
+  return $summary;
+
+
+}
+
+function ldap_servers_install_update_schema($schema, &$change_log) {
+  foreach ($schema as $table_name => $table_schema) {
+    foreach ($table_schema['fields'] as $field_name => $field_schema) {
+      if (!db_field_exists($table_name, $field_name)) {
+        db_add_field($table_name, $field_name, $field_schema);
+        $change_log[] = t("!field_name field added to !table_name table", array('!field_name' => $field_name, '!table_name' => $table_name));
+      }
+    }
+  }
 }

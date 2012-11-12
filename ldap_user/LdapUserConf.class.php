@@ -182,7 +182,6 @@ class LdapUserConf {
     'manualAccountConflict',
     'acctCreation',
     'ldapUserSynchMappings',
-
   );
 // 'wsKey','wsEnabled','wsUserIps',
   function __construct() {
