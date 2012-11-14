@@ -1026,7 +1026,9 @@ class LdapServer {
    *
    *  @return array $ldap_user_entry (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
   */
-
+  public function user_lookup($user) {
+    return $this->userUserToExistingLdapEntry($user);
+  }
   public function userUserToExistingLdapEntry($user) {
 
     if (is_object($user)) {
