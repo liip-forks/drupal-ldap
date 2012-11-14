@@ -102,7 +102,7 @@ function ldap_query_update_7101() {
 /**
  * make ldap_query.scope field small int instead of tiny int for ctools bug
  */
-function ldap_servers_update_7102() {
+function ldap_query_update_7102() {
 
   db_change_field('ldap_query', 'scope', 'scope', array(
     'type' => 'int',
