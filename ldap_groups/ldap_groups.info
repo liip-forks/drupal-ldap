@@ -1,6 +1,0 @@
-name = LDAP Groups
-description = "NOT YET IMPLEMENTED!! Provision of Drupal roles to LDAP groups"
-package = "Lightweight Directory Access Protocol"
-dependencies[] = ldap_servers
-dependencies[] = ldap_user
-core = 7.x
