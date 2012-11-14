@@ -716,6 +716,20 @@ function ldap_servers_update_7201() {
 
 }
 
+/**
+ * make ldap_servers.bind_method field small int instead of tiny int for ctools bug
+ */
+function ldap_servers_update_7202() {
+
+  db_change_field('ldap_servers', 'bind_method', 'bind_method', array(
+    'type' => 'int',
+    'size' => 'small',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+
+}
+
 function ldap_servers_install_update_schema($schema, &$change_log) {
   foreach ($schema as $table_name => $table_schema) {
     foreach ($table_schema['fields'] as $field_name => $field_schema) {

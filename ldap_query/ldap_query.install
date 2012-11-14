@@ -74,7 +74,7 @@ function ldap_query_update_7100() {
   if (!db_field_exists('ldap_query', 'scope')) {
     db_add_field('ldap_query', 'scope', array(
       'type' => 'int',
-      'size' => 'tiny',
+      'size' => 'small',
       'not null' => FALSE,
       'default' => LDAP_SCOPE_SUBTREE,
     ));
@@ -96,4 +96,19 @@ function ldap_query_update_7101() {
   ));
 
   return t('ldap_query table field "filter" changed to type "text"');
+}
+
+
+/**
+ * make ldap_query.scope field small int instead of tiny int for ctools bug
+ */
+function ldap_servers_update_7102() {
+
+  db_change_field('ldap_query', 'scope', 'scope', array(
+    'type' => 'int',
+    'size' => 'small',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+
 }
