@@ -52,7 +52,7 @@ function ldap_query_menu() {
   $items['admin/config/people/ldap/query/delete/%'] = array(
     'title' => 'Delete LDAP Query',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_query_admin_delete', $menu_offset + 2),
+    'page arguments' => array('ldap_query_admin_delete', $menu_offset + 1, $menu_offset + 2),
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_query.admin.inc',
   );
