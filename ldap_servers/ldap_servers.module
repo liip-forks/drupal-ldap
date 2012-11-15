@@ -795,6 +795,12 @@ function ldap_servers_ldap_servers_types() {
     'name' => 'Open LDAP',
   );
 
+  $types['opendir'] =  array(
+    'class' => t('LdapTypeOpenDirectory'),
+    'directory_path' => $path,
+    'name' => 'Apple Open Directory',
+  );
+
   drupal_alter('ldap_servers_ldap_types', $types);
   return $types;
 
