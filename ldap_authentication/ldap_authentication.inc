@@ -549,7 +549,6 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
 
     if (count($user_edit)) {
       $watchdog_tokens['%username'] = $account->name;
-      $watchdog_tokens['%changed'] = $changed;
       if (!$updated_account = user_save($account, $user_edit)) {
         watchdog('ldap_authentication', 'Failed to make changes to user %username updated %changed.', $watchdog_tokens,  WATCHDOG_ERROR);
       }

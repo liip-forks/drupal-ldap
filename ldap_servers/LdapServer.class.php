@@ -984,11 +984,11 @@ class LdapServer {
    */
   public function userEmailFromLdapEntry($ldap_entry) {
 
-    if ($this->mail_attr) { // not using template
+    if ($ldap_entry && $this->mail_attr) { // not using template
       $mail = isset($ldap_entry[$this->mail_attr][0]) ? $ldap_entry[$this->mail_attr][0] : FALSE;
       return $mail;
     }
-    elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
+    elseif ($ldap_entry && $this->mail_template) {  // template is of form [cn]@illinois.edu
       ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
       return ldap_servers_token_replace($ldap_entry, $this->mail_template, 'ldap_entry');
     }

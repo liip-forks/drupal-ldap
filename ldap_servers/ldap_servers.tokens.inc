@@ -62,6 +62,7 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
 
   $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);
   switch ($resource_type) {
+    
     case 'ldap_entry':
     $tokens = ldap_servers_token_tokenize_entry($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
     break;
@@ -176,7 +177,6 @@ should return tokens such as:
 
 function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
 
-  //debug('ldap_servers_token_tokenize_entry'); debug($token_keys);
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
 
