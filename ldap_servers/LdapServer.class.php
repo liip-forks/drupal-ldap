@@ -980,12 +980,12 @@ class LdapServer {
   /**
    * @param ldap entry array $ldap_entry
    *
-   * @return string user's mail value
+   * @return string user's mail value or FALSE if none present
    */
   public function userEmailFromLdapEntry($ldap_entry) {
 
     if ($this->mail_attr) { // not using template
-      $mail = $ldap_entry[$this->mail_attr][0];
+      $mail = isset($ldap_entry[$this->mail_attr][0]) ? $ldap_entry[$this->mail_attr][0] : FALSE;
       return $mail;
     }
     elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
@@ -1661,6 +1661,8 @@ class LdapServer {
         }
       }
     }
+
+    return TRUE;
   }
 
 
