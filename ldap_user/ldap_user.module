@@ -600,7 +600,29 @@ function ldap_user_form_register_form_submit2($form, &$form_state) {
 
 }
 
+/**
+ * @param stdClass $account as drupal user object
+ *
+ * @return boolean if user is ldap associated
+ */
 
+function ldap_user_is_ldap_associated($account) {
+
+  if ((boolean)$account->ldap_user_current_dn['und'][0]['value']) {
+    return TRUE;
+  }
+  else {
+    $authmaps = db_query(
+      "SELECT aid, uid, module, authname FROM {authmap} WHERE uid = :uid AND module = :module",
+      array(
+        ':uid' => $account->uid,
+        ':module' => 'ldap_user'
+      )
+      )->fetchAllAssoc('aid',  PDO::FETCH_ASSOC);
+    return (boolean)(count($authmaps));
+  }
+
+}
 /**
  * api function for synching
  * note: does no checking if synching is enabled or configured for a given context
@@ -831,7 +853,7 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
 function ldap_user_user_update(&$user_edit, $account, $category) {
  //debug("ldap_user_user_update, category=$category"); debug($user_edit); debug($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
 
-  if ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1)) {
+  if (!ldap_user_is_ldap_associated($account) || $category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1)) {
     return; // do not provision or synch user 1
   }
 
