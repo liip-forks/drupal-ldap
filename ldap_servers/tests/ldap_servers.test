@@ -248,19 +248,19 @@ class LdapServersTestCase extends LdapTestCase {
       'search_page_size' => array(1000, ''),
 
       'groupFunctionalityUnused' => array(NULL, NULL, 0, 0),
+      'groupMembershipsAttrMatchingUserAttr' => array('dn', 'dn'),
+      'search_pagination' => array(NULL, NULL),
+      'search_page_size' => array(NULL, NULL),
+    );
+/**
+ *      'groupFunctionalityUnused' => array(NULL, NULL, 0, 0),
       'group_object_category' => array('group', 'group'),
       'groupNested' => array(NULL, NULL, 0, 0),
       'groupUserMembershipsAttrExists' => array(1, 1, 1, 1),
       'groupUserMembershipsAttr' =>  array('memberof', 'memberof'),
       'groupMembershipsAttr' => array('member', 'member'),
       'groupMembershipsAttrMatchingUserAttr' => array('dn', 'dn'),
-
-      'groupDeriveFromDn' =>  array(1, 1, 1, 1),
-      'groupDeriveFromDnAttr' =>  array('ou', 'ou'),
-      'groupTestGroupDn' =>   array('cn=gryffindor,ou=groups,dc=hogwarts,dc=edu', 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu'),
-      'search_pagination' => array(NULL, NULL),
-      'search_page_size' => array(NULL, NULL),
-    );
+      **/
 
     $lcase_transformed = array(
       'user_attr',
@@ -303,7 +303,10 @@ class LdapServersTestCase extends LdapTestCase {
     // assert load of server has correct properties for each input
     $mismatches = $this->compareFormToProperties($ldap_servers['server1'], $server_data['server1'], 0, $field_to_prop_map, $lcase_transformed);
     if (count($mismatches)) {
-      debug('mismatches between ldap server properties and form submitted values'); debug($mismatches);
+      debug('mismatches between ldap server properties and form submitted values');
+      debug($mismatches);
+      debug($ldap_servers['server1']);
+      debug($server_data['server1']);
     }
     $this->assertTrue(count($mismatches) == 0, 'Add form for ldap server properties match values submitted.',  $this->ldapTestId . ' Add Server');
 

@@ -398,7 +398,7 @@ class LdapUserUnitTests extends LdapTestCase {
       'mapping' => array(
         'sid' => $sid,
         'name' => 'Field: Last Name',
-        'ldap_attr' => '[sn]',
+        'ldap_attr' => '[SN]',
         'user_attr' => '[field.field_lname]',
         'convert' => 0,
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
@@ -419,7 +419,7 @@ class LdapUserUnitTests extends LdapTestCase {
       'field_results' => array('Harry Potter', 'Sir Harry Potter'),  // desired results
       'mapping' => array(
         'sid' => $sid,
-        'ldap_attr' => '[givenname] [sn]',
+        'ldap_attr' => '[givenName] [sn]',
         'user_attr' => '[field.field_display_name]',
         'convert' => 0,
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
@@ -571,7 +571,7 @@ class LdapUserUnitTests extends LdapTestCase {
               'activedirectory1',
               'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
               $attr_name,
-              $test['field_values'][0][$attr_name],
+              $test['field_values'][0][drupal_strtolower($attr_name)],
               0);
           }
           $field_token = '[field.' . $field_name . ']';

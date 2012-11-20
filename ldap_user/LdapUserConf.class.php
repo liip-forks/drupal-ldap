@@ -779,7 +779,7 @@ class LdapUserConf {
    *
    */
   public function synchToDrupalAccount($drupal_user, &$user_edit, $prov_event = LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user = NULL,  $save = FALSE) {
-  //  dpm('synchToDrupalAccount');
+
     $debug = array(
       'account' => $drupal_user,
       'user_edit' => $user_edit,
@@ -1016,7 +1016,7 @@ class LdapUserConf {
    */
 
   public function provisionDrupalAccount($account = FALSE, &$user_edit, $ldap_user = NULL, $save = TRUE) {
-    //dpm("provisionDrupalAccount"); dpm($ldap_user);
+
     $watchdog_tokens = array();
     /**
      * @todo

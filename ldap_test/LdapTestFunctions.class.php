@@ -42,9 +42,16 @@ class LdapTestFunctions  {
   }
 
   function setFakeServerUserAttribute($sid, $dn, $attr_name, $attr_value, $i=0) {
+    $attr_name = drupal_strtolower($attr_name);
     $test_data = variable_get('ldap_test_server__' . $sid, array());
+
     $test_data['entries'][$dn][$attr_name][$i] = $attr_value;
+    $count_set = (int)isset($test_data['entries'][$dn][$attr_name]['count']);
+    $test_data['entries'][$dn][$attr_name]['count'] = count($test_data['entries'][$dn][$attr_name]) - $count_set; // don't count the 'count'
+
     $test_data['ldap'][$dn][$attr_name][$i] = $attr_value;
+    $count_set = (int)isset($test_data['ldap'][$dn][$attr_name]['count']);
+    $test_data['ldap'][$dn][$attr_name]['count'] = count($test_data['ldap'][$dn][$attr_name]) - $count_set; // don't count the 'count'
     variable_set('ldap_test_server__' . $sid, $test_data);
     $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE, TRUE); // clear server cache;
   }
