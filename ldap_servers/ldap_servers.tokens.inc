@@ -62,7 +62,7 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
 
   $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);
   switch ($resource_type) {
-    
+
     case 'ldap_entry':
     $tokens = ldap_servers_token_tokenize_entry($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
     break;
@@ -257,7 +257,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
       }
 
       $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token_key);
-      $attr_name = $parts[0];
+      $attr_name = drupal_strtolower($parts[0]);
       $ordinal_key = isset($parts[1]) ? $parts[1] : 0;
       // debug("conversion=$conversion, attr_name=$attr_name, ordinal_key=$ordinal_key");
       $i = NULL;
