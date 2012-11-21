@@ -1,7 +1,6 @@
 name = LDAP User Module
-description = "Module for ldap identified users.  User may be associated via ldap authentication, ldap authorization, or from account provisioning.
-Configures synching of ldap entries to drupal user properties, fields and the opposite direction."
-package = "Lightweight Directory Access Protocol"
+description = Module for ldap identified users.  User may be associated via ldap authentication, ldap authorization, or from account provisioning.  Configures synching of ldap entries to drupal user properties, fields and the opposite direction.
+package = Lightweight Directory Access Protocol
 dependencies[] = ldap_servers
 dependencies[] = entity
 dependencies[] = number

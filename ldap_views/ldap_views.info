@@ -1,7 +1,7 @@
-; $Id: $
+
 name = LDAP Views
-description = "Implements LDAP integration with Views"
-package = "Lightweight Directory Access Protocol"
+description = Implements LDAP integration with Views
+package = Lightweight Directory Access Protocol
 dependencies[] = ldap_query
 dependencies[] = views
 core = 7.x
