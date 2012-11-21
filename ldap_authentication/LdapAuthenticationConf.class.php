@@ -197,12 +197,14 @@ class LdapAuthenticationConf {
           $this->{$property} = $saved[$property];
         }
       }
+      $this->enabledAuthenticationServers = array(); // reset in case reloading instantiated object
       $enabled_ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
       foreach ($this->sids as $sid => $enabled) {
         if ($enabled && isset($enabled_ldap_servers[$sid])) {
           $this->enabledAuthenticationServers[$sid] = $enabled_ldap_servers[$sid];
         }
       }
+
     }
     else {
       $this->inDatabase = FALSE;

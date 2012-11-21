@@ -189,6 +189,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       $save[$property] = $this->{$property};
     }
     variable_set('ldap_authentication_conf', $save);
+    $this->load();
   }
 
   static public function getSaveableProperty($property) {
@@ -245,7 +246,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#default_value' => $this->authenticationMode,
       '#options' => $this->authenticationModeOptions,
     );
-
 
     $form['logon']['authenticationServers'] = array(
       '#type' => 'checkboxes',
@@ -331,10 +331,10 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#description' => t($this->allowTestPhpDescription, $tokens),
       '#disabled' => (boolean)(!module_exists('php')),
     );
+
     if (!module_exists('php')) {
       $form['restrictions']['allowTestPhp']['#title'] .= ' <em>' . t('php module currently disabled') . '</em>';
     }
-
 
     $form['restrictions']['excludeIfNoAuthorizations'] = array(
       '#type' => 'checkbox',
@@ -457,7 +457,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
     $enabled_servers = ldap_servers_get_servers(NULL, 'enabled');
     if ($this->ssoEnabled) {
-      foreach ($this->sids as $sid) {
+      foreach ($this->sids as $sid => $discard) {
         if ($enabled_servers[$sid]->bind_method == LDAP_SERVERS_BIND_METHOD_USER || $enabled_servers[$sid]->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
           $methods = array(
             LDAP_SERVERS_BIND_METHOD_USER => 'Bind with Users Credentials',
@@ -477,6 +477,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   }
 
   protected function populateFromDrupalForm($values) {
+
     $this->authenticationMode = ($values['authenticationMode']) ? (int)$values['authenticationMode'] : NULL;
     $this->sids = $values['authenticationServers'];
     $this->allowOnlyIfTextInDn = $this->linesToArray($values['allowOnlyIfTextInDn']);
@@ -499,7 +500,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
     $this->populateFromDrupalForm($values);
     try {
-        $save_result = $this->save();
+      $save_result = $this->save();
     }
     catch (Exception $e) {
       $this->errorName = 'Save Error';
