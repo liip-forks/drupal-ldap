@@ -132,7 +132,8 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
 function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
-  $authname = $form_state['values']['name']; // $name = $form_state['values']['name']; // patch 1599632
+  $authname = $form_state['values']['name']; // $authname is the name the user is authenticated with from the logon form // patch 1599632
+  $accountname = $authname; // $accountname is used as the drupal account name $account->name property.
   $pass = $form_state['values']['pass'];
 
   /*
@@ -381,17 +382,8 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       if ($ldap_server->account_name_attr != '') {
         $accountname = $ldap_user['attr'][ldap_server_massage_text($ldap_server->account_name_attr, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)][0];
       }
-      else {
-        $accountname = $authname;
-      }
       $watchdog_tokens['%account_name_attr'] = $accountname;
-      if ($ldap_server->account_name_attr != '') {
-        $accountname = $ldap_user['attr'][ldap_server_massage_text($ldap_server->account_name_attr, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)][0];
-      }
-      else {
-        $accountname = $authname;
-      }
-      $watchdog_tokens['%account_name_attr'] = $accountname;
+
       if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
           $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
           $ldap_server->disconnect();
@@ -449,7 +441,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       $account = $ldap_server->userUserEntityFromPuid($puid);
       if ($account) {
         $account_exists = TRUE;
-        $user_edit['name'] = $name;
+        $user_edit['name'] = $accountname;
         $account = user_save($account, $user_edit, 'ldap_user');
         user_set_authmaps($account, array("authname_ldap_user" => $name));
       }
@@ -466,7 +458,6 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   }
   if (!$account_exists) {
 
-
     if ($account_with_same_email = user_load_by_mail($ldap_user['mail'])) {
       // dpm('account with same email');
       /**
@@ -481,10 +472,9 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     }
 
     if (!$auth_conf->ldapUser->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE)) {
-      watchdog('ldap_user', 'Drupal account for %authname does not exists and provisioning of Drupal accounts on authentication is not enabled', array('%authname' => $accountname));
+      watchdog('ldap_user', 'Drupal account for authname=%authname account name=%account_name_attr does not exist and provisioning of Drupal accounts on authentication is not enabled', $watchdog_tokens);
       return FALSE;
     }
-
     /**
      *
      * new ldap_authentication provisioned account could let user_external_login_register create the account and set authmaps, but would need
@@ -500,7 +490,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
 
     // $ldap_user['sid'] = $sid;
     $account = NULL;
-    $user_edit = array('name' => $authname, 'status' => 1);
+    $user_edit = array('name' => $accountname, 'status' => 1);
     $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
     if ($auth_conf->ldapUser->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP && $user_register == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
       $user_edit['status'] = 0; // if admin approval required, set status to 1.
