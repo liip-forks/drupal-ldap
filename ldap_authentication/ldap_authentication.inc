@@ -443,7 +443,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
         $account_exists = TRUE;
         $user_edit['name'] = $accountname;
         $account = user_save($account, $user_edit, 'ldap_user');
-        user_set_authmaps($account, array("authname_ldap_user" => $name));
+        user_set_authmaps($account, array("authname_ldap_user" => $authname));
       }
     }
   }
