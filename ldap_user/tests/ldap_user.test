@@ -672,7 +672,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
  /**
    * integration tests for provisioning to ldap
    */
-  function x_testProvisionToLdap() {
+  function testProvisionToLdap() {
 
     // just to give warning if setup doesn't succeed.  may want to take these out at some point.
     $setup_success = (
@@ -906,7 +906,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
 
       $this->assertTrue($ldap_entry_success, t("correct ldap entry created for " . $username), $this->testId($test_id));
       if (!$ldap_entry_success) {
-        debug("password_token,password_result: $password_token, $password_result");
+        debug("password_success=$password_success,password_token,password_result: $password_token, $password_result");
         debug('ldap_user_conf'); debug($ldap_user_conf);
         debug('ldap_entry_post'); debug($ldap_entry_post);
         debug('user'); debug($sstephens);
