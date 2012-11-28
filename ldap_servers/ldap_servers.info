@@ -1,7 +1,7 @@
 name = LDAP Servers
 description = Implements LDAP Server Configuration
 package = Lightweight Directory Access Protocol
-
+dependencies[] = ctools
 core = 7.x
 
 files[] = LdapServer.class.php
