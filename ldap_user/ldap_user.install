@@ -393,10 +393,13 @@ function ldap_user_user_entity_fields() {
 
 
 /**
- * update authmap table, changing ldap_authentication to ldap_user
+ * update authmap table, changing ldap_authentication to ldap_user, disable ldap_profile
  */
 
 function ldap_user_update_7201() {
+  if (module_exists('ldap_profile')) {
+    module_disable(array('ldap_profile', TRUE));
+  }
   _ldap_user_install_update_authmap();
 }
 
@@ -418,6 +421,10 @@ function ldap_user_update_7202() {
  */
 
 function ldap_user_update_7203() {
+
+  if (module_exists('ldap_groups')) {
+    module_disable(array('ldap_groups', TRUE));
+  }
 
   $fields_added = ldap_user_update_check_user_fields();
 
