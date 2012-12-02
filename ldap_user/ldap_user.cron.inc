@@ -36,7 +36,8 @@ function _ldap_user_orphans($ldap_user_conf) {
    *   - order by uid asc (get oldest first)
    */
 
-  $last_uid_checked = variable_set('ldap_user_cron_last_uid_checked', 1);
+  $last_uid_checked = variable_get('ldap_user_cron_last_uid_checked', 1);
+
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'user')
     ->fieldCondition('ldap_user_current_dn', 'value', 'NULL', '!=')
@@ -46,8 +47,6 @@ function _ldap_user_orphans($ldap_user_conf) {
     ->addMetaData('account', user_load(1)); // run the query as user 1
   $result = $query->execute();
 
-  //dpm($result);  dpm(variable_get('ldap_user_cron_last_uid_checked', 0));
-// debug($result);  debug("_ldap_user_orphans, last orphan checked=" . variable_get('ldap_user_cron_last_uid_checked', 0));
   $drupal_users = array();
   $ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
   $watchdogs_sids_missing_watchdogged = array();
@@ -60,8 +59,6 @@ function _ldap_user_orphans($ldap_user_conf) {
     return TRUE;
   }
 
-
- // dpm($result['user']);
   $uids = array_keys($result['user']);
   $user_count = count($uids);
 
@@ -72,15 +69,15 @@ function _ldap_user_orphans($ldap_user_conf) {
   else {
     variable_set('ldap_user_cron_last_uid_checked', $uids[count($uids) - 1]);
   }
-  
+
   $batches = floor($user_count / LDAP_SERVERS_MAXFILTER_ORS) + 1;
   // e.g. 175 users and  50 max ldap query ors will yield 4 batches
-  //debug("user_count=$user_count, batches=$batches");
   for ($batch=1; $batch <= $batches; $batch++) { // e.g. 1,2,3,4
     $filters = array();
 
-    // 1. populate $drupal_users[$sid][$puid_attr][$puid]['exists']  = TRUE
     /**
+     * 1. populate $drupal_users[$sid][$puid_attr][$puid]['exists']  = TRUE
+     *
      * e.g.  first batch $i=0; $i<50; $i++
      *       2nd batch   $i=50; $i<100; $i++
      *       4th batch   $i=150; $i<175; $i++
@@ -89,14 +86,12 @@ function _ldap_user_orphans($ldap_user_conf) {
     $end_plus_1 = min(($batch)* LDAP_SERVERS_MAXFILTER_ORS, $user_count); // e.g. 50, 100, 150
     $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start)); // e.g. 50, 50; 100, 50
     $accounts = entity_load('user', $batch_uids);
-   // dpm("start, end+1: $start, $end_plus_1"); dpm($accounts);
-  //  debug("start, end+1: $start, $end_plus_1"); debug($accounts);
+
     foreach ($accounts as $uid => $user) {
 
       $sid = @$user->ldap_user_puid_sid['und'][0]['value'];
       $puid = @$user->ldap_user_puid['und'][0]['value'];
       $puid_attr = @$user->ldap_user_puid_property['und'][0]['value'];
-      //dpm("uid=$uid, sid=$sid, puid=$puid, puid_attr=$puid_attr");
       if ($sid && $puid && $puid_attr) {
         $filters[$sid][$puid_attr][] = "($puid_attr=$puid)";
         $drupal_users[$sid][$puid_attr][$puid]['uid'] = $uid;
@@ -108,7 +103,6 @@ function _ldap_user_orphans($ldap_user_conf) {
       }
     }
 
-    //dpm("filters and drupal_users, batch $batch"); dpm($filters); dpm($drupal_users);
     //2. set $drupal_users[$sid][$puid_attr][$puid]['exists'] to FALSE
     // if entry doesn't exist
     foreach ($filters as $sid => $puid_attrs) {
@@ -142,7 +136,6 @@ function _ldap_user_orphans($ldap_user_conf) {
         }
 
         unset($ldap_entries['count']);
-       // dpm("ldap_entries"); dpm($ldap_entries);
         foreach ($ldap_entries as $i => $ldap_entry) {
           $puid = $ldap_entry[$puid_attr][0];
           $drupal_users[$sid][$puid_attr][$puid]['exists'] = TRUE;
@@ -159,7 +152,6 @@ function _ldap_user_orphans($ldap_user_conf) {
   $email_list = array();
   foreach ($drupal_users as $sid => $puid_x_puid_attrs) {
     foreach ($puid_x_puid_attrs as $puid_attr => $puids) {
-      // debug("orphaned puid data"); debug($puids);
       foreach ($puids as $puid => $user_data) {
         $account = $accounts[$user_data['uid']];
         $user_edit['ldap_user_last_checked'][LANGUAGE_NONE][0]['value'] = $check_time;
