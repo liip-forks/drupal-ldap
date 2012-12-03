@@ -105,6 +105,12 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
         l(t('README.txt'), drupal_get_path('module', 'ldap_sso') . '/README.txt')))
         . '</p>';
 
+      $values['ssoExcludedPathsDescription'] = '<p>' .
+        t("Which paths will not check for SSO? cron.php is common example.  Specify pages by using their paths. Enter one path per line. The '*' character is a wildcard.
+          Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.",
+          array('%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>'));
+        '</p>';
+
       $values['ssoRemoteUserStripDomainNameDescription'] = t('Useful when the ' .
         'WWW server provides authentication in the form of user@realm and you ' .
         'want to have both SSO and regular forms based authentication ' .
@@ -429,6 +435,14 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#disabled' => (boolean)(!$this->ssoEnabled),
     );
 
+    $form['sso']['ssoExcludedPaths'] = array(
+      '#type' => 'textarea',
+      '#title' => t('SSO Excluded Paths'),
+      '#description' => t($this->ssoExcludedPathsDescription),
+      '#default_value' => $this->arrayToLines($this->ssoExcludedPaths),
+      '#disabled' => (boolean)(!$this->ssoEnabled),
+    );
+
     $form['submit'] = array(
       '#type' => 'submit',
       '#value' => 'Save',
@@ -490,6 +504,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->excludeIfNoAuthorizations = ($values['excludeIfNoAuthorizations']) ? (int)$values['excludeIfNoAuthorizations'] : NULL;
     $this->emailOption  = ($values['emailOption']) ? (int)$values['emailOption'] : NULL;
     $this->emailUpdate  = ($values['emailUpdate']) ? (int)$values['emailUpdate'] : NULL;
+    $this->ssoExcludedPaths = $this->linesToArray($values['ssoExcludedPaths']);
     $this->ssoRemoteUserStripDomainName = ($values['ssoRemoteUserStripDomainName']) ? (int)$values['ssoRemoteUserStripDomainName'] : NULL;
     $this->seamlessLogin = ($values['seamlessLogin']) ? (int)$values['seamlessLogin'] : NULL;
     $this->cookieExpire = ($values['cookieExpire']) ? (int)$values['cookieExpire'] : NULL;
