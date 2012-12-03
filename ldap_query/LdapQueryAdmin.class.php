@@ -129,6 +129,10 @@ class LdapQueryAdmin extends LdapQuery {
   public function delete($qid) {
     if ($qid == $this->qid) {
       $this->inDatabase = FALSE;
+      if (module_exists('ctools')) {
+        ctools_include('export');
+        ctools_export_load_object_reset('ldap_query');
+      }
       return db_delete('ldap_query')->condition('qid', $qid)->execute();
     }
     else {

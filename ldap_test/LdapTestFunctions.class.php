@@ -92,8 +92,10 @@ class LdapTestFunctions  {
         $consumer_conf_admin->{$property_name} = $property_value;
       }
       $consumer_conf_admin->save();
+      //debug('prepConsumerConf mappings'); debug($consumer_conf['mappings']); debug($consumer_conf_admin->mappings);
     }
   }
+
 
   function ldapUserIsAuthmapped($username) {
     $authmaps = user_get_authmaps($username);

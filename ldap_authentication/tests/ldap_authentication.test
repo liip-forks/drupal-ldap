@@ -292,6 +292,95 @@ class LdapAuthenticationTestCase extends LdapTestCase {
 
   }
 
+  /**
+   * set mock server variables for sso tests
+   *
+   * @param object $drupal_user in drupal stdClass format
+   * @param array $ldap_user array
+   * @param enum ldap implementation type
+   *
+   */
+  private function setSsoServerEnvironment($sso_username = NULL, $ldapImplementation = 'mod_auth_sspi') {
+
+
+    // clear past environment
+    // these need to be set in simpletest client browser,
+    // or a new user/client browser  created each test
+    // perhaps there is a wrapper function in simpletest framework for altering
+    // $_SESSION ?
+    //setcookie("seamless_login", '');
+    //unset($_SESSION['seamless_login']);
+    //setcookie("seamless_login_attempted", '');
+    //unset($_SESSION['seamless_login_attempted']);
+
+
+    if ($sso_username !== FALSE) {
+      $_SERVER['REMOTE_USER'] = $sso_username;
+      $_SERVER['REDIRECT_REMOTE_USER'] = $sso_username;
+    }
+  }
+/**
+ *  LDAP Authentication Exclusive Mode User Logon Test (ids = LDAP_authen.EM.ULT.*)
+ */
+  function x_testSSOUserLogon() {
+
+    module_enable(array('ldap_sso'));
+
+    $sid = 'activedirectory1';
+    $testid = 'SSOUserLogon3';
+    $sids = array($sid);
+    $this->prepTestData(
+      'hogwarts',
+      $sids,
+      'ad_authentication',
+      'SSOUserLogon'
+      );
+
+    $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
+    $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
+    $hpotter_drupal = user_load_by_name('hpotter');
+    $ldap_user_conf = ldap_user_conf('admin', TRUE);
+    $hpotter_ldap = $ldap_user_conf->getProvisionRelatedLdapEntry($hpotter_drupal);
+
+    foreach (array('hpotter') as $sso_name) { // array('hpotter@hogwarts', 'hogwarts\hpotter', 'hpotter')
+      foreach (array('user') as $test_path) { // ,'user/login/sso'
+        foreach (array('mod_auth_sspi') as $ldapImplementation) {  // , 'mod_auth_kerb'
+          foreach (array(TRUE) as $seamlessLogin ) {  // , FALSE
+            foreach (array(TRUE) as $ssoRemoteUserStripDomainName) {  // , FALSE
+              foreach (array(TRUE, FALSE) as $invalid_server_data) {
+                $this->ldapTestId = "testSSO.$sso_name.invalid_server_data=$invalid_server_data.path.$test_path.$ldapImplementation.seamlessLogin.$seamlessLogin.ssoRemoteUserStripDomainName.$ssoRemoteUserStripDomainName";
+                $this->assertTrue(TRUE, 'test of loop', $this->ldapTestId);
+                $sso_name = ($invalid_server_data) ? 'blah' : $sso_name;
+                $this->setSsoServerEnvironment($sso_name, $ldapImplementation);
+                $this->drupalGet($test_path);
+
+                /**
+                 * what should results be?
+                 */
+
+                if ($invalid_server_data) { // user should end up on logon page with logon form
+
+                }
+                elseif ($seamlessLogin) { // if seemless logon, should end up on requested page
+
+                }
+                else {
+
+                }
+
+                // test resulting page path and logged in
+              //  $this->drupalLogout();
+                // test logged out
+
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+
   function testAuthenticationWhitelistTests() {
     require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
 

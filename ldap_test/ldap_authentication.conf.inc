@@ -31,6 +31,13 @@ function ldap_test_ldap_authentication_data() {
   $conf['ExclusiveModeUserLogon'] = $conf['default'];
   $conf['ExclusiveModeUserLogon']['authenticationMode'] = LDAP_AUTHENTICATION_EXCLUSIVE;
 
+  $conf['SSOUserLogon'] = $conf['default'];
+  $conf['SSOUserLogon']['authenticationMode'] = LDAP_AUTHENTICATION_EXCLUSIVE;
+  $conf['SSOUserLogon']['ssoEnabled'] = TRUE;
+  $conf['SSOUserLogon']['ssoRemoteUserStripDomainName'] = FALSE;
+  $conf['SSOUserLogon']['cookieExpire'] = 3600; // -- 0, 3600, 86400, 604800, 2592000, 31536000, 315360000
+  $conf['SSOUserLogon']['ldapImplementation'] = 'mod_auth_sspi'; //  'mod_auth_kerb'
+
   $conf['ExclusiveModeUserLogon3'] = $conf['default'];
   $conf['ExclusiveModeUserLogon3']['sids'] = array('activedirectory1' => 'activedirectory1');
   $conf['ExclusiveModeUserLogon3']['authenticationMode'] = LDAP_AUTHENTICATION_EXCLUSIVE;

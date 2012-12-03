@@ -298,4 +298,72 @@ class LdapTestCase extends DrupalWebTestCase {
 
   }
 
+  public function checkConsumerConfSetup($conf_id) {
+
+    $authorization_data = ldap_test_ldap_authorization_data();
+    $props_set_correctly = TRUE;
+
+    foreach ($authorization_data[$conf_id] as $consumer_type => $conf) {
+      $props_set_display = array();
+      foreach ($conf as $prop => $values) {
+        if (!property_exists($this->consumerAdminConf[$consumer_type], $prop)) {
+          $props_set_correctly = FALSE;
+          $props_set_display[] = $prop . " $consumer_type property does not exist in consumer conf object";
+        }
+        elseif (is_scalar($this->consumerAdminConf[$consumer_type]->{$prop})) {
+          if ($this->consumerAdminConf[$consumer_type]->{$prop} == $values) {
+            $props_set_display[] = $prop . " $consumer_type set to $values correctly";
+          }
+          else {
+            $props_set_correctly = FALSE;
+            $props_set_display[] = $prop . " $consumer_type not set to $values correctly";
+          }
+        }
+      }
+    }
+
+    return array($props_set_display, $props_set_correctly);
+  }
+
+
+  public function compareFormToProperties($object, $data, $item_id, $map, $lcase_transformed) {
+
+    $mismatches = array();
+    foreach ($data as $field_id => $values) {
+      $field_id = drupal_strtolower($field_id);
+      if (!isset($map[$field_id])) {
+        continue;
+      }
+      $property = $map[$field_id];
+      if (!is_object($object) || !property_exists($object, $property) && !property_exists($object, drupal_strtolower($property))) {
+        continue;
+      }
+      $property_value = $object->{$property};
+
+      $field_value = isset($values[$item_id + 2]) ? $values[$item_id + 2] : $values[$item_id]; // for cases where string input is not same as array.
+
+      if (in_array($field_id, $lcase_transformed) && is_scalar($field_value)) {
+        $field_value = drupal_strtolower($field_value);
+      }
+      $property_value_show = (is_scalar($property_value)) ? $property_value : serialize($property_value);
+      $field_value_show = (is_scalar($field_value)) ? $field_value : serialize($field_value);
+
+      if (is_array($property_value) && is_array($field_value)) {
+        $pass = count(array_diff($property_value, $field_value)) == 0;
+      }
+      elseif (is_scalar($property_value) && is_scalar($field_value)) {
+        $pass = ($property_value == $field_value);
+      }
+      else {
+        $pass = FALSE;
+      }
+
+      if (!$pass) {
+        $mismatches[] = "property $property ($property_value_show) does not match field $field_id value ($field_value_show)";
+      }
+    }
+
+    return $mismatches;
+  }
+
 }

@@ -8,3 +8,297 @@
 
 define('LDAP_TEST_USER_ORPHAN_CLONE_COUNT', 7);  // number of cloned drupal users (clone0, clone1, etc) to make for tests
 define('LDAP_TEST_USER_ORPHAN_CLONE_REMOVE_COUNT', 2); // number of cloned drupal users to delete in orphan check
+
+
+/**
+ * Implements hook_menu().
+ */
+function ldap_test_menu() {
+  // $items = array();
+  //$items['admin/config/people/ldap/createtestdata'] = array(
+  //  'title' => 'Create Test Users, Roles, and OG Groups',
+  //  'page callback' => 'ldap_test_create_drupal_data',
+  //  'page arguments' => array(),
+  //  'type' => MENU_LOCAL_TASK,
+  //  'access arguments' => array('administer site configuration'),
+  //  'weight' => 3,
+  //);
+  //
+  //$items['admin/config/people/ldap/testog2apifunctions'] = array(
+  //  'title' => 'Test OG Api',
+  //  'page callback' => 'ldap_test_og_api',
+  //  'page arguments' => array(),
+  //  'type' => MENU_LOCAL_TASK,
+  //  'access arguments' => array('administer site configuration'),
+  //  'weight' => 3,
+  //);
+  //return $items;
+}
+
+
+function ldap_test_og_api() {
+
+  $group_entity_types = og_get_all_group_bundle();
+  foreach ($group_entity_types as $entity_type => $group) {
+    $entity_ids = og_get_all_group('node');
+    $entities[$entity_type] = entity_load('node', $entity_ids);
+  }
+  dpm($entities);
+  //return "og_get_all_group_bundle";
+  module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
+  $testFunctions = new LdapTestFunctions();
+  $testFunctions->getCsvLdapData('hogwarts');
+  $consumer_conf = ldap_authorization_get_consumer_object('og_group');
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'group');
+  $result = $query->execute();
+//  dpm($result);
+  $groups = entity_load('node', array_keys($result['node']));
+ // dpm($groups);
+
+  $groups_by_name = array();
+  foreach ($groups as $nid => $node) {
+    $groups_by_name[$node->title] = $node;
+  }
+  dpm($groups_by_name);
+  $anonymous_rid = ldap_authorization_og2_rid_from_role_name('node', 'group', $groups_by_name['gryffindor']->nid, OG_ANONYMOUS_ROLE);
+  $member_rid =    ldap_authorization_og2_rid_from_role_name('node', 'group', $groups_by_name['students']->nid,   OG_AUTHENTICATED_ROLE);
+  $admin_rid =    ldap_authorization_og2_rid_from_role_name('node', 'group', $groups_by_name['students']->nid,   OG_ADMINISTRATOR_ROLE);
+  $dungeon_master_rid =     ldap_authorization_og2_rid_from_role_name('node', 'group', $groups_by_name['faculty']->nid, 'dungeon-master');
+  dpm("test of ldap_authorization_og2_rid_from_role_name(). rids: $anonymous_rid,$member_rid,$admin_rid,$dungeon_master_rid");
+
+
+  $hpotter = user_load_by_name('hpotter');
+  $uid = $hpotter->uid;
+  $values = array(
+    'entity_type' => 'user',
+    'entity' => $uid,
+    'field_name' => FALSE,
+    'state' => OG_STATE_ACTIVE,
+  );
+  $og_gryffindor_membership = og_group('node', $groups_by_name['gryffindor']->nid, $values);
+  $og_faculty_membership =    og_group('node', $groups_by_name['faculty']->nid,    $values);
+  //dpm($og_gryffindor_membership); dpm($og_faculty_membership);
+  og_role_grant('node', $groups_by_name['gryffindor']->nid, $uid, $admin_rid);
+  og_role_grant('node', $groups_by_name['gryffindor']->nid, $uid, $dungeon_master_rid);
+  og_role_grant('node', $groups_by_name['faculty']->nid,    $uid, $admin_rid);
+  // user should now be member of faculty and gyffindor groups, with admin role in both
+
+  $gryffindor_dm_id = ldap_authorization_og_authorization_id($groups_by_name['gryffindor']->nid, $dungeon_master_rid);
+  dpm("has $gryffindor_dm_id auth? (should be 1)" . (int)$consumer_conf->hasAuthorization($hpotter, $gryffindor_dm_id));
+  dpm("has bogus auth id? (should be 0)" . (int)$consumer_conf->hasAuthorization($hpotter, 'node:632:3232'));
+
+  $consumer = $consumer_conf->emptyConsumer;
+  $user_auth = array();
+  $consumer_conf->revokeSingleAuthorization($hpotter, $gryffindor_dm_id, $consumer, $user_auth, TRUE);
+ // og_invalidate_cache(array($groups_by_name['gryffindor']->nid));
+  dpm("has $gryffindor_dm_id auth? (should be 0)" . (int)$consumer_conf->hasAuthorization($hpotter, $gryffindor_dm_id));
+  $consumer_conf->grantSingleAuthorization($hpotter, $gryffindor_dm_id, $consumer, $user_auth_data, TRUE);
+  dpm("has $gryffindor_dm_id auth? (should be 1)" . (int)$consumer_conf->hasAuthorization($hpotter, $gryffindor_dm_id));
+  // try using authorizationRevoke and authorizationGrant instead of grantSingleAuthorization and revokeSingleAuthorization
+
+  $user_data = array();
+  $ldap_entry = array();
+  $consumer = array($gryffindor_dm_id => $consumer_conf->emptyConsumer);
+  dpm($consumer);
+  $consumer_conf->authorizationRevoke($hpotter, $user_data, $consumer, $ldap_entry, TRUE);
+  dpm("post authorizationRevoke has $gryffindor_dm_id auth? (should be 0)" . (int)$consumer_conf->hasAuthorization($hpotter, $gryffindor_dm_id));
+
+  $consumer_conf->authorizationGrant($hpotter, $user_data,$consumer, $ldap_entry, TRUE);
+  dpm("post authorizationGrant has $gryffindor_dm_id auth? (should be 1)" . (int)$consumer_conf->hasAuthorization($hpotter, $gryffindor_dm_id));
+
+
+  list($students_group, $entity_id) = ldap_authorization_og2_get_group_from_name('node', 'students');
+  dpm("ldap_authorization_og2_get_group_from_name: students_group title=" . $students_group->title);
+// ldap_authorization_og2_has_role($group_type, $gid, $uid, $role_name) {
+  $test = ldap_authorization_og2_has_role('node', $groups_by_name['gryffindor']->nid, $hpotter->uid, OG_ADMINISTRATOR_ROLE);
+  dpm("ldap_authorization_og2_has_role: for gryffindor admin role should be1, is=" . (int)$test);
+
+  $test = ldap_authorization_og2_has_role('node', $groups_by_name['students']->nid, $hpotter->uid, OG_ADMINISTRATOR_ROLE);
+  dpm("ldap_authorization_og2_has_role: for students admin role should be0, is=" . (int)$test);
+
+  return "api function debugging called";
+}
+
+
+/**
+ * this function is just for creating hogwarts/test data for ldap
+ * module development
+ */
+
+function ldap_test_create_drupal_data() {
+  module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
+  $testFunctions = new LdapTestFunctions();
+  $testFunctions->getCsvLdapData('hogwarts');
+  $users = entity_load('user', FALSE, array());
+  dpm($users);
+  foreach ($testFunctions->csvTables['users'] as $guid => $user) {
+    $username = $user['cn'];
+    $edit = array();
+    $account = new stdClass();
+    $existing_account = user_load_by_name($username);
+
+    if (!$existing_account) {
+      $account->is_new = TRUE;
+      $edit['pass'] = user_password();
+      $edit['name'] = $username;
+      $edit['status'] = 1;
+      $edit['mail'] = $user['cn'] . '@hogwarts.com';
+      $account = user_save($account, $edit);
+    }
+    else {
+      if (!$existing_account->mail) {
+        $edit['mail'] = $user['cn'] . '@hogwarts.com';
+      }
+      $account = user_save($existing_account, $edit);
+    }
+    $testFunctions->csvTables['users'][$guid]['account'] = $account;
+  }
+  $users = entity_load('user', FALSE, array(),TRUE);
+  dpm($users);
+
+  $roles = user_roles(TRUE);
+  $roles_by_name = array_combine(array_values($roles), array_keys($roles));
+  foreach ($testFunctions->csvTables['groups'] as $guid => $group) {
+    if (!isset($roles_by_name[$group['cn']])) {
+      $new_role = new stdClass();
+      $new_role->name = $group['cn'];
+      $status = user_role_save($new_role);
+    }
+  }
+
+
+  $roles = user_roles(TRUE);
+  $roles_by_name = array_combine(array_values($roles), array_keys($roles));
+  dpm($roles_by_name);
+
+  // create og groups
+  $existing_og_groups = entity_load('node', FALSE, array('type' => 'group'));
+                                    dpm($existing_og_groups);
+  $groups_by_name = array();
+  foreach ($existing_og_groups as $nid => $group_node) {
+    $groups_by_name[$group_node->title] = $group_node;
+  }
+  foreach ($testFunctions->csvTables['groups'] as $guid => $group) {
+    $rid = $roles_by_name[$group['cn']];
+    $testFunctions->csvTables['groups']['rid'] = $rid;
+
+    if (!isset($groups_by_name[$group['cn']])) {
+    // create og group here
+      $node = new stdClass();
+      $node->type = 'group';
+      node_object_prepare($node);
+      $node->title    = $group['cn'];
+      $node->language = LANGUAGE_NONE;
+      $node->body[$node->language][0]['value']   = 'auto generated og group: ' . $group['cn'];
+      $node->body[$node->language][0]['summary'] = 'auto generated og group: ' . $group['cn'];
+      $node->body[$node->language][0]['format']  = 'filtered_html';
+      node_save($node);
+      $groups_by_name[$node->title] = $node;
+    }
+  }
+
+  // set og group  memberships and roles
+  // membershipid,gid,group_cn,member_guid,group_guid
+  // 1,1,gryffindor,101,201
+  foreach ($testFunctions->csvTables['memberships'] as $membership_id => $membership) {
+    $user = NULL;
+    $user = @$testFunctions->csvTables['users'][$membership['member_guid']]['account'];
+    if (!$user)  {
+      continue;
+    }
+    $rid = $roles_by_name[$membership['group_cn']];
+    $og_group_node = $groups_by_name[$membership['group_cn']];
+
+    dpm($user); dpm($rid); dpm($og_group_node);
+    $account = user_load($user->uid, TRUE);
+    $account->roles[$rid] = $membership['group_cn'];
+    $user_edit = array('roles' => $account->roles);
+    user_save($account, $user_edit, 'account');
+
+   // $og_membership = og_membership_create('node', $og_group_node->nid , 'user', $account->uid, 'og_user_node');
+
+    /**
+ * Set an association (e.g. subscribe) an entity to a group.
+ *
+  @param $group_type
+ *   The entity type of the group.
+ * @param $gid
+ *   The group entity or ID.
+ * @param $values
+ *   Array with the information to pass along, until it is processed in the
+ *   field handlers.
+ *   - "entity_type": Optional; The entity type (e.g. "node" or "user").
+ *     Defaults to 'user'
+ *   - "entity": Optional; The entity object or entity Id to set the
+ *     association. Defaults to the current user if the $entity_type property is
+ *     set to 'user'.
+ *   - "field_name": The name of the field, the membership should be registered
+ *     in. If no value given, a first field with the correct membership type
+ *     will be used. If no field found, an execpetion will be thrown.
+ *
+ * @return
+ *   The OG membership entity.
+ */
+    $values = array(
+      'entity_type' => 'user',
+      'entity' => $account->uid,
+    );
+    $og_membership = og_group('node', $og_group_node->nid, $values);
+
+
+    dpm('og_membership'); dpm($og_membership);
+   // $og_membership = og_membership_create($group_type, $gid, 'user', $account->uid, $field_name);
+    // add og membership
+// @param $gid The group ID
+// @param $entity_type  The entity type of the group content.
+// @param $etid The entity ID of the group content.
+
+
+  }
+
+  $customOgRoles = array(
+    'dungeon-master' => array('entity_type' => 'node', 'bundle_type' => 'group'),
+    'time-keeper' => array('entity_type' => 'node', 'bundle_type' => 'group'),
+    );
+
+  $default_roles = og_get_default_roles();  // this will only return default roles (0,1,2)
+  // og_roles($group_type, $bundle, $gid = 0, $force_group = FALSE, $include_all = TRUE)
+  $custom_roles = og_roles('node', 'group', 0, FALSE, FALSE);  // this will only return default roles (0,1,2)
+  $all_roles = og_roles('node', 'group', 0, FALSE, TRUE);
+  $all_roles_rev = array_flip($all_roles);
+  dpm("all roles"); dpm($all_roles_rev);
+  foreach ($customOgRoles as $og_role_name => $og_role) {
+    dpm("role_name=$og_role_name");
+    if (empty($all_roles_rev[$og_role_name])) {
+      $role = new stdClass;
+      $role->gid = 0;
+      $role->group_type = $og_role['entity_type'];
+      $role->group_bundle = $og_role['bundle_type'];
+      $role->name = $og_role_name;
+      $status = og_role_save($role);
+    }
+  }
+
+
+  dpm('default, custom, and all roles for node:group og'); dpm($default_roles); dpm($custom_roles); dpm($all_roles);
+
+  dpm("groups by name"); dpm($groups_by_name);
+  return "test data created";
+}
+
+function ldap_test_create_users() {
+
+
+}
+
+function ldap_test_create_and_assign_roles() {
+
+
+}
+
+function ldap_test_create_and_og2_groups() {
+
+
+}

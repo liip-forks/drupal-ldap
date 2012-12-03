@@ -419,7 +419,6 @@ function ldap_user_update_7202() {
 /**
  * make sure all user entity fields are created
  */
-
 function ldap_user_update_7203() {
 
   if (module_exists('ldap_groups')) {
@@ -438,6 +437,25 @@ function ldap_user_update_7203() {
 
 }
 
+/**
+ * make sure all user entity field instances are created
+ */
+function ldap_user_update_7204() {
+
+  $fields_added = ldap_user_update_check_user_fields();
+
+  if (count($fields_added)) {
+    $fields = join(', ', $fields_added);
+    return t('%fields added to user entity.', array('%fields' => $fields));
+  }
+  else {
+    return t('no fields needed to be added to user entity.');
+  }
+
+}
+
+
+
 function ldap_user_update_check_user_fields($query = FALSE) {
   if (!$query) {
     module_enable(array('number'));
@@ -449,6 +467,12 @@ function ldap_user_update_check_user_fields($query = FALSE) {
       $fields_added[] = $field_id;
       if (!$query) {
         field_create_field($field_conf['field']);
+      }
+    }
+    $field_instance_info = field_info_instance('user', $field_id, 'user');
+    if (!$field_instance_info) {
+      $fields_added[] = $field_id . " instance";
+      if (!$query) {
         field_create_instance($field_conf['instance']);
       }
     }
