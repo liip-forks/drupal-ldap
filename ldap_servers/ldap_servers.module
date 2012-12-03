@@ -470,6 +470,20 @@ function ldap_servers_flush_server_cache() {
   $discard = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE); // flush server cache
 }
 
+
+/**
+ * function to replace module_load_include such that when
+ * something is not included, drupal will exit instead
+ * of attempting something half baked.
+ */
+function ldap_servers_module_load_include($type, $module, $name = NULL) {
+  $result = module_load_include($type, $module, $name);
+  if ($result === FALSE) {
+    print "Failed to load file $name.$type in module $module";
+    drupal_exit();
+  }
+}
+
 /**
  *
  * return ldap server conf objects
@@ -568,6 +582,9 @@ function ldap_servers_debug($variable) {
 }
 function ldap_servers_cache_clear() {
   $discard = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE);
+  if (module_exists('ctools')) {
+    ctools_export_load_object_reset('ldap_servers');
+  }
 }
 
 /**

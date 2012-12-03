@@ -23,6 +23,7 @@ class LdapServer {
   const LDAP_PROTOCOL_ERROR = 0x02;
 
   public $sid;
+  public $numericSid;
   public $name;
   public $status;
   public $ldap_type;
@@ -48,7 +49,7 @@ class LdapServer {
   public $queriableWithoutUserCredentials = FALSE; // can this server be queried without user credentials provided?
   public $userAttributeNeededCache = array(); // array of attributes needed keyed on $op such as 'user_update'
 
-  public $groupFunctionalityUnused = FALSE;
+  public $groupFunctionalityUnused = 0;
   public $groupObjectClass;
   public $groupNested = 0; // 1 | 0
   public $groupDeriveFromDn = FALSE;
@@ -83,7 +84,9 @@ class LdapServer {
 
   // direct mapping of db to object properties
   public static function field_to_properties_map() {
-    return array( 'sid' => 'sid',
+    return array(
+    'sid' => 'sid',
+    'numeric_sid' => 'numericSid',
     'name'  => 'name' ,
     'status'  => 'status',
     'ldap_type'  => 'ldap_type',
@@ -102,19 +105,19 @@ class LdapServer {
     'unique_persistent_attr_binary' => 'unique_persistent_attr_binary',
     'ldap_to_drupal_user'  => 'ldapToDrupalUserPhp',
     'testing_drupal_username'  => 'testingDrupalUsername',
-    'testingDrupalUserDn'  => 'testingDrupalUserDn',
+    'testing_drupal_user_dn'  => 'testingDrupalUserDn',
 
-    'groupFunctionalityUnused' => 'groupFunctionalityUnused',
-    'group_object_category' => 'groupObjectClass',
-    'groupNested' => 'groupNested',
-    'groupUserMembershipsAttrExists' => 'groupUserMembershipsAttrExists',
-    'groupUserMembershipsAttr' => 'groupUserMembershipsAttr',
-    'groupMembershipsAttr' => 'groupMembershipsAttr',
-    'groupMembershipsAttrMatchingUserAttr' => 'groupMembershipsAttrMatchingUserAttr',
-    'groupDeriveFromDn' => 'groupDeriveFromDn',
-    'groupDeriveFromDnAttr' => 'groupDeriveFromDnAttr',
-    'groupTestGroupDn' =>  'groupTestGroupDn',
-    'groupTestGroupDnWriteable' => 'groupTestGroupDnWriteable',
+    'grp_unused' => 'groupFunctionalityUnused',
+    'grp_object_cat' => 'groupObjectClass',
+    'grp_nested' => 'groupNested',
+    'grp_user_memb_attr_exists' => 'groupUserMembershipsAttrExists',
+    'grp_user_memb_attr' => 'groupUserMembershipsAttr',
+    'grp_memb_attr' => 'groupMembershipsAttr',
+    'grp_memb_attr_match_user_attr' => 'groupMembershipsAttrMatchingUserAttr',
+    'grp_derive_from_dn' => 'groupDeriveFromDn',
+    'grp_derive_from_dn_attr' => 'groupDeriveFromDnAttr',
+    'grp_test_grp_dn' =>  'groupTestGroupDn',
+    'grp_test_grp_dn_writeable' => 'groupTestGroupDnWriteable',
 
     'search_pagination' => 'searchPagination',
     'search_page_size' => 'searchPageSize',
@@ -131,16 +134,17 @@ class LdapServer {
       return;
     }
     $this->detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
-    $server_record = array();
+    $server_record = FALSE;
     if (module_exists('ctools')) {
       ctools_include('export');
       $result = ctools_export_load_object('ldap_servers', 'names', array($sid));
       if (isset($result[$sid])) {
-        $server_record[$sid] = $result[$sid];
-        foreach ($server_record[$sid] as $property => $value) {
-          $this->{$property} = $value;
+        $server_record = new stdClass();
+        foreach ($result[$sid] as $db_field_name => $value) {
+          $server_record->{$db_field_name} = $value;
         }
       }
+      //debug('ctools record'); debug($server_record);
     }
     else {
       $select = db_select('ldap_servers')
@@ -148,37 +152,31 @@ class LdapServer {
         ->condition('ldap_servers.sid',  $sid)
         ->execute();
       foreach ($select as $record) {
-        $server_record[$record->sid] = $record;
+        if ($record->sid == $sid) {
+           $server_record = $record;
+        }
       }
+    //  debug('db record'); debug($server_record);
     }
-    if (!isset($server_record[$sid])) {
+
+    if (!$server_record) {
       $this->inDatabase = FALSE;
-      return;
     }
-    $server_record = $server_record[$sid];
-    if ($server_record) {
+    else {
       $this->inDatabase = TRUE;
       $this->sid = $sid;
       $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
-    }
-    else {
-      // @todo throw error
-    }
-
-    $this->groupFunctionalityUnused = (isset($server_record->groupFunctionalityUnused) && $server_record->groupFunctionalityUnused);
-
-    foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
-      $db_field_name = drupal_strtolower($db_field_name);
-      if (isset($server_record->$db_field_name)) {
-        if ($this->groupFunctionalityUnused && in_array($db_field_name, $this->group_properties)) {
-          // leave group properties as default if groups are set as unused
-        }
-        else {
+     // debug('this server_record'); debug($server_record);
+      foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
+        if (isset($server_record->$db_field_name)) {
           $this->{$property_name} = $server_record->$db_field_name;
         }
       }
+     // debug('this 2'); debug($this);
+      $server_record_bindpw = property_exists($server_record, 'bindpw') ? $server_record->bindpw : '';
+      $this->initDerivedProperties($server_record_bindpw);
+    //  debug('this 3'); debug($this);
     }
-    $this->initDerivedProperties($server_record->bindpw);
 
   }
 
@@ -187,9 +185,14 @@ class LdapServer {
    */
   protected function initDerivedProperties($bindpw) {
 
-    if (is_scalar($this->basedn)) {
-      $this->basedn = unserialize($this->basedn);
+   // debug('initDerivedProperties'); debug($this->basedn);
+    if (!is_array($this->basedn)) {
+      $basedn_unserialized = @unserialize($this->basedn);
+     // debug('basedn_unserialized'); debug($basedn_unserialized);
+      $this->basedn = $basedn_unserialized;
     }
+   // debug('initDerivedProperties'); debug($this->basedn);
+
     if ($bindpw != '') {
       $this->bindpw = ldap_servers_decrypt($bindpw);
     }
@@ -1079,7 +1082,8 @@ class LdapServer {
       $attributes = array_keys($attribute_maps);
     }
 
-    foreach ($this->basedn as $basedn) {
+    $basedns = (is_array($this->basedn)) ? $this->basedn : array(); 
+    foreach ($basedns as $basedn) {
       if (empty($basedn)) continue;
       $filter = '(' . $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ')';
       $result = $this->search($basedn, $filter, $attributes);

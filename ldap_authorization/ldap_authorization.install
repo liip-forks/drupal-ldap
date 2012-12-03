@@ -339,3 +339,21 @@ function ldap_authorization_update_7202() {
     field_delete_field('ldap_authorizations');
 
 }
+
+/**
+ * make all schema field names lowercase in ldap server to deal with cronic case sensitivity issues
+ */
+function ldap_authorization_update_7203() {
+
+  if (db_field_exists('ldap_authorization', 'searchAll')) {
+    db_drop_field('ldap_authorization', 'searchAll');
+  }
+
+  $schema = ldap_authorization_schema();
+  $field_schema = $schema['ldap_authorization']['fields']['use_first_attr_as_groupid'];
+  if (db_field_exists('ldap_authorization', 'useFirstAttrAsGroupId')) {
+    db_change_field('ldap_authorization', 'useFirstAttrAsGroupId', 'use_first_attr_as_groupid', $field_schema);
+  }
+
+
+}

@@ -23,10 +23,8 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values->consumer_module = $this->consumer->consumerModule;
     $values->status = ($this->status) ? 1 : 0;
     $values->only_ldap_authenticated = (int)$this->onlyApplyToLdapAuthenticated;
-
-    $values->useFirstAttrAsGroupId = (int)$this->useFirstAttrAsGroupId;
-
-    $values->mappings = $this->arrayToPipeList($this->mappings);
+    $values->use_first_attr_as_groupid = (int)$this->useFirstAttrAsGroupId;
+    $values->mappings = serialize($this->mappings);
     $values->use_filter = (int)$this->useMappingsAsFilter;
     $values->synch_to_ldap = (int)$this->synchToLdap;
     $values->synch_on_logon = (int)$this->synchOnLogon;
@@ -65,20 +63,20 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     }
 
     // revert mappings to array and remove temporary properties from ctools export
-    $this->mappings = $this->pipeListToArray($values->mappings, FALSE);
-    foreach (array(
-      'consumer_type',
-      'consumer_module',
-      'only_ldap_authenticated',
-      'use_filter',
-      'synch_to_ldap',
-      'synch_on_logon',
-      'revoke_ldap_provisioned',
-      'create_consumers',
-      'regrant_ldap_provisioned'
-      ) as $prop_name) {
-      unset($this->{$prop_name});
-    }
+    //$this->mappings = $this->pipeListToArray($values->mappings, FALSE);
+    //foreach (array(
+    //  'consumer_type',
+    //  'consumer_module',
+    //  'only_ldap_authenticated',
+    //  'use_filter',
+    //  'synch_to_ldap',
+    //  'synch_on_logon',
+    //  'revoke_ldap_provisioned',
+    //  'create_consumers',
+    //  'regrant_ldap_provisioned'
+    //  ) as $prop_name) {
+    //  unset($this->{$prop_name});
+    //}
   }
 
   public $fields;
@@ -100,9 +98,8 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $this->consumers = ldap_authorization_get_consumers(NULL, TRUE);
 
     if ($new) {
-      foreach ($this->consumer->defaultableConsumerConfProperties as $property) {
-        $default_prop_name = $property . 'Default';
-        $this->$property = $this->consumer->$default_prop_name;
+      foreach ($this->consumer->defaultConsumerConfProperties as $property => $value) {
+        $this->$property = $value;
       }
     }
   }
@@ -114,11 +111,6 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
         '#type' => 'item',
         '#markup' => t('<h1>LDAP to !consumer_name Configuration</h1>', $consumer_tokens),
     );
-
-  //  $form['status_intro'] = array(
-   //     '#type' => 'item',
-     //   '#title' => t('Part I.  Basics.', $consumer_tokens),
-  //  );
 
     $form['status'] = array(
       '#type' => 'fieldset',
@@ -186,7 +178,7 @@ Representations of groups derived from LDAP might initially look like:
       '#collapsed' => !($this->mappings || $this->useMappingsAsFilter || $this->useFirstAttrAsGroupId),
     );
 
-    $form['filter_and_mappings']['useFirstAttrAsGroupId'] = array(
+    $form['filter_and_mappings']['use_first_attr_as_groupid'] = array(
       '#type' => 'checkbox',
       '#title' => t('Convert full dn to value of first attribute before mapping.  e.g.  <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>', $consumer_tokens),
       '#default_value' => $this->useFirstAttrAsGroupId,
@@ -194,7 +186,7 @@ Representations of groups derived from LDAP might initially look like:
     $form['filter_and_mappings']['mappings'] = array(
       '#type' => 'textarea',
       '#title' => t('Mapping of LDAP to !consumer_name (one per line)', $consumer_tokens),
-      '#default_value' => $this->arrayToPipeList($this->mappings),
+      '#default_value' => $this->mappingsToPipeList($this->mappings),
       '#cols' => 50,
       '#rows' => 5,
     );
@@ -318,8 +310,6 @@ Representations of groups derived from LDAP might initially look like:
     else {
 
       $this->populateFromDrupalForm($op, $values);
-
-
       $errors = $this->validate($values);
       if (count($this->mappings) == 0 && trim($values['mappings'])) {
         $errors['mappings'] = t('Bad mapping syntax.  Text entered but not able to convert to array.');
@@ -342,8 +332,7 @@ Representations of groups derived from LDAP might initially look like:
 
     if (count($this->mappings) > 0) {
       foreach ($this->mappings as $mapping_item) {
-        list($map_from, $map_to) = $mapping_item;
-        list($type, $text) = $this->consumer->validateAuthorizationMappingTarget($map_to, $form_values);
+        list($type, $text) = $this->consumer->validateAuthorizationMappingTarget($mapping_item, $form_values);
         if ($type == 'error') {
           $errors['mappings'] = $text;
         }
@@ -361,17 +350,16 @@ Representations of groups derived from LDAP might initially look like:
   protected function populateFromDrupalForm($op, $values) {
 
     $this->inDatabase = (drupal_strtolower($op) == 'edit' || drupal_strtolower($op) == 'save');
-    $values['mappings'] = $this->pipeListToArray($values['mappings'], FALSE);
+    $this->consumerType = $values['consumer_type'];
 
     $this->sid = $values['sid'];
-    $this->consumerType = $values['consumer_type'];
+
     $this->status = (bool)$values['status'];
     $this->onlyApplyToLdapAuthenticated  = (bool)(@$values['only_ldap_authenticated']);
-    $this->useFirstAttrAsGroupId  = (bool)($values['useFirstAttrAsGroupId']);
+    $this->useFirstAttrAsGroupId  = (bool)($values['use_first_attr_as_groupid']);
 
-    $this->mappings = $values['mappings'];
+    $this->mappings = $this->consumer->normalizeMappings($this->pipeListToArray($values['mappings'], FALSE));
     $this->useMappingsAsFilter  = (bool)(@$values['use_filter']);
-
 
     $this->synchOnLogon = (bool)(@$values['synchronization_modes']['user_logon']);
     $this->regrantLdapProvisioned = (bool)(@$values['synchronization_actions']['regrant_ldap_provisioned']);
@@ -455,7 +443,7 @@ Representations of groups derived from LDAP might initially look like:
         )
       ),
 
-      'useFirstAttrAsGroupId' => array(
+      'use_first_attr_as_groupid' => array(
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
@@ -539,27 +527,13 @@ Representations of groups derived from LDAP might initially look like:
   }
 
 
-
-
-  protected function arrayToPipeList($array) {
+  protected function mappingsToPipeList($mappings) {
     $result_text = "";
-    foreach ($array as $map_pair) {
-      $result_text .= $map_pair[0] . '|' . $map_pair[1] . "\n";
+    foreach ($mappings as $map) {
+      $result_text .= $map['from'] . '|' . $map['user_entered'] . "\n";
     }
     return $result_text;
   }
-
-  protected function arrayToLines($array) {
-        $lines = "";
-        if (is_array($array)) {
-          $lines = join("\n", $array);
-        }
-        elseif (is_array(@unserialize($array))) {
-          $lines = join("\n", unserialize($array));
-        }
-        return $lines;
-      }
-
 
 
 }

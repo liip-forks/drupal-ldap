@@ -46,7 +46,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
       }
     }
 
-    $form['useFirstAttrAsGroupId'] = array(
+    $form['use_first_attr_as_groupid'] = array(
       '#type' => 'fieldset',
       '#title' => t('After "Convert full dn to value of first attribute before mapping"'),
       '#collapsible' => TRUE,
@@ -55,14 +55,14 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
 
     if ($consumer->consumerConf->useFirstAttrAsGroupId) {
       if (isset($_SESSION['ldap_authorization_test_query']['useFirstAttrAsGroupId'])) {
-        $form['useFirstAttrAsGroupId']['data'] = array(
+        $form['use_first_attr_as_groupid']['data'] = array(
          '#type' => 'item',
          '#markup' => theme('item_list', array('items' => $_SESSION['ldap_authorization_test_query']['useFirstAttrAsGroupId'], 'type' => 'ul', 'title' => "Convert full dn to value of first attribute before mapping")),
         );
       }
     }
     else {
-      $form['useFirstAttrAsGroupId']['data'] = array(
+      $form['use_first_attr_as_groupid']['data'] = array(
        '#type' => 'item',
        '#markup' => "Convert full dn to value of first attribute before mapping. NOT enabled",
       );
@@ -75,11 +75,16 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
       '#collapsed' => TRUE,
     );
 
+    $maps = array();
+    foreach ($consumer->consumerConf->mappings as $i => $mapping) {
+      $maps[] = $mapping['from'] . '|' . $mapping['user_entered'];
+    }
+
     $form['post mappings']['conf'] = array(
       '#type' => 'item',
       '#markup' => 'Use Mappings as Filter = ' . (int)$consumer->consumerConf->useMappingsAsFilter .
           theme('item_list', array(
-          'items' =>  $consumer->consumerConf->mappings,
+          'items' =>  $maps,
           'type' => 'ul',
           'title' => 'Configured Mappings',
         )
@@ -89,7 +94,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
       $form['post mappings']['conf']['#markup'] =
       'Use Mappings as Filter = ' . (int)$consumer->consumerConf->useMappingsAsFilter .
           theme('item_list', array(
-          'items' =>  $consumer->consumerConf->mappings,
+          'items' =>  $maps,
           'type' => 'ul',
           'title' => 'Configured Mappings',
         )

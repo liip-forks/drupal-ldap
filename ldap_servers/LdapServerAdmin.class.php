@@ -73,22 +73,22 @@ class LdapServerAdmin extends LdapServer {
     $this->unique_persistent_attr_binary = trim($values['unique_persistent_attr_binary']);
     $this->ldapToDrupalUserPhp = $values['ldap_to_drupal_user'];
     $this->testingDrupalUsername = trim($values['testing_drupal_username']);
-    $this->testingDrupalUserDn = trim($values['testingDrupalUserDn']);
+    $this->testingDrupalUserDn = trim($values['testing_drupal_user_dn']);
+    $this->groupFunctionalityUnused = $values['grp_unused'];
+    $this->groupObjectClass = drupal_strtolower(trim($values['grp_object_cat']));
+    $this->groupNested = trim($values['grp_nested']);
 
-    $this->groupFunctionalityUnused = trim($values['groupFunctionalityUnused']);
-    $this->groupObjectClass = drupal_strtolower(trim($values['group_object_category']));
-    $this->groupNested = trim($values['groupNested']);
+    $this->groupUserMembershipsAttrExists = trim($values['grp_user_memb_attr_exists']);
+    $this->groupUserMembershipsAttr =  drupal_strtolower(trim($values['grp_user_memb_attr']));
 
-    $this->groupUserMembershipsAttrExists = trim($values['groupUserMembershipsAttrExists']);
-    $this->groupUserMembershipsAttr =  drupal_strtolower(trim($values['groupUserMembershipsAttr']));
+    $this->groupMembershipsAttr = drupal_strtolower(trim($values['grp_memb_attr']));
 
-    $this->groupMembershipsAttr = drupal_strtolower(trim($values['groupMembershipsAttr']));
-    $this->groupMembershipsAttrMatchingUserAttr =  drupal_strtolower(trim($values['groupMembershipsAttrMatchingUserAttr']));
+    $this->groupMembershipsAttrMatchingUserAttr =  drupal_strtolower(trim($values['grp_memb_attr_match_user_attr']));
 
-    $this->groupDeriveFromDn = trim($values['groupDeriveFromDn']);
-    $this->groupDeriveFromDnAttr = drupal_strtolower(trim($values['groupDeriveFromDnAttr']));
-    $this->groupTestGroupDn = trim($values['groupTestGroupDn']);
-    $this->groupTestGroupDnWriteable = trim($values['groupTestGroupDnWriteable']);
+    $this->groupDeriveFromDn = trim($values['grp_derive_from_dn']);
+    $this->groupDeriveFromDnAttr = drupal_strtolower(trim($values['grp_derive_from_dn_attr']));
+    $this->groupTestGroupDn = trim($values['grp_test_grp_dn']);
+    $this->groupTestGroupDnWriteable = trim($values['grp_test_grp_dn_writeable']);
 
 
     $this->searchPagination = ($values['search_pagination']) ? 1 : 0;
@@ -96,57 +96,65 @@ class LdapServerAdmin extends LdapServer {
 
   }
 
-  protected function entry() {
+  /**
+   * @param string enum $op 'add', 'update'
+   */
 
-    $entry = $this;
-    foreach ($this->field_to_properties_map() as $field_name => $property_name) {
-      $entry->{$field_name} = $this->{$property_name};
-    }
-    if (isset($this->bindpw) && $this->bindpw) {
-      $entry->bindpw = ldap_servers_encrypt($this->bindpw);
-    }
-    if ($this->bindpw_new) {
-      $entry->bindpw =  ldap_servers_encrypt($this->bindpw_new);
-    }
-    elseif ($this->bindpw_clear) {
-      $entry->bindpw = NULL;
-    }
-    $entry->tls = (int)$entry->tls;
-    return $entry;
-
-  }
   public function save($op) {
 
-    $entry = $this->entry();
+    $values = new stdClass();
 
-    $result = FALSE;
-    if ($op == 'edit') {
-      if (module_exists('ctools')) {
-        ctools_include('export');
-        $result = ctools_export_crud_save('ldap_servers', $entry);
-          ctools_export_load_object_reset('ldap_servers'); // ctools_export_crud_save doesn't invalidate cache
+    foreach ($this->field_to_properties_map() as $field_name => $property_name) {
+      $field_name_lcase = drupal_strtolower($field_name);
+      if (is_scalar($this->{$property_name})) {
+        $values->{$field_name_lcase} = $this->{$property_name};
       }
       else {
-        $result = drupal_write_record('ldap_servers', $entry, 'sid');
+        $values->{$field_name_lcase} = serialize($this->{$property_name});
       }
     }
-    else {
-      if (module_exists('ctools')) {
-        ctools_include('export');
-        // Populate our object with ctool's properties
-        $object = ctools_export_crud_new('ldap_servers');
-        foreach ($object as $property => $value) {
-          if (!isset($entry->$property)) {
-            $entry->$property = $value;
-          }
+    if (isset($this->bindpw) && $this->bindpw) {
+      $values->bindpw = ldap_servers_encrypt($this->bindpw);
+    }
+    if ($this->bindpw_new) {
+      $values->bindpw = ldap_servers_encrypt($this->bindpw_new);
+    }
+    elseif ($this->bindpw_clear) {
+      $values->bindpw = NULL;
+    }
+
+    $values->tls = (int)$this->tls;
+
+    if (module_exists('ctools')) {
+      ctools_include('export');
+      // Populate our object with ctool's properties
+      $object = ctools_export_crud_new('ldap_servers');
+
+      foreach ($object as $property => $value) {
+        $property_lcase = drupal_strtolower($property);
+        if (!isset($values->$property) || !isset($values->$property_lcase)) {
+          $values->$property_lcase = $value;
         }
-        $result = ctools_export_crud_save('ldap_servers', $entry);
-        ctools_export_load_object_reset('ldap_servers'); // ctools_export_crud_save doesn't invalidate cache
+      }
+
+      $values->export_type = ($this->inDatabase) ? EXPORT_IN_DATABASE : NULL;
+      $result = ctools_export_crud_save('ldap_servers', $values);
+      ctools_export_load_object_reset('ldap_servers'); // ctools_export_crud_save doesn't invalidate cache
+
+    }
+    else { // directly via db
+      unset($values->numeric_sid);
+      if ($op == 'add') {
+        $result = drupal_write_record('ldap_servers', $values);
       }
       else {
-        $result = drupal_write_record('ldap_servers', $entry);
+        $result = drupal_write_record('ldap_servers', $values, 'sid');
       }
+      ldap_servers_cache_clear();
+
     }
+
+  //  debug("values sent to save op=$op, ctools=". (int)module_exists('ctools')); debug($values);
     if ($result) {
       $this->inDatabase = TRUE;
     }
@@ -159,6 +167,7 @@ class LdapServerAdmin extends LdapServer {
     if ($sid == $this->sid) {
       $result = db_delete('ldap_servers')->condition('sid', $sid)->execute();
       if (module_exists('ctools')) {
+        ctools_include('export');
         ctools_export_load_object_reset('ldap_servers'); // invalidate cache
       }
       $this->inDatabase = FALSE;
@@ -561,7 +570,7 @@ public function drupalFormSubmit($op, $values) {
         'schema' => array(
           'type' => 'varchar',
           'length' => 255,
-          'not null' => TRUE,
+          'not null' => FALSE,
         ),
       ),
 
@@ -576,7 +585,7 @@ public function drupalFormSubmit($op, $values) {
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
-          'not null' => TRUE,
+          'not null' => FALSE,
           'default' => 0,
         ),
       ),
@@ -608,7 +617,7 @@ public function drupalFormSubmit($op, $values) {
         'schema' => array(
           'type' => 'varchar',
           'length' => 255,
-          'not null' => TRUE,
+          'not null' => FALSE,
         ),
       ),
 
@@ -622,7 +631,7 @@ public function drupalFormSubmit($op, $values) {
         ),
         'schema' => array(
           'type' => 'int',
-          'not null' => TRUE,
+          'not null' => FALSE,
           'default' => 389,
         ),
       ),
@@ -637,7 +646,7 @@ public function drupalFormSubmit($op, $values) {
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
-          'not null' => TRUE,
+          'not null' =>FALSE,
           'default' => 0,
         ),
       ),
@@ -668,7 +677,7 @@ public function drupalFormSubmit($op, $values) {
         'schema' => array(
           'type' => 'int',
           'size' => 'small',
-          'not null' => TRUE,
+          'not null' => FALSE,
           'default' => 0,
         ),
       ),
@@ -761,7 +770,7 @@ public function drupalFormSubmit($op, $values) {
         'schema' => array(
           'type' => 'varchar',
           'length' => 255,
-          'not null' => TRUE,
+          'not null' => FALSE,
         ),
       ),
 
@@ -908,7 +917,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-     'testingDrupalUserDn' =>  array(
+     'testing_drupal_user_dn' =>  array(
         'form' => array(
           'fieldset' => 'users',
           '#type' => 'textfield',
@@ -923,10 +932,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-
-
-
-      'groupFunctionalityUnused' => array(
+      'grp_unused' => array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'checkbox',
@@ -936,12 +942,12 @@ public function drupalFormSubmit($op, $values) {
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
-          'not null' => TRUE,
+          'not null' => FALSE,
           'default' => 0,
         ),
       ),
 
-     'group_object_category' =>  array(
+     'grp_object_cat' =>  array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
@@ -950,7 +956,7 @@ public function drupalFormSubmit($op, $values) {
           '#description' => t('e.g. groupOfNames, groupOfUniqueNames, group.'),
           '#states' => array(
               'visible' => array(   // action to take.
-                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+                ':input[name=grp_unused]' => array('checked' => FALSE),
               ),
             ),
         ),
@@ -961,7 +967,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-      'groupNested' => array(
+      'grp_nested' => array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'checkbox',
@@ -972,7 +978,7 @@ public function drupalFormSubmit($op, $values) {
              want to ignore nesting, leave this unchecked.'),
           '#states' => array(
               'visible' => array(   // action to take.
-                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+                ':input[name=grp_unused]' => array('checked' => FALSE),
               ),
             ),
         ),
@@ -984,7 +990,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-      'groupUserMembershipsAttrExists' => array(
+      'grp_user_memb_attr_exists' => array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'checkbox',
@@ -993,19 +999,19 @@ public function drupalFormSubmit($op, $values) {
           '#disabled' => FALSE,
           '#states' => array(
              'visible' => array(   // action to take.
-               ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+               ':input[name=grp_unused]' => array('checked' => FALSE),
               ),
             ),
         ),
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
-          'not null' => TRUE,
+          'not null' => FALSE,
           'default' => 0,
         ),
       ),
 
-      'groupUserMembershipsAttr' =>  array(
+      'grp_user_memb_attr' =>  array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
@@ -1014,10 +1020,10 @@ public function drupalFormSubmit($op, $values) {
           '#description' => t('e.g. memberOf'),
           '#states' => array(
             'enabled' => array(   // action to take.
-              ':input[name=groupUserMembershipsAttrExists]' => array('checked' => TRUE),
+              ':input[name=grp_user_memb_attr_exists]' => array('checked' => TRUE),
             ),
               'visible' => array(   // action to take.
-              ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+              ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
           ),
         ),
@@ -1028,7 +1034,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-      'groupMembershipsAttr' =>  array(
+      'grp_memb_attr' =>  array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
@@ -1037,7 +1043,7 @@ public function drupalFormSubmit($op, $values) {
           '#description' => t('e.g uniquemember, memberUid'),
           '#states' => array(
               'visible' => array(   // action to take.
-                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+                ':input[name=grp_unused]' => array('checked' => FALSE),
               ),
             ),
         ),
@@ -1048,7 +1054,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-      'groupMembershipsAttrMatchingUserAttr' =>  array(
+      'grp_memb_attr_match_user_attr' =>  array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
@@ -1057,7 +1063,7 @@ public function drupalFormSubmit($op, $values) {
           '#description' => t('This is almost always "dn" (which technically isn\'t an attribute).  Sometimes its "cn".'),
           '#states' => array(
               'visible' => array(   // action to take.
-                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+                ':input[name=grp_unused]' => array('checked' => FALSE),
               ),
             ),
         ),
@@ -1068,7 +1074,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-      'groupDeriveFromDn' => array(
+      'grp_derive_from_dn' => array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'checkbox',
@@ -1079,19 +1085,19 @@ public function drupalFormSubmit($op, $values) {
           '#disabled' => FALSE,
           '#states' => array(
               'visible' => array(   // action to take.
-                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+                ':input[name=grp_unused]' => array('checked' => FALSE),
               ),
             ),
         ),
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
-          'not null' => TRUE,
+          'not null' => FALSE,
           'default' => 0,
         ),
       ),
 
-      'groupDeriveFromDnAttr' =>  array(
+      'grp_derive_from_dn_attr' =>  array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
@@ -1100,10 +1106,10 @@ public function drupalFormSubmit($op, $values) {
           '#description' => t('e.g. ou'),
           '#states' => array(
             'enabled' => array(   // action to take.
-              ':input[name=groupDeriveFromDn]' => array('checked' => TRUE),
+              ':input[name=grp_derive_from_dn]' => array('checked' => TRUE),
             ),
               'visible' => array(   // action to take.
-              ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+              ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
           ),
         ),
@@ -1114,7 +1120,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-     'groupTestGroupDn' =>  array(
+     'grp_test_grp_dn' =>  array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
@@ -1123,7 +1129,7 @@ public function drupalFormSubmit($op, $values) {
           '#description' => t('This is optional and can be useful for debugging and validating forms.'),
           '#states' => array(
               'visible' => array(   // action to take.
-                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+                ':input[name=grp_unused]' => array('checked' => FALSE),
               ),
             ),
         ),
@@ -1134,7 +1140,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-     'groupTestGroupDnWriteable' =>  array(
+     'grp_test_grp_dn_writeable' =>  array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
@@ -1143,7 +1149,7 @@ public function drupalFormSubmit($op, $values) {
           '#description' => t('This is optional and can be useful for debugging and validating forms.'),
           '#states' => array(
               'visible' => array(   // action to take.
-                ':input[name=groupFunctionalityUnused]' => array('checked' => FALSE),
+                ':input[name=grp_unused]' => array('checked' => FALSE),
               ),
             ),
         ),
@@ -1198,7 +1204,7 @@ public function drupalFormSubmit($op, $values) {
       'weight' =>  array(
         'schema' => array(
           'type' => 'int',
-          'not null' => TRUE,
+          'not null' => FALSE,
           'default' => 0,
         ),
       ),

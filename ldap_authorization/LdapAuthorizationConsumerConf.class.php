@@ -29,17 +29,12 @@ class LdapAuthorizationConsumerConf {
 
   public $useFirstAttrAsGroupId = FALSE;
 
-
-  public $searchAll = FALSE;
-
   public $mappings = array();
-  public $normalizedMappings = array(); // mappings in simples form.
   public $useMappingsAsFilter = TRUE;
 
   public $synchToLdap = FALSE;
 
   public $synchOnLogon = TRUE;
-  public $synchManually = TRUE;
 
   public $revokeLdapProvisioned = TRUE;
   public $regrantLdapProvisioned = TRUE;
@@ -66,11 +61,13 @@ class LdapAuthorizationConsumerConf {
     }
     else {
       $this->inDatabase = TRUE;
-      $this->loadFromDb();
+      $exists = $this->loadFromDb();
+      if (!$exists) {
+        watchdog('ldap_authorization', 'failed to load existing %consumer object', array('%consumer' => $consumer), WATCHDOG_ERROR);
+      }
     }
     // default value for deriveFromEntryAttrMatchingUserAttr set up this way for backward compatibility in 1.0 branch,
     // make deriveFromEntryAttrMatchingUserAttr default to dn in 2.0 branch.
-    $this->normalizedMappings = $consumer->normalizeMappings($this->mappings);
   }
 
   protected function loadFromDb() {
@@ -79,7 +76,7 @@ class LdapAuthorizationConsumerConf {
       $result = ctools_export_load_object('ldap_authorization', 'names', array($this->consumerType));
 
       // @todo, this is technically wrong, but I don't quite grok what we're doing in the non-ctools case - justintime
-      $consumer_conf = array_pop($result);
+      $server_record = array_pop($result);
       // There's no ctools api call to get the reserved properties, so instead of hardcoding a list of them
       // here, we just grab everything.  Basically, we sacrifice a few bytes of RAM for forward-compatibility.
     }
@@ -87,35 +84,74 @@ class LdapAuthorizationConsumerConf {
       $select = db_select('ldap_authorization', 'ldap_authorization');
       $select->fields('ldap_authorization');
       $select->condition('ldap_authorization.consumer_type',  $this->consumerType);
-      $consumer_conf = $select->execute()->fetchObject();
+      $server_record = $select->execute()->fetchObject();
     }
 
-    if (!$consumer_conf) {
+    if (!$server_record) {
       $this->inDatabase = FALSE;
-      return;
+      return FALSE;
     }
 
-    $this->sid = $consumer_conf->sid;
-    $this->consumerType = $consumer_conf->consumer_type;
-    $this->numericConsumerConfId = isset($consumer_conf->numeric_consumer_conf_id)? $consumer_conf->numeric_consumer_conf_id : NULL;
-    $this->status = ($consumer_conf->status) ? 1 : 0;
-    $this->onlyApplyToLdapAuthenticated  = (bool)(@$consumer_conf->only_ldap_authenticated);
+    foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
+      if (isset($server_record->$db_field_name)) {
+        if (in_array($db_field_name, $this->field_to_properties_serialized())) {
+          $this->{$property_name} = unserialize($server_record->$db_field_name);
+        }
+        else {
+          $this->{$property_name} = $server_record->$db_field_name;
 
-    $this->useFirstAttrAsGroupId  = (bool)(@$consumer_conf->useFirstAttrAsGroupId);
-
-    $this->searchAll = (bool)(@$consumer_conf->searchAll);
-
-    $this->mappings = $this->pipeListToArray($consumer_conf->mappings, FALSE);
-    $this->useMappingsAsFilter = (bool)(@$consumer_conf->use_filter);
-
-    $this->synchToLdap = (bool)(@$consumer_conf->synch_to_ldap);
-    $this->synchOnLogon = (bool)(@$consumer_conf->synch_on_logon);
-    $this->regrantLdapProvisioned = (bool)(@$consumer_conf->regrant_ldap_provisioned);
-    $this->revokeLdapProvisioned = (bool)(@$consumer_conf->revoke_ldap_provisioned);
-    $this->createConsumers = (bool)(@$consumer_conf->create_consumers);
+        }
+      }
+    }
+    $this->numericConsumerConfId = isset($server_record->numeric_consumer_conf_id)? $server_record->numeric_consumer_conf_id : NULL;
     $this->server = ldap_servers_get_servers($this->sid, NULL, TRUE);
 
+    return TRUE;
+
+   // $this->sid = $consumer_conf->sid;
+   // $this->consumerType = $consumer_conf->consumer_type;
+
+  //  $this->status = ($consumer_conf->status) ? 1 : 0;
+  //  $this->onlyApplyToLdapAuthenticated  = (@$consumer_conf->only_ldap_authenticated);
+
+  //  $this->useFirstAttrAsGroupId  = (@$consumer_conf->use_first_attr_as_groupid);
+
+   // $this->mappings = unserialize($consumer_conf->mappings);
+   // dpm($this->mappings); dpm($consumer_conf->mappings);
+  //  $this->useMappingsAsFilter = (@$consumer_conf->use_filter);
+
+ //   $this->synchToLdap = (@$consumer_conf->synch_to_ldap);
+ //   $this->synchOnLogon = (@$consumer_conf->synch_on_logon);
+ //   $this->regrantLdapProvisioned = (@$consumer_conf->regrant_ldap_provisioned);
+  //  $this->revokeLdapProvisioned = (@$consumer_conf->revoke_ldap_provisioned);
+  //  $this->createConsumers = (@$consumer_conf->create_consumers);
+
+
   }
+
+  // direct mapping of db to object properties
+  public static function field_to_properties_map() {
+    return array(
+      'sid' => 'sid',
+      'consumer_type' => 'consumerType',
+      'numeric_consumer_conf_id'  => 'numericConsumerConfId' ,
+      'status'  => 'status',
+      'only_ldap_authenticated'  => 'useFirstAttrAsGroupId',
+      'use_first_attr_as_groupid'  => 'address',
+      'mappings'  => 'mappings',
+      'use_filter'  => 'useMappingsAsFilter',
+      'synch_to_ldap' => 'synchToLdap',
+      'synch_on_logon'  => 'synchOnLogon',
+      'regrant_ldap_provisioned'  => 'regrantLdapProvisioned',
+      'revoke_ldap_provisioned' => 'revokeLdapProvisioned',
+      'create_consumers'  => 'createConsumers',
+    );
+  }
+
+  public static function field_to_properties_serialized() {
+    return array('mappings');
+  }
+
   /**
    * Destructor Method
    */
@@ -125,24 +161,6 @@ class LdapAuthorizationConsumerConf {
 
   protected $_sid;
   protected $_new;
-
-  protected $saveable = array(
-    'sid',
-    'consumerType',
-    'status',
-    'onlyApplyToLdapAuthenticated',
-    'mappings',
-    'useMappingsAsFilter',
-    'synchToLdap',
-    'synchOnLogon',
-    'synchManually',
-    'revokeLdapProvisioned',
-    'createConsumers',
-    'regrantLdapProvisioned',
-    'searchAll',
-    'useFirstAttrAsGroupId',
-
-  );
 
   protected function linesToArray($lines) {
     $lines = trim($lines);

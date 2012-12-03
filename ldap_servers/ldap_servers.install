@@ -730,6 +730,35 @@ function ldap_servers_update_7202() {
 
 }
 
+/**
+ * make all schema field names lowercase in ldap server to deal with cronic case sensitivity issues
+ */
+function ldap_servers_update_7203() {
+  $schema = ldap_servers_schema();
+    $changes = array(
+    'testingDrupalUserDn' => 'testing_drupal_user_dn',
+    'group_object_category' => 'grp_object_cat',
+    'groupFunctionalityUnused' => 'grp_unused',
+    'groupNested' => 'grp_nested',
+    'groupUserMembershipsAttrExists' => 'grp_user_memb_attr_exists',
+    'groupUserMembershipsAttr' => 'grp_user_memb_attr',
+    'groupMembershipsAttr' => 'grp_memb_attr',
+    'groupMembershipsAttrMatchingUserAttr' => 'grp_memb_attr_match_user_attr',
+    'groupDeriveFromDn' => 'grp_derive_from_dn',
+    'groupDeriveFromDnAttr' => 'grp_derive_from_dn_attr',
+    'groupTestGroupDn' => 'grp_test_grp_dn',
+    'groupTestGroupDnWriteable' => 'grp_test_grp_dn_writeable'
+  );
+  foreach ($changes as $old_field_name => $new_field_name) {
+    $field_schema = $schema['ldap_servers']['fields'][$new_field_name];
+    if (db_field_exists('ldap_servers', $old_field_name)) {
+      db_change_field('ldap_servers', $old_field_name, $new_field_name, $field_schema);
+    }
+  }
+
+}
+
+
 function ldap_servers_install_update_schema($schema, &$change_log) {
   foreach ($schema as $table_name => $table_schema) {
     foreach ($table_schema['fields'] as $field_name => $field_schema) {

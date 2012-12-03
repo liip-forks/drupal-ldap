@@ -69,7 +69,7 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
     '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
   );
 
-  $form['groupTestGroupDn'] = array(
+  $form['grp_test_grp_dn'] = array(
     '#type' => 'textfield',
     '#title' => t('Testing Group DN'),
     '#default_value' => $ldap_server->groupTestGroupDn,
@@ -78,7 +78,7 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
     '#description' => t('This is optional and used for testing this server\'s group configuration.'),
   );
 
-  $form['groupTestGroupDnWriteable'] = array(
+  $form['grp_test_grp_dn_writeable'] = array(
     '#type' => 'textfield',
     '#title' => t('Testing Group DN that is writeable. Warning!  In test, this group will be deleted, created, have members added to it!'),
     '#default_value' => $ldap_server->groupTestGroupDnWriteable,
@@ -190,9 +190,9 @@ function ldap_servers_test_form_submit($form, &$form_state) {
     $results_tables['basic'][] = array(t('Binding with null DN for anonymous search.'));
   }
 
-  if (@$values['groupTestGroupDnWriteable'] && @$values['testingDrupalUserDn']) {
-    $user_test_dn = @$values['testingDrupalUserDn'];
-    $group_create_test_dn = $values['groupTestGroupDnWriteable'];
+  if (@$values['grp_test_grp_dn_writeable'] && @$values['grp_test_grp_dn']) {
+    $user_test_dn = @$values['grp_test_grp_dn'];
+    $group_create_test_dn = $values['grp_test_grp_dn_writeable'];
     $group_create_test_attr = array(
       'objectClass' => array($ldap_server->groupObjectClass, 'top'),
     );
@@ -271,8 +271,8 @@ function ldap_servers_test_form_submit($form, &$form_state) {
     }
   }
 
-  if (!$has_errors && isset($values['groupTestGroupDn'])) {
-    $group_dn = $values['groupTestGroupDn'];
+  if (!$has_errors && isset($values['grp_test_grp_dn'])) {
+    $group_dn = $values['grp_test_grp_dn'];
     $user = isset($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
 
     foreach (array(FALSE, TRUE) as $nested) { //FALSE

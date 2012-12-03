@@ -98,7 +98,7 @@ class LdapAuthorizationOg2Tests extends LdapTestCase {
   /**
    * just make sure install succeeds and
    */
-  function x_testBasicFunctionsAndApi() {
+  function testBasicFunctionsAndApi() {
 
     if (ldap_authorization_og_og_version() != 2) {
       debug('LdapAuthorizationOg2Tests must be run with OG 7.x-2.x');
@@ -142,7 +142,7 @@ class LdapAuthorizationOg2Tests extends LdapTestCase {
     $dungeon_master_rid =     ldap_authorization_og2_rid_from_role_name($this->groupEntityType, $this->groupBundle, $og_faculty_node->nid, 'dungeon-master');
     $time_keeper =     ldap_authorization_og2_rid_from_role_name($this->groupEntityType, $this->groupBundle, $og_faculty_node->nid, 'time-keeper');
 
-    debug("test of ldap_authorization_og2_rid_from_role_name(). rids: $anonymous_rid,$member_rid,$admin_rid,$dungeon_master_rid, $time_keeper");
+    // debug("test of ldap_authorization_og2_rid_from_role_name(). rids: $anonymous_rid,$member_rid,$admin_rid,$dungeon_master_rid, $time_keeper");
 
     /**
      * II.0 basic granting tests to make sure og_role_grant, ldap_authorization_og_rid_from_role_name,
