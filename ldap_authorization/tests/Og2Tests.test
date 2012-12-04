@@ -234,12 +234,13 @@ class LdapAuthorizationOg2Tests extends LdapTestCase {
       "LdapAuthorizationConsumerOG has faculty member role BEFORE authorizationRevoke() test revoke on member role $faculty_member_consumer_id", $this->ldapTestId);
 
 
-    $consumers =  array($faculty_member_consumer_id => $og_auth->emptyConsumer);
+    $consumers = array($faculty_member_consumer_id => $og_auth->emptyConsumer);
     $og_auth->authorizationRevoke($web_user, $user_data, $consumers, $ldap_entry, TRUE);
-    $this->assertFalse(ldap_authorization_og2_has_consumer_id($faculty_member_consumer_id, $web_user->uid),
+    debug("consumers"); debug($consumers);
+    $result = ldap_authorization_og2_has_consumer_id($faculty_member_consumer_id, $web_user->uid);
+    debug("consumers"); debug($consumers); debug("result"); debug($result);
+    $this->assertFalse($result,
       "LdapAuthorizationConsumerOG authorizationRevoke() test revoke on member role $faculty_member_consumer_id", $this->ldapTestId);
-
-    return;
 
     $faculty_dungeon_master_consumer_id = ldap_authorization_og_authorization_id($og_faculty_node->nid, $dungeon_master_rid, 'node');
     $consumers =  array($faculty_dungeon_master_consumer_id => $og_auth->emptyConsumer);
@@ -525,7 +526,7 @@ function testFlags() {
   * LDAP_authorz.Flags.createConsumers=1
   */
 
-  if ($og_group_consumer->allowConsumerObjectCreation) {
+  if (!empty($og_group_consumer['allowConsumerObjectCreation']) && $og_group_consumer['allowConsumerObjectCreation']) {
     //@todo.  this needs to be finished when creation of og groups is added to ldap authorization og functionality
 
     //add new mapping to and enable create consumers

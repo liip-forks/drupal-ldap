@@ -73,21 +73,25 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
   public function normalizeMappings($mappings) {
 
 		$new_mappings = array();
-    if ($this->ogVersion == 2) {  // not relavant to og 2 mappings
+    if ($this->ogVersion == 2) {
 			$group_entity_types = og_get_all_group_bundle();
 			foreach ($mappings as $i => $mapping) {
 
 				$from = $mapping[0];
+				$to = $mapping[1];
+				$to_parts = explode('(', $to);
+
+				$user_entered = $to_parts[0];
 				$new_mapping = array(
 					'from' => $from,
-				  'user_entered' => $mapping[1],
+				  'user_entered' => $user_entered,
 				  'valid' => TRUE,
 				  'error_message' => '',
 				);
 
-				$to = $mapping[1];
-				$to_parts = explode('(', $to);
-				if (count($to_parts) == 2) { // has simplified and non normalized part. update normalized part as validation
+
+
+				if (count($to_parts) == 2) { // has simplified and normalized part in (). update normalized part as validation
 					$to_normalized = trim($to_parts[1], ')');
 					/**
 					 * users (node:35:1)
@@ -143,14 +147,25 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 					$to_simplified = ($to_simplified) ? $to_simplified . ':' . $role_name : $to_normalized;
 					$new_mapping['normalized'] = $to_normalized;
 					$new_mapping['simplified'] = $to_simplified;
+					if ($to == $to_normalized) {
+						/**  if not using simplified notation, do not convert to simplified.
+						  this would create a situation where an og group
+					    can change its title and the authorizations change when the
+						  admin specified the group by entity id
+						**/
+						$new_mapping['user_entered'] = $to;
+					}
+					else {
+						$new_mapping['user_entered'] = $to_simplified . ' (' . $to_normalized . ')';
+					}
 
-					// if not using simplified notation, do not convert to simplified.  this creates a situation where an og group
-					// can change its title and authorization model changes.
+
 				}
 			 // dpm("convert $to, to: $to_simplified ($to_normalized)");
 
 				$new_mappings[] = $new_mapping;
 			}
+		//	dpm($new_mappings);
     }
     else { // og 1
 			foreach ($mappings as $i => $mapping) {
@@ -361,11 +376,11 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
   public function revokeSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $reset = FALSE) {
 		if (!$this->hasAuthorization($user, $consumer_id)) {
 			og_invalidate_cache(); // if trying to revoke, but thinks not granted, flush cache
+			//debug("hasAuthorization $user, $consumer_id"); debug($this->hasAuthorization($user, $consumer_id));
 			if (!$this->hasAuthorization($user, $consumer_id)) {
 				return TRUE;
 			}
 		}
-
 
 		$watchdog_tokens =  array('%consumer_id' => $consumer_id, '%username' => $user->name,
 			'%ogversion' => $this->ogVersion, '%function' => 'LdapAuthorizationConsumerOG.revokeSingleAuthorization()');
@@ -376,7 +391,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     else {
       list($group_entity_type, $gid, $rid) = @explode(':', $consumer_id);
     }
-
+    //debug("gid=$gid");
 		// make sure group exists, since og doesn't do much error catching.
 		if (!empty($consumer['value'])) {
 			$og_group = $consumer['value'];
