@@ -185,7 +185,7 @@ function ldap_authorization_og2_has_consumer_id($consumer_id, $uid) {
     if ($group = entity_load_single($group_type, $gid)) {
       if (og_is_group($group_type, $group)) {
         $roles = og_get_user_roles($group_type, $gid, $uid, TRUE);
-        debug("ldap_authorization_og2_has_consumer_id: has uid=$uid, gid=$gid, rid=$rid"); debug($roles);
+       // debug("ldap_authorization_og2_has_consumer_id: has uid=$uid, gid=$gid, rid=$rid"); debug($roles);
         $result = isset($roles[$rid]);
       }
       else {
