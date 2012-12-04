@@ -36,7 +36,7 @@ function ldap_authorization_og_ldap_authorization_consumer() {
     $types['og_group']['consumer_mapping_directions'] =  'Mappings should be of form:<br/>
       <code>[raw authorization id]|[og entity type]:[og entity id or title]:[og role id]</code>
       <br/>[og entity type] is generally "node"
-      <br/>[og entity id or title] can be the groups title or entity id
+      <br/>[og entity id or title] can be the groups title or entity id. <strong>Titles with ":"s in them may not be used</strong>.
       <br/>when [og role id] is left off, default role is used.
       <br/>such as:<br/>
       <code>

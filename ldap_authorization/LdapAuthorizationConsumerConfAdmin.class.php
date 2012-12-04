@@ -148,7 +148,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
 
     if (method_exists($this->consumer, 'mappingExamples')) {
       $consumer_tokens['!examples'] = '<fieldset class="collapsible collapsed form-wrapper" id="authorization-mappings">
-<legend><span class="fieldset-legend">' . t('Examples base on current !consumer_namePlural', $consumer_tokens) . '</span></legend>
+<legend><span class="fieldset-legend">' . t('Examples based on current !consumer_namePlural', $consumer_tokens) . '</span></legend>
 <div class="fieldset-wrapper">'. $this->consumer->mappingExamples($consumer_tokens) . '<div class="fieldset-wrapper">
 </fieldset>';
     }
