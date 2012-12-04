@@ -71,12 +71,21 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
     $tokens = ldap_servers_token_tokenize_user_account($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
     break;
   }
-  //
-  foreach ($tokens as $key => $value) {
-    $tokens[drupal_strtolower($key)] = $value;
+
+  foreach ($tokens as $attribute => $value) {
+    $tokens[drupal_strtolower($attribute)] = $value;
   }
-  $result = str_replace(array_keys($tokens), array_values($tokens), $text);
-  //@todo should unresolved tokens such as [x] be removed?
+
+  // If $text is not present as an attribute key, insert it and set the key's value to an empty string.
+  if (!array_key_exists(drupal_strtolower($text), $tokens)) {
+		$tokens[$text] = '';
+    $tokens[drupal_strtolower($text)] = '';
+	}
+
+  $attributes = array_keys($tokens); //array of attributes (sn, givenname, etc)
+  $values = array_values($tokens); //array of attribute values (Lincoln, Abe, etc)
+  $result = str_replace($attributes, $values, $text);
+
   return $result;
 }
 
