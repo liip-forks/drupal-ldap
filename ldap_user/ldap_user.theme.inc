@@ -49,7 +49,7 @@ function theme_ldap_user_conf_form($variables) {
           'rowspan' => 1,
           'class' => 'mixedcase',
         ),
-        array('data' => t('When Should Attribute Be Synchronized to LDAP?'),
+        array('data' => t('When Should Attribute Be Synchronized to Drupal?'),
           'colspan' => count($ldap_user_conf_admin->provisionsDrupalEvents),
           'rowspan' => 1,
           'class' => 'mixedcase'
@@ -102,7 +102,7 @@ function theme_ldap_user_conf_form($variables) {
           'class' => 'mixedcase',
         ),
         array(
-          'data' => t('When Should Attribute Be Synchronized to Drupal?'),
+          'data' => t('When Should Attribute Be Synchronized to LDAP?'),
           'colspan' => count($ldap_user_conf_admin->provisionsLdapEvents),
           'rowspan' => 1,
           'class' => 'mixedcase',
