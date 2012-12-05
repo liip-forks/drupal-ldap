@@ -475,7 +475,7 @@ EOT;
     }
 
     $has_ldap_prov_servers = (boolean)($this->ldapEntryProvisionServer);
-    $has_ldap_prov_settings_options = (count(array_filter($this->drupalAcctProvisionTriggers)) > 0);
+    $has_ldap_prov_settings_options = (count(array_filter($this->ldapEntryProvisionTriggers)) > 0);
     if (!$has_ldap_prov_servers && $has_ldap_prov_settings_options) {
       $warnings['ldapEntryProvisionServer'] =  t('No Servers are enabled to provide provisioning to ldap, but LDAP Entry Options are selected.', $tokens);
     }
