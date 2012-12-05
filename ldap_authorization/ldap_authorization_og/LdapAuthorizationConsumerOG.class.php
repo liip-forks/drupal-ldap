@@ -348,11 +348,12 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     if ($this->ogVersion == 1) {
       list($gid, $rid) = @explode('-', $consumer_id);
 			$roles = og_get_user_roles($gid, $uid);
-			return (!empty($roles[$rid]));
+			$result = (!empty($roles[$rid]));
     }
     else {
-      return ldap_authorization_og2_has_consumer_id($consumer_id, $user->uid);
+      $result = ldap_authorization_og2_has_consumer_id($consumer_id, $user->uid);
     }
+		return $result;
 	}
 
   public function flushRelatedCaches($consumers = NULL) {
@@ -374,7 +375,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
   public function revokeSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $reset = FALSE) {
 		if (!$this->hasAuthorization($user, $consumer_id)) {
 			og_invalidate_cache(); // if trying to revoke, but thinks not granted, flush cache
-			//debug("hasAuthorization $user, $consumer_id"); debug($this->hasAuthorization($user, $consumer_id));
 			if (!$this->hasAuthorization($user, $consumer_id)) {
 				return TRUE;
 			}
@@ -389,7 +389,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     else {
       list($group_entity_type, $gid, $rid) = @explode(':', $consumer_id);
     }
-    //debug("gid=$gid");
 		// make sure group exists, since og doesn't do much error catching.
 		if (!empty($consumer['value'])) {
 			$og_group = $consumer['value'];
@@ -407,7 +406,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     else { // og 7.x-2.x
       $users_group_roles = og_get_user_roles($group_entity_type, $gid, $user->uid);
     }
-    //debug("revokeSingleAuthorization,group_entity_type=$group_entity_type,gid=$gid,..users_group_roles"); debug($users_group_roles);
     // CASE: revoke
     if (count($users_group_roles) == 1) {  // ungroup if only single role left
       if ($this->ogVersion == 1) { // og 7.x-1.x
