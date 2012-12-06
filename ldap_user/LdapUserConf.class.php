@@ -278,9 +278,11 @@ class LdapUserConf {
     foreach ($directions as $direction) {
       if (!empty($this->ldapUserSynchMappings[$direction])) {
         foreach ($this->ldapUserSynchMappings[$direction] as $attribute => $mapping) {
-          $result = count(array_intersect($prov_events, $mapping['prov_events']));
-          if ($result) {
-            $mappings[$attribute] = $mapping;
+          if (!empty($mapping['prov_events'])) {
+            $result = count(array_intersect($prov_events, $mapping['prov_events']));
+            if ($result) {
+              $mappings[$attribute] = $mapping;
+            }
           }
         }
       }
