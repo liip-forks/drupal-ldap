@@ -153,7 +153,7 @@ class LdapServer {
         ->execute();
       foreach ($select as $record) {
         if ($record->sid == $sid) {
-           $server_record = $record;
+          $server_record = $record;
         }
       }
     //  debug('db record'); debug($server_record);
@@ -291,7 +291,7 @@ class LdapServer {
         if ($this->detailedWatchdogLog) {
           watchdog('ldap', "LDAP anonymous bind error. Error %errno: %error", array('%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
         }
-         return ldap_errno($this->connection);
+        return ldap_errno($this->connection);
       }
     }
     else {
@@ -1082,7 +1082,7 @@ class LdapServer {
       $attributes = array_keys($attribute_maps);
     }
 
-    $basedns = (is_array($this->basedn)) ? $this->basedn : array(); 
+    $basedns = (is_array($this->basedn)) ? $this->basedn : array();
     foreach ($basedns as $basedn) {
       if (empty($basedn)) continue;
       $filter = '(' . $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ')';

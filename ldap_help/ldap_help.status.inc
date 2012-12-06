@@ -409,7 +409,7 @@ function ldap_help_get_ldap_authorization() {
 
 
 function ldap_help_parse_form($form, $items) {
-  
+
   $status = array();
   foreach ($form as $fieldset_name => $field) {
     foreach ($field as $field_name => $field_data) {

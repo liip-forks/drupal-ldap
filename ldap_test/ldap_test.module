@@ -105,7 +105,7 @@ function ldap_test_og_api() {
   $consumer_conf->authorizationRevoke($hpotter, $user_data, $consumer, $ldap_entry, TRUE);
   dpm("post authorizationRevoke has $gryffindor_dm_id auth? (should be 0)" . (int)$consumer_conf->hasAuthorization($hpotter, $gryffindor_dm_id));
 
-  $consumer_conf->authorizationGrant($hpotter, $user_data,$consumer, $ldap_entry, TRUE);
+  $consumer_conf->authorizationGrant($hpotter, $user_data, $consumer, $ldap_entry, TRUE);
   dpm("post authorizationGrant has $gryffindor_dm_id auth? (should be 1)" . (int)$consumer_conf->hasAuthorization($hpotter, $gryffindor_dm_id));
 
 
@@ -155,7 +155,7 @@ function ldap_test_create_drupal_data() {
     }
     $testFunctions->csvTables['users'][$guid]['account'] = $account;
   }
-  $users = entity_load('user', FALSE, array(),TRUE);
+  $users = entity_load('user', FALSE, array(), TRUE);
   dpm($users);
 
   $roles = user_roles(TRUE);

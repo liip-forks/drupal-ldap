@@ -185,7 +185,6 @@ class LdapServerTest extends LdapServer {
      */
     $base_dn = drupal_strtolower($base_dn);
     $filter = trim($filter, "()");
-   // debug("trimmed filter=$filter");
     $subqueries = array();
     $operand = FALSE;
 
@@ -481,10 +480,10 @@ class LdapServerTest extends LdapServer {
    // debug("test ldap server, delete=$dn, test data="); debug(array_keys($test_data['users']));
     $deleted = FALSE;
     foreach (array('entries', 'users', 'groups', 'ldap') as $test_data_sub_array) {
-       if (isset($test_data[$test_data_sub_array][$dn])) {
-         unset($test_data[$test_data_sub_array][$dn]);
-         $deleted = TRUE;
-       }
+      if (isset($test_data[$test_data_sub_array][$dn])) {
+        unset($test_data[$test_data_sub_array][$dn]);
+        $deleted = TRUE;
+      }
     }
     if ($deleted) {
       variable_set('ldap_test_server__' . $this->sid, $test_data);

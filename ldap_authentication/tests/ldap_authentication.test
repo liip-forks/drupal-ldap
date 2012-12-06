@@ -732,8 +732,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
           "witch\nwarlord\nwisecracker"
         ),
         'desired_result' => array(
-          array('witch','warlord','wisecracker'),
-          array('witch','warlord','wisecracker'),
+          array('witch', 'warlord', 'wisecracker'),
+          array('witch', 'warlord', 'wisecracker'),
         )
       ),
       'excludeIfTextInDn' => array(
@@ -743,8 +743,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
           "muggle\nmuddle\nmummy"
         ),
         'desired_result' => array(
-          array('muggle','muddle','mummy'),
-          array('muggle','muddle','mummy'),
+          array('muggle', 'muddle', 'mummy'),
+          array('muggle', 'muddle', 'mummy'),
         )
       ),
       'excludeIfNoAuthorizations' => array(

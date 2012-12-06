@@ -31,7 +31,7 @@ class LdapAuthorizationConsumerAbstract {
 
   public $emptyConsumer = array(
     'exists' => TRUE,
-		'value' => NULL,
+    'value' => NULL,
     'name' => NULL,
     'map_to_string' => NULL
     );

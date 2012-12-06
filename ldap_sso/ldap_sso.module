@@ -226,7 +226,7 @@ function ldap_sso_user_login_sso() {
         if ($detailed_watchdog_log) {
           $watchdog_tokens['!remote_user'] = $remote_user;
           $watchdog_tokens['!domain'] = $domain;
-          watchdog('ldap_authentication', 'ldap_sso_user_login_sso.stripdomain: remote_user=!remote_user, domain=!domain',$watchdog_tokens, WATCHDOG_DEBUG);
+          watchdog('ldap_authentication', 'ldap_sso_user_login_sso.stripdomain: remote_user=!remote_user, domain=!domain', $watchdog_tokens, WATCHDOG_DEBUG);
         }
       }
     }
@@ -253,7 +253,9 @@ function ldap_sso_user_login_sso() {
 
     if ($user && $user->uid > 0) {
       if ($auth_conf->seamlessLogin == 1) {
-        if ($detailed_watchdog_log) {watchdog('ldap_authentication', 'ldap_sso_user_login_sso.remote_user.user_success.seemlessLogin', $watchdog_tokens, WATCHDOG_DEBUG);}
+        if ($detailed_watchdog_log) {
+          watchdog('ldap_authentication', 'ldap_sso_user_login_sso.remote_user.user_success.seemlessLogin', $watchdog_tokens, WATCHDOG_DEBUG);
+        }
         setcookie("seamless_login", 'auto login', time() + $auth_conf->cookieExpire, base_path(), "");
         $_SESSION['seamless_login'] = 'auto login';
         setcookie("seamless_login_attempted", '');
@@ -261,12 +263,16 @@ function ldap_sso_user_login_sso() {
       }
       drupal_set_message(theme('ldap_authentication_login_message',
         array('message' => t('You have been successfully authenticated'))));
-      if ($detailed_watchdog_log) {watchdog('ldap_authentication', 'ldap_sso_user_login_sso.remote_user.user_success.drupal_goto front', $watchdog_tokens, WATCHDOG_DEBUG);}
+      if ($detailed_watchdog_log) {
+        watchdog('ldap_authentication', 'ldap_sso_user_login_sso.remote_user.user_success.drupal_goto front', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
       drupal_goto('<front>');
     }
     else {
       if ($auth_conf->seamlessLogin == 1) {
-        if ($detailed_watchdog_log) {watchdog('ldap_authentication', 'ldap_sso_user_login_sso.remote_user.user_fail.seamlessLogin', $watchdog_tokens, WATCHDOG_DEBUG);}
+        if ($detailed_watchdog_log) {
+          watchdog('ldap_authentication', 'ldap_sso_user_login_sso.remote_user.user_fail.seamlessLogin', $watchdog_tokens, WATCHDOG_DEBUG);
+        }
         setcookie("seamless_login", 'do not auto login', time() + $auth_conf->cookieExpire, base_path(), "");
         $_SESSION['seamless_login'] = 'do not auto login';
       }
@@ -276,7 +282,9 @@ function ldap_sso_user_login_sso() {
            'with other credentials on the !user_login_form.',
             array('!user_login_form' => l(t('user login form'), 'user/login'))))
         ), 'error');
-      if ($detailed_watchdog_log) {watchdog('ldap_authentication', 'ldap_sso_user_login_sso.remote_user.user_fail.drupal_goto user/logint', $watchdog_tokens, WATCHDOG_DEBUG);}
+      if ($detailed_watchdog_log) {
+        watchdog('ldap_authentication', 'ldap_sso_user_login_sso.remote_user.user_fail.drupal_goto user/logint', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
       drupal_goto('user/login');
     }
   }
@@ -285,7 +293,9 @@ function ldap_sso_user_login_sso() {
     if ($auth_conf->seamlessLogin == 1) {
       setcookie("seamless_login", 'do not auto login', time() + $auth_conf->cookieExpire, base_path(), "");
       $_SESSION['seamless_login'] = 'do not auto login';
-      if ($detailed_watchdog_log) {watchdog('ldap_authentication', 'ldap_sso_user_login_sso.no_remote_user.seamlessLogin', $watchdog_tokens, WATCHDOG_DEBUG);}
+      if ($detailed_watchdog_log) {
+        watchdog('ldap_authentication', 'ldap_sso_user_login_sso.no_remote_user.seamlessLogin', $watchdog_tokens, WATCHDOG_DEBUG);
+      }
     }
     drupal_set_message(theme('ldap_authentication_message_not_authenticated',
       array('message' =>
@@ -293,7 +303,9 @@ function ldap_sso_user_login_sso() {
       You may log in with your credentials below.')
       )
       ), 'error');
-    if ($detailed_watchdog_log) {watchdog('ldap_authentication', 'ldap_sso_user_login_sso.no_remote_user.drupal_goto user/login', $watchdog_tokens, WATCHDOG_DEBUG);}
+    if ($detailed_watchdog_log) {
+      watchdog('ldap_authentication', 'ldap_sso_user_login_sso.no_remote_user.drupal_goto user/login', $watchdog_tokens, WATCHDOG_DEBUG);
+    }
     drupal_goto('user/login');
   }
 }

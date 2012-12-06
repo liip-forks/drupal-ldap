@@ -214,7 +214,7 @@ class LdapServersTestCase extends LdapTestCase {
 
   public function testUIForms() {
 
-    foreach (array(0,1) as $ctools_enabled) {
+    foreach (array(0, 1) as $ctools_enabled) {
       $this->ldapTestId = "testUIForms.ctools.$ctools_enabled";
       if ($ctools_enabled) {
         module_enable(array('ctools'));

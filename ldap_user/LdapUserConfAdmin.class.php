@@ -280,7 +280,7 @@ class LdapUserConfAdmin extends LdapUserConf {
         ),
       ),
     );
-**/
+*/
 
     $form['server_mapping_preamble'] = array(
       '#type' => 'markup',
@@ -984,12 +984,12 @@ EOT;
     );
 
     $values['orphanedDrupalAcctBehaviorDescription'] = '<ul>' .
-       '<li style="color: red">'. t('This is a new feature as of 11/7/2012!
+       '<li style="color: red">' . t('This is a new feature as of 11/7/2012!
         It is highly recommended to use the "Perform no action,
         but email list of orphaned accounts" for some time before using the
         "Disable the account" options.') . '</li>' .
 
-      '<li>'. t('These actions will only occur if the query to server is successful
+      '<li>' . t('These actions will only occur if the query to server is successful
       and does not return a user entry.  If the ldap server is down or otherwise
       cannot be connected to, no actions
       will be performed.') . '</li>' .

@@ -40,7 +40,7 @@ function ldap_authentication_admin_form_validate($form, &$form_state) {
  */
 
 function ldap_authentication_admin_form_submit($form, &$form_state) {
-  
+
   ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
   $auth_conf = new LdapAuthenticationConfAdmin();
   $auth_conf->drupalFormSubmit($form_state['values']);  // add form data to object and save or create

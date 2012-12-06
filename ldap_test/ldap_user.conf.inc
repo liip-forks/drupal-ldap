@@ -26,11 +26,11 @@ $conf['default']  = array(
     ),
    'orphanedCheckQty' => 50,
   );
-/**
- *    'wsEnabled'  => 0,
-    'wsUserIps' => array('1.2.3.4'),
-    'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
-**/
+  /**
+   *    'wsEnabled'  => 0,
+      'wsUserIps' => array('1.2.3.4'),
+      'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
+  */
 $conf['ad_authentication'] = array(
     'drupalAcctProvisionServer' => 'activedirectory1',
     'ldapEntryProvisionServer' => LDAP_USER_NO_SERVER_SID,

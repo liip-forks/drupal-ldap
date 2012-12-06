@@ -21,9 +21,13 @@ class LdapTestFunctions  {
   public $ldapTypeConf;
 
   function __construct() {
+    module_load_include('module', 'ldap_servers');
     $this->data['ldap_servers'] = ldap_test_ldap_servers_data();
+    module_load_include('module', 'ldap_user');
     $this->data['ldap_user'] = ldap_test_ldap_user_data();
+    module_load_include('module', 'ldap_authentication');
     $this->data['ldap_authorization'] = ldap_test_ldap_authorization_data();
+    module_load_include('module', 'ldap_authorization');
     $this->data['ldap_authentication'] = ldap_test_ldap_authentication_data();
   }
 

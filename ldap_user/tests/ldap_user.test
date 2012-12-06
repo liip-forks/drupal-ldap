@@ -36,7 +36,7 @@ class LdapUserUnitTests extends LdapTestCase {
    */
 
   function setUp() {
-    parent::setUp(array('ldap_user', 'ldap_test'));
+    parent::setUp(array('ldap_servers', 'ldap_user', 'ldap_authentication', 'ldap_test'));
     variable_set('ldap_simpletest', 2);
   }
 
@@ -1022,7 +1022,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
       // create 70 drupal accounts (clone0 to clone69) based on corresponding ldap entries
       $first_clone_username = 'clone0';
       $last_clone_username= 'clone' . (LDAP_TEST_USER_ORPHAN_CLONE_COUNT - 1);
-      for($i = 0; $i < LDAP_TEST_USER_ORPHAN_CLONE_COUNT; $i++) { // 70
+      for ($i = 0; $i < LDAP_TEST_USER_ORPHAN_CLONE_COUNT; $i++) { // 70
         $name = "clone" . $i;
         //debug("create clone $name, activedirectory1");
         $account = $this->createLdapIdentifiedDrupalAccount(
@@ -1063,7 +1063,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
 
         case 'ldap_user_orphan_do_not_check':
           $test_uids = array();
-          for($i = 0; $i < LDAP_TEST_USER_ORPHAN_CLONE_COUNT; $i++) { // 70
+          for ($i = 0; $i < LDAP_TEST_USER_ORPHAN_CLONE_COUNT; $i++) { // 70
             $name = "clone" . $i;
             $test_uids[] = @$cn_to_account[$name]->uid;
 
@@ -1108,7 +1108,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
           // test is if clone0-clone9 have a status of 0
           // and clone12,11... have a status of 1
           $test_uids = array();
-          for($i = 0; $i < $delete; $i++) { // 70
+          for ($i = 0; $i < $delete; $i++) { // 70
             $name = "clone" . $i;
             $test_uids[] = @$cn_to_account[$name]->uid;
           }
@@ -1131,7 +1131,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
           // test is if clone0-clone9 are deleted
           // and clone12,11... have a status of 1
           $test_uids = array();
-          for($i = 0; $i < $delete; $i++) { // 70
+          for ($i = 0; $i < $delete; $i++) { // 70
             $name = "clone" . $i;
             $test_uids[] = @$cn_to_account[$name]->uid;
 

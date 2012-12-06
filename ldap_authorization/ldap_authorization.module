@@ -95,7 +95,7 @@ function ldap_authorization_user_login(&$edit, $user) {
   if (variable_get('ldap_help_watchdog_detail', FALSE)) {
     foreach ($authorizations as $consumer_type => $authorization_ids) {
       $ul = theme('item_list', array('title' => $consumer_type, 'items' => array_keys($authorization_ids), 'type' => 'ul'));
-      watchdog('ldap_authentication', 'ldap_authorization_user_login.authorizations'. $ul , array(), WATCHDOG_DEBUG);
+      watchdog('ldap_authentication', 'ldap_authorization_user_login.authorizations' . $ul , array(), WATCHDOG_DEBUG);
     }
   }
 

@@ -15,7 +15,7 @@ class LdapAuthenticationConf {
    *
    * @var array
    *
-   * @see LdapServer::sid
+   * @see LdapServer::sid()
    */
   public $sids = array();
 

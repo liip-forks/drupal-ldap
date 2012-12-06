@@ -248,7 +248,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
    */
   public function normalizeMappings($mappings) {
 
-		$new_mappings = array();
+    $new_mappings = array();
     $roles = user_roles(TRUE); // in rid => role name format
     $roles_by_name = array_flip($roles);
     foreach ($mappings as $i => $mapping) {
@@ -270,10 +270,10 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
 	 * @see ldapAuthorizationConsumerAbstract::convertToFriendlyAuthorizationIds
 	 */
   public function convertToFriendlyAuthorizationIds($authorizations) {
-		$authorization_ids_friendly = array();
-		foreach ($authorizations as $authorization_id => $authorization) {
-			$authorization_ids_friendly[] = $authorization['name'] . '  (' . $authorization_id . ')';
-		}
+    $authorization_ids_friendly = array();
+    foreach ($authorizations as $authorization_id => $authorization) {
+      $authorization_ids_friendly[] = $authorization['name'] . '  (' . $authorization_id . ')';
+    }
     return $authorization_ids_friendly;
   }
 

@@ -104,7 +104,7 @@ function ldap_user_menu() {
   module_load_include('inc', 'ldap_user', 'ldap_user.ws');
   return _ldap_user_ws_urls_item_list();
 }
-**/
+*/
 
 /**
  * Implements hook_init().
@@ -626,9 +626,9 @@ function ldap_user_is_ldap_associated($account, $direction = NULL) {
   }
 
   if ($direction === NULL || $direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
-     if (property_exists($account, 'ldap_user_prov_entries') && !empty($account->ldap_user_prov_entries['und'][0]['value'])) {
-       $to_ldap_entry = TRUE;
-     }
+    if (property_exists($account, 'ldap_user_prov_entries') && !empty($account->ldap_user_prov_entries['und'][0]['value'])) {
+      $to_ldap_entry = TRUE;
+    }
   }
 
   if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
