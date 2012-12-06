@@ -180,7 +180,7 @@ class LdapUserConfAdmin extends LdapUserConf {
 
     $form['basic_to_drupal']['orphanedDrupalAcctBehavior'] = array(
       '#type' => 'radios',
-      '#title' => t('Action to perform on Drupal account that no longer has a
+      '#title' => t('Action to perform on Drupal account that no longer have a
         corresponding LDAP entry'),
       '#required' => 0,
       '#default_value' => $this->orphanedDrupalAcctBehavior,

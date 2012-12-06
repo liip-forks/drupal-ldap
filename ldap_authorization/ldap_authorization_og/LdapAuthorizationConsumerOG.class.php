@@ -25,7 +25,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       'createConsumers' => TRUE,
       );
 
-  function __construct($consumer_type = NULL) {
+  function __construct($consumer_type) {
     $this->ogVersion = ldap_authorization_og_og_version();
     $params = ldap_authorization_og_ldap_authorization_consumer();
     parent::__construct('og_group', $params['og_group']);

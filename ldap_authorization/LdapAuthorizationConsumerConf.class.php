@@ -63,7 +63,7 @@ class LdapAuthorizationConsumerConf {
       $this->inDatabase = TRUE;
       $exists = $this->loadFromDb();
       if (!$exists) {
-        watchdog('ldap_authorization', 'failed to load existing %consumer object', array('%consumer' => $consumer), WATCHDOG_ERROR);
+        watchdog('ldap_authorization', 'failed to load existing %consumer object', array('%consumer' => $consumer->consumerType), WATCHDOG_ERROR);
       }
     }
     // default value for deriveFromEntryAttrMatchingUserAttr set up this way for backward compatibility in 1.0 branch,

@@ -10,6 +10,7 @@
  * Implements hook_ldap_authorization_consumer().
  */
 function ldap_authorization_drupal_role_ldap_authorization_consumer() {
+
   $types['drupal_role'] =  array(
     'consumer_name' => t('drupal role'),
     'consumer_name_plural' => t('drupal roles'),
