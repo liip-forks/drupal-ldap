@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Active Directory Example WIth Authentication and Authorization feature.
+ */
+
+include_once 'ldap_ad_basic.features.inc';

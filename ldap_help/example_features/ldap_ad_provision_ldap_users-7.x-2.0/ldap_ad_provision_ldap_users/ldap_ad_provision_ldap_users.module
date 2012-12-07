@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Provision Users to Active Directory feature.
+ */
+
+include_once 'ldap_ad_provision_ldap_users.features.inc';
