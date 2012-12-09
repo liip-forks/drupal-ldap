@@ -453,6 +453,12 @@ function ldap_user_form_user_profile_form_alter(&$form, $form_state) {
   array_unshift($form['#submit'], 'ldap_user_grab_password_validate');
 }
 
+/**
+* Implements hook_form_FORM_ID_alter(). for password_policy_password_tab
+*/
+function ldap_user_form_password_policy_password_tab_alter(&$form, &$form_state) {
+  array_unshift($form['#validate'], 'ldap_user_grab_password_validate');
+}
 
 /**
  * store password from logon forms in ldap_user_ldap_provision_pwd static variable
@@ -465,6 +471,8 @@ function ldap_user_grab_password_validate($form, &$form_state) {
   }
 
 }
+
+
 
 
 /**

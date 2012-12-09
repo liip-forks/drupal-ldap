@@ -324,13 +324,18 @@ the top of this form.
       );
 
 
-      $password_notes = <<<EOT
-<ul>
-<li>Pwd: Random -- Uses a random Drupal generated password</li>
-<li>Pwd: User or Random -- Uses password supplied on user forms.
-  If none available uses random password.</li>
-</ul>
-EOT;
+$password_notes = '<h3>' . t('Password Tokens') . '</h3><ul>' .
+'<li>' . t('Pwd: Random -- Uses a random Drupal generated password') . '</li>' .
+'<li>' . t('Pwd: User or Random -- Uses password supplied on user forms.
+  If none available uses random password.') . '</li></ul>' .
+'<h3>' . t('Password Concerns') . '</h3>' .
+'<ul>' .
+'<li>' . t('Provisioning passwords to LDAP means passwords must meet the LDAP\'s
+password requirements.  Password Policy module can be used to add requirements.') . '</li>' .
+'<li>' . t('Some LDAPs require a user to reset their password if it has been changed
+by someone other that user.  Consider this when provisioning LDAP passwords.') . '</li>' .
+'</ul></p>';
+
 
       $source_drupal_token_notes = <<<EOT
 <p>Examples in form: Source Drupal User token => Target LDAP Token (notes)</p>
@@ -350,7 +355,7 @@ EOT;
       if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) { // add some password notes
         $form[$parent_fieldset]['password_notes'] = array(
           '#type' => 'fieldset',
-          '#title' =>  t('Password Source Options'),
+          '#title' =>  t('Password Notes'),
           '#collapsible' => TRUE,
           '#collapsed' => TRUE,
           'directions' => array(
