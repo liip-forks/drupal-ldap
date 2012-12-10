@@ -199,18 +199,6 @@ class LdapServerAdmin extends LdapServer {
 
   public function drupalForm($op) {
 
-  //  $form['#validate'] = array('ldap_servers_admin_form_validate');
-    $form['#prefix'] = <<<EOF
-<p>Setup an LDAP server configuration to be used by other modules such as LDAP Authentication,
-LDAP Authorization, etc.</p>
-<p>More than one LDAP server configuration can exist for a physical LDAP server.
-Multiple configurations for the same physical ldap server are useful in cases such as: (1) different
-base dns for authentication and authorization and (2) service accounts with different privileges
-for different purposes.</p>
-EOF;
-
-  $form['#prefix'] = t($form['#prefix']);
-
   $form['server'] = array(
     '#type' => 'fieldset',
     '#title' => t('Connection settings'),
@@ -221,6 +209,7 @@ EOF;
   $form['bind_method'] = array(
     '#type' => 'fieldset',
     '#title' => t('Binding Method'),
+    '#description' => t('How the Drupal system is authenticated by the LDAP server.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
@@ -657,21 +646,21 @@ public function drupalFormSubmit($op, $values) {
           '#type' => 'radios',
           '#title' => t('Binding Method for Searches (such as finding user object or their group memberships)'),
           '#options' => array(
-            LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT => t('Service Account Bind.  Use credentials in following section to
-            bind to ldap.  This option is usually a best practice. Service account is entered in next section.'),
+            LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT => t('Service Account Bind: Use credentials in the
+            <strong>Service Account</strong> field to bind to LDAP.  <em>This option is usually a best practice.</em>'),
 
-            LDAP_SERVERS_BIND_METHOD_USER => t('Bind with Users Credentials.  Use users\' entered credentials
-            to bind to LDAP.  This is only useful for modules that work during user logon such
-            as ldap authentication and ldap authorization.  This option is not a best practice in most cases.
-            The users dn must be of the form "cn=[username],[base dn]" for this option to work.'),
+            LDAP_SERVERS_BIND_METHOD_USER => t('Bind with Users Credentials: Use user\'s entered credentials
+            to bind to LDAP.<br/> This is only useful for modules that execute during user logon such
+            as LDAP Authentication and LDAP Authorization.  <em>This option is not a best practice in most cases.</em>
+            The user\'s dn must be of the form "cn=[username],[base dn]" for this option to work.'),
 
-            LDAP_SERVERS_BIND_METHOD_ANON_USER => t('Anonymous Bind for search, then Bind with Users Credentials.
-            Searches for user DN then uses users\' entered credentials to bind to LDAP.  This is only useful for
-            modules that work during user logon such as ldap authentication and ldap authorization.
-            The users dn must be discovered by an anonymous search for this option to work.'),
+            LDAP_SERVERS_BIND_METHOD_ANON_USER => t('Anonymous Bind for search, then Bind with Users Credentials:
+            Searches for user dn then uses user\'s entered credentials to bind to LDAP.<br/> This is only useful for
+            modules that work during user logon such as LDAP Authentication and LDAP Authorization.
+            The user\'s dn must be discovered by an anonymous search for this option to work.'),
 
-            LDAP_SERVERS_BIND_METHOD_ANON => t('Anonymous Bind. Use no credentials to bind to ldap server.
-            Will not work on most ldaps.'),
+            LDAP_SERVERS_BIND_METHOD_ANON => t('Anonymous Bind: Use no credentials to bind to LDAP server.<br/>
+            <em>This option will not work on most LDAPS connections.</em>'),
           ),
         ),
         'schema' => array(
@@ -687,7 +676,7 @@ public function drupalFormSubmit($op, $values) {
         'fieldset' => 'bind_method',
         '#type' => 'markup',
         '#markup' => t('<label>Service Account</label> Some LDAP configurations
-          prohibit or restrict results of anonymous searches. These LDAPs require a DN//password pair
+          prohibit or restrict the results of anonymous searches. These LDAPs require a DN//password pair
           for binding. For security reasons, this pair should belong to an
           LDAP account with stripped down permissions.
           This is also required for provisioning LDAP accounts and groups!'),
@@ -735,7 +724,7 @@ public function drupalFormSubmit($op, $values) {
         'form' => array(
           'fieldset' => 'bind_method',
           '#type' => 'checkbox',
-          '#title' => t('Clear existing password from database.  Check this when switching away from service account binding.'),
+          '#title' => t('Clear existing password from database.  Check this when switching away from Service Account Binding.'),
           '#default_value' => 0,
         ),
       ),

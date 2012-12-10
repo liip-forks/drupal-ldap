@@ -121,7 +121,7 @@ function hook_ldap_entry_post_provision(&$ldap_entries, $ldap_server, $context) 
  */
 function hook_ldap_attributes_needed_alter(&$attributes, $params) {
 
-  $attributes['dn'] = ldap_servers_set_attribute_map(@$attributes['dn'], NULL, 'ldap_dn') ;
+  $attributes['dn'] = ldap_servers_set_attribute_map(@$attributes['dn'], 'ldap_dn') ;
   if ($params['sid']) { // puid attributes are server specific
     $ldap_server = (is_object($params['sid'])) ? $params['sid'] : ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
 

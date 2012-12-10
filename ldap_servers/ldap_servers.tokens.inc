@@ -108,9 +108,9 @@ function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
     $parts2 = explode(LDAP_SERVERS_TOKEN_MODIFIER_DEL, $attr_name);
     if (count($parts2) > 1) {
       $attr_name = $parts2[0];
-      $source_data_type = $parts2[1];
+      $conversion = $parts2[1];
     }
-    $attribute_maps[$attr_name] = ldap_servers_set_attribute_map(@$attribute_maps[$attr_name], $source_data_type, NULL, array($ordinal => NULL));
+    $attribute_maps[$attr_name] = ldap_servers_set_attribute_map(@$attribute_maps[$attr_name], $conversion, array($ordinal => NULL));
   }
 }
 
