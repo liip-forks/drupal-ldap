@@ -254,7 +254,7 @@ function ldap_servers_update_7104() {
 function ldap_servers_update_7105() {
 
   if (!module_exists('ldap_user')) {
-    module_enable('ldap_user');
+    module_enable(array('ldap_user'));
     $msg = t('LDAP User module enabled.  Some authentication and authorization functionality shifted to LDAP User module.');
   }
 
@@ -751,7 +751,12 @@ function ldap_servers_update_7203() {
   foreach ($changes as $old_field_name => $new_field_name) {
     $field_schema = $schema['ldap_servers']['fields'][$new_field_name];
     if (db_field_exists('ldap_servers', $old_field_name)) {
-      db_change_field('ldap_servers', $old_field_name, $new_field_name, $field_schema);
+      if (db_field_exists('ldap_servers', $new_field_name)) {
+        db_drop_field('ldap_servers', $old_field_name);
+      }
+      else {
+        db_change_field('ldap_servers', $old_field_name, $new_field_name, $field_schema);
+      }
     }
   }
 

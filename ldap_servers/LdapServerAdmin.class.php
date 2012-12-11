@@ -298,18 +298,12 @@ class LdapServerAdmin extends LdapServer {
     }
   }
 
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save configuration'),
-  );
-
   $action = ($op == 'add') ? 'Add' : 'Update';
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => $action,
     '#weight' => 100,
   );
-
 
   return $form;
 
