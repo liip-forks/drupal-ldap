@@ -1494,15 +1494,16 @@ class LdapServer {
       $nested = $this->groupNested;
     }
 
-    if (!is_array($user['attr']) && !isset($user['attr'][$this->groupUserMembershipsAttr])) {
-      $user_ldap_entry = $this->userUserToExistingLdapEntry($user);
-        if (!isset($user_ldap_entry['attr'][$this->groupUserMembershipsAttr])) {
-          return FALSE; // user's membership attribute is not present.  either misconfigured or query failed
-        }
+    $not_user_ldap_entry = empty($user['attr'][$this->groupUserMembershipsAttr]);
+    if ($not_user_ldap_entry) { // if drupal user passed in, try to get user_ldap_entry
+      $user = $this->userUserToExistingLdapEntry($user);
+      $not_user_ldap_entry = empty($user['attr'][$this->groupUserMembershipsAttr]);
+      if ($not_user_ldap_entry) {
+        return FALSE; // user's membership attribute is not present.  either misconfigured or query failed
+      }
     }
-    else {
-      $user_ldap_entry = $user;
-    }
+    // if not exited yet, $user must be user_ldap_entry.
+    $user_ldap_entry = $user;
 
     $all_group_dns = array();
     $tested_group_ids = array();
