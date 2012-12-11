@@ -1023,12 +1023,12 @@ function ldap_user_field_widget_form(&$form, &$form_state, $field, $instance, $l
 function ldap_user_synch_triggers_key_values() {
 
   return array(
-    LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE => 'DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE',
-    LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE => 'DRUPAL_USER_PROV_ON_AUTHENTICATE',
-    LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE => 'LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE',
-    LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE => 'LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE',
-    LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE => 'LDAP_ENTRY_PROV_ON_AUTHENTICATE',
-    LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE => 'LDAP_ENTRY_DELETE_ON_USER_DELETE',
+    LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE => t('On synch to Drupal user create or update. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
+    LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE => t('On create or synch to Drupal user when successfully authenticated with LDAP credentials. (Requires LDAP Authentication module).'),
+    LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE => t('On manual creation of Drupal user from admin/people/create and "Create corresponding LDAP entry" is checked'),
+    LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE => t('On creation or synch of an LDAP entry when a Drupal account is created or updated. Only applied to accounts with a status of approved.'),
+    LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE => t('On creation or synch of an LDAP entry when a user authenticates.'),
+    LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE => t('On deletion of an LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
   );
 
 }
