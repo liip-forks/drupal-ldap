@@ -63,7 +63,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $testid = 'MixedModeUserLogon3';
     $sids = array($sid);
     $this->prepTestData(
-      'hogwarts',
+      LDAP_TEST_LDAP_NAME,
       $sids,
       'provisionToDrupal',
       'MixedModeUserLogon3',
@@ -181,7 +181,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $testid = 'ExclusiveModeUserLogon3';
     $sids = array($sid);
     $this->prepTestData(
-      'hogwarts',
+      LDAP_TEST_LDAP_NAME,
       $sids,
       'ad_authentication',
       'ExclusiveModeUserLogon3',
@@ -330,7 +330,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $testid = 'SSOUserLogon3';
     $sids = array($sid);
     $this->prepTestData(
-      'hogwarts',
+      LDAP_TEST_LDAP_NAME,
       $sids,
       'ad_authentication',
       'SSOUserLogon'
@@ -661,7 +661,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
 
     $sid = 'activedirectory1';
     $sids = array('activedirectory1');
-    $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default');
+    $this->prepTestData(LDAP_TEST_LDAP_NAME, $sids, 'provisionToDrupal', 'default');
 
     $this->privileged_user = $this->drupalCreateUser(array(
       'administer site configuration',

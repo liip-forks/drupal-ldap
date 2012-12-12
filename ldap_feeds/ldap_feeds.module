@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Implements hook_ctools_plugin_api().
+ */
+function ldap_feeds_ctools_plugin_api($owner, $api) {
+  if ($owner == 'feeds' && $api == 'plugins') {
+  return array('version' => 1);
+  }
+}
 
 /**
  * Implements hook_feeds_plugins().

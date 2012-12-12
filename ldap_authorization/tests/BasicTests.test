@@ -80,7 +80,7 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
     $sid = 'activedirectory1';
     $testid = 'ExclusiveModeUserLogon3';
     $sids = array($sid);
-    $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default', 'drupal_role_default');
+    $this->prepTestData(LDAP_TEST_LDAP_NAME, $sids, 'provisionToDrupal', 'default', 'drupal_role_default');
 
     $edit = array(
       'name' => 'hpotter',
@@ -124,7 +124,7 @@ function testFlags() {
 
   $sid = 'activedirectory1';
   $this->prepTestData(
-    'hogwarts',
+    LDAP_TEST_LDAP_NAME,
     array($sid),
     'provisionToDrupal',
     'default',
@@ -344,7 +344,7 @@ function testFlags() {
   */
 
   //add new mapping to and enable create consumers
-  $this->prepTestData('hogwarts', array($sid), 'provisionToDrupal', 'default', 'drupal_role_default');
+  $this->prepTestData(LDAP_TEST_LDAP_NAME, array($sid), 'provisionToDrupal', 'default', 'drupal_role_default');
   $this->drupalGet('user/logout');
   $new_role = 'oompa-loompas';
   $this->consumerAdminConf['drupal_role']->createConsumers = 1;
@@ -394,7 +394,7 @@ function testFlags() {
     variable_del('ldap_simpletest'); // need to be out of fake server mode to test ui.
 
     $sid = 'activedirectory1';
-    $this->prepTestData('hogwarts', array($sid), 'provisionToDrupal', 'default');
+    $this->prepTestData(LDAP_TEST_LDAP_NAME, array($sid), 'provisionToDrupal', 'default');
 
     ldap_servers_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
     $ldap_server = new LdapServerAdmin($sid);

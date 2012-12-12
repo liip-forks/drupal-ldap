@@ -57,6 +57,18 @@ function ldap_help_menu() {
     'weight' => 7,
   );
 
+
+  $items['admin/config/people/ldap/help/examples'] = array(
+    'title' => 'Sample LDAPs',
+    'description' => 'Sample LDAPs from Documentation',
+    'page callback' => 'ldap_help_examples',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'ldap_help.examples.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 7,
+  );
+
+
   return $items;
 }
 

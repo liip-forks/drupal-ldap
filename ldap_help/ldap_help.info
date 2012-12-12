@@ -4,3 +4,4 @@ package = Lightweight Directory Access Protocol
 core = 7.x
 
 dependencies[] = ldap_servers
+dependencies[] = ldap_test

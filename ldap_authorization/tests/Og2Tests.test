@@ -52,7 +52,7 @@ class LdapAuthorizationOg2Tests extends LdapTestCase {
 
     $this->user1 = $this->drupalCreateUser();
     $this->groups = array();
-    $this->prepTestData('hogwarts', array('activedirectory1'));
+    $this->prepTestData(LDAP_TEST_LDAP_NAME, array('activedirectory1'));
 
 
 
@@ -67,8 +67,8 @@ class LdapAuthorizationOg2Tests extends LdapTestCase {
 
     // create og group for each group in group csv
 
-    $this->testFunctions->populateFakeLdapServerData('hogwarts', 'activedirectory1');
-    $this->testFunctions->getCsvLdapData('hogwarts');
+    $this->testFunctions->populateFakeLdapServerData(LDAP_TEST_LDAP_NAME, 'activedirectory1');
+    $this->testFunctions->getCsvLdapData(LDAP_TEST_LDAP_NAME);
     foreach ($this->testFunctions->csvTables['groups'] as $guid => $group) {
       $label = $group['cn'];
       $settings = array();
@@ -291,7 +291,7 @@ function testFlags() {
 
   $sid = 'activedirectory1';
   $this->prepTestData(
-    'hogwarts',
+    LDAP_TEST_LDAP_NAME,
     array($sid),
     'provisionToDrupal',
     'default',
