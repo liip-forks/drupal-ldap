@@ -100,7 +100,7 @@ function ldap_authorization_schema() {
 
   module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
   module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
-  
+
   $fields = LdapAuthorizationConsumerConfAdmin::fields();
   foreach ($fields as $name => $props) {
     if (isset($props['schema'])) {
@@ -352,8 +352,12 @@ function ldap_authorization_update_7203() {
   $schema = ldap_authorization_schema();
   $field_schema = $schema['ldap_authorization']['fields']['use_first_attr_as_groupid'];
   if (db_field_exists('ldap_authorization', 'useFirstAttrAsGroupId')) {
-    db_change_field('ldap_authorization', 'useFirstAttrAsGroupId', 'use_first_attr_as_groupid', $field_schema);
+    if (db_field_exists('ldap_authorization', 'use_first_attr_as_groupid')) {
+      db_drop_field('ldap_authorization', 'useFirstAttrAsGroupId');
+    }
+    else {
+      db_change_field('ldap_authorization', 'useFirstAttrAsGroupId', 'use_first_attr_as_groupid', $field_schema);
+    }
   }
-
 
 }

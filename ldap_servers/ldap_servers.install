@@ -108,12 +108,13 @@ function ldap_servers_schema() {
  */
 
 function ldap_servers_update_7100() {
-
-  db_change_field('ldap_servers', 'type', 'ldap_type', array(
-    'type' => 'varchar',
-    'length' => 20,
-    'not null' => FALSE
-  ));
+  if (!db_field_exists('ldap_servers', 'ldap_type') && db_field_exists('ldap_servers', 'type')) {
+    db_change_field('ldap_servers', 'type', 'ldap_type', array(
+      'type' => 'varchar',
+      'length' => 20,
+      'not null' => FALSE
+    ));
+  }
 
   return t('ldap_servers table field "type" renamed to "ldap_type"');
 
