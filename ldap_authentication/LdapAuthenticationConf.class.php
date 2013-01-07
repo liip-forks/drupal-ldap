@@ -111,6 +111,7 @@ class LdapAuthenticationConf {
   public $ssoEnabled = FALSE;
   public $ssoRemoteUserStripDomainName = FALSE;
   public $ssoExcludedPaths = NULL;
+  public $ssoExcludedHosts = NULL;
   public $seamlessLogin = FALSE;
   public $ldapImplementation = FALSE;
   public $cookieExpire = LDAP_AUTHENTICATION_COOKIE_EXPIRE;
@@ -173,6 +174,7 @@ class LdapAuthenticationConf {
     'excludeIfNoAuthorizations',
     'ssoRemoteUserStripDomainName',
     'ssoExcludedPaths',
+    'ssoExcludedHosts',
     'seamlessLogin',
     'ldapImplementation',
     'cookieExpire',

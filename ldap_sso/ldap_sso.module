@@ -90,14 +90,24 @@ function ldap_sso_path_excluded_from_sso($path = FALSE) {
   if ($path) {
     // don't derive
   }
-  elseif ($_SERVER['URL'] == '/index.php') {
+  elseif ($_SERVER['PHP_SELF'] == '/index.php') {
     $path = $_GET['q'];
   }
   else {
-    $path = ltrim($_SERVER['URL'], '/'); // cron.php, etc.
+    $path = ltrim($_SERVER['PHP_SELF'], '/'); // cron.php, etc.
   }
 
   $ldap_authentication_conf = variable_get('ldap_authentication_conf', array());
+
+  if ($ldap_authentication_conf['ssoExcludedHosts']) {
+    $host = $_SERVER['SERVER_NAME'];
+    foreach($ldap_authentication_conf['ssoExcludedHosts'] as $host_to_check) {
+      if($host_to_check == $host) {
+        return TRUE;
+      }
+    }
+  }
+
   if ($ldap_authentication_conf['ssoExcludedPaths']) {
     $patterns = join("\r\n", $ldap_authentication_conf['ssoExcludedPaths']);
     if ($patterns) {

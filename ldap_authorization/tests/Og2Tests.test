@@ -107,8 +107,7 @@ class LdapAuthorizationOg2Tests extends LdapTestCase {
 
     $this->createCustomRoles();
     $all_roles = og_roles($this->groupEntityType, $this->groupBundle, 0, FALSE, TRUE);
-    debug('testBasicFunctionsAndApi:all_roles'); debug($all_roles);
-    //
+
     $this->ldapTestId = $this->module_name . ': setup success';
     // just to give warning if setup doesn't succeed.  may want to take these out at some point.
     $setup_success = (

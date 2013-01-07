@@ -111,6 +111,12 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
           array('%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>'));
         '</p>';
 
+      $values['ssoExcludedHostsDescription'] = '<p>' .
+        t('If your site is accessible via multiple hostnames, you may only want
+          the LDAP SSO module to authenticate against some of them. To exclude
+          any hostnames from SSO, enter them here. Enter one host per line.');
+        '</p>';
+
       $values['ssoRemoteUserStripDomainNameDescription'] = t('Useful when the ' .
         'WWW server provides authentication in the form of user@realm and you ' .
         'want to have both SSO and regular forms based authentication ' .
@@ -443,6 +449,14 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#disabled' => (boolean)(!$this->ssoEnabled),
     );
 
+    $form['sso']['ssoExcludedHosts'] = array(
+      '#type' => 'textarea',
+      '#title' => t('SSO Excluded Hosts'),
+      '#description' => t($this->ssoExcludedHostsDescription),
+      '#default_value' => $this->arrayToLines($this->ssoExcludedHosts),
+      '#disabled' => (boolean)(!$this->ssoEnabled),
+    );
+
     $form['submit'] = array(
       '#type' => 'submit',
       '#value' => 'Save',
@@ -505,6 +519,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->emailOption  = ($values['emailOption']) ? (int)$values['emailOption'] : NULL;
     $this->emailUpdate  = ($values['emailUpdate']) ? (int)$values['emailUpdate'] : NULL;
     $this->ssoExcludedPaths = $this->linesToArray($values['ssoExcludedPaths']);
+    $this->ssoExcludedHosts = $this->linesToArray($values['ssoExcludedHosts']);
     $this->ssoRemoteUserStripDomainName = ($values['ssoRemoteUserStripDomainName']) ? (int)$values['ssoRemoteUserStripDomainName'] : NULL;
     $this->seamlessLogin = ($values['seamlessLogin']) ? (int)$values['seamlessLogin'] : NULL;
     $this->cookieExpire = ($values['cookieExpire']) ? (int)$values['cookieExpire'] : NULL;

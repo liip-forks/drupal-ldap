@@ -109,9 +109,8 @@ function hook_ldap_entry_post_provision(&$ldap_entries, $ldap_server, $context) 
  *   array of attributes to be returned from ldap queries where:
  *     - each key is ldap attribute name (e.g. mail, cn)
  *     - each value is associative array of form:
- *       - 'source_data_type' => NULL,
- *       - 'target_data_type' => NULL,
- *       - 'values' =>
+ *       - 'conversion' => NULL,
+ *       - 'values' => array(0 => 'john', 1 => 'johnny'))
  *
  * @param array $params context array with some or all of the following key/values
  *   'sid' => drupal account object,

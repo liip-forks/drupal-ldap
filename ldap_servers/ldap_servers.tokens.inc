@@ -54,13 +54,18 @@ function ldap_servers_parse_user_attr_name($user_attr_key) {
 
 /**
  * @param array $ldap_entry
- * @param string $text
+ * @param string $text such as "[dn]", "[cn]@my.org", "[displayName] [sn]", "Drupal Provisioned"
  * @return string $text with tokens replaced
  */
 
 function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_entry') { // user_account
 
   $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);
+
+  if (count($desired_tokens) == 0) {
+    return $text; // if no tokens exist in text, return text itself.
+  }
+
   switch ($resource_type) {
 
     case 'ldap_entry':
@@ -72,29 +77,24 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
     break;
   }
 
+  // add lowercase tokens to avoid case sensitivity
   foreach ($tokens as $attribute => $value) {
     $tokens[drupal_strtolower($attribute)] = $value;
-  }
-
-  // If $text is not present as an attribute key, insert it and set the key's value to an empty string.
-  if (!array_key_exists(drupal_strtolower($text), $tokens)) {
-    $tokens[$text] = '';
-    $tokens[drupal_strtolower($text)] = '';
   }
 
   $attributes = array_keys($tokens); //array of attributes (sn, givenname, etc)
   $values = array_values($tokens); //array of attribute values (Lincoln, Abe, etc)
   $result = str_replace($attributes, $values, $text);
 
+  $result = preg_replace('/\[[^\]]*>/', '', $result);  // strip out any unreplace tokens
   return $result;
 }
 
 /**
  * @param array $attributes array of attributes passed by reference
  * @param string $text with tokens in it
- * @param boolean $ignore_attr_count signifies if :1, :0, etc should be stripped off attribute.
  *
- * by reference return add ldap attribute triplet array (<attr_name>, <ordinal>, <data_type>) to $attributes
+ * by reference return add ldap attribute triplet $attribute_maps[<attr_name>] = (<attr_name>, <ordinal>, <data_type>) to $attributes
  */
 function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
   $tokens = ldap_servers_token_tokens_needed_for_template($text);
@@ -110,6 +110,9 @@ function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
       $attr_name = $parts2[0];
       $conversion = $parts2[1];
     }
+    else {
+      $conversion = NULL;
+    }
     $attribute_maps[$attr_name] = ldap_servers_set_attribute_map(@$attribute_maps[$attr_name], $conversion, array($ordinal => NULL));
   }
 }
@@ -117,21 +120,23 @@ function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
 /**
  * @param string $token or token expression with singular token in it, eg. [dn], [dn;binary], [titles:0;binary] [cn]@mycompany.com
  *
- * @return array with attrinutetoken converted to dn, title, etc.
+ *
+ *
+ * @return array(<attr_name>, <ordinal>, <conversion>)
  */
 function ldap_servers_token_extract_parts($token) {
   $attributes = array();
-  ldap_servers_token_extract_attributes($attribute_maps, $token);
+  ldap_servers_token_extract_attributes($attributes, $token);
   if (is_array($attributes)) {
-    $keys = array_keys($attribute_maps);
+    $keys = array_keys($attributes);
     $attr_name = $keys[0];
-    $attr_data = $attribute_maps[$attr_name];
+    $attr_data = $attributes[$attr_name];
     $ordinals = array_keys($attr_data['values']);
     $ordinal = $ordinals[0];
-    return array($attr_name, $ordinal, $attr_data['source_data_type'], $attr_data['target_data_type']);
+    return array($attr_name, $ordinal, $attr_data['conversion']);
   }
   else {
-    return array(NULL, NULL, NULL, NULL);
+    return array(NULL, NULL, NULL);
   }
 
 }

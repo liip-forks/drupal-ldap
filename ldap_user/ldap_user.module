@@ -216,7 +216,7 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
     if (!isset($attributes['dn'])) {
       $attributes['dn'] = array();
     }
-    $attributes['dn'] = ldap_servers_set_attribute_map($attributes['dn'], 'ldap_dn', 'ldap_dn'); // force this data type
+    $attributes['dn'] = ldap_servers_set_attribute_map($attributes['dn']); // force dn "attribute" to exist
     switch ($params['ldap_context']) { // Add the attributes required by the user configuration when provisioning drupal users
       case 'ldap_user_insert_drupal_user':
       case 'ldap_user_update_drupal_user':
@@ -828,9 +828,6 @@ function ldap_user_user_login(&$edit, $account) {
  *
  */
 function ldap_user_user_insert(&$user_edit, $account, $category) {
-
- // debug('ldap_user_user_insert'); debug($user_edit); debug($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
-
 
   global $user;
   $is_user_1 = ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1));

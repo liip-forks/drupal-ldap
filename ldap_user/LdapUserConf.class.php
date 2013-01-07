@@ -955,7 +955,7 @@ class LdapUserConf {
   //  debug('mappings'); debug($mappings);
       // Loop over the mappings.
     foreach ($mappings as $field_key => $field_detail) {
-      list($ldap_attr_name, $ordinal, $source_data_type, $target_data_type) = ldap_servers_token_extract_parts($field_key, TRUE);  //trim($field_key, '[]');
+      list($ldap_attr_name, $ordinal, $conversion) = ldap_servers_token_extract_parts($field_key, TRUE);  //trim($field_key, '[]');
       $ordinal = (!$ordinal) ? 0 : $ordinal;
       if ($ldap_user_entry && isset($ldap_user_entry[$ldap_attr_name]) && is_array($ldap_user_entry[$ldap_attr_name]) && isset($ldap_user_entry[$ldap_attr_name][$ordinal]) ) {
         continue; // don't override values passed in;
