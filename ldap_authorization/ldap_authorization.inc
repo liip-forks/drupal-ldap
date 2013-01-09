@@ -192,9 +192,13 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
             $authorization_id = ldap_pear_unescape_dn_value(trim($first_part[1]));
           }
         }
+        $new_key = drupal_strtolower($authorization_id);
       }
-      $proposed_ldap_authorizations[drupal_strtolower($key)] = $authorization_id;
-      if ($key != drupal_strtolower($key)) {
+      else {
+        $new_key = drupal_strtolower($key);
+      }
+      $proposed_ldap_authorizations[$new_key] = $authorization_id;
+      if ($key != $new_key) {
         unset($proposed_ldap_authorizations[$key]);
       }
     }
