@@ -96,7 +96,7 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
 
     $hpotter = user_load_by_name('hpotter');
     $roles = array_values($hpotter->roles);
-    $desired_roles = array('students', 'authenticated user', 'gryffindor', 'honors students');
+    $desired_roles = array('students', 'authenticated user', 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu', 'cn=honors students,ou=groups,dc=hogwarts,dc=edu');
     $diff1 = array_diff($roles, $desired_roles);
     $diff2 = array_diff($desired_roles, $roles);
     $correct_roles = (count($diff1) == 0 && count($diff2) == 0);
@@ -357,7 +357,7 @@ function testFlags() {
       'error_message' => '',
       );
   $this->consumerAdminConf['drupal_role']->save();
- // debug('mappings'); debug($this->consumerAdminConf['drupal_role']->mappings);
+  debug('mappings'); debug($this->consumerAdminConf['drupal_role']->mappings);
 
   $edit = array(
     'name' => 'hpotter',
@@ -366,7 +366,7 @@ function testFlags() {
   $this->drupalPost('user', $edit, t('Log in'));
 
   $new_role_created = in_array($new_role, array_values(user_roles()));
-
+  debug("roles"); debug(user_roles());
   $roles_by_name = array_flip(user_roles());
   $hpotter = user_load_by_name('hpotter');
   $hpotter = user_load($hpotter->uid, TRUE);

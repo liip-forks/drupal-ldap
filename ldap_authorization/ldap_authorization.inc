@@ -229,7 +229,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
      */
 
     $filtered_ldap_authorizations = array();
-
+//    debug("proposed_ldap_authorizations, consumer->consumerConf->useFirstAttrAsGroupId=" . $consumer->consumerConf->useFirstAttrAsGroupId); debug($proposed_ldap_authorizations);
     if ($consumer->consumerConf->useMappingsAsFilter) { // filter + map
       foreach ($consumer->consumerConf->mappings as $mapping_filter) {
         $map_from = $mapping_filter['from'];
@@ -267,7 +267,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         );
       }
     }
-
+//    debug("filtered_ldap_authorizations"); debug($filtered_ldap_authorizations);
     $consumer->populateConsumersFromConsumerIds($filtered_ldap_authorizations, $consumer->consumerConf->createConsumers); // set values of $filtered_ldap_authorizations to consumers
 
     /**

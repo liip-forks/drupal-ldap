@@ -312,6 +312,7 @@ function testFlags() {
     debug('LDAP_authorz.Flags.setup.0 properties not set correctly'); debug($props_set_display);
   }
 
+  $this->consumerAdminConf['og_group']->useFirstAttrAsGroupId = 0;
   $this->consumerAdminConf['og_group']->status = 0;
   $this->consumerAdminConf['og_group']->save();
 
