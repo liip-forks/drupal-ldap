@@ -161,7 +161,6 @@ function ldap_user_test_form_submit($form, &$form_state) {
         }
       }
     }
-   // dpm('results'); dpm($results);
     // do all synchs second, in case logic of form changes to allow executing mulitple events
     foreach (array_filter($selected_actions) as $i => $synch_trigger) {
       $synch_trigger_description = $synch_trigger_options[$synch_trigger];
@@ -171,7 +170,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
             $discard = $ldap_user_conf->synchToDrupalAccount(NULL, $user_edit, NULL, $test_query);
             $results['synchToDrupalAccount method results']["context = $synch_trigger_description"]['proposed'] = $user_edit;
           }
-          else {
+          else { // to ldap
             $provision_result = $ldap_user_conf->synchToLdapEntry($user_object, $user_edit, array(), $test_query);
             $results['synchToLdapEntry method results']["context = $synch_trigger_description"] = $provision_result;
           }
@@ -180,7 +179,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
           if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
             $results['synchToDrupalAccount method results']["context = $synch_trigger_description"] = 'Not enabled.';
           }
-          else {
+          else { // to ldap
             $results['synchToLdapEntry method results']["context = $synch_trigger_description"] = 'Not enabled.';
           }
         }

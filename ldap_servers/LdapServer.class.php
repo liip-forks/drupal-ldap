@@ -362,13 +362,9 @@ class LdapServer {
 
     $result = $this->ldapQuery(LDAP_SCOPE_BASE, $params);
     if ($result !== FALSE) {
-      if ($return == 'boolean') {
-        return TRUE;
-      }
-
       $entries = @ldap_get_entries($this->connection, $result);
-      if ($entries !== FALSE) {
-        return $entries[0];
+      if ($entries !== FALSE && $entries['count'] > 0) {
+        return ($return == 'boolean') ? TRUE : $entries[0];
       }
     }
 
