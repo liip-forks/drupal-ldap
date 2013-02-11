@@ -275,6 +275,21 @@ function ldap_authentication_form_user_pass_alter(&$form, $form_state) {
 }
 
 
+/**
+ * A validate handler on the login form. Check supplied username/password
+ * against local users table. If successful, $form_state['uid']
+ * is set to the matching user ID.
+ */
+function ldap_authentication_core_override_user_login_authenticate_validate($form, &$form_state) {
+  // No additional validation of user credentials is needed when
+  // $form_state['uid'] is set.
+  if (!empty($form_state['uid'])) {
+    return;
+  }
+  user_login_authenticate_validate($form, $form_state);
+}
+
+
 function ldap_authentication_user_pass_validate(&$form_state) {
   $name_or_mail = trim($form_state['name']['#value']);
   if ($account = user_load_by_mail($name_or_mail)) {

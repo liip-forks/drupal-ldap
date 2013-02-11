@@ -34,29 +34,10 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
    *    array('user_login_name_validate', 'user_login_authenticate_validate', 'user_login_final_validate')
    */
 
-  if (@in_array('user_login_authenticate_validate', $form['#validate'])) {
-    $new_validation_sequence = array();
-    foreach ($form['#validate'] as $validate_function_name) {
-      if ($validate_function_name == 'user_login_authenticate_validate') {
-        if ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_MIXED) {
-         // if mixed mode, allow drupal authentication first
-          $new_validation_sequence[] = 'user_login_authenticate_validate';
-          $new_validation_sequence[] = 'ldap_authentication_user_login_authenticate_validate';
-        }
-        elseif ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_EXCLUSIVE) {
-         // see drupal.org/node/1009990 and drupal.org/node/1022362 change back when fixed.
-          $new_validation_sequence[] = 'user_login_authenticate_validate';
-          $new_validation_sequence[] = 'ldap_authentication_user_login_authenticate_validate';
-        }
-        else { // misconfigured ldap authentication, restore to original validation sequence
-        $new_validation_sequence[] = 'user_login_authenticate_validate';
-        }
-      }
-      else {
-        $new_validation_sequence[] = $validate_function_name;
-      }
-    }
-  $form['#validate'] = $new_validation_sequence;
+  if (@in_array('user_login_authenticate_validate', $form['#validate']) && $auth_conf->authenticationMode) {
+    $key = array_search('user_login_authenticate_validate', $form['#validate']);
+    $form['#validate'][$key] =  'ldap_authentication_core_override_user_login_authenticate_validate';
+    array_splice($form['#validate'], $key + 1, 0, 'ldap_authentication_user_login_authenticate_validate');
   }
 
   if ($form_id == 'user_login_block') {
@@ -367,13 +348,18 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   * being used here.
   * 
   * without doing the user_login_submit,
-  * [#1009990]
+  * [#1009990],[#1865938]
   */
-  $fake_form_state = array('uid' => $drupal_account->uid);
-  user_login_submit(array(), $fake_form_state);
-  global $user;
-  $form_state['uid'] = $user->uid;
-
+  
+  $form_state['uid'] = $drupal_account->uid;
+ // $fake_form_state = array('uid' => $drupal_account->uid);
+ // user_login_submit(array(), $fake_form_state);
+ // global $user;
+ // $form_state['uid'] = $user->uid;
+ 
+ 
+  // the uid is returned so that special login modules, namely ldap sso, can manually call this function.
+  return $drupal_account->uid;
 }
 
 /**
