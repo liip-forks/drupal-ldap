@@ -309,7 +309,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
    *
    */
   if (!$drupal_account_exists) {
-    
+  
     // VI.C.1 Do not provision Drupal account if another account has same email.
     if ($account_with_same_email = user_load_by_mail($ldap_user['mail'])) {
       /**

@@ -1085,6 +1085,24 @@ class LdapUserConf {
       else { // create drupal account
         $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_CREATE_DRUPAL_USER));
         if ($save) {
+          $watchdog_tokens = array('%drupal_username' =>  $user_edit['name']);
+          if (!isset($user_edit['mail']) || !$user_edit['mail']) {
+            drupal_set_message(t('User account creation failed because of invalid, empty derived email address.'), 'error');
+            watchdog('ldap_user',
+              'Failed to create Drupal account %drupal_username because email address could not be derived by LDAP User module',
+              $tokens,
+              WATCHDOG_ERROR
+            );
+            return FALSE;
+          }
+          if ($account_with_same_email = user_load_by_mail($user_edit['mail'])) {
+            $watchdog_tokens['%email'] = $user_edit['mail'];
+            $watchdog_tokens['%duplicate_name'] = $account_with_same_email->name;
+            watchdog('ldap_user', 'LDAP user %drupal_username has email address
+              (%email) conflict with a drupal user %duplicate_name', $watchdog_tokens, WATCHDOG_ERROR);
+            drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
+            return FALSE;
+          }
           $account = user_save(NULL, $user_edit, 'ldap_user');
           if (!$account) {
             drupal_set_message(t('User account creation failed because of system problems.'), 'error');
