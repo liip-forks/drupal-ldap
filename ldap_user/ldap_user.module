@@ -223,6 +223,7 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
       case 'ldap_user_ldap_associate':
         $attributes[$ldap_server->user_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->user_attr]); // array($ldap_server->user_attr, 0, NULL);
         $attributes[$ldap_server->mail_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->mail_attr]);
+        $attributes[$ldap_server->picture_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->picture_attr]);
         $attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->unique_persistent_attr]);
         if ($ldap_server->mail_template) {
           ldap_servers_token_extract_attributes($attributes,  $ldap_server->mail_template);
@@ -270,7 +271,18 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       'prov_module' => 'ldap_user',
       'configurable_to_ldap' => TRUE,
     );
-
+    
+    $available_user_attrs['[property.picture]'] =  array(
+    		'name' => 'Property: picture',
+    		'source' => '',
+    		'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
+    		'enabled' => TRUE,
+    		'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
+    		'config_module' => 'ldap_user',
+    		'prov_module' => 'ldap_user',
+    		'configurable_to_ldap' => TRUE,
+    );
+    
     $available_user_attrs['[property.uid]'] =  array(
       'name' => 'Property: Drupal User Id (uid)',
       'source' => '',
@@ -281,6 +293,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       'prov_module' => 'ldap_user',
       'configurable_to_ldap' => TRUE,
     );
+    
   }
 
   // 1. Drupal user properties
@@ -342,6 +355,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
   if (!$ldap_user_conf->provisionsDrupalAccountsFromLdap) {
     $available_user_attrs['[property.mail]']['config_module'] = 'ldap_user';
     $available_user_attrs['[property.name]']['config_module'] = 'ldap_user';
+    $available_user_attrs['[property.picture]']['config_module'] = 'ldap_user';
   }
 
   if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {

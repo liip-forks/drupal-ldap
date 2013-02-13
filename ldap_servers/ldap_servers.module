@@ -317,6 +317,9 @@ function ldap_servers_theme() {
       if (!isset($attributes[$ldap_server->mail_attr])) {
         $attributes[$ldap_server->mail_attr] = ldap_servers_set_attribute_map();
       }
+      if(!isset($attributes[$ldap_server->picture_attr])){
+      	$attributes[$ldap_server->picture_attr] = ldap_servers_set_attribute_map();
+      }
       if ($ldap_server->unique_persistent_attr && !isset($attributes[$ldap_server->unique_persistent_attr])) {
         $attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map();
       }
@@ -456,6 +459,19 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'config_module' => 'ldap_server',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[property.mail]'];
+      
+      if (!isset($available_user_attrs['[property.picture]']) || !is_array($available_user_attrs['[property.picture]'])) {
+      	$available_user_attrs['[property.picture]'] = array();
+      }
+      $available_user_attrs['[property.picture]'] = array(
+      		'name' => 'Property: Picture',
+      		'source' => '[' . $ldap_server->picture_attr . ']',
+      		'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+      		'enabled' => TRUE,
+      		'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
+      		'config_module' => 'ldap_server',
+      		'prov_module' => 'ldap_user',
+      ) + $available_user_attrs['[property.picture]'];
     }
   }
  // debug('available_user_attrs2'); debug($available_user_attrs);

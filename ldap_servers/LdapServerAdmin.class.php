@@ -66,6 +66,7 @@ class LdapServerAdmin extends LdapServer {
     $this->user_dn_expression = trim($values['user_dn_expression']);
     $this->basedn = $this->linesToArray(trim($values['basedn']));
     $this->user_attr = drupal_strtolower(trim($values['user_attr']));
+    $this->picture_attr = drupal_strtolower(trim($values['picture_attr']));
     $this->account_name_attr = drupal_strtolower(trim($values['account_name_attr']));
     $this->mail_attr = drupal_strtolower(trim($values['mail_attr']));
     $this->mail_template = trim($values['mail_template']);
@@ -808,6 +809,21 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
+    'picture_attr' => array(
+      		'form' => array(
+      				'fieldset' => 'users',
+      				'#type' => 'textfield',
+      				'#size' => 30,
+      				'#title' => t('Thumbnail attribute'),
+      				'#description' => t('The attribute that holds the users\' thumnail image. (eg. <code>thumbnailPhoto</code>). Leave empty if no such attribute exists'),
+      		),
+      		'schema' => array(
+      				'type' => 'varchar',
+      				'length' => 255,
+      				'not null' => FALSE,
+      		),
+      ),
+  
       'unique_persistent_attr' => array(
         'form' => array(
           'fieldset' => 'users',

@@ -763,6 +763,20 @@ function ldap_servers_update_7203() {
 
 }
 
+/**
+ * Add picture_attr field in schema
+ */
+function ldap_servers_update_7204() {
+	db_add_field(
+			'ldap_servers',			
+			'picture_attr',
+			array(
+					'type' => 'varchar',
+					'length' => 255,
+					'not null' => FALSE,
+			)
+	);		
+}
 
 function ldap_servers_install_update_schema($schema, &$change_log) {
   foreach ($schema as $table_name => $table_schema) {

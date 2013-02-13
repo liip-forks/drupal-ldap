@@ -1177,10 +1177,10 @@ class LdapUserConf {
    * ... should not assume all attribues are present in ldap entry
    *
    * @param array ldap entry $ldap_user
-   * @param object $ldap_server
    * @param array $edit see hook_user_save, hook_user_update, etc
-   * @param drupal account object $account
-   * @param string $op see hook_ldap_attributes_needed_alter
+   * @param object $ldap_server
+   * @param enum $direction
+   * @param array $prov_events
    */
 
   function entryToUserEdit($ldap_user, &$edit, $ldap_server, $direction = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_events = NULL) {
@@ -1196,12 +1196,23 @@ class LdapUserConf {
         $edit['mail'] = $derived_mail;
       }
     }
-
-    if ($this->isSynched('[property.name]', $prov_events, $direction) && !isset($edit['name'])) {
-      $name = $ldap_server->userUsernameFromLdapEntry($ldap_user['attr']);
-      if ($name) {
-        $edit['name'] = $name;
-      }
+   
+    $drupal_username = $ldap_server->userUsernameFromLdapEntry($ldap_user['attr']);
+    
+		if ($this->isSynched('[property.picture]', $prov_events, $direction)){
+      
+			$picture = $ldap_server->userPictureFromLdapEntry($ldap_user['attr'], $drupal_username);
+      
+			if ($picture){
+				$edit['picture'] = $picture;
+				if(isset($picture->md5Sum)){
+					$edit['data']['ldap_user']['init']['thumb5md'] = $picture->md5Sum;
+				}				
+			}
+		}
+    
+    if ($this->isSynched('[property.name]', $prov_events, $direction) && !isset($edit['name']) && $drupal_username) {
+      $edit['name'] = $drupal_username;
     }
 
     if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER && in_array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, $prov_events)) {
