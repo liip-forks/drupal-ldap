@@ -34,6 +34,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
    */
 
   public function createConsumer($consumer_id, $consumer) {
+    debug("createConsumer $consumer_id"); debug("consumer"); debug($consumer);
     $roles_by_consumer_id = $this->existingRolesByRoleName();
     $existing_role = isset($roles_by_consumer_id[$consumer_id]) ? $roles_by_consumer_id[$consumer_id] : FALSE;
 
@@ -50,13 +51,16 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     $new_role = new stdClass();
     $new_role->name = empty($consumer['value']) ? $consumer_id : $consumer['value'];
     if (! ($status = user_role_save($new_role))) {
+     // debug("failed to created ". $new_role->name);
       // if role is not created, remove from array to user object doesn't have it stored as granted
       watchdog('user', 'failed to create drupal role %role in ldap_authorizations module', array('%role' => $new_role->name));
       return FALSE;
     }
     else {
+    //  debug("created ". $new_role->name);
       watchdog('user', 'created drupal role %role in ldap_authorizations module', array('%role' => $new_role->name));
     }
+    debug(user_roles());
     return TRUE;
   }
 
@@ -140,7 +144,8 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     $role_name_lcase = $consumer_id;
     $role_name = empty($consumer['value']) ? $consumer_id : $consumer['value'];
     $rid = $this->getDrupalRoleIdFromRoleName($role_name);
-
+    debug("grantSingleAuthorization, role_name_lcase=$role_name_lcase, role_name=$role_name, rid=$rid");
+    debug("consumer"); debug($consumer);
     if (is_null($rid)) {
       watchdog('ldap_authorization', 'LdapAuthorizationConsumerDrupalRole.grantSingleAuthorization()
       failed to grant %username the role %role_name because role does not exist',
@@ -156,7 +161,9 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
     }
 
     $account = user_load($user->uid);
+    debug("grantSingleAuthorization account and user edit"); debug($account); debug($user_edit);
     $user = user_save($account, $user_edit);
+    debug("grantSingleAuthorization account and user edit, post save"); debug($account); debug($user_edit);
     $result = ($user && !empty($user->roles[$rid]));
 
     if ($this->detailedWatchdogLog) {

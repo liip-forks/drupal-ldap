@@ -90,7 +90,6 @@ function ldap_authorization_menu() {
  * Implements hook_user_login() login operation.
  */
 function ldap_authorization_user_login(&$edit, $user) {
-
   list($authorizations, $notifications) = ldap_authorizations_user_authorizations($user, 'set', NULL, 'logon');
   if (variable_get('ldap_help_watchdog_detail', FALSE)) {
     foreach ($authorizations as $consumer_type => $authorization_ids) {
@@ -98,10 +97,6 @@ function ldap_authorization_user_login(&$edit, $user) {
       watchdog('ldap_authentication', 'ldap_authorization_user_login.authorizations' . $ul , array(), WATCHDOG_DEBUG);
     }
   }
-
-
- // dpm('ldap_authorization_user_login'); dpm($user); dpm($authorizations);
-
 }
 
 /**
