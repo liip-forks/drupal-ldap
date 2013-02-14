@@ -366,60 +366,65 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
      fields/properties are provisioned or synched
     */
 
-    foreach (array(
-      'field.ldap_user_puid_sid',
-      'field.ldap_user_puid',
-      'field.ldap_user_puid_property',
-      'field.ldap_user_current_dn',
-      ) as $i => $property_id) {
-      $property_token = '[' . $property_id . ']';
-      if (!isset($available_user_attrs[$property_token]) || !is_array($available_user_attrs[$property_token])) {
-        $available_user_attrs[$property_token] = array();
+    if ($ldap_server->unique_persistent_attr) {
+      foreach (array(
+        'field.ldap_user_puid_sid',
+        'field.ldap_user_puid',
+        'field.ldap_user_puid_property',
+        ) as $i => $property_id) {
+        $property_token = '[' . $property_id . ']';
+        if (!isset($available_user_attrs[$property_token]) || !is_array($available_user_attrs[$property_token])) {
+          $available_user_attrs[$property_token] = array();
+        }
       }
+  
+      $available_user_attrs['[field.ldap_user_puid_sid]'] =  array(
+        'name' => t('Field: sid providing PUID'),
+        'configurable_to_drupal' => 0,
+        'configurable_to_ldap' => 1,
+        'source' => t('!sid', $tokens),
+        'notes' => 'not configurable',
+        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+        'enabled' => TRUE,
+        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+        'config_module' => 'ldap_server',
+        'prov_module' => 'ldap_user',
+      ) + $available_user_attrs['[field.ldap_user_puid_sid]'];
+  
+      $available_user_attrs['[field.ldap_user_puid]'] =  array(
+        'name' => t('Field: PUID', $tokens),
+        'configurable_to_drupal' => 0,
+        'configurable_to_ldap' => 1,
+        'source' => '[' . $ldap_server->unique_persistent_attr . ']',
+        'notes' => 'configure at ' . $server_edit_path,
+        'convert' => $ldap_server->unique_persistent_attr_binary,
+        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+        'enabled' => TRUE,
+        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+        'config_module' => 'ldap_server',
+        'prov_module' => 'ldap_user',
+      ) + $available_user_attrs['[field.ldap_user_puid]'];
+  
+      $available_user_attrs['[field.ldap_user_puid_property]'] =
+      array(
+        'name' => t('Field: PUID Attribute', $tokens),
+        'configurable_to_drupal' => 0,
+        'configurable_to_ldap' => 1,
+        'source' =>  $ldap_server->unique_persistent_attr ,
+        'notes' => 'configure at ' . $server_edit_path,
+        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+        'enabled' => TRUE,
+        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+        'config_module' => 'ldap_server',
+        'prov_module' => 'ldap_user',
+      ) + $available_user_attrs['[field.ldap_user_puid_property]'];
     }
-
-    $available_user_attrs['[field.ldap_user_puid_sid]'] =  array(
-      'name' => t('Field: sid providing PUID'),
-      'configurable_to_drupal' => 0,
-      'configurable_to_ldap' => 1,
-      'source' => t('!sid', $tokens),
-      'notes' => 'not configurable',
-      'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
-      'enabled' => TRUE,
-      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
-      'config_module' => 'ldap_server',
-      'prov_module' => 'ldap_user',
-    ) + $available_user_attrs['[field.ldap_user_puid_sid]'];
-
-    $available_user_attrs['[field.ldap_user_puid]'] =  array(
-      'name' => t('Field: PUID', $tokens),
-      'configurable_to_drupal' => 0,
-      'configurable_to_ldap' => 1,
-      'source' => '[' . $ldap_server->unique_persistent_attr . ']',
-      'notes' => 'configure at ' . $server_edit_path,
-      'convert' => $ldap_server->unique_persistent_attr_binary,
-      'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
-      'enabled' => TRUE,
-      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
-      'config_module' => 'ldap_server',
-      'prov_module' => 'ldap_user',
-    ) + $available_user_attrs['[field.ldap_user_puid]'];
-
-    $available_user_attrs['[field.ldap_user_puid_property]'] =
-    array(
-      'name' => t('Field: PUID Attribute', $tokens),
-      'configurable_to_drupal' => 0,
-      'configurable_to_ldap' => 1,
-      'source' =>  $ldap_server->unique_persistent_attr ,
-      'notes' => 'configure at ' . $server_edit_path,
-      'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
-      'enabled' => TRUE,
-      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
-      'config_module' => 'ldap_server',
-      'prov_module' => 'ldap_user',
-    ) + $available_user_attrs['[field.ldap_user_puid_property]'];
-
-    $available_user_attrs['[field.ldap_user_current_dn]'] =
+    
+    $token = '[field.ldap_user_current_dn]';
+    if (!isset($available_user_attrs[$token]) || !is_array($available_user_attrs[$token])) {
+      $available_user_attrs[$token] = array();
+    }
+    $available_user_attrs[$token] =
     array(
       'name' => t('Field: Most Recent DN', $tokens),
       'configurable_to_drupal' => 0,
@@ -431,7 +436,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
       'config_module' => 'ldap_server',
       'prov_module' => 'ldap_user',
-    ) + $available_user_attrs['[field.ldap_user_current_dn]'];
+    ) + $available_user_attrs[$token];
 
     if ($ldap_user_conf->provisionsDrupalAccountsFromLdap) {
       if (!isset($available_user_attrs['[property.name]']) || !is_array($available_user_attrs['[property.name]'])) {
@@ -460,18 +465,20 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[property.mail]'];
       
-      if (!isset($available_user_attrs['[property.picture]']) || !is_array($available_user_attrs['[property.picture]'])) {
-      	$available_user_attrs['[property.picture]'] = array();
+      if ($ldap_server->picture_attr) {
+        if (!isset($available_user_attrs['[property.picture]']) || !is_array($available_user_attrs['[property.picture]'])) {
+          $available_user_attrs['[property.picture]'] = array();
+        }
+        $available_user_attrs['[property.picture]'] = array(
+            'name' => 'Property: Picture',
+            'source' => '[' . $ldap_server->picture_attr . ']',
+            'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+            'enabled' => TRUE,
+            'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
+            'config_module' => 'ldap_server',
+            'prov_module' => 'ldap_user',
+        ) + $available_user_attrs['[property.picture]'];
       }
-      $available_user_attrs['[property.picture]'] = array(
-      		'name' => 'Property: Picture',
-      		'source' => '[' . $ldap_server->picture_attr . ']',
-      		'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
-      		'enabled' => TRUE,
-      		'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
-      		'config_module' => 'ldap_server',
-      		'prov_module' => 'ldap_user',
-      ) + $available_user_attrs['[property.picture]'];
     }
   }
  // debug('available_user_attrs2'); debug($available_user_attrs);

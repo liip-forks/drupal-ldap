@@ -120,7 +120,7 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
  * authorization configuration flags tests clumped together
  */
 
-function x_testFlags() {
+function testFlags() {
 
   $sid = 'activedirectory1';
   $this->prepTestData(
@@ -389,7 +389,7 @@ function x_testFlags() {
 
 }
 
-  public function x_testUIForms() {
+  public function testUIForms() {
 
     $ldap_simpletest_initial = variable_get('ldap_simpletest', 1);
     variable_del('ldap_simpletest'); // need to be out of fake server mode to test ui.
