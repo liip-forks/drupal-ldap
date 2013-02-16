@@ -29,7 +29,6 @@ function ldap_authorization_og_ldap_authorization_consumer() {
       <code>
       Student Accounts|group-name=students,role-name=member<br/>
       cn=honors students,ou=groups,dc=hogwarts,dc=edu|gid=7,rid=28<br/>
-      cn=gryffindor,ou=groups,dc=hogwarts,dc=edu|node.house=gryffindor,role-name=administrator member<br/>
       </code>';
   }
   else {
@@ -85,6 +84,25 @@ function ldap_authorization_og1_entity_id_to_gid($entity_id) {
 }
 
 /**
+ * Convert entity id to group id
+ *
+ * @param int $entity_id as id of entity associated with organic group
+ * @return int og group id
+ */
+function ldap_authorization_og1_group_name_to_gid($group_name) {
+
+  $gid = db_select('og', 'og')
+        ->fields('og', array('gid'))
+        ->condition('og.label', $group_name, '=')
+        ->range(0, 1)
+        ->execute()
+        ->fetchField();
+  return ($gid && is_scalar($gid)) ? $gid : FALSE;
+
+}
+
+
+/**
  * Generic function to convert between query values and organic groups structures and attributes
  *
  * @param mixed $value signifies query value e.g. 'bakers', 7 etc.
@@ -94,32 +112,25 @@ function ldap_authorization_og1_entity_id_to_gid($entity_id) {
  */
 function ldap_authorization_og1_get_group($value, $value_type = 'group_name', $return = 'object') {
 
-  $groups = og_load_multiple(og_get_all_group());
-  $group = NULL;
-  $node = NULL;
-
   if ($value_type == 'gid') {
-    $group = $groups[$value];
+    $group = og_load($value);
   }
   elseif ($value_type == 'group_name') {
-    foreach ($groups as $gid => $discard) {
-      $group_obj = og_load($gid);
-      $group_node = node_load($group_obj->etid);
-      if ($group_node && $group_node->type == $value) {
-        $group = $group_obj;
-        $node = $group_node;
-        break;
-      }
-    }
+    $gid = ldap_authorization_og1_group_name_to_gid($value);
+    $group = ($gid) ? og_load($gid) : FALSE;
   }
-
-  if ($return == 'object' && is_object($group) && is_object($node)) {
-    return array($group, $node);
+  
+  if (!$group || !is_object($group)) {
+    return FALSE;
   }
-  elseif ($return == 'label' || $return == 'name' && is_object($group)) {
+  if ($return == 'object' && is_object($group)) {
+    $group_entity = node_load($group->etid);
+    return array($group, $group_entity);
+  }
+  elseif ($return == 'label' || $return == 'name') {
     return $group->label;
   }
-  elseif ($return == 'gid' && is_object($group)) {
+  elseif ($return == 'gid') {
     return $group->gid;
   }
   else {
@@ -229,6 +240,12 @@ function ldap_authorization_og_rid_from_role_name($role_name) {
   $rids = array_flip($roles);
   return isset($rids[$role_name]) ? $rids[$role_name] : FALSE;
 }
+
+function ldap_authorization_og1_role_name_from_rid($rid) {
+  $roles = og_roles(0);
+  return isset($roles[$rid]) ? $roles[$rid] : FALSE;
+}
+
 
 function ldap_authorization_og_get_all_group_entities() {
   $entities = array();

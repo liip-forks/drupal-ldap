@@ -76,11 +76,9 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     if ($this->ogVersion == 2) {
       $group_entity_types = og_get_all_group_bundle();
       foreach ($mappings as $i => $mapping) {
-
         $from = $mapping[0];
         $to = $mapping[1];
         $to_parts = explode('(raw: ', $to);
-
         $user_entered = $to_parts[0];
         $new_mapping = array(
           'from' => $from,
@@ -163,7 +161,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
         $new_mappings[] = $new_mapping;
       }
-    //  dpm($new_mappings);
     }
     else { // og 1
       foreach ($mappings as $i => $mapping) {
@@ -193,7 +190,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
           $new_mapping['error_message'] = $incorrect_syntax;
           continue;
         }
-        $new_mapping['simplified'] = $group_target_and_value;
+        
         list($group_target, $group_target_value) = $group_target_and_value;
 
         $role_target_and_value = explode('=', $targets[1]);
@@ -203,7 +200,9 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
           continue;
         }
         list($role_target, $role_target_value) = $role_target_and_value;
-
+        
+        
+        $og_group = FALSE;
         if ($group_target == 'gid') {
           $gid = $group_target_value;
         }
@@ -232,25 +231,29 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
             $entities = array_keys($result[$entity_type]);
             $gid = ldap_authorization_og1_entity_id_to_gid($entities[0]);
           }
+         
         }
-
+        if (!$og_group && $gid) {
+          $og_group = og_load($gid);
+        }
+        
+        
         if ($role_target == 'rid') {
+          $role_name = ldap_authorization_og1_role_name_from_rid($role_target_value);
           $rid = $role_target_value;
         }
         elseif ($role_target == 'role-name') {
           $rid = ldap_authorization_og_rid_from_role_name($role_target_value);
+          $role_name = $role_target_value;
         }
+        
+        $new_mapping['simplified'] = $og_group->label . ', '. $role_name;
+        $new_mapping['normalized'] = ($gid && $rid) ? ldap_authorization_og_authorization_id($gid, $rid) : FALSE;
 
-        if ($gid && $rid) {
-          $new_mapping['normalized'] = ldap_authorization_og_authorization_id($gid, $rid);
-        }
-        else {
-          $new_mappings['normalized'] = FALSE;
-        }
         $new_mappings[] = $new_mapping;
       }
+      
     }
-
     return $new_mappings;
   }
 
@@ -278,6 +281,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     //debug('populateConsumersFromConsumerIds'); debug($consumers);
     // generate a query for all og groups of interest
     $gids = array();
+    //dpm("consumers"); dpm($consumers);
     foreach ($consumers as $consumer_id => $consumer) {
       if (ldap_authorization_og_og_version() == 1) {
         list($gid, $rid) = explode('-', $consumer_id);
@@ -286,8 +290,9 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       else  {
         //debug("populateConsumersFromConsumerIds.consumer_id=$consumer_id");
         list($entity_type, $gid, $rid) = explode(':', $consumer_id);
+        $gids[$entity_type][] = $gid;
       }
-      $gids[$entity_type][] = $gid;
+      
     }
     if (ldap_authorization_og_og_version() == 1) {
       $og_group_entities = og_load_multiple($gids);
