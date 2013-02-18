@@ -55,6 +55,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
       return FALSE;
     }
     else {
+      $roles_by_consumer_id = $this->existingRolesByRoleName(TRUE); // flush existingRolesByRoleName cache after creating new role
       watchdog('user', 'created drupal role %role in ldap_authorizations module', array('%role' => $new_role->name));
     }
     return TRUE;
