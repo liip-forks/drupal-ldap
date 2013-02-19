@@ -288,7 +288,11 @@ class LdapServer {
       watchdog('ldap', "LDAP bind failure for user %user. Not connected to LDAP server.", array('%user' => $userdn));
       return LDAP_CONNECT_ERROR;
     }
-    if ($anon_bind) {
+    
+    if ($anon_bind !== FALSE && $userdn === NULL && $pass === NULL && $this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON) {
+      $anon_bind = TRUE;
+    }
+    if ($anon_bind === TRUE) {
       if (@!ldap_bind($this->connection)) {
         if ($this->detailedWatchdogLog) {
           watchdog('ldap', "LDAP anonymous bind error. Error %errno: %error", array('%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
@@ -299,6 +303,11 @@ class LdapServer {
     else {
       $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
       $pass = ($pass != NULL) ? $pass : $this->bindpw;
+      
+      if (drupal_strlen($pass) == 0 || drupal_strlen($userdn) == 0) {
+        watchdog('ldap', "LDAP bind failure for user userdn=%userdn, pass=%pass.", array('%userdn' => $userdn, '%pass' => $pass));
+        return LDAP_LOCAL_ERROR;
+      }
       if (@!ldap_bind($this->connection, $userdn, $pass)) {
         if ($this->detailedWatchdogLog) {
           watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", array('%user' => $userdn, '%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));

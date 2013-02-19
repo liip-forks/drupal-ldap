@@ -449,7 +449,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
         $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
         ) {
-      $bind_success = ($ldap_server->bind() == LDAP_SUCCESS);
+      $bind_success = ($ldap_server->bind(NULL, NULL, FALSE) == LDAP_SUCCESS);
     }
     elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON) {
       $bind_success = ($ldap_server->bind(NULL, NULL, TRUE) == LDAP_SUCCESS);
@@ -464,7 +464,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
         $transformname =  $ldap_server->userUsernameToLdapNameTransform($authname, $watchdog_tokens);
         $replace = array($basedn, $transformname);
         $userdn = str_replace($search, $replace, $ldap_server->user_dn_expression);
-        $bind_success = ($ldap_server->bind($userdn, $password) == LDAP_SUCCESS);
+        $bind_success = ($ldap_server->bind($userdn, $password, FALSE) == LDAP_SUCCESS);
         if ($bind_success) {
           break;
         }
@@ -545,7 +545,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
       $credentials_pass = (boolean)($ldap_user);
     }
     else {
-      $credentials_pass = ($ldap_server->bind($ldap_user['dn'], $password) == LDAP_SUCCESS);
+      $credentials_pass = ($ldap_server->bind($ldap_user['dn'], $password, FALSE) == LDAP_SUCCESS);
     }
     if (!$credentials_pass) {
       if ($detailed_watchdog_log) {

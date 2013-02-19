@@ -262,7 +262,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
     }
     $results_tables['basic'][] = array(t('Binding with DN (%bind_dn).  Using supplied password ',
       array('%bind_dn' =>  $ldap_user['dn'])));
-    $result = $ldap_server->bind($ldap_user['dn'], $values['testing_drupal_userpw']);
+    $result = $ldap_server->bind($ldap_user['dn'], $values['testing_drupal_userpw'], FALSE);
     if ($result == LDAP_SUCCESS) {
       $results_tables['basic'][] = array(t('Successfully bound to server'), 'PASS');
     }
@@ -359,7 +359,7 @@ function ldap_servers_test_binding_credentials(&$ldap_server, $bindpw, &$results
   }
 
   if (!$errors) {
-    $bind_result = $ldap_server->bind($ldap_server->binddn, $bindpw);
+    $bind_result = $ldap_server->bind($ldap_server->binddn, $bindpw, FALSE);
     if ($bind_result == LDAP_SUCCESS) {
       $results_tables['basic'][] =  array(t('Successfully bound to server'));
     }
