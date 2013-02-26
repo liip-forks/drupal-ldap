@@ -109,9 +109,9 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
   * @param array $form_state array from user logon form
   * @return null, but success or failure is indicated by:
   * -- form_set_error() to invalidate authentication process
-  * -- setting $form_state['uid'] to indate successful authentication
+  * -- setting $form_state['uid'] to indicate successful authentication
   */
-function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
+function _ldap_authentication_user_login_authenticate_validate(&$form_state, $return_user) {
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $authname = $form_state['values']['name']; // $authname is the name the user is authenticated with from the logon form // patch 1599632
@@ -359,7 +359,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
  
  
   // the uid is returned so that special login modules, namely ldap sso, can manually call this function.
-  return $drupal_account->uid;
+  return ($return_user) ? $drupal_account : null;
 }
 
 /**
