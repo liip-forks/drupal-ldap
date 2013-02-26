@@ -33,7 +33,8 @@ function ldap_sso_user_logout($account) {
   $auth_conf = ldap_authentication_get_valid_conf();
   if ($auth_conf->seamlessLogin == 1) {
     $cookie_string = 'do not auto login';
-    setcookie("seamless_login", $cookie_string, time() + (int)$auth_conf->cookieExpire, base_path(), "");
+    $cookie_timeout = (int)$auth_conf->cookieExpire;
+    setcookie("seamless_login", $cookie_string, (($cookie_timeout == -1) ? 0 : $cookie_timeout + time()), base_path(), "");
     $_SESSION['seamless_login'] = $cookie_string;
   }
 }

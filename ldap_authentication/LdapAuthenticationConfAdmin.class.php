@@ -90,9 +90,8 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
         'mod_auth_kerb' => t('mod_auth_kerb'),
         );
 
-      $values['cookieExpirePeriod'] = array(0 => t('Immediately')) +
-        drupal_map_assoc(array(3600, 86400, 604800, 2592000, 31536000, 315360000), 'format_interval')
-        + array(-1 => t('Never'));
+      $values['cookieExpirePeriod'] = array(-1 => t('Session'), 0 => t('Immediately')) +
+        drupal_map_assoc(array(3600, 86400, 604800, 2592000, 31536000, 315360000, 630720000), 'format_interval');
 
       $values['ssoEnabledDescription'] = '<strong>' . t('Single Sign on is enabled.') .
         '</strong> ' . t('To disable it, disable the LDAP SSO Module on the') . ' ' . l(t('Modules Form'), 'admin/modules') . '.<p>' .
