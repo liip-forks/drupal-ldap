@@ -115,8 +115,37 @@ class LdapTestFunctions  {
     }
     return $user;
   }
+// from http://www.midwesternmac.com/blogs/jeff-geerling/programmatically-adding-roles
+public function removeRoleFromUser($user, $role_name) {
 
+  if (is_numeric($user)) {
+    $user = user_load($user);
+  }
+  $key = array_search($role_name, $user->roles);
+  if ($key == TRUE) {
+    // Get the rid from the roles table.
+    $roles = user_roles(TRUE);
+    $rid = array_search($role_name, $roles);
+    if ($rid != FALSE) {
+      // Make a copy of the roles array, without the deleted one.
+      $new_roles = array();
+      foreach($user->roles as $id => $name) {
+        if ($id != $rid) {
+          $new_roles[$id] = $name;
+        }
+      }
+      user_save($user, array('roles' => $new_roles));
+    }
+  }
+}
 
+    public function userByNameFlushingCache($name) {
+      $user = user_load_by_name($name);
+      $users = user_load_multiple(array($user->uid), array(), TRUE); // clear user cache
+      $user = $users[$user->uid];
+      return $user;
+    }
+    
  /**
    * set variable with fake test data
    *
