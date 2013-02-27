@@ -105,6 +105,10 @@ function ldap_user_uninstall() {
     }
   }
 
+  variable_del('ldap_user_conf');
+  variable_del('ldap_user_cron_last_orphan_checked');
+  variable_del('ldap_user_cron_last_uid_checked');
+
 }
 
 /**
