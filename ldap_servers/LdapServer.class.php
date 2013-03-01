@@ -1085,14 +1085,14 @@ class LdapServer {
    *
    * @return string user's PUID or permanent user id (within ldap) in native ldap format (no binary conversions applied)
    */
-  public function userPuidFromLdapEntry($ldap_entry) {
+  public function userHexPuidFromLdapEntry($ldap_entry) {
 
     if ($this->unique_persistent_attr
         && isset($ldap_entry[$this->unique_persistent_attr][0])
         && is_scalar($ldap_entry[$this->unique_persistent_attr][0])
         ) {
-
-      return $ldap_entry[$this->unique_persistent_attr][0];
+      $puid = $ldap_entry[$this->unique_persistent_attr][0];
+      return ($ldap_server->unique_persistent_attr_binary) ? ldap_servers_binary($puid) : $puid;
     }
     else {
       return FALSE;
