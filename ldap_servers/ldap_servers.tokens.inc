@@ -82,7 +82,7 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
   $result = str_replace($attributes, $values, $text);
 
   $result = preg_replace('/\[[^\]]*>/', '', $result);  // strip out any unreplace tokens
-  return $result;
+  return ($result == '') ? NULL : $result; // return NULL if $result is empty, else $result
 }
 
 /**
