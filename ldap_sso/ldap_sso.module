@@ -103,7 +103,7 @@ function ldap_sso_path_excluded_from_sso($path = FALSE) {
     $path = ltrim($_SERVER['PHP_SELF'], '/'); // cron.php, etc.
   }
   
-  if (in_array($path, $this->ldap_sso_default_excluded_paths())) {
+  if (in_array($path, ldap_sso_default_excluded_paths())) {
     return TRUE;
   }
   
