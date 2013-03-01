@@ -5,11 +5,6 @@
  * collection of functions related to ldap tokens
  */
 
-//define('LDAP_SERVERS_TOKEN_PRE', '[');
-//define('LDAP_SERVERS_TOKEN_POST', ']');
-//define('LDAP_SERVERS_TOKEN_DEL', ':');
-//define('LDAP_SERVERS_TOKEN_MODIFIER_DEL', ';');
-
 /**
  * @param string $attr_name such 'field_user_lname', 'name', 'mail', 'dn'
  * @param string $attr_type such as 'field', 'property', etc.  NULL for ldap attributes
@@ -62,7 +57,7 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
 
   $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);
 
-  if (count($desired_tokens) == 0) {
+  if (empty($desired_tokens)) {
     return $text; // if no tokens exist in text, return text itself.
   }
 
@@ -273,7 +268,6 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
       $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token_key);
       $attr_name = drupal_strtolower($parts[0]);
       $ordinal_key = isset($parts[1]) ? $parts[1] : 0;
-      // debug("conversion=$conversion, attr_name=$attr_name, ordinal_key=$ordinal_key");
       $i = NULL;
 
       if ($attr_name == 'dn' || !isset($ldap_entry[$attr_name])) { // don't use empty() since a 0, "", etc value may be a desired value
@@ -403,7 +397,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
         else {
           $skip = TRUE; // don't set token value because token is invalid
         }
-        // debug("case password: user_entered_password_available=$user_entered_password_available, attr_name=$attr_name, value=$value");
+        
       break;
     }
     if (!$skip) {
@@ -413,7 +407,6 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
       }
     }
   }
- // debug('final tokens'); debug($tokens);
   return $tokens;
 }
 
