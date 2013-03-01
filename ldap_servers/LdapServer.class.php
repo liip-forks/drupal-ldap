@@ -1017,7 +1017,7 @@ class LdapServer {
 			//Check if ldap entry has been provisioned.
 				
 			$thumb = isset($ldap_entry[$this->picture_attr][0]) ? $ldap_entry[$this->picture_attr][0] : FALSE;
-			if(!$thumb || $account->uid == '0'){
+			if(!$thumb){
 				return false;
 			}
       
@@ -1029,6 +1029,9 @@ class LdapServer {
 		   * If picture is not set but account has md5 something is wrong exit. 
 			 */
 			if ($drupal_username && $account = user_load_by_name($drupal_username)) {
+        if($account->uid == '0'){
+          return false;
+        }
         if (isset($account->picture)){
           // Check if image has changed
           if (isset($account->data['ldap_user']['init']['thumb5md']) && $md5thumb === $account->data['ldap_user']['init']['thumb5md']){
