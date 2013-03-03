@@ -1068,7 +1068,7 @@ class LdapUserConf {
       drupal_alter('ldap_entry', $ldap_user, $params);
 
       // look for existing drupal account with same puid.  if so update username and attempt to synch in current context
-      $puid = $ldap_server->userHexPuidFromLdapEntry($ldap_user['attr']);
+      $puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
       $account2 = ($puid) ? $ldap_server->userUserEntityFromPuid($puid) : FALSE;
 
       if ($account2) { // synch drupal account, since drupal account exists
@@ -1157,7 +1157,7 @@ class LdapUserConf {
           'dn'   => $ldap_user['dn'],
           'mail'   => $account->mail,
         );
-        $ldap_user_puid = $ldap_server->userHexPuidFromLdapEntry($ldap_user['attr']);
+        $ldap_user_puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
         if ($ldap_user_puid) {
           $user_edit['ldap_user_puid'][LANGUAGE_NONE][0]['value'] = $ldap_user_puid; //
         }
@@ -1233,7 +1233,7 @@ class LdapUserConf {
      * basic $user ldap fields
      */
     if ($this->isSynched('[field.ldap_user_puid]', $prov_events, $direction)) {
-      $ldap_user_puid = $ldap_server->userHexPuidFromLdapEntry($ldap_user['attr']);
+      $ldap_user_puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
       if ($ldap_user_puid) {
         $edit['ldap_user_puid'][LANGUAGE_NONE][0]['value'] = $ldap_user_puid; //
       }

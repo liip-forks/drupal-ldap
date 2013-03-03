@@ -221,7 +221,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
    *
    */
   if (!$drupal_account_exists && $ldap_server_authenticated_on) {
-    $puid = $ldap_server_authenticated_on->userHexPuidFromLdapEntry($ldap_user['attr']);
+    $puid = $ldap_server_authenticated_on->userPuidFromLdapEntry($ldap_user['attr']);
     if ($puid) {
       $drupal_account = $ldap_server_authenticated_on->userUserEntityFromPuid($puid);
       if ($drupal_account) {

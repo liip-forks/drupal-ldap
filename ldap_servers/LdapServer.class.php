@@ -893,21 +893,15 @@ class LdapServer {
    */
   public function userUserEntityFromPuid($puid) {
 
-    if ($this->unique_persistent_attr_binary) {
-      $puid = ldap_servers_binary($puid);
-    }
-
-   // list($account, $user_entity) = ldap_user_load_user_acct_and_entity('jkeats');
-    //debug('userUserEntityFromPuid:account and user entity'); debug($account); debug($user_entity);
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'user')
     ->fieldCondition('ldap_user_puid_sid', 'value', $this->sid, '=')
     ->fieldCondition('ldap_user_puid', 'value', $puid, '=')
     ->fieldCondition('ldap_user_puid_property', 'value', $this->unique_persistent_attr, '=')
     ->addMetaData('account', user_load(1)); // run the query as user 1
-// ->entityCondition('bundle', 'user')
+
     $result = $query->execute();
-   // debug("userUserEntityFromPuid: puid=$puid, sid=". $this->sid . "attr=" . $this->unique_persistent_attr); debug($result);
+
     if (isset($result['user'])) {
       $uids = array_keys($result['user']);
       if (count($uids) == 1) {
@@ -1086,9 +1080,9 @@ class LdapServer {
   /**
    * @param ldap entry array $ldap_entry
    *
-   * @return string user's PUID or permanent user id (within ldap) in native ldap format (no binary conversions applied)
+   * @return string user's PUID or permanent user id (within ldap), converted from binary, if applicable
    */
-  public function userHexPuidFromLdapEntry($ldap_entry) {
+  public function userPuidFromLdapEntry($ldap_entry) {
 
     if ($this->unique_persistent_attr
         && isset($ldap_entry[$this->unique_persistent_attr][0])
@@ -1586,7 +1580,6 @@ class LdapServer {
     }
     // if not exited yet, $user must be user_ldap_entry.
     $user_ldap_entry = $user;
-
     $all_group_dns = array();
     $tested_group_ids = array();
     $level = 0;

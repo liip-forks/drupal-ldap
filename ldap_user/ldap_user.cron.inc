@@ -94,6 +94,12 @@ function _ldap_user_orphans($ldap_user_conf) {
       $puid_attr = @$user->ldap_user_puid_property['und'][0]['value'];
       if ($sid && $puid && $puid_attr) {
         $filters[$sid][$puid_attr][] = "($puid_attr=" . ldap_servers_binary_filter($puid) . ")";
+        if ($ldap_servers[$sid]->unique_persistent_attr_binary) {
+          $filters[$sid][$puid_attr][] = "($puid_attr=" . ldap_servers_binary_filter($puid) . ")";
+        }
+        else {
+          $filters[$sid][$puid_attr][] = "($puid_attr=$puid)";
+        }
         $drupal_users[$sid][$puid_attr][$puid]['uid'] = $uid;
         $drupal_users[$sid][$puid_attr][$puid]['exists'] = FALSE;
       }
@@ -137,7 +143,7 @@ function _ldap_user_orphans($ldap_user_conf) {
 
         unset($ldap_entries['count']);
         foreach ($ldap_entries as $i => $ldap_entry) {
-          $puid = $ldap_server->userHexPuidFromLdapEntry($ldap_entry);
+          $puid = $ldap_server->userPuidFromLdapEntry($ldap_entry);
           $drupal_users[$sid][$puid_attr][$puid]['exists'] = TRUE;
         }
       }
