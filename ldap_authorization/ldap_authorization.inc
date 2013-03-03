@@ -346,8 +346,8 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
    /**
    * B. if regrantLdapProvisioned is false, $grants_lcase array should only be new authorizations
    */
-
-  if ($consumer->consumerConf->regrantLdapProvisioned === FALSE) {
+  
+  if (!$consumer->consumerConf->regrantLdapProvisioned) {
     // if regranting disabled, filter off previously granted roles
     $grants = array_diff(array_keys($filtered_ldap_authorizations), $initial_existing_ldap_authorizations);
   }
@@ -456,6 +456,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
 
   // traditional groups (dns)
   $group_dns = $consumer_conf->server->groupMembershipsFromUser($user, 'group_dns');
+ // debug("groupMembershipsFromUser, group_dns"); debug($group_dns);
   if (!$group_dns) {
     $group_dns = array();
   }
