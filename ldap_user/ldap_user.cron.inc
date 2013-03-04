@@ -88,12 +88,10 @@ function _ldap_user_orphans($ldap_user_conf) {
     $accounts = entity_load('user', $batch_uids);
 
     foreach ($accounts as $uid => $user) {
-
       $sid = @$user->ldap_user_puid_sid['und'][0]['value'];
       $puid = @$user->ldap_user_puid['und'][0]['value'];
       $puid_attr = @$user->ldap_user_puid_property['und'][0]['value'];
       if ($sid && $puid && $puid_attr) {
-        $filters[$sid][$puid_attr][] = "($puid_attr=" . ldap_servers_binary_filter($puid) . ")";
         if ($ldap_servers[$sid]->unique_persistent_attr_binary) {
           $filters[$sid][$puid_attr][] = "($puid_attr=" . ldap_servers_binary_filter($puid) . ")";
         }
@@ -112,7 +110,6 @@ function _ldap_user_orphans($ldap_user_conf) {
     //2. set $drupal_users[$sid][$puid_attr][$puid]['exists'] to FALSE
     // if entry doesn't exist
     foreach ($filters as $sid => $puid_attrs) {
-
       if (!isset($ldap_servers[$sid])) {
         if (!isset($watchdogs_sids_missing_watchdogged[$sid])) {
           watchdog(
@@ -143,7 +140,7 @@ function _ldap_user_orphans($ldap_user_conf) {
 
         unset($ldap_entries['count']);
         foreach ($ldap_entries as $i => $ldap_entry) {
-          $puid = $ldap_server->userPuidFromLdapEntry($ldap_entry);
+          $puid = $ldap_servers[$sid]->userPuidFromLdapEntry($ldap_entry);
           $drupal_users[$sid][$puid_attr][$puid]['exists'] = TRUE;
         }
       }
