@@ -54,23 +54,36 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
       'type' => 'group',
       'name' => 'OG Group',
       ))->type;
-
     og_create_field(OG_GROUP_FIELD, $this->groupEntityType, $this->groupBundle);
     og_create_field(OG_AUDIENCE_FIELD, $this->groupEntityType,  $this->groupBundle);
-
+    
+    
+    $this->createCustomRoles();
     // create og group for each group in group csv
 
     $this->testFunctions->populateFakeLdapServerData(LDAP_TEST_LDAP_NAME, 'activedirectory1');
     $this->testFunctions->getCsvLdapData(LDAP_TEST_LDAP_NAME);
     foreach ($this->testFunctions->csvTables['groups'] as $guid => $group) {
       $label = $group['cn'];
-      $settings = array();
-      $settings['type'] = $this->groupBundle;
-      $settings[OG_GROUP_FIELD][LANGUAGE_NONE][0]['value'] = 1;
-      $settings['uid'] = $this->user1->uid;
-      $settings['title'] = $label;
-      $settings['type'] = 'group';
-      $this->group_nodes[$label] = $this->drupalCreateNode($settings);
+      $group_type_obj = $this->drupalCreateContentType(array('name' => $label, 'type' => $label));
+      og_create_field(OG_GROUP_FIELD, 'node', $group_type_obj->type);
+      $group_node = $this->drupalCreateNode(array(
+        'title'    => $label,
+        'type'     => $group_type_obj->type,
+        'og_group' => array(
+           LANGUAGE_NONE => array(
+             0 => array(
+               'value' =>TRUE
+             )
+           )
+         )
+       ));
+      $group = og_create_group(array(
+        'entity_type' => 'node',
+        'etid' => $group_node->nid,
+        ));
+
+      $this->group_nodes[$label] = $group_node;
     }
 
   }
@@ -79,17 +92,18 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
 
     foreach ($this->customOgRoles as $og_role_name => $og_role) {
       $role = new stdClass;
-      $role->gid = 0;
-      $role->group_type = $og_role['entity_type'];
-      $role->group_bundle = $og_role['bundle_type'];
       $role->name = $og_role_name;
+      $role->gid = 0;
+    //  $role->group_type = $og_role['entity_type'];
+    //  $role->group_bundle = $og_role['bundle_type'];
+
       $status = og_role_save($role);
     }
 
   }
 
   /**
-   * just make sure install succeeds.  
+   * just make sure install succeeds and og and ldap_authorization_og functions work as designed 
    */
   function testBasicFunctionsAndApi() {
     $this->ldapTestId = $this->module_name . ': setup success';
@@ -105,49 +119,79 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
 
     $this->ldapTestId = $this->module_name . ': cron test';
     $this->assertTrue(drupal_cron_run(), t('Cron can run with ldap authorization og enabled.'), $this->ldapTestId);
-
-
+    
+    debug("this->group_nodes"); debug($this->group_nodes);
     /***
      * I. some basic tests to make sure og module's apis are working before testing ldap_authorization_og
+     */
      
-
     $web_user = $this->drupalCreateUser();
     $this->ldapTestId = $this->module_name . ': og functions';
+    // array($group, $group_entity)
+    list($og_gryffindor_group, $og_gryffindor_node) =  ldap_authorization_og1_get_group('gryffindor', 'group_name');
+    list($og_students_group, $og_students_node) =  ldap_authorization_og1_get_group('students', 'group_name');
+    list($og_faculty_group, $og_faculty_node) =  ldap_authorization_og1_get_group('faculty', 'group_name');
+    debug('og_gryffindor_node');debug($og_gryffindor_node->nid); debug($og_gryffindor_group->gid);
+    debug('og_students_node');debug($og_students_node->nid); debug($og_students_group->gid);
+    debug('og_faculty_node');debug($og_faculty_node->nid); debug($og_faculty_group->gid);
+    $anonymous_rid = ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE);
+    $member_rid =    ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE);
+    $admin_rid =     ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
+    $dungeon_master_rid =     ldap_authorization_og_rid_from_role_name('dungeon-master');
+    $time_keeper =     ldap_authorization_og_rid_from_role_name('time-keeper');
+    
+    debug("anonymous_rid=$anonymous_rid, member_rid=$member_rid,admin_rid=$admin_rid, dungeon_master_rid=$dungeon_master_rid, time_keeper=$time_keeper");
+    
+    /**
+function og_role_grant($gid, $uid, $rid) {
+  // Get the existiong user roles.
+  $user_roles = og_get_user_roles($gid, $uid);
+  if (!in_array($rid, $user_roles)) {
+    $role = new stdClass();
+    $role->uid = $uid;
+    $role->rid = $rid;
+    $role->gid = $gid;
 
-    list($og_knitters, $og_knitters_node) = ldap_authorization_og_get_group('knitters', 'group_name', 'object');
-    list($og_bakers, $og_bakers_node) = ldap_authorization_og_get_group('bakers', 'group_name', 'object');
-    list($og_butchers, $og_butchers_node) = ldap_authorization_og_get_group('butchers', 'group_name', 'object');
-    $anonymous_rid = ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE );
-    $member_rid = ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE );
-    $admin_rid = ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
-
-    og_role_grant($og_knitters->gid, $web_user->uid, $member_rid);
-    og_role_grant($og_bakers->gid, $web_user->uid, $member_rid);
-    og_role_grant($og_bakers->gid, $web_user->uid, $admin_rid);
-*/
+    drupal_write_record('og_users_roles', $role);
+    module_invoke_all('og_role_grant', $gid, $uid, $rid);
+  }
+}
+**/
+    og_role_grant($og_gryffindor_group->gid, $web_user->uid, $member_rid);
+    og_role_grant($og_students_group->gid, $web_user->uid, $member_rid);
+    og_role_grant($og_faculty_group->gid, $web_user->uid, $member_rid);
+    og_role_grant($og_faculty_group->gid, $web_user->uid, $admin_rid);
 
     /**
      * basic granting tests to make sure og_role_grant, ldap_authorization_og_rid_from_role_name,
      *   and ldap_authorization_og_get_group functions work
+     */
     
-
+/**
+function og_is_member($gid, $entity_type = 'user', $entity = NULL, $states = array(OG_STATE_ACTIVE)) {
+  $entity = og_load_entity($entity_type, $entity);
+  $groups = og_get_entity_groups($entity_type, $entity, $states);
+  return in_array($gid, $groups);
+}
+**/
     $ids = array($web_user->uid);
-   // debug($ids);
-    $user_entity = entity_load('user', $ids, array(), TRUE);
-   // debug($user_entity);
-    $this->assertTrue(og_is_member($og_knitters->gid, 'user', $user_entity),
-       'User is member of Group og_knitters without LDAP (based on og_is_member() function)', $this->ldapTestId);
-    $this->assertTrue(ldap_authorization_og_has_role($og_knitters->gid, $web_user->uid, OG_AUTHENTICATED_ROLE ),
-      'User is member of Group og_knitters without LDAP (based on ldap_authorization_og_has_role() function)', $this->ldapTestId);
-    $this->assertTrue(ldap_authorization_og_has_role($og_bakers->gid, $web_user->uid, OG_AUTHENTICATED_ROLE ),
-      'User is member of Group og_bakers without LDAP (based on dap_authorization_og_has_role() function)', $this->ldapTestId);
-    $this->assertTrue(ldap_authorization_og_has_role($og_bakers->gid, $web_user->uid, OG_ADMINISTRATOR_ROLE),
-      'User is administrator member of Group og_bakers without LDAP (based on dap_authorization_og_has_role() function)', $this->ldapTestId);
-    //
- */
+    debug($ids);
+    $user_entities = entity_load('user', $ids, array(), TRUE);
+    $user_entity = $user_entities[$web_user->uid];
+    debug("user_entity"); debug($user_entity);
+    $this->assertTrue(og_is_member($og_gryffindor_group->gid, 'user', $user_entity),
+       'User is member of Group gryffindor without LDAP (based on og_is_member() function)', $this->ldapTestId);
+    $this->assertTrue(ldap_authorization_og1_has_role($og_students_group->gid, $web_user->uid, OG_AUTHENTICATED_ROLE ),
+      'User is member of Group students without LDAP (based on ldap_authorization_og_has_role() function)', $this->ldapTestId);
+    $this->assertTrue(ldap_authorization_og1_has_role($og_faculty_group->gid, $web_user->uid, OG_AUTHENTICATED_ROLE ),
+      'User is member of Group ofaculty without LDAP (based on dap_authorization_og_has_role() function)', $this->ldapTestId);
+    $this->assertTrue(ldap_authorization_og1_has_role($og_faculty_group->gid, $web_user->uid, OG_ADMINISTRATOR_ROLE),
+      'User is administrator member of Group faculty without LDAP (based on dap_authorization_og_has_role() function)', $this->ldapTestId);
+
     /***
      * II.A. construct ldapauthorization og object and test methods (ignoring if ldap created or not).
      * unit tests for methods and class without any ldap context.
+     */
      
 
     $this->ldapTestId = $this->module_name . ': LdapAuthorizationConsumerOG class';
@@ -159,95 +203,81 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
     $this->assertTrue($og_auth->hasAuthorization($web_user, '2-3'),
       'hasAuthorization() method works for non LDAP provisioned og authorizaiton', $this->ldapTestId);
 
-    $this->assertTrue($og_auth->consumerType == 'og_group',
-      'LdapAuthorizationConsumerOG ConsumerType set properly', $this->ldapTestId);
+     $should_haves = array(
+      ldap_authorization_og_authorization_id($og_gryffindor_group->gid,     $member_rid,    'node') => 'gryffindor member',
+      ldap_authorization_og_authorization_id($og_students_group->gid,      $admin_rid,     'node') => 'faculty member',
+      ldap_authorization_og_authorization_id($og_faculty_group->gid,      $member_rid,    'node') => 'faculty admin',
+      ldap_authorization_og_authorization_id($og_faculty_group->gid,      $dungeon_master_rid,    'node') => 'faculty dungeon master',
 
-    $consumer_ids = $og_auth->availableConsumerIDs();
-    $should_haves = array('1-1', '1-2', '1-3', '2-1', '2-2', '2-3', '3-1', '3-2', '3-3');
-    $match = (boolean)(count(array_intersect($consumer_ids, $should_haves)) == count($should_haves));
-    $this->assertTrue($match,
-      'LdapAuthorizationConsumerOG availableConsumerIDs()', $this->ldapTestId);
-  //  debug($consumer_ids);
+    );
+       /***
+    foreach ($should_haves as $consumer_id => $descriptor) {
+      $this->assertTrue(ldap_authorization_og2_has_consumer_id($consumer_id, $web_user->uid),
+         "LdapAuthorizationConsumerOG usersAuthorizations() for $descriptor - $consumer_id", $this->ldapTestId);
+    }
 
-    $should_haves = array('1-1', '1-2', '2-1', '2-3');
-    $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
-    $match = (boolean)(count(array_intersect($web_user_authorizations, $should_haves)) == count($should_haves));
-    $this->assertTrue($match,
-      'LdapAuthorizationConsumerOG usersAuthorizations()', $this->ldapTestId);
+    $ldap_entry = NULL;
+    $user_data = array();
+    $web_user = user_load($web_user->uid, TRUE);
 
-    $baker_nonmember_id = ldap_authorization_og_authorization_id($og_bakers->gid, $anonymous_rid);
-    $og_auth->authorizationRevoke($web_user, $web_user->data['ldap_authorizations']['og_groups'], array($baker_nonmember_id => TRUE), NULL, TRUE);
-    $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
-    $this->assertTrue(in_array($baker_nonmember_id, $web_user_authorizations),
-      'LdapAuthorizationConsumerOG authorizationRevoke() test revoke on nonmeber role', $this->ldapTestId);
-
-    $butcher_member_id = ldap_authorization_og_authorization_id($og_butchers->gid, $member_rid);
-    $og_auth->authorizationGrant($web_user, $web_user->data['ldap_authorizations']['og_group'], array($butcher_member_id => TRUE), NULL, TRUE);
-    $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
-    $this->assertTrue(in_array($butcher_member_id, $web_user_authorizations),
-      'LdapAuthorizationConsumerOG authorizationGrant()', $this->ldapTestId);
-    $this->assertTrue($og_auth->hasLdapGrantedAuthorization($web_user, $butcher_member_id),
-      'hasLdapGrantedAuthorization() method works for non LDAP provisioned og authorization', $this->ldapTestId);
-
-    $og_auth->authorizationRevoke($web_user, $web_user->data['ldap_authorizations']['og_group'], array($butcher_member_id), NULL, TRUE);
-    $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
-  //  debug('web_user_authorizations'); debug($web_user_authorizations);
-    $this->assertFalse(in_array($butcher_member_id, $web_user_authorizations),
-       'LdapAuthorizationConsumerOG authorizationRevoke()', $this->ldapTestId);
+    $faculty_member_consumer_id = ldap_authorization_og_authorization_id($og_faculty_node->nid, $member_rid, 'node');
+    $faculty_dungeon_master_consumer_id = ldap_authorization_og_authorization_id($og_faculty_node->nid, $dungeon_master_rid, 'node');
+    $this->assertTrue(ldap_authorization_og2_has_consumer_id($faculty_dungeon_master_consumer_id, $web_user->uid),
+      "LdapAuthorizationConsumerOG has faculty member role BEFORE authorizationRevoke() test revoke on member role $faculty_dungeon_master_consumer_id", $this->ldapTestId);
 
 
-    $og_auth->authorizationRevoke($web_user, $web_user->data['ldap_authorizations']['og_group'], array($butcher_member_id), NULL, TRUE);
-    $web_user_authorizations = $og_auth->usersAuthorizations($web_user);
-   // debug('web_user_authorizations'); debug($web_user_authorizations);
-    $this->assertFalse(in_array($butcher_member_id, $web_user_authorizations),
-      'LdapAuthorizationConsumerOG authorizationRevoke() attempt to revoke role that user doesnt have', $this->ldapTestId);
+    $consumers = array($faculty_dungeon_master_consumer_id => $og_auth->emptyConsumer);
+    $og_auth->authorizationRevoke($web_user, $user_data, $consumers, $ldap_entry, TRUE);
+    $result = ldap_authorization_og2_has_consumer_id($faculty_dungeon_master_consumer_id, $web_user->uid);
+    $this->assertFalse($result,
+      "LdapAuthorizationConsumerOG authorizationRevoke() test revoke on member role $faculty_dungeon_master_consumer_id", $this->ldapTestId);
 
-    $result = $og_auth->authorizationRevoke($web_user, $web_user->data['ldap_authorizations']['og_group'], array('212-212' => NULL), NULL, TRUE);
+    $faculty_dungeon_master_consumer_id = ldap_authorization_og_authorization_id($og_faculty_node->nid, $dungeon_master_rid, 'node');
+    $consumers =  array($faculty_dungeon_master_consumer_id => $og_auth->emptyConsumer);
+    $og_auth->authorizationRevoke($web_user, $user_data, $consumers, $ldap_entry, TRUE);
+    $this->assertFalse(ldap_authorization_og2_has_consumer_id($faculty_dungeon_master_consumer_id, $web_user->uid),
+      "LdapAuthorizationConsumerOG authorizationRevoke() test revoke on custom member role role $faculty_dungeon_master_consumer_id", $this->ldapTestId);
+
+    $og_students_consumer_id = ldap_authorization_og_authorization_id($og_students_node->nid, $member_rid, 'node');
+    $og_auth->authorizationGrant($web_user, $user_data, array($og_students_consumer_id =>  $og_auth->emptyConsumer), $ldap_entry, TRUE);
+    $this->assertTrue(ldap_authorization_og2_has_consumer_id($og_students_consumer_id, $web_user->uid),
+      "LdapAuthorizationConsumerOG authorizationGrant() test grant on member role $og_students_consumer_id", $this->ldapTestId);
+
+    $web_user = user_load($web_user->uid, TRUE);
+    $result = $og_auth->authorizationRevoke($web_user, $user_data, array('node:454:44334'  => $og_auth->emptyConsumer), $ldap_entry, TRUE);
     $this->assertFalse($result,
       'LdapAuthorizationConsumerOG authorizationRevoke() test revoke of bogus authorization', $this->ldapTestId);
 
-    $result = $og_auth->authorizationGrant($web_user, $web_user->data['ldap_authorizations']['og_group'], array('212-212' => NULL), NULL, TRUE);
+    $web_user = user_load($web_user->uid, TRUE);
+    $result = $og_auth->authorizationGrant($web_user, $user_data, array('node:454:44334' => $og_auth->emptyConsumer), $ldap_entry, TRUE);
     $this->assertFalse($result,
       'LdapAuthorizationConsumerOG authorizationGrant() test grant of bogus authorization', $this->ldapTestId);
 
-    $result = $og_auth->authorizationRevoke($web_user, $web_user->data['ldap_authorizations']['og_group'], array('bogusformat' => NULL), NULL, TRUE);
+    $web_user = user_load($web_user->uid, TRUE);
+    $result = $og_auth->authorizationRevoke($web_user, $user_data, array('bogusformat'), $ldap_entry, TRUE);
     $this->assertFalse($result,
       'LdapAuthorizationConsumerOG authorizationRevoke()  test revoke malformed params', $this->ldapTestId);
 
-    $result = $og_auth->authorizationGrant($web_user, $web_user->data['ldap_authorizations']['og_group'], array('bogusformat' => NULL), NULL, TRUE);
+    $web_user = user_load($web_user->uid, TRUE);
+    $result = $og_auth->authorizationGrant($web_user, $user_data, array('bogusformat'), $ldap_entry, TRUE);
     $this->assertFalse($result,
       'LdapAuthorizationConsumerOG authorizationGrant() test grant malformed params', $this->ldapTestId);
-*/
-    /***
+
+
+    
      * II.B. Also test function in ldap_authorization_og.module
+    
+
+    list($students_group, $group_entity_id) = ldap_authorization_og2_get_group_from_name('node', 'students');
+    //debug("ldap_authorization_og2_get_group_from_name: students_group"); debug($students_group);
+    $this->assertTrue($students_group->title == 'students', 'ldap_authorization_og2_get_group_from_name() function works', $this->ldapTestId);
+
+    $test = ldap_authorization_og2_has_role($this->groupType, $og_gryffindor_node->nid, $web_user->uid, OG_ADMINISTRATOR_ROLE);
+    $this->assertTrue($test, 'ldap_authorization_og2_has_role() function works', $this->ldapTestId);
+
+    $test = ldap_authorization_og2_has_role($this->groupType, $og_students_node->nid, $web_user->uid, OG_ADMINISTRATOR_ROLE);
+    $this->assertTrue($test === FALSE, 'ldap_authorization_og2_has_role() function fails with FALSE', $this->ldapTestId);
      */
-/**
-    $normalized_authorization_id = ldap_authorization_og_authorization_id(3, 2);
-    $this->assertTrue($normalized_authorization_id == '3-2', ' ldap_authorizations og ldap_authorization_og_authorization_id() function works', $this->ldapTestId);
-
-    $gid = ldap_authorization_og_entity_id_to_gid(4345);
-    $this->assertTrue($gid === FALSE, ' ldap_authorizations og ldap_authorization_og_entity_id_to_gid() returns false for bogus data', $this->ldapTestId);
-
-
-    // create entity and get gid
-    $gid = ldap_authorization_og_entity_id_to_gid($og_knitters->etid);
-    $this->assertTrue($og_knitters->gid == $gid, 'ldap_authorization_og_entity_id_to_gid() function works', $this->ldapTestId);
-
-    $bakers_gid = ldap_authorization_og_get_group($og_bakers->gid, 'gid', 'gid');
-    $this->assertTrue($bakers_gid == $og_bakers->gid, 'ldap_authorization_og_get_group() function gid return works with query type gid', $this->ldapTestId);
-
-    $bakers_label = ldap_authorization_og_get_group($og_bakers->gid, 'gid', 'label');
-    $this->assertTrue($bakers_label == 'bakers', 'ldap_authorization_og_get_group() function label return works with query type gid', $this->ldapTestId);
-
-    $test = ldap_authorization_og_has_role($og_bakers->gid, $web_user->uid, OG_ADMINISTRATOR_ROLE);
-    $this->assertTrue($test, 'ldap_authorization_og_has_role() function works', $this->ldapTestId);
-
-    $test = ldap_authorization_og_has_role($og_knitters->gid, $web_user->uid, OG_ADMINISTRATOR_ROLE);
-    $this->assertTrue($test === FALSE, 'ldap_authorization_og_has_role() function fails with FALSE', $this->ldapTestId);
-
-    $test = ldap_authorization_og_rid_from_role_name('sdfsdfsdfsdf');
-    $this->assertTrue($test === FALSE, 'ldap_authorization_og_rid_from_role_name() function fails with FALSE', $this->ldapTestId);
-*/
   }
   
   /***

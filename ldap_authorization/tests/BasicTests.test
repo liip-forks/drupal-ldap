@@ -81,20 +81,20 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
     $testid = 'ExclusiveModeUserLogon3';
     $sids = array($sid);
     $this->prepTestData(LDAP_TEST_LDAP_NAME, $sids, 'provisionToDrupal', 'default', 'drupal_role_default');
-
-    $edit = array(
+    
+    $hpotter_logon_edit = array(
       'name' => 'hpotter',
       'pass' => 'goodpwd',
     );
-    $this->drupalPost('user', $edit, t('Log in'));
+    $this->drupalPost('user', $hpotter_logon_edit, t('Log in'));
     $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', 'LDAP Authorization: Test Logon');
     $this->assertTrue(
       $this->testFunctions->ldapUserIsAuthmapped('hpotter'),
       'Ldap user properly authmapped.',
       'LDAP Authorization: Test Logon'
     );
-
-    $hpotter = user_load_by_name('hpotter');
+    
+    $hpotter = $this->testFunctions->userByNameFlushingCache('hpotter');
     $roles = array_values($hpotter->roles);
     $desired_roles = array('students', 'authenticated user', 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu', 'cn=honors students,ou=groups,dc=hogwarts,dc=edu');
     $diff1 = array_diff($roles, $desired_roles);
@@ -111,7 +111,81 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
     );
 
     $this->drupalGet('user/logout');
+    
+    /**
+     * test revoking of no longer deserved roles when revokeLdapProvisioned=1
+     */
+    $this->consumerAdminConf['drupal_role']->revokeLdapProvisioned = 1;
+    $this->consumerAdminConf['drupal_role']->save();
+    
+    // setup:  remove hpotter from honors members 
+    $test_data_pre_test = variable_get('ldap_test_server__' . $sid, NULL);
+    $test_data = variable_get('ldap_test_server__' . $sid, NULL);
+    
+    $this->removeUserFromGroup($test_data, 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'cn=honors students,ou=groups,dc=hogwarts,dc=edu', "dc=hogwarts,dc=edu");
+    
+    variable_set('ldap_test_server__' . $sid, $test_data);
 
+    $hpotter_dn = 'cn=hpotter,ou=people,dc=hogwarts,dc=edu';
+    $this->drupalPost('user', $hpotter_logon_edit, t('Log in'));
+    $hpotter = $this->testFunctions->userByNameFlushingCache('hpotter');
+    $roles = array_values($hpotter->roles);
+
+    $this->assertFalse(
+      in_array('cn=honors students,ou=groups,dc=hogwarts,dc=edu', $roles),
+      'when revokeLdapProvisioned=1, removed role from user',
+      'LDAP Authorization: Test Logon'
+    );
+
+    $this->assertTrue(
+      empty($hpotter->data['ldap_authorizations']['drupal_role']['cn=honors students,ou=groups,dc=hogwarts,dc=edu']),
+      'when revokeLdapProvisioned=1, removed user->data[ldap_authorizations][drupal_role][<role>]',
+      'LDAP Authorization: Test Logon'
+    );
+    
+    // return test data to original state
+    variable_set('ldap_test_server__' . $sid, $test_data_pre_test);
+    $this->drupalGet('user/logout');
+    
+    
+    /**
+     * test regranting of removed roles (regrantLdapProvisioned = 0)
+     */
+    $hpotter = $this->testFunctions->userByNameFlushingCache('hpotter');
+    $roles = array_values($hpotter->roles);
+    $this->consumerAdminConf['drupal_role']->regrantLdapProvisioned = 0;
+    $this->consumerAdminConf['drupal_role']->save();
+    $this->testFunctions->removeRoleFromUser($hpotter, "cn=gryffindor,ou=groups,dc=hogwarts,dc=edu");
+    $this->drupalPost('user', $hpotter_logon_edit, t('Log in'));
+    $hpotter = $this->testFunctions->userByNameFlushingCache('hpotter');
+    $roles = array_values($hpotter->roles);
+
+    $this->assertFalse(
+      in_array("cn=gryffindor,ou=groups,dc=hogwarts,dc=edu", $roles),
+      'when regrantLdapProvisioned=0, did not regrant role on logon',
+      'LDAP Authorization: Test Logon'
+    );
+    $this->assertTrue(
+      !empty($hpotter->data['ldap_authorizations']['drupal_role']['cn=gryffindor,ou=groups,dc=hogwarts,dc=edu']),
+      'when regrantLdapProvisioned=0, role is not regranted, but initial grant still remains in user->data[ldap_authorizations][drupal_role][<role>]',
+      'LDAP Authorization: Test Logon'
+    );
+    $this->drupalGet('user/logout');
+    
+    /**
+     * test regranting of removed roles (regrantLdapProvisioned = 1)
+     */
+    $this->consumerAdminConf['drupal_role']->regrantLdapProvisioned = 1;
+    $this->consumerAdminConf['drupal_role']->save();
+    $this->drupalPost('user', $hpotter_logon_edit, t('Log in'));
+    $hpotter = $this->testFunctions->userByNameFlushingCache('hpotter');
+    $roles = array_values($hpotter->roles);
+    $this->assertTrue(
+      in_array("cn=gryffindor,ou=groups,dc=hogwarts,dc=edu", $roles),
+      'when regrantLdapProvisioned=0, did not regrant role on logon',
+      'LDAP Authorization: Test Logon'
+    );
+    $this->drupalGet('user/logout');
 
 }
 
@@ -512,8 +586,6 @@ function testFlags() {
             debug("status" . $consumer_conf->status);
             debug("sid" . $consumer_conf->sid);
           }
-
-
         }
       }
     }
