@@ -57,9 +57,7 @@ class LdapServerTest extends LdapServer {
     foreach ($test_data['properties'] as $property_name => $property_value ) {
       $this->{$property_name} = $property_value;
     }
-    if (is_scalar($this->basedn)) {
-      $this->basedn = unserialize($this->basedn);
-    }
+    $this->basedn = unserialize($this->basedn);
     if (isset($test_data['bindpw']) && $test_data['bindpw'] != '') {
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
@@ -141,7 +139,7 @@ class LdapServerTest extends LdapServer {
    */
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
 
-  //  debug("ldap test server search base_dn=$base_dn, filter=$filter");
+   // debug("ldap test server search base_dn=$base_dn, filter=$filter");
 
     $lcase_attribute = array();
     foreach ($attributes as $i => $attribute_name) {
@@ -166,7 +164,7 @@ class LdapServerTest extends LdapServer {
      * are prepolulated in test data
      */
     if (isset($this->searchResults[$filter][$base_dn])) {
-    //  debug('case1');
+   //   debug("case1 filter= $filter   base_dn=$base_dn ");
       $results = $this->searchResults[$filter][$base_dn];
       foreach ($results as $i => $entry) {
         if (is_array($entry) && isset($entry['FULLENTRY'])) {
@@ -176,7 +174,8 @@ class LdapServerTest extends LdapServer {
           $results[$i]['dn'] = $dn;
         }
       }
-      return $results;
+   //   debug($results);
+      return $results; 
     }
 
     /**
@@ -189,7 +188,7 @@ class LdapServerTest extends LdapServer {
     $operand = FALSE;
 
     if (strpos($filter, '&') === 0) {
-     // debug('2.A.');
+   //   debug('2.A.');
      /**
      * case 2.A.: filter of form (&(<attribute>=<value>)(<attribute>=<value>)(<attribute>=<value>))
      *  such as (&(samaccountname=hpotter)(samaccountname=hpotter)(samaccountname=hpotter))
@@ -230,7 +229,7 @@ class LdapServerTest extends LdapServer {
       $subqueries[] = explode('=', $filter);
     }
     else {
-      debug('no case');
+    //  debug('no case');
       return FALSE;
     }
 
@@ -336,7 +335,7 @@ class LdapServerTest extends LdapServer {
     }
 
     $results['count'] = count($results);
-   // debug("ldap test server search results"); debug($results);
+  //  debug("ldap test server search results"); debug($results);
     return $results;
   }
 

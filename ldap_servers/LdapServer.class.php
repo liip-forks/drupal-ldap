@@ -158,7 +158,6 @@ class LdapServer {
           $server_record = $record;
         }
       }
-    //  debug('db record'); debug($server_record);
     }
 
     if (!$server_record) {
@@ -168,16 +167,13 @@ class LdapServer {
       $this->inDatabase = TRUE;
       $this->sid = $sid;
       $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
-     // debug('this server_record'); debug($server_record);
       foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
         if (isset($server_record->$db_field_name)) {
           $this->{$property_name} = $server_record->$db_field_name;
         }
       }
-     // debug('this 2'); debug($this);
       $server_record_bindpw = property_exists($server_record, 'bindpw') ? $server_record->bindpw : '';
       $this->initDerivedProperties($server_record_bindpw);
-    //  debug('this 3'); debug($this);
     }
 
   }
@@ -186,14 +182,15 @@ class LdapServer {
    * this method sets properties that don't directly map from db record
    */
   protected function initDerivedProperties($bindpw) {
-
-   // debug('initDerivedProperties'); debug($this->basedn);
-    if (!is_array($this->basedn)) {
-      $basedn_unserialized = @unserialize($this->basedn);
-     // debug('basedn_unserialized'); debug($basedn_unserialized);
+    
+    if (is_array($this->basedn)) { // do nothing
+    }
+    elseif ($this->basedn && !is_array($this->basedn) && $basedn_unserialized = @unserialize($this->basedn)) {
       $this->basedn = $basedn_unserialized;
     }
-   // debug('initDerivedProperties'); debug($this->basedn);
+    else {
+      $this->basedn = array();
+    }
 
     if ($bindpw != '') {
       $this->bindpw = ldap_servers_decrypt($bindpw);
@@ -1158,8 +1155,7 @@ class LdapServer {
       $attributes = array_keys($attribute_maps);
     }
 
-    $basedns = (is_array($this->basedn)) ? $this->basedn : array();
-    foreach ($basedns as $basedn) {
+    foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
       $filter = '(' . $this->user_attr . '=' . ldap_server_massage_text($ldap_username, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP) . ')';
       $result = $this->search($basedn, $filter, $attributes);
