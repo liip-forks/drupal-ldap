@@ -160,6 +160,7 @@ class LdapServer {
       }
     }
 
+    $server_record_bindpw = NULL;
     if (!$server_record) {
       $this->inDatabase = FALSE;
     }
@@ -173,26 +174,37 @@ class LdapServer {
         }
       }
       $server_record_bindpw = property_exists($server_record, 'bindpw') ? $server_record->bindpw : '';
-      $this->initDerivedProperties($server_record_bindpw);
     }
-
+    $this->initDerivedProperties($server_record_bindpw);
   }
 
   /**
-   * this method sets properties that don't directly map from db record
+   * this method sets properties that don't directly map from db record.  it is split out so it can be shared with ldapServerTest.class.php
    */
   protected function initDerivedProperties($bindpw) {
     
-    if (is_array($this->basedn)) { // do nothing
-    }
-    elseif ($this->basedn && !is_array($this->basedn) && $basedn_unserialized = @unserialize($this->basedn)) {
-      $this->basedn = $basedn_unserialized;
-    }
-    else {
+    // get this->basedn in array format
+    if (!$this->basedn) {
       $this->basedn = array();
     }
+    elseif (is_array($this->basedn)) { // do nothing
+    }
+    else {
+      $basedn_unserialized = @unserialize($this->basedn);
+      if (is_array($basedn_unserialized)) {
+        $this->basedn = $basedn_unserialized;
+      }
+      else {
+        $this->basedn = array();
+        $token = is_scalar($basedn_unserialized) ? $basedn_unserialized : print_r($basedn_unserialized, TRUE);
+        debug("basednb desearialization error". $token);
+        watchdog('ldap_server', 'Failed to deserialize LdapServer::basedn of !basedn', array('!basedn' => $token), WATCHDOG_ERROR);
+      }
+      
+    }
 
-    if ($bindpw != '') {
+
+    if ($bindpw) {
       $this->bindpw = ldap_servers_decrypt($bindpw);
     }
 
@@ -202,7 +214,7 @@ class LdapServer {
       $this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
       $this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
     );
-    $this->editPath = 'admin/config/people/ldap/servers/edit/' . $this->sid;
+    $this->editPath = (!$this->sid) ? '' : 'admin/config/people/ldap/servers/edit/' . $this->sid;
 
     $this->groupGroupEntryMembershipsConfigured = ($this->groupMembershipsAttrMatchingUserAttr && $this->groupMembershipsAttr);
     $this->groupUserMembershipsConfigured = ($this->groupUserMembershipsAttrExists && $this->groupUserMembershipsAttr);
