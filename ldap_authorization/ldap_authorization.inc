@@ -406,6 +406,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
    */
 
   $uid = $user->uid;
+  $user_edit['data']['ldap_authorizations'] = $user->data['ldap_authorizations'];
   $user_edit['data']['ldap_authorizations'][$consumer->consumerType] = $user_auth_data;
   $watchdog_tokens['%user_edit_presave'] = print_r($user_edit, TRUE);
   $user = user_save($user, $user_edit);
