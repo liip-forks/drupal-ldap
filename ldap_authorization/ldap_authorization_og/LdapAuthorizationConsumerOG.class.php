@@ -346,13 +346,10 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
   }
 
 
-
-
   public function hasAuthorization(&$user, $consumer_id) {
-
     if ($this->ogVersion == 1) {
       list($gid, $rid) = @explode('-', $consumer_id);
-      $roles = og_get_user_roles($gid, $uid);
+      $roles = og_get_user_roles($gid, $user->uid);
       $result = (!empty($roles[$rid]));
     }
     else {

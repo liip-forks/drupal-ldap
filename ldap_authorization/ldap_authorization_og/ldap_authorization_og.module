@@ -174,13 +174,13 @@ function ldap_authorization_og2_get_group_from_name($entity_type, $group_name) {
  *
  * @param int $gid as og group id
  * @param int $uid as user id
- * @param string $role_name as og role name
+ * @param string $rid as og role id
  *
  * @return boolean signifying if user has group x role
  */
-function ldap_authorization_og1_has_role($gid, $uid, $role_name) {
+function ldap_authorization_og1_has_role($gid, $uid, $rid) {
   $roles = og_get_user_roles($gid, $uid);
-  return (is_array($roles) && in_array($role_name, array_values($roles)));
+  return (is_array($roles) && in_array($rid, array_values($roles)));
 }
 
 function ldap_authorization_og2_has_consumer_id($consumer_id, $uid) {
