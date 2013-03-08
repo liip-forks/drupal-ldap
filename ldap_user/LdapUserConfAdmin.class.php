@@ -304,11 +304,11 @@ the top of this form.
 
       if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
         $parent_fieldset = 'basic_to_drupal';
-        $description =  t('Provisioning from LDAP to Drupal Mapppings:');
+        $description =  t('Provisioning from LDAP to Drupal Mappings:');
       }
       elseif ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
         $parent_fieldset = 'basic_to_ldap';
-        $description =   t('Provisioning from Drupal to LDAP Mapppings:');
+        $description =   t('Provisioning from Drupal to LDAP Mappings:');
       }
 
       $form[$parent_fieldset]['mappings__' . $direction] = array(
@@ -968,7 +968,7 @@ EOT;
     $values['ldapEntryProvisionServerDescription'] = t('Check ONE LDAP server configuration to create ldap entries on.');
 
     $values['drupalAccountProvisionEventsDescription'] = t('Which user fields and properties are synched on create or synch is determined in the
-      "Provisioning from LDAP to Drupal mapppings" table below in the right two columns.');
+      "Provisioning from LDAP to Drupal mappings" table below in the right two columns.');
 
     $values['drupalAccountProvisionEventsOptions'] = array(
       LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE => t('Create or Synch to Drupal user on successful authentication with LDAP
@@ -979,7 +979,7 @@ EOT;
     );
 
     $values['ldapEntryProvisionTriggersDescription'] = t('Which LDAP attributes are synched on create or synch is determined in the
-      "Provisioning from Drupal to LDAP mapppings" table below in the right two columns.');
+      "Provisioning from Drupal to LDAP mappings" table below in the right two columns.');
 
     $values['ldapEntryProvisionTriggersOptions'] = array(
       LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE => t('Create or Synch to LDAP entry when a Drupal account is created or updated.
