@@ -41,8 +41,14 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
           $values->$property = $value;
         }
       }
-      $values->export_type = ($this->numericConsumerConfId) ? EXPORT_IN_DATABASE : NULL;
-      $result = ctools_export_crud_save('ldap_authorization', $values);
+      try {
+        $values->export_type = NULL;
+        $result = ctools_export_crud_save('ldap_authorization', $values);
+      } catch (Exception $e) {
+        //  debug($e); Integrity constraint violation: 1062 Duplicate entry
+        $values->export_type = EXPORT_IN_DATABASE;
+        $result = ctools_export_crud_save('ldap_authorization', $values);
+      }
       ctools_export_load_object_reset('ldap_authorization'); // ctools_export_crud_save doesn't invalidate cache
     }
     else {
@@ -62,21 +68,6 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       }
     }
 
-    // revert mappings to array and remove temporary properties from ctools export
-    //$this->mappings = $this->pipeListToArray($values->mappings, FALSE);
-    //foreach (array(
-    //  'consumer_type',
-    //  'consumer_module',
-    //  'only_ldap_authenticated',
-    //  'use_filter',
-    //  'synch_to_ldap',
-    //  'synch_on_logon',
-    //  'revoke_ldap_provisioned',
-    //  'create_consumers',
-    //  'regrant_ldap_provisioned'
-    //  ) as $prop_name) {
-    //  unset($this->{$prop_name});
-    //}
   }
 
   public $fields;

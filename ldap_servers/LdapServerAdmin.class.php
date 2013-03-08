@@ -138,8 +138,14 @@ class LdapServerAdmin extends LdapServer {
         }
       }
 
-      $values->export_type = ($this->inDatabase) ? EXPORT_IN_DATABASE : NULL;
-      $result = ctools_export_crud_save('ldap_servers', $values);
+      try {
+        $values->export_type = NULL;
+        $result = ctools_export_crud_save('ldap_servers', $values);
+      } catch (Exception $e) {
+        $values->export_type = EXPORT_IN_DATABASE;
+        $result = ctools_export_crud_save('ldap_servers', $values);
+      }
+      
       ctools_export_load_object_reset('ldap_servers'); // ctools_export_crud_save doesn't invalidate cache
 
     }
