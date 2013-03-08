@@ -446,12 +446,11 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
   */
 
     $bind_success = FALSE;
-    if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
-        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
-        ) {
+    if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
       $bind_success = ($ldap_server->bind(NULL, NULL, FALSE) == LDAP_SUCCESS);
     }
-    elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON) {
+    elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON ||
+        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
       $bind_success = ($ldap_server->bind(NULL, NULL, TRUE) == LDAP_SUCCESS);
     }
     elseif ($sso_login) {
