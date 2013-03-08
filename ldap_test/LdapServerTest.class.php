@@ -57,7 +57,7 @@ class LdapServerTest extends LdapServer {
     foreach ($test_data['properties'] as $property_name => $property_value ) {
       $this->{$property_name} = $property_value;
     }
-    $this->basedn = unserialize($this->basedn);
+  //  $this->basedn = unserialize($this->basedn);
     if (isset($test_data['bindpw']) && $test_data['bindpw'] != '') {
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
