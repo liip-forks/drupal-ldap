@@ -32,7 +32,7 @@ class LdapServersTestCase extends LdapTestCase {
    */
 
   function setUp() {
-    parent::setUp(array('ldap_servers', 'ldap_test'));
+    parent::setUp(array('ctools', 'ldap_servers', 'ldap_test'));
     variable_set('ldap_simpletest', 2);
     //$this->createTestUserFields();
   }
@@ -214,13 +214,13 @@ class LdapServersTestCase extends LdapTestCase {
 
   public function testUIForms() {
 
-    foreach (array(0, 1) as $ctools_enabled) {
+    foreach (array(1) as $ctools_enabled) {
       $this->ldapTestId = "testUIForms.ctools.$ctools_enabled";
       if ($ctools_enabled) {
         module_enable(array('ctools'));
       }
       else {
-        module_disable(array('ctools'));
+        // module_disable(array('ctools'));
       }
 
       $ldap_simpletest_initial = variable_get('ldap_simpletest', 1);

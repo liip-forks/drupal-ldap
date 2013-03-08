@@ -50,7 +50,12 @@ function ldap_servers_servers_list($sid = NULL, $actions = FALSE) {
  */
 
 function ldap_servers_admin_form($form, &$form_state, $op = NULL, $sid = NULL) {
-  ldap_servers_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
+  if (function_exists('ldap_servers_module_load_include')) {
+    ldap_servers_module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
+  }
+  else {
+    module_load_include('php', 'ldap_servers', 'LdapServerAdmin.class');
+  }
   $server = new LdapServerAdmin($sid);
   $form = $server->drupalForm($op);
   return $form;
