@@ -5,7 +5,7 @@
  * This classextends by LdapAuthenticationConf for configuration and other admin functions
  */
 
-module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConf.class');
+ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConf.class');
 
 class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
