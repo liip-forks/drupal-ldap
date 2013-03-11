@@ -337,7 +337,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
  */
 
 function ldap_servers_token_tokenize_user_account($user_account, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
-  //dpm('ldap_servers_token_tokenize_user_account, $user_account'); dpm($user_account);
+
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
 
@@ -397,7 +397,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
         else {
           $skip = TRUE; // don't set token value because token is invalid
         }
-        
+
       break;
     }
     if (!$skip) {

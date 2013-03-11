@@ -107,7 +107,6 @@ function ldap_badattr($attr, $attr_name) {
  */
 function ldap_servers_attributes_needed($sid, $ldap_context = 'all', $reset = TRUE) {
 
- // dpm("call of ldap_servers_attributes_needed, op=$op,ldap_server="); dpm($ldap_server);
   static $attributes;
   $sid = is_object($sid) ? $sid->sid : $sid;
   $static_cache_id = ($sid) ? $ldap_context . '__' . $sid : $ldap_context;

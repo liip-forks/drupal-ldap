@@ -377,7 +377,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
           $available_user_attrs[$property_token] = array();
         }
       }
-  
+
       $available_user_attrs['[field.ldap_user_puid_sid]'] =  array(
         'name' => t('Field: sid providing PUID'),
         'configurable_to_drupal' => 0,
@@ -390,7 +390,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'config_module' => 'ldap_server',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[field.ldap_user_puid_sid]'];
-  
+
       $available_user_attrs['[field.ldap_user_puid]'] =  array(
         'name' => t('Field: PUID', $tokens),
         'configurable_to_drupal' => 0,
@@ -404,7 +404,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'config_module' => 'ldap_server',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[field.ldap_user_puid]'];
-  
+
       $available_user_attrs['[field.ldap_user_puid_property]'] =
       array(
         'name' => t('Field: PUID Attribute', $tokens),
@@ -419,7 +419,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[field.ldap_user_puid_property]'];
     }
-    
+
     $token = '[field.ldap_user_current_dn]';
     if (!isset($available_user_attrs[$token]) || !is_array($available_user_attrs[$token])) {
       $available_user_attrs[$token] = array();
@@ -464,7 +464,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'config_module' => 'ldap_server',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[property.mail]'];
-      
+
       if ($ldap_server->picture_attr) {
         if (!isset($available_user_attrs['[property.picture]']) || !is_array($available_user_attrs['[property.picture]'])) {
           $available_user_attrs['[property.picture]'] = array();
@@ -581,7 +581,6 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
         $servers['enabled'][$_sid] = $ldap_server;
       }
     }
-    // dpm('servers'); dpm($servers);
   }
 
   if ($sid) {
@@ -676,7 +675,6 @@ function ldap_servers_binary($value) {
  */
 
 function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_context = NULL) {
-  //dpm("_ldap_servers_get_user_ldap_data, sid=$sid, ldap_context=$ldap_context"); dpm($drupal_user);
 
   if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = db_query("SELECT authname FROM {authmap} WHERE uid = :uid AND module = 'ldap_user'", array(':uid' => $drupal_user->uid))->fetchColumn()) {
     $drupal_username = $authname;

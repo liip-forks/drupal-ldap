@@ -564,7 +564,6 @@ function ldap_servers_update_7201() {
   foreach ($select as $record) {
     $ldap_server_records[$record->sid] = $record;
   }
-  //dpm("ldap_server_records"); dpm($ldap_server_records);
 
   if (db_table_exists('ldap_authorization')) {
     $ldap_authorization_record = NULL;
@@ -580,7 +579,7 @@ function ldap_servers_update_7201() {
         $ldap_authorization_record = $record;
       }
     }
-    //dpm("ldap_authorization_record"); dpm($ldap_authorization_record);
+
     foreach ($ldap_server_records as $sid => $ldap_server_record) {
       if ($ldap_authorization_record && $ldap_authorization_record->sid == $sid) {
         $consumer_type = $ldap_authorization_record->consumer_type;
@@ -609,7 +608,7 @@ function ldap_servers_update_7201() {
       }
     }
   }
-//  dpm("field_changes"); dpm($field_changes);
+
   foreach ($field_changes as $table_name => $record) {
     foreach ($record as $id => $field_data) {
       if ($table_name == 'ldap_servers' || $table_name == 'ldap_authorization') {
@@ -768,14 +767,14 @@ function ldap_servers_update_7203() {
  */
 function ldap_servers_update_7204() {
 	db_add_field(
-			'ldap_servers',			
+			'ldap_servers',
 			'picture_attr',
 			array(
 					'type' => 'varchar',
 					'length' => 255,
 					'not null' => FALSE,
 			)
-	);		
+	);
 }
 
 function ldap_servers_install_update_schema($schema, &$change_log) {

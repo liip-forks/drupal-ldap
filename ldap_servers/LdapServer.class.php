@@ -182,7 +182,7 @@ class LdapServer {
    * this method sets properties that don't directly map from db record.  it is split out so it can be shared with ldapServerTest.class.php
    */
   protected function initDerivedProperties($bindpw) {
-    
+
     // get this->basedn in array format
     if (!$this->basedn) {
       $this->basedn = array();
@@ -200,7 +200,7 @@ class LdapServer {
         debug("basednb desearialization error". $token);
         watchdog('ldap_server', 'Failed to deserialize LdapServer::basedn of !basedn', array('!basedn' => $token), WATCHDOG_ERROR);
       }
-      
+
     }
 
 
@@ -297,7 +297,7 @@ class LdapServer {
       watchdog('ldap', "LDAP bind failure for user %user. Not connected to LDAP server.", array('%user' => $userdn));
       return LDAP_CONNECT_ERROR;
     }
-    
+
     if ($anon_bind !== FALSE && $userdn === NULL && $pass === NULL && $this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON) {
       $anon_bind = TRUE;
     }
@@ -312,7 +312,7 @@ class LdapServer {
     else {
       $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
       $pass = ($pass != NULL) ? $pass : $this->bindpw;
-      
+
       if (drupal_strlen($pass) == 0 || drupal_strlen($userdn) == 0) {
         watchdog('ldap', "LDAP bind failure for user userdn=%userdn, pass=%pass.", array('%userdn' => $userdn, '%pass' => $pass));
         return LDAP_LOCAL_ERROR;
@@ -416,7 +416,7 @@ class LdapServer {
    */
 
   public function createLdapEntry($attributes, $dn = NULL) {
-    // dpm("createLdapEntry, dn=$dn"); dpm($ldap_entry);
+
     if (!$this->connection) {
       $this->connect();
       $this->bind();
@@ -429,7 +429,6 @@ class LdapServer {
       return FALSE;
     }
 
-   // debug("createLdapEntry, dn=$dn, entry:"); debug($attributes);
     $result = @ldap_add($this->connection, $dn, $attributes);
     if (!$result) {
       $error = "LDAP Server ldap_add(%dn) Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
@@ -437,7 +436,6 @@ class LdapServer {
       debug(t($error, $tokens));
       watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
     }
-
 
     return $result;
   }
@@ -552,7 +550,7 @@ class LdapServer {
         }
       }
     }
-  //  dpm('modifyLdapEntry, attributes to modify'); dpm($attributes);
+
     if (count($attributes) > 0) {
       $result = @ldap_modify($this->connection, $dn, $attributes);
       if (!$result) {
@@ -712,7 +710,7 @@ class LdapServer {
       'query_display' => $query,
       'scope' => $scope,
     );
-   // dpm($ldap_query_params); dpm("searchPagination=" . $this->searchPagination .",paginationEnabled=". $this->paginationEnabled .", searchPageStart=" . $this->searchPageStart);
+
     if ($this->searchPagination && $this->paginationEnabled) {
       $aggregated_entries = $this->pagedLdapQuery($ldap_query_params);
       return $aggregated_entries;
@@ -1018,18 +1016,18 @@ class LdapServer {
 	public function userPictureFromLdapEntry($ldap_entry, $drupal_username = FALSE) {
 		if ($ldap_entry && $this->picture_attr) {
 			//Check if ldap entry has been provisioned.
-				
+
 			$thumb = isset($ldap_entry[$this->picture_attr][0]) ? $ldap_entry[$this->picture_attr][0] : FALSE;
 			if(!$thumb){
 				return false;
 			}
-      
-			//Create md5 check.						
+
+			//Create md5 check.
 			$md5thumb = md5($thumb);
-      
+
 			/**
-			 * If existing account already has picture check if it has changed if so remove old file and create the new one 
-		   * If picture is not set but account has md5 something is wrong exit. 
+			 * If existing account already has picture check if it has changed if so remove old file and create the new one
+		   * If picture is not set but account has md5 something is wrong exit.
 			 */
 			if ($drupal_username && $account = user_load_by_name($drupal_username)) {
         if ($account->uid == 0 || $account->uid == 1){
@@ -1038,8 +1036,8 @@ class LdapServer {
         if (isset($account->picture)){
           // Check if image has changed
           if (isset($account->data['ldap_user']['init']['thumb5md']) && $md5thumb === $account->data['ldap_user']['init']['thumb5md']){
-            //No change return same image					
-            return $account->picture;					
+            //No change return same image
+            return $account->picture;
           }
           else {
             //Image is different check wether is obj/str and remove fileobject
@@ -1050,7 +1048,7 @@ class LdapServer {
               $file = file_load(intval($account->picture));
               file_delete($file, TRUE);
             }
-          }			
+          }
         }
         elseif (isset($account->data['ldap_user']['init']['thumb5md'])) {
           watchdog('ldap_server', "Some error happened during thumbnailPhoto sync");
@@ -1060,7 +1058,7 @@ class LdapServer {
 			//Create tmp file to get image format.
 			$filename = uniqid();
 			$fileuri = file_directory_temp() .'/'. $filename;
-			$size = file_put_contents($fileuri, $thumb);				
+			$size = file_put_contents($fileuri, $thumb);
 			$info = image_get_info($fileuri);
 			unlink($fileuri);
 			// create file object
@@ -1084,8 +1082,8 @@ class LdapServer {
 			}
 		}
 	}
-	
- 
+
+
   /**
    * @param ldap entry array $ldap_entry
    *
@@ -1418,11 +1416,8 @@ class LdapServer {
       return $members;
     }
 
-
-
     $this->groupMembersResursive($current_group_entries, $all_group_dns, $tested_group_ids, 0, $max_levels, $object_classes);
 
-  //  dpm('all_group_dns'); dpm($all_group_dns);
     return $all_group_dns;
 
   }
@@ -1442,7 +1437,7 @@ class LdapServer {
    */
 
   public function groupMembersResursive($current_member_entries, &$all_member_dns, &$tested_group_ids, $level, $max_levels, $object_classes = FALSE) {
-   // dpm("group membership recursive"); dpm($current_entries);
+
     if (!$this->groupGroupEntryMembershipsConfigured || !is_array($current_member_entries) || count($current_member_entries) == 0) {
       return FALSE;
     }
@@ -1735,12 +1730,9 @@ class LdapServer {
       $count = count($ors);
       for ($i=0; $i < $count; $i=$i+LDAP_SERVER_LDAP_QUERY_CHUNK) { // only 50 or so per query
         $current_ors = array_slice($ors, $i, LDAP_SERVER_LDAP_QUERY_CHUNK);
-        //dpm("current_ors $i," . LDAP_SERVER_LDAP_QUERY_CHUNK); dpm($current_ors);
         $or = '(|(' . join(")(", $current_ors) . '))';  // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
         $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass . ')' . $or . ')';
 
-
-        // debug('query_for_parent_groups'); debug($query_for_parent_groups);
         foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
           $group_entries = $this->search($base_dn, $query_for_parent_groups);  // no attributes, just dns needed
           if ($group_entries !== FALSE  && $level < $max_levels) {

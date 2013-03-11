@@ -73,8 +73,7 @@ class LdapUserConfAdmin extends LdapUserConf {
     }
     $this->drupalAcctProvisionServerOptions['none'] = t('None');
     $this->ldapEntryProvisionServerOptions['none'] = t('None');
-  //  dpm($this->ldapUserSynchMappings);
-   // print "<pre>"; print_r($this->ldapUserSynchMappings);
+
   }
 
 
@@ -512,7 +511,7 @@ EOT;
             }
           }
         }
-       // dpm("mappings"); dpm($mappings);
+
         foreach ($mappings as $target_attr => $mapping) {
           foreach ($mapping as $key => $value) {
             if (is_scalar($value)) {

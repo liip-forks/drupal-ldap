@@ -663,8 +663,6 @@ class LdapUserConf {
    */
 
   public function synchToLdapEntry($account, $user_edit = NULL, $ldap_user =  array(), $test_query = FALSE) {
-    //dpm("synchToLdapEntry, test_query=$test_query, account, user_edit"); dpm($account); dpm($user_edit);
-   // debug("synchToLdapEntry, test_query=$test_query, account, user_edit"); debug($account); debug($user_edit);
 
     if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
       return FALSE; // do not provision or synch user 1
@@ -676,7 +674,7 @@ class LdapUserConf {
 
     if ($this->ldapEntryProvisionServer) {
       $ldap_server = ldap_servers_get_servers($this->ldapEntryProvisionServer, NULL, TRUE);
-     // dpm('synchToLdapEntry:ldap_server, prov='. $this->ldapEntryProvisionServer); dpm($ldap_server);
+
       $params = array(
         'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
         'prov_events' => array(LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
@@ -686,15 +684,12 @@ class LdapUserConf {
       );
 
       list($proposed_ldap_entry, $error) = $this->drupalUserToLdapEntry($account, $ldap_server, $params, $ldap_user);
-     // //debug('synchToLdapEntry:proposed_ldap_entry'); //debug($proposed_ldap_entry); //debug("error=$error");
       if ($error != LDAP_USER_PROV_RESULT_NO_ERROR) {
-       // //debug("synchToLdapEntry:proposed_ldap_entryerror=$error");
         $result = FALSE;
       }
       elseif (is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn'])) {
         $existing_ldap_entry = $ldap_server->dnExists($proposed_ldap_entry['dn'], 'ldap_entry');
         $attributes = array(); // this array represents attributes to be modified; not comprehensive list of attributes
-       // //debug('synchToLdapEntry:proposed_ldap_entry'); //debug($proposed_ldap_entry);
         foreach ($proposed_ldap_entry as $attr_name => $attr_values) {
           if ($attr_name != 'dn') {
             if (isset($attr_values['count'])) {
@@ -708,7 +703,7 @@ class LdapUserConf {
             }
           }
         }
-  //     //dpm('synchToLdapEntry:attributes passed to modifyLdapEntry, dn='. $proposed_ldap_entry['dn']);//dpm($attributes);
+
         if ($test_query) {
           $proposed_ldap_entry = $attributes;
           $result = array(
@@ -984,7 +979,7 @@ class LdapUserConf {
           if ($include_count) {
             $ldap_user_entry[$ldap_attr_name]['count'] = count($ldap_user_entry[$ldap_attr_name]);
           }
-         // dpm("ldap_user_entry: $ldap_attr_name=$ldap_attr_name, ordinal=$ordinal"); dpm($ldap_user_entry[$ldap_attr_name]);
+
         }
 
       }
@@ -1053,7 +1048,7 @@ class LdapUserConf {
       $watchdog_tokens['%username'] = $user_edit['name'];
     }
     if ($this->drupalAcctProvisionServer) {
-     // dpm("this->drupalAcctProvisionServer=" . $this->drupalAcctProvisionServer);
+
       $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);  // $ldap_user['sid']
 
       $params = array(
@@ -1196,21 +1191,21 @@ class LdapUserConf {
         $edit['mail'] = $derived_mail;
       }
     }
-   
+
     $drupal_username = $ldap_server->userUsernameFromLdapEntry($ldap_user['attr']);
-    
+
 		if ($this->isSynched('[property.picture]', $prov_events, $direction)){
-      
+
 			$picture = $ldap_server->userPictureFromLdapEntry($ldap_user['attr'], $drupal_username);
-      
+
 			if ($picture){
 				$edit['picture'] = $picture;
 				if(isset($picture->md5Sum)){
 					$edit['data']['ldap_user']['init']['thumb5md'] = $picture->md5Sum;
-				}				
+				}
 			}
 		}
-    
+
     if ($this->isSynched('[property.name]', $prov_events, $direction) && !isset($edit['name']) && $drupal_username) {
       $edit['name'] = $drupal_username;
     }
@@ -1253,7 +1248,7 @@ class LdapUserConf {
 
      // Loop over the mappings.
     foreach ($mappings as $user_attr_key => $field_detail) {
-     // //dpm('field detail');//dpm($field_detail);
+
        // Make sure this mapping is relevant to the sync context.
       if (!$this->isSynched($user_attr_key, $prov_events, $direction)) {
         continue;

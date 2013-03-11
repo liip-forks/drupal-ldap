@@ -92,9 +92,9 @@ function ldap_feeds_drupal_user_attributes() {
  */
 
 function ldap_feeds_form_feeds_ui_mapping_form_alter(&$form, &$form_state, $form_id) {
-// dpm($form); dpm($form_state);
+
   $importer = feeds_importer_load($form['#importer']);
-  //dpm($importer->config['fetcher']);
+
   if ($importer->config['fetcher']['plugin_key'] == 'FeedsDrupalUserLdapEntryFetcher') {
     ldap_feeds_drupal_user_legend($form, $importer);
   }

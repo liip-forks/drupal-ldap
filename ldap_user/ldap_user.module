@@ -271,7 +271,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       'prov_module' => 'ldap_user',
       'configurable_to_ldap' => TRUE,
     );
-    
+
     $available_user_attrs['[property.picture]'] =  array(
     		'name' => 'Property: picture',
     		'source' => '',
@@ -282,7 +282,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
     		'prov_module' => 'ldap_user',
     		'configurable_to_ldap' => TRUE,
     );
-    
+
     $available_user_attrs['[property.uid]'] =  array(
       'name' => 'Property: Drupal User Id (uid)',
       'source' => '',
@@ -293,7 +293,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       'prov_module' => 'ldap_user',
       'configurable_to_ldap' => TRUE,
     );
-    
+
   }
 
   // 1. Drupal user properties
@@ -413,7 +413,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       }
 
     }
-   // dpm($available_user_attrs);
+
   }
 
    // 3. profile2 fields
@@ -558,14 +558,13 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
   $values = $form_state['values'];
   $user_ldap_entry = NULL;
   $drupal_username = $form_state['values']['name'];
-  //dpm('ldap_user_form_register_form_validate'); dpm($form_state['values']);
 
   // if corresponding ldap account doesn't exist and provision not selected and make ldap associated is selected, throw error
   if (!@$values['ldap_user_create_ldap_acct'] && @$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE) {
     $ldap_user_conf = ldap_user_conf();
     $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->ldapEntryProvisionServer, 'ldap_user_prov_to_drupal');
     if (!$ldap_user) {
-     // dpm($ldap_user);
+
       form_set_error('ldap_user_association', t('User %name does not have a corresponding LDAP Entry (dn).
         Under LDAP options, you may NOT select "Make this an LDAP Associated Account"', array('%name' => $drupal_username)));
     }
@@ -897,7 +896,7 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
     if ($already_provisioned_to_ldap || $already_synched_to_ldap) {
       return;
     }
-    
+
     $provision_result = array('status' => 'none');
     // always check if provisioning to ldap has already occurred this page load
     $ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
