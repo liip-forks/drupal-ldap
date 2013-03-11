@@ -119,7 +119,7 @@ function ldap_authorization_og1_get_group($value, $value_type = 'group_name', $r
     $gid = ldap_authorization_og1_group_name_to_gid($value);
     $group = ($gid) ? og_load($gid) : FALSE;
   }
-  
+
   if (!$group || !is_object($group)) {
     return FALSE;
   }
@@ -147,7 +147,7 @@ function ldap_authorization_og1_get_group($value, $value_type = 'group_name', $r
  * @return mixed organic group object, gid, label, etc.
  */
 function ldap_authorization_og2_get_group_from_name($entity_type, $group_name) {
- // dpm("ldap_authorization_og2_get_group_from_name( $entity_type,  $group_name)");
+
   require_once(drupal_get_path('module', 'ldap_authorization_og') . '/LdapAuthorizationConsumerOG.class.php');
   $group_entity = FALSE;
   $group_entity_id = FALSE;
@@ -155,7 +155,6 @@ function ldap_authorization_og2_get_group_from_name($entity_type, $group_name) {
   $query->entityCondition('entity_type', $entity_type)
     ->propertyCondition('title', $group_name);
   $result = $query->execute();
- // dpm($result);
   if (isset($result[$entity_type])) {
     $group_ids = array_keys($result[$entity_type]);
     if (count($group_ids) == 1) {
@@ -169,6 +168,9 @@ function ldap_authorization_og2_get_group_from_name($entity_type, $group_name) {
 }
 
 
+function ldap_authorization_og1_has_membership($gid, $uid) {
+  return (boolean)og_get_group_membership($gid, 'user', $uid);
+}
 /**
  * Test if a user has a particular group role
  *
@@ -181,6 +183,20 @@ function ldap_authorization_og2_get_group_from_name($entity_type, $group_name) {
 function ldap_authorization_og1_has_role($gid, $uid, $rid) {
   $roles = og_get_user_roles($gid, $uid);
   return (is_array($roles) && in_array($rid, array_values($roles)));
+}
+
+/** avoid excessive calls to og_roles() **/
+function ldap_authoriztion_og1_roles($reset = false) {
+  static $roles;
+  if ($reset || !is_array($roles)) {
+    $roles = og_roles();
+  }
+  return $roles;
+}
+
+function ldap_authorization_og1_role_name_to_role_id($role_name) {
+  $roles = ldap_authoriztion_og1_roles();
+  return array_search($role_name, $roles); //empty($roles[$role_name]) ? FALSE : $roles[$role_name];
 }
 
 function ldap_authorization_og2_has_consumer_id($consumer_id, $uid) {
@@ -222,10 +238,8 @@ function ldap_authorization_og2_has_role($group_type, $gid, $uid, $role_name) {
  * @return int og role id
  */
 function ldap_authorization_og2_rid_from_role_name($entity_type, $bundle, $gid, $role_name) {
-
   $roles = og_roles($entity_type, $bundle, 0, FALSE, TRUE);
   $roles_flipped = array_flip($roles);
- // debug("ldap_authorization_og2_rid_from_role_name,role_name=$role_name, og_roles"); debug($roles_flipped);
   return (empty($roles_flipped[$role_name])) ? NULL : $roles_flipped[$role_name];
 }
 

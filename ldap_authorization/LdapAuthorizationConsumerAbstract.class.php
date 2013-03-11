@@ -288,7 +288,7 @@ class LdapAuthorizationConsumerAbstract {
         }
         elseif (!$user_has_authorization && $consumer['exists']) {
           // grant case 2: consumer exists, but user is not member. grant authorization
-          $results[$consumer_id] = $this->grantSingleAuthorization($user, $consumer_id, $consumer, $user_auth_data);  // allow consuming module to add additional data to $user_auth_data
+          $results[$consumer_id] = $this->grantSingleAuthorization($user, $consumer_id, $consumer, $user_auth_data, $user_save);  // allow consuming module to add additional data to $user_auth_data
           $user_auth_data[$consumer_id] = array(
             'date_granted' => time(),
             'consumer_id_mixed_case' => $consumer_id,
@@ -315,7 +315,7 @@ class LdapAuthorizationConsumerAbstract {
         if ($user_has_authorization) {
           // revoke case 1: user has authorization, revoke it.  revokeSingleAuthorization will remove $user_auth_data[$consumer_id]
           //debug("op=revoke, consumer_id=$consumer_id, calling revokeSingleAuthorization");
-          $results[$consumer_id] = $this->revokeSingleAuthorization($user, $consumer_id, $consumer, $user_auth_data);  // defer to default for $user_save param
+          $results[$consumer_id] = $this->revokeSingleAuthorization($user, $consumer_id, $consumer, $user_auth_data, $user_save);  // defer to default for $user_save param
           $log .= t(',result=') . (boolean)($results[$consumer_id]);
         }
         elseif ($user_has_authorization_recorded)  {
@@ -337,6 +337,7 @@ class LdapAuthorizationConsumerAbstract {
       $watchdog_tokens['%consumer_ids_log'] = (count($consumer_ids_log)) ? join('<hr/>', $consumer_ids_log) : t('no actions');
     }
 
+   // debug("user->data and user_auth_data"); debug($user->data); debug($user_auth_data);
     if ($user_save) {
       $user = user_load($user->uid, TRUE);
       $user_edit = $user->data;
@@ -368,7 +369,7 @@ class LdapAuthorizationConsumerAbstract {
    *   $user_auth_data should have successfully revoked consumer id removed
    */
 
-  public function revokeSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $reset = FALSE) {
+  public function revokeSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $user_save = FALSE, $reset = FALSE) {
      // method must be overridden
   }
 
@@ -384,7 +385,7 @@ class LdapAuthorizationConsumerAbstract {
    * @param boolean $reset signifying if caches associated with $consumer_id should be invalidated.
    *  @return boolean FALSE on failure or TRUE on success
    */
-  public function grantSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $reset = FALSE) {
+  public function grantSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $user_save = FALSE, $reset = FALSE) {
      // method must be overridden
   }
 
