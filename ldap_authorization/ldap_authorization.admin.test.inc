@@ -115,6 +115,22 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
     }
   }
 
+  if (isset($_SESSION['ldap_authorization_test_query']['setting_data'])) {
+    foreach ($_SESSION['ldap_authorization_test_query']['setting_data'] as $title => $data) {
+      $form[$title] = array(
+        '#type' => 'fieldset',
+        '#title' => $title,
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      $form[$title]['overview'] = array(
+       '#type' => 'item',
+       '#markup' => "<pre>" . print_r($data, TRUE) . "</pre>",
+      );
+    }
+  }
+
+
   $form['intro'] = array(
       '#type' => 'item',
       '#markup' => t('<h1>Test LDAP to !consumer_name Configuration</h1>
@@ -140,6 +156,15 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
     '#type' => 'checkbox',
     '#default_value' => @$_SESSION['ldap_authorization_test_form']['random_users'],
     '#title' => t('Use 10 random users', $consumer_tokens),
+  );
+
+  $form['execute_authorizations'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => @$_SESSION['ldap_authorization_test_form']['execute_authorizations'],
+    '#title' => t('Actually grant or revoke example authorizations.
+      This will grant and revoke based on the ldap authorization configuration
+      options such as whether to revoke or regrant manually applied authorizations.
+      Try with this unchecked first, then check to see how authorizations are applied.', $consumer_tokens),
   );
 
   $form['submit'] = array(
@@ -209,7 +234,8 @@ function ldap_authorization_test_form_submit($form, &$form_state) {
           dpm("user: $username"); dpm($user);
         }
       }
-      list($results[$username], $notifications[$username]) = ldap_authorizations_user_authorizations($user, 'test_query', $consumer_type, 'logon');
+      $action = ($form_state['values']['execute_authorizations'] == 1) ? "test_query_set" : 'test_query';
+      list($results[$username], $notifications[$username]) = ldap_authorizations_user_authorizations($user, $action, $consumer_type, 'logon');
       // remove authorizations from other consumer types
       $results[$username] = array($consumer_type => $results[$username][$consumer_type]);
       $i++;

@@ -135,10 +135,8 @@ function ldap_authorization_ldap_server_in_use($sid, $server_name) {
  * Implements hook_ldap_attributes_needed_alter().
  */
 function ldap_authorization_ldap_attributes_needed_alter(&$attribute_maps, $params) {
- // dpm('ldap_authorization_ldap_attributes_needed_alter'); dpm($params);
 
   if (isset($params['ldap_context'])) {
-    //  'ldap_authorization__' . $consumer_type
     $parts = explode('__', $params['ldap_context']);
     if (count($parts) == 2 && $parts[0] == 'ldap_authorization') {
       $consumer_type = $parts[1];
@@ -149,7 +147,6 @@ function ldap_authorization_ldap_attributes_needed_alter(&$attribute_maps, $para
           $attribute_maps[$attribute_name] = ldap_servers_set_attribute_map($attribute_name); //array($attribute_name, 0, NULL);
         }
       }
-     // dpm('ldap_authorization_ldap_attributes_needed_alter, consumer_conf'); dpm($consumer_conf); dpm($attribute_maps);
     }
   }
 
@@ -246,7 +243,7 @@ function ldap_authorization_get_consumers($consumer_type = NULL, $reset = FALSE,
  * so it can be called from a batch synchronization process for example
  *
  * @param drupal user object $user
- * @param string $op indicateing operation such as query, set, test_query, etc.
+ * @param string $op indicating operation such as query, set, test_query, etc.
  * @param string $consumer_type e.g. drupal_role, or og_groups
  * @param string $context
  *

@@ -96,7 +96,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
   }
 
 
-  public function revokeSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $reset = FALSE) {
+  public function revokeSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $user_save = FALSE, $reset = FALSE) {
 
     $role_name_lcase = $consumer_id;
     $role_name = empty($consumer['value']) ? $consumer_id : $consumer['value'];
@@ -136,7 +136,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
    * extends grantSingleAuthorization()
    */
 
-  public function grantSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $reset = FALSE) {
+  public function grantSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $user_save = FALSE, $reset = FALSE) {
 
     $role_name_lcase = $consumer_id;
     $role_name = empty($consumer['value']) ? $consumer_id : $consumer['value'];
