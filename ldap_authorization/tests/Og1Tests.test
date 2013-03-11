@@ -242,25 +242,16 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
     $consumers = array($faculty_member_consumer_id => $og_auth->emptyConsumer);
     debug($web_user);
     $user_auth_data = empty($web_user->data['ldap_authorization']['og_group']) ? array() : $web_user->data['ldap_authorization']['og_group'];
-    $result = $og_auth->revokeSingleAuthorization($web_user, $faculty_member_consumer_id, $og_auth->emptyConsumer, $user_auth_data);
-    debug("result of revokeSingleAuthorization=$result for consumer id=$faculty_member_consumer_id");
+    // (&$user, $consumer_id, $consumer, &$user_auth_data, $discarded_user_save_flag = TRUE, $reset = FALSE) 
+    $result = $og_auth->revokeSingleAuthorization($web_user, $faculty_member_consumer_id, $og_auth->emptyConsumer, $user_auth_data, TRUE, TRUE);
+    debug("result of revokeSingleAuthorization=" . (int)$result . "for consumer id=$faculty_member_consumer_id");
     // grantSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $user_save = FALSE, $reset = FALSE)
-  //  $og_auth->authorizationRevoke($web_user, $user_data, $consumers, $ldap_entry, FALSE);
+    $og_auth->authorizationRevoke($web_user, $user_data, $consumers, $ldap_entry, FALSE);
     $result = ldap_authorization_og1_has_role($og_faculty_group->gid, $web_user->uid, $member_rid);
     $this->assertFalse($result,
       "LdapAuthorizationConsumerOG authorizationRevoke() test revoke on member role $faculty_member_consumer_id",
       $this->ldapTestId);
-
-
-    // test of revoke of custom role via authorizationRevoke()
-    $faculty_dungeon_master_consumer_id = ldap_authorization_og_authorization_id($og_faculty_node->nid, $dungeon_master_rid, 'node');
-    $consumers =  array($faculty_dungeon_master_consumer_id => $og_auth->emptyConsumer);
-    $og_auth->authorizationRevoke($web_user, $user_data, $consumers, $ldap_entry, TRUE);
-    $result = ldap_authorization_og1_has_role($og_faculty_group->gid, $web_user->uid, $dungeon_master_rid);
-    $this->assertFalse($result,
-      "LdapAuthorizationConsumerOG authorizationRevoke() test revoke on custom member role role $faculty_dungeon_master_consumer_id",
-      $this->ldapTestId);
-
+debug("all web user faculty roles:"); debug(og_get_user_roles($og_faculty_group->gid, $web_user->uid));
 
     // test grant of custom role via authorizationGrant()
     $og_students_consumer_id = ldap_authorization_og_authorization_id($og_students_node->nid, $dungeon_master_rid, 'node');
