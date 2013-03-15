@@ -255,7 +255,6 @@ class LdapAuthorizationConsumerAbstract {
 
     $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
     $this->sortConsumerIds($op, $consumers);
-
     $results = array();
     $watchdog_tokens = array();
     $watchdog_tokens['%username'] = $user->name;
@@ -283,13 +282,14 @@ class LdapAuthorizationConsumerAbstract {
           $results[$consumer_id] = TRUE;
           $user_auth_data[$consumer_id] = array(
             'date_granted' => time(),
-            'consumer_id' => $consumer_id,
+            'consumer_id_mixed_case' => $consumer_id,
           );
         }
         elseif (!$user_has_authorization && $consumer['exists']) {
           // grant case 2: consumer exists, but user is not member. grant authorization
           $results[$consumer_id] = $this->grantSingleAuthorization($user, $consumer_id, $consumer, $user_auth_data, $user_save);  // allow consuming module to add additional data to $user_auth_data
-          $user_auth_data[$consumer_id] = array(
+          $existing = empty($user_auth_data[$consumer_id]) ? array() : $user_auth_data[$consumer_id];
+          $user_auth_data[$consumer_id] = $existing + array(
             'date_granted' => time(),
             'consumer_id_mixed_case' => $consumer_id,
           );
