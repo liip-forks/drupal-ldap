@@ -113,6 +113,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
        '#markup' => theme('item_list', array('items' => $_SESSION['ldap_authorization_test_query']['post mappings'], 'type' => 'ul', 'title' => "Results after any filtering and mappings applied")),
       );
     }
+
   }
 
   if (isset($_SESSION['ldap_authorization_test_query']['setting_data'])) {
@@ -165,6 +166,12 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
       This will grant and revoke based on the ldap authorization configuration
       options such as whether to revoke or regrant manually applied authorizations.
       Try with this unchecked first, then check to see how authorizations are applied.', $consumer_tokens),
+  );
+
+  $form['user_data_clear'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => @$_SESSION['ldap_authorization_test_form']['user_data_clear'],
+    '#title' => t('Clear <pre>$user->data[ldap_authorization][<consumer type>]</pre> data for test users.', $consumer_tokens),
   );
 
   $form['submit'] = array(
@@ -234,6 +241,13 @@ function ldap_authorization_test_form_submit($form, &$form_state) {
           dpm("user: $username"); dpm($user);
         }
       }
+
+      if ($form_state['values']['user_data_clear'] == 1) {
+        $user_data = $user->data;
+        unset($user_data['ldap_authorizations'][$consumer_type]);
+        $user = user_save($user, array('data' => $user_data));
+      }
+
       $action = ($form_state['values']['execute_authorizations'] == 1) ? "test_query_set" : 'test_query';
       list($results[$username], $notifications[$username]) = ldap_authorizations_user_authorizations($user, $action, $consumer_type, 'logon');
       // remove authorizations from other consumer types
@@ -242,7 +256,6 @@ function ldap_authorization_test_form_submit($form, &$form_state) {
       if ($i == 10) {
         break;
       }
-
     }
   }
 

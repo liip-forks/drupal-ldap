@@ -291,6 +291,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $display_authorizations[] = $_consumer['map_to_string'];
       }
       $_SESSION['ldap_authorization_test_query']['post mappings'] = $display_authorizations;
+      $_SESSION['ldap_authorization_test_query']['user data'] = $user->data['ldap_authorization'][$consumer->consumerType];
     }
 
     /**
@@ -421,6 +422,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
 
   $uid = $user->uid;
   $user_edit['data']['ldap_authorizations'] = empty($user->data['ldap_authorizations']) ? array() : $user->data['ldap_authorizations'];
+  $consumer->sortConsumerIds('grant', $user_auth_data);  // keep in good display order
   $user_edit['data']['ldap_authorizations'][$consumer->consumerType] = $user_auth_data;
   $watchdog_tokens['%user_edit_presave'] = print_r($user_edit, TRUE);
   $user = user_save($user, $user_edit);
