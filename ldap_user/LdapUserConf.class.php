@@ -229,7 +229,6 @@ class LdapUserConf {
     else {
       $this->inDatabase = FALSE;
     }
-
     // determine account creation configuration
     $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
     if ($this->acctCreation == LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT || $user_register == USER_REGISTER_VISITORS) {
@@ -444,7 +443,7 @@ class LdapUserConf {
    * @param enum $direction LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY
    *
    * @param enum $prov_event
-   *   LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER,LDAP_USER_EVENT_CREATE_DRUPAL_USER
+   *   LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, LDAP_USER_EVENT_CREATE_DRUPAL_USER
    *   LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY LDAP_USER_EVENT_CREATE_LDAP_ENTRY
    *   LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT
    *   LDAP_USER_EVENT_ALL
@@ -457,22 +456,20 @@ class LdapUserConf {
     $result = FALSE;
 
     if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
+
       if (!$this->ldapEntryProvisionServer) {
-        //debug('provisionEnabled:a');
         $result = FALSE;
       }
       else {
-        //debug('provisionEnabled:b');
         $result = in_array($provision_trigger, $this->ldapEntryProvisionTriggers);
       }
+
     }
     elseif ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
       if (!$this->drupalAcctProvisionServer) {
-        //debug('provisionEnabled:c');
         $result = FALSE;
       }
       else {
-        //debug('provisionEnabled:d');
         $result = in_array($provision_trigger, $this->drupalAcctProvisionTriggers);
       }
     }
@@ -728,21 +725,12 @@ class LdapUserConf {
           if ($result) { // success
             module_invoke_all('ldap_entry_post_provision', $ldap_entries, $ldap_server, $context);
           }
-
-
         }
       }
       else { // failed to get acceptable proposed ldap entry
         $result = FALSE;
       }
-
-
-      //  $attributes["attribute1"] = "value";
-     //   $attributes["attribute2"][0] = "value1";
-      //  $attributes["attribute2"][1] = "value2";
     }
-   ////dpm('provisionLdapEntry:results');//dpm($results);
-
 
     $tokens = array(
       '%dn' => isset($result['proposed']['dn']) ? $result['proposed']['dn'] : NULL,
