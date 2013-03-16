@@ -29,7 +29,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
      until each is exhausted.  In most cases only one server configuration is selected.');
 
     /**
-     * 1.  User Login Interface
+     * User Login Interface
      */
     $values['loginUIUsernameTxtDescription'] = t('Text to be displayed to user below the username field of
      the user login screen.');
@@ -45,7 +45,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
 
     /**
-     * 2.  LDAP User Restrictions
+     * LDAP User Restrictions
      */
 
     $values['allowOnlyIfTextInDnDescription'] = t('A list of text such as ou=education
@@ -65,7 +65,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       enabled for this to work.');
 
     /**
-    * 4. Email
+    * Email
     */
 
     $values['emailOptionOptions'] = array(
@@ -82,7 +82,17 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
 
     /**
-     * 5. Single Sign-On / Seamless Sign-On
+    * Password
+    */
+
+    $values['passwordUpdateOptions'] = array(
+      LDAP_AUTHENTICATION_PASSWORD_FIELD_SHOW => t('Display password field disabled (Prevents password updates).'),
+      LDAP_AUTHENTICATION_PASSWORD_FIELD_HIDE => t('Don\'t show password field on user forms except login form.'),
+      LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW => t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
+      );
+
+    /**
+     *  Single Sign-On / Seamless Sign-On
      */
 
       $values['ldapImplementationOptions'] = array(
@@ -381,6 +391,20 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       );
 
 
+    $form['password'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Password'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
+    $form['password']['passwordOption'] = array(
+      '#type' => 'radios',
+      '#title' => t('Password Behavior'),
+      '#required' => 1,
+      '#default_value' => $this->passwordOption,
+      '#options' => $this->passwordUpdateOptions,
+    );
+
     /**
      * Begin single sign-on settings
      */
@@ -517,6 +541,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->excludeIfNoAuthorizations = ($values['excludeIfNoAuthorizations']) ? (int)$values['excludeIfNoAuthorizations'] : NULL;
     $this->emailOption  = ($values['emailOption']) ? (int)$values['emailOption'] : NULL;
     $this->emailUpdate  = ($values['emailUpdate']) ? (int)$values['emailUpdate'] : NULL;
+    $this->passwordOption  = ($values['passwordOption']) ? (int)$values['passwordOption'] : NULL;
     $this->ssoExcludedPaths = $this->linesToArray($values['ssoExcludedPaths']);
     $this->ssoExcludedHosts = $this->linesToArray($values['ssoExcludedHosts']);
     $this->ssoRemoteUserStripDomainName = ($values['ssoRemoteUserStripDomainName']) ? (int)$values['ssoRemoteUserStripDomainName'] : NULL;

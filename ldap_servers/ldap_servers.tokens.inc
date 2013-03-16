@@ -391,7 +391,10 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
         if ($user_entered_password_available && $attr_name == 'user-random') {
           $value = ldap_user_ldap_provision_pwd('get');
         }
-        elseif ($attr_name == 'random' || $attr_name == 'user-random') {
+        if (empty($value)) {
+          $skip = TRUE;
+        }
+        elseif ($attr_name == 'random') {
           $value = user_password();
         }
         else {

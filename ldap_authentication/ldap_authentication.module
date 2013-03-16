@@ -29,6 +29,11 @@ define('LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE',      3);
 define('LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW',        4);
 define('LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT',      3);
 
+define('LDAP_AUTHENTICATION_PASSWORD_FIELD_SHOW',       2);
+define('LDAP_AUTHENTICATION_PASSWORD_FIELD_HIDE',       3);
+define('LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW',      4);
+define('LDAP_AUTHENTICATION_PASSWORD_FIELD_DEFAULT',    2);
+
 define('LDAP_AUTHENTICATION_RESULT_FAIL_CONNECT',      1);
 define('LDAP_AUTHENTICATION_RESULT_FAIL_BIND',         2);
 define('LDAP_AUTHENTICATION_RESULT_FAIL_FIND',         3);
@@ -246,12 +251,25 @@ function ldap_authentication_show_reset_pwd($user = NULL) {
   }
 
   if ($user->uid == 0) {
-    // hide reset password for anonymous users if ldap only authentication, otherwise show
-    return ($auth_conf->authenticationMode != LDAP_AUTHENTICATION_EXCLUSIVE);
+    // hide reset password for anonymous users if ldap only authentication and password updates are disabled, otherwise show
+    if ($auth_conf->authenticationMode != LDAP_AUTHENTICATION_EXCLUSIVE) {
+      if ($auth_conf->passwordOption == LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW) {
+        return TRUE;
+      }
+      return FALSE;
+    }
+    return TRUE;
   }
   else {
-    // authenticated user.  hide if ldap authenticated otherwise show.
-    return (!ldap_authentication_ldap_authenticated($user));
+    // authenticated user.  hide if ldap authenticated and updating password is
+    // not allowed, otherwise show.
+    if (ldap_authentication_ldap_authenticated($user)) {
+      if ($auth_conf->passwordOption == LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW) {
+        return TRUE;
+      }
+      return FALSE;
+    }
+    return TRUE;
   }
 
 }
@@ -304,7 +322,15 @@ function ldap_authentication_user_pass_validate(&$form_state) {
       'account' => $account,
       'auth_conf' => ldap_authentication_get_valid_conf(),
     );
-    form_set_error('name', theme('ldap_authentication_user_pass_validate_ldap_authenticated', $vars));
+    $error = TRUE;
+    if (is_object($vars['auth_conf'])) {
+      if ($vars['auth_conf']->passwordOption == LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW) {
+        $error = FALSE;
+      }
+    }
+    if (!empty($error)) {
+      form_set_error('name', theme('ldap_authentication_user_pass_validate_ldap_authenticated', $vars));
+    }
   }
 }
 

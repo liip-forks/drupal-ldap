@@ -108,6 +108,17 @@ class LdapAuthenticationConf {
    */
   public $emailUpdate = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DEFAULT;
 
+
+   /**
+   * Password handling option
+   *   LDAP_AUTHENTICATION_PASSWORD_FIELD_SHOW -- show field disabled on user forms
+   *   LDAP_AUTHENTICATION_PASSWORD_FIELD_HIDE (default) -- disable password on user forms
+   *   LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW -- allow editing of password on user forms
+   *
+   * @var int
+   */
+  public $passwordOption = LDAP_AUTHENTICATION_PASSWORD_FIELD_DEFAULT;
+
   public $ssoEnabled = FALSE;
   public $ssoRemoteUserStripDomainName = FALSE;
   public $ssoExcludedPaths = NULL;
@@ -168,6 +179,7 @@ class LdapAuthenticationConf {
     'ldapUserHelpLinkText',
     'emailOption',
     'emailUpdate',
+    'passwordOption',
     'allowOnlyIfTextInDn',
     'excludeIfTextInDn',
     'allowTestPhp',
