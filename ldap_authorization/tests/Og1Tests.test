@@ -315,21 +315,11 @@ function testFlags() {
 
   $this->consumerAdminConf['og_group']->status = 1;
   $this->consumerAdminConf['og_group']->save();
-  list($props_set_display, $props_set_correctly) = $this->checkConsumerConfSetup('og_group15');
-  $this->assertTrue(
-    $props_set_correctly,
-    'Authorization Configuration set correctly in test setup',
-    'LDAP_authorz.Flags.setup.0'
-  );
-  if (!$props_set_correctly) {
-    debug('LDAP_authorz.Flags.setup.1 properties not set correctly'); debug($props_set_display);
-  }
 
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hpotter, 'test_query', 'og_group');  // just see if the correct ones are derived.
-  debug('ldap_authorizations_user_authorizations enabled: '); debug($new_authorizations);  debug($notifications);
 
-  $correct_groups = !empty($new_authorizations['og_group'][$student_membership_consumer_id])
-    && !empty($new_authorizations['og_group'][$gryffindor_membership_consumer_id]);
+  $correct_groups = !empty($new_authorizations['og_group']['students-member'])
+    && !empty($new_authorizations['og_group']['gryffindor-member']);
   $this->assertTrue($correct_groups, 'enabled consumer configuration allows authorizations.', 'LDAP_authorz.Flags.status.1');
   if (!$correct_groups) {
     debug('LDAP_authorz.Flags.enable.1 roles with enabled'); debug($new_authorizations);
@@ -353,10 +343,7 @@ function testFlags() {
     ->condition('module', 'ldap_user')
     ->execute();
 
-  debug("user hgrainger"); debug(user_load_by_name('hgrainger'));
-
-  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hgrainger, 'test_query', 'og_group');  // just see if the correct ones are derived.
-  debug($new_authorizations);
+  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hgrainger, 'set', 'og_group');  // just see if the correct ones are derived.
   $success = (isset($new_authorizations['og_group']) && count($new_authorizations['og_group']) == 0);
   $this->assertTrue($success, ' only apply to ldap authenticated grants no roles for non ldap user.', 'LDAP_authorz.onlyLdapAuthenticated.1');
   if (!$success) {
@@ -364,6 +351,7 @@ function testFlags() {
     debug($new_authorizations);
     debug($this->testFunctions->ldapUserIsAuthmapped('hgrainger'));
     debug($notifications);
+    debug($hgrainger);
   }
 
 
