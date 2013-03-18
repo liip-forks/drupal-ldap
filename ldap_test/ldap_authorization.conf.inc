@@ -70,6 +70,42 @@ $conf['og_group2']['og_group'] = array(
 
 );
 
+$conf['og_group15']['og_group'] = $conf['og_group2']['og_group'];
+$conf['og_group15']['og_group']['mappings'] = array(
+    array(
+      'from' => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
+      'user_entered' => 'group-name=students,role-name=member',
+      'normalized' => 'students-' . OG_AUTHENTICATED_ROLE,
+      'simplified' => '',
+      'valid' => '',
+      'error_message' => '',
+    ),
+    array(
+      'from' => 'cn=faculty,ou=groups,dc=hogwarts,dc=edu',
+      'user_entered' => 'group-name=faculty,role-name=member',
+      'normalized' =>  'faculty-' . OG_AUTHENTICATED_ROLE,
+      'simplified' => '',
+      'valid' => '',
+      'error_message' => '',
+    ),
+    array(
+      'from' => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
+      'user_entered' => 'group-name=gryffindor,role-name=member',
+      'normalized' => 'gryffindor-' . OG_AUTHENTICATED_ROLE,
+      'simplified' => '',
+      'valid' => '',
+      'error_message' => '',
+    ),
+    array(
+      'from' => 'cn=users,ou=groups,dc=hogwarts,dc=edu',
+      'user_entered' => 'group-name=users,role-name=member',
+      'normalized' => 'users-' . OG_AUTHENTICATED_ROLE,
+      'simplified' => '',
+      'valid' => '',
+      'error_message' => '',
+    ),
+  );
+
 
 $conf['drupal_role_default']['drupal_role'] = array(
 

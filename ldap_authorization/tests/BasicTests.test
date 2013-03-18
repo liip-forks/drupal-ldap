@@ -45,7 +45,7 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
         module_exists('ldap_servers') &&
         module_exists('ldap_authorization') &&
         module_exists('ldap_authorization_drupal_role') &&
-        (variable_get('ldap_simpletest', 0) > 0)
+        (variable_get('ldap_simpletest', 2) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_authorizations setup successful', 'LDAP Authorization: Test Setup Success');
 
@@ -81,7 +81,7 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
     $testid = 'ExclusiveModeUserLogon3';
     $sids = array($sid);
     $this->prepTestData(LDAP_TEST_LDAP_NAME, $sids, 'provisionToDrupal', 'default', 'drupal_role_default');
-    
+
     $hpotter_logon_edit = array(
       'name' => 'hpotter',
       'pass' => 'goodpwd',
@@ -93,7 +93,7 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
       'Ldap user properly authmapped.',
       'LDAP Authorization: Test Logon'
     );
-    
+
     $hpotter = $this->testFunctions->userByNameFlushingCache('hpotter');
     $roles = array_values($hpotter->roles);
     $desired_roles = array('students', 'authenticated user', 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu', 'cn=honors students,ou=groups,dc=hogwarts,dc=edu');
@@ -111,19 +111,19 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
     );
 
     $this->drupalGet('user/logout');
-    
+
     /**
      * test revoking of no longer deserved roles when revokeLdapProvisioned=1
      */
     $this->consumerAdminConf['drupal_role']->revokeLdapProvisioned = 1;
     $this->consumerAdminConf['drupal_role']->save();
-    
-    // setup:  remove hpotter from honors members 
+
+    // setup:  remove hpotter from honors members
     $test_data_pre_test = variable_get('ldap_test_server__' . $sid, NULL);
     $test_data = variable_get('ldap_test_server__' . $sid, NULL);
-    
+
     $this->removeUserFromGroup($test_data, 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'cn=honors students,ou=groups,dc=hogwarts,dc=edu', "dc=hogwarts,dc=edu");
-    
+
     variable_set('ldap_test_server__' . $sid, $test_data);
 
     $hpotter_dn = 'cn=hpotter,ou=people,dc=hogwarts,dc=edu';
@@ -142,12 +142,12 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
       'when revokeLdapProvisioned=1, removed user->data[ldap_authorizations][drupal_role][<role>]',
       'LDAP Authorization: Test Logon'
     );
-    
+
     // return test data to original state
     variable_set('ldap_test_server__' . $sid, $test_data_pre_test);
     $this->drupalGet('user/logout');
-    
-    
+
+
     /**
      * test regranting of removed roles (regrantLdapProvisioned = 0)
      */
@@ -171,7 +171,7 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
       'LDAP Authorization: Test Logon'
     );
     $this->drupalGet('user/logout');
-    
+
     /**
      * test regranting of removed roles (regrantLdapProvisioned = 1)
      */
@@ -465,7 +465,7 @@ function testFlags() {
 
   public function testUIForms() {
 
-    $ldap_simpletest_initial = variable_get('ldap_simpletest', 1);
+    $ldap_simpletest_initial = variable_get('ldap_simpletest', 2);
     variable_del('ldap_simpletest'); // need to be out of fake server mode to test ui.
 
     $sid = 'activedirectory1';

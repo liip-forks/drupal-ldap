@@ -656,7 +656,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
         module_exists('ldap_user') &&
         module_exists('ldap_servers') &&
         module_exists('ldap_authentication') &&
-        (variable_get('ldap_simpletest', 0) > 0)
+        (variable_get('ldap_simpletest', 2) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_authentication UI setup successful',  $this->testId('user interface tests'));
 

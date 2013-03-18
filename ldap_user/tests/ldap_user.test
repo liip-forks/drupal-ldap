@@ -55,7 +55,7 @@ class LdapUserUnitTests extends LdapTestCase {
     $setup_success = (
         module_exists('ldap_user') &&
         module_exists('ldap_servers') &&
-        (variable_get('ldap_simpletest', 0) > 0)
+        (variable_get('ldap_simpletest', 2) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId('setup'));
 
@@ -678,7 +678,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
     $setup_success = (
         module_exists('ldap_user') &&
         module_exists('ldap_servers') &&
-        (variable_get('ldap_simpletest', 0) > 0)
+        (variable_get('ldap_simpletest', 2) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId("setup"));
 
@@ -995,7 +995,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
     $setup_success = (
         module_exists('ldap_user') &&
         module_exists('ldap_servers') &&
-        (variable_get('ldap_simpletest', 0) > 0)
+        (variable_get('ldap_simpletest', 2) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_user setup successful',  $this->testId('orphaned entries tests'));
 
@@ -1212,7 +1212,7 @@ class LdapUserUITests extends LdapTestCase {
     $setup_success = (
         module_exists('ldap_user') &&
         module_exists('ldap_servers') &&
-        (variable_get('ldap_simpletest', 0) > 0)
+        (variable_get('ldap_simpletest', 2) > 0)
       );
     $this->assertTrue($setup_success, ' ldap_user setup successful',  $this->testId('user interface tests'));
 
