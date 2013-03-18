@@ -99,33 +99,12 @@ class LdapAuthorizationConsumerConf {
         }
         else {
           $this->{$property_name} = $server_record->$db_field_name;
-
         }
       }
     }
     $this->numericConsumerConfId = isset($server_record->numeric_consumer_conf_id)? $server_record->numeric_consumer_conf_id : NULL;
     $this->server = ldap_servers_get_servers($this->sid, NULL, TRUE);
-
     return TRUE;
-
-   // $this->sid = $consumer_conf->sid;
-   // $this->consumerType = $consumer_conf->consumer_type;
-
-  //  $this->status = ($consumer_conf->status) ? 1 : 0;
-  //  $this->onlyApplyToLdapAuthenticated  = (@$consumer_conf->only_ldap_authenticated);
-
-  //  $this->useFirstAttrAsGroupId  = (@$consumer_conf->use_first_attr_as_groupid);
-
-   // $this->mappings = unserialize($consumer_conf->mappings);
-   // dpm($this->mappings); dpm($consumer_conf->mappings);
-  //  $this->useMappingsAsFilter = (@$consumer_conf->use_filter);
-
- //   $this->synchToLdap = (@$consumer_conf->synch_to_ldap);
- //   $this->synchOnLogon = (@$consumer_conf->synch_on_logon);
- //   $this->regrantLdapProvisioned = (@$consumer_conf->regrant_ldap_provisioned);
-  //  $this->revokeLdapProvisioned = (@$consumer_conf->revoke_ldap_provisioned);
-  //  $this->createConsumers = (@$consumer_conf->create_consumers);
-
 
   }
 
