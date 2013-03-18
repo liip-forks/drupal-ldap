@@ -387,21 +387,18 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
       break;
 
       case 'password':
-
-        if ($user_entered_password_available && $attr_name == 'user-random') {
-          $value = ldap_user_ldap_provision_pwd('get');
-        }
-        if (empty($value)) {
-          $skip = TRUE;
+        if ($attr_name == 'user-random') {
+          $pwd = ldap_user_ldap_provision_pwd('get');
+          $value = ($pwd) ? $pwd : user_password();
         }
         elseif ($attr_name == 'random') {
           $value = user_password();
         }
-        else {
-          $skip = TRUE; // don't set token value because token is invalid
+        if (empty($value)) {
+          $skip = TRUE;
         }
-
       break;
+
     }
     if (!$skip) {
       $tokens[$pre . $token_key . $post] = check_plain($value);

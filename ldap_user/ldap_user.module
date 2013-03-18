@@ -894,13 +894,6 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
     return; // do not provision or synch user 1
   }
 
-  // Remove password so it doesn't get double hashed
-  if (isset($user_edit['pass'])) {
-    if ($user_edit['pass'] == $account->pass) {
-      unset($user_edit['pass']);
-    }
-  }
-
   $ldap_user_conf = ldap_user_conf();
   // check for provisioning to LDAP; this will normally occur on hook_user_insert or other event when drupal user is created.
   if ($ldap_user_conf->provisionsLdapEntriesFromDrupalUsers &&
@@ -1166,4 +1159,3 @@ function ldap_user_token_tokenize_entry($account, $token_keys, $pre = LDAP_SERVE
     return array($account, $user_entity);
 
   }
-  
