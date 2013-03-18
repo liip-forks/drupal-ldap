@@ -704,7 +704,6 @@ function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_contex
 
   $ldap_server = ($sid) ? ldap_servers_get_servers($sid, 'enabled', TRUE) : FALSE;
 
- // debug("ldap_servers_get_user_ldap_data,sid=$sid"); debug($ldap_server->entries['cn=hpotter,ou=people,dc=hogwarts,dc=edu']);
   if ($ldap_server === FALSE) {
     watchdog('ldap_servers', 'Failed to load server object %sid in _ldap_servers_get_user_ldap_data', array('%sid' => $sid), WATCHDOG_ERROR);
     return FALSE;
