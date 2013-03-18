@@ -41,38 +41,14 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
   /**
    * @see LdapAuthorizationConsumerAbstract::createConsumer
+   *
+   * this function is not implemented for og, but could be
+   * if a use case for generating og groups and roles on the
+   * fly existed.
    */
 
   public function createConsumer($consumer_id, $consumer) {
-
-    list($entity_type, $group_name, $rid) = explode(':', $consumer_id);
-
-    $group = @ldap_authorization_og2_get_group_from_name($entity_type, $group_name);
-    if ($group) {
-      return FALSE;
-    }
-
-    // create og group with name of $group_name of entity type $entity_type
-    $entity_info = entity_get_info($entity_type);
-
-    $new_group_created = FALSE;
-
-    /**
-     *
-     * @todo
-     * need to create new entity with title of $group_name here
-     *
-     */
-
-    if ($new_group_created === FALSE) {
-      // if role is not created, remove from array to user object doesn't have it stored as granted
-      watchdog('user', 'failed to create og group %group_name in ldap_authorizations module', array('%group_name' => $group_name));
-      return FALSE;
-    }
-    else {
-      watchdog('user', 'created  og group %group_name in ldap_authorizations module', array('%group_name' => $group_name));
-    }
-    return TRUE;
+    return FALSE;
   }
 
   /**
@@ -417,6 +393,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
      * step #1:  generate $og_actions = array of form $og_actions['revokes'|'grants'][$gid] = $rid
      *  based on all consumer ids granted and revokes
      */
+    $og_actions = array('grants' => array(), 'revokes' => array());
     //dpm('consumers');dpm($consumers); dpm('users_authorization_consumer_ids'); dpm($users_authorization_consumer_ids);
     foreach ($consumers as $consumer_id => $consumer) {
       if ($detailed_watchdog_log) {
@@ -516,10 +493,12 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       $existing_roles = og_get_user_roles($gid, $user->uid);
       if (in_array($this->defaultMembershipRid, array_values($existing_roles))) {
         // ungroup and set audience
-        foreach ($group_audience['gid'] as $i => $_audience_gid) {
-           if ($_audience_gid == $gid) {
-             unset($user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE][$i]);
-           }
+        if (!empty($group_audience['gid'])) {
+          foreach ($group_audience['gid'] as $i => $_audience_gid) {
+             if ($_audience_gid == $gid) {
+               unset($user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE][$i]);
+             }
+          }
         }
         og_entity_presave($user, 'user');
         $user = og_ungroup($gid, 'user', $user, TRUE);
@@ -566,6 +545,9 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
   public function revokeSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $discarded_user_save_flag = TRUE, $reset = FALSE) {
 
+    if ($this->ogVersion == 1) {
+      return false; // not implemented for og 7.x-1.x
+    }
     $watchdog_tokens =  array('%consumer_id' => $consumer_id, '%username' => $user->name,
       '%ogversion' => $this->ogVersion, '%function' => 'LdapAuthorizationConsumerOG.revokeSingleAuthorization()');
 
@@ -628,6 +610,10 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
    *
    */
   public function grantSingleAuthorization(&$user, $consumer_id, $consumer, &$user_auth_data, $discarded_user_save_flag = TRUE, $reset = FALSE) {
+
+    if ($this->ogVersion == 1) {
+      return false; // not implemented for og 7.x-1.x
+    }
 
     $watchdog_tokens =  array(
       '%consumer_id' => $consumer_id,
