@@ -364,7 +364,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       parent::grantsAndRevokes($op, $user, $user_auth_data, $consumers, $ldap_entry, $user_save);
       return;
     }
-
+    $user_save = TRUE; // override for og 1.5
     if (!is_array($user_auth_data)) {
       $user_auth_data = array();
     }
@@ -472,7 +472,8 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       if (!in_array($this->defaultMembershipRid, array_values($existing_roles))) {
         $user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE][] = array('gid' => $gid);
         og_entity_presave($user, 'user');
-        $user_auth_data[ldap_authorization_og_authorization_id($gid, $this->defaultMembershipRid)] = array(
+        $consumer_id = ldap_authorization_og_authorization_id($gid, $this->defaultMembershipRid);
+        $user_auth_data[$consumer_id] = array(
           'date_granted' => time(),
           'consumer_id_mixed_case' => $consumer_id,
         );
@@ -480,7 +481,8 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       foreach ($rids as $rid) {
         if ($rid != $this->defaultMembershipRid && $rid != $this->anonymousRid) {
           og_role_grant($gid, $user->uid, $rid);
-          $user_auth_data[ldap_authorization_og_authorization_id($gid, $rid)] = array(
+          $consumer_id = ldap_authorization_og_authorization_id($gid, $rid);
+          $user_auth_data[$consumer_id] = array(
             'date_granted' => time(),
             'consumer_id_mixed_case' => $consumer_id,
             );
@@ -522,9 +524,9 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     if ($user_save) {
       $user_edit['data']['ldap_authorizations'][$this->consumerType] = $user_auth_data;
       $user = user_save($user, $user_edit);
-      $user_auth_data = $user->data['ldap_authorizations'][$this->consumerType];  // reload this because hooks impact it.
+      $user_auth_data = $user->data['ldap_authorizations'][$this->consumerType];  // reset this variable because user save hooks can impact it.
     }
-   //  dpm("user_save=$user_save, user post save"); dpm($user ); dpm("user_auth_data post save"); dpm($user_auth_data);
+
     $this->flushRelatedCaches($consumers);
 
     if ($detailed_watchdog_log) {
