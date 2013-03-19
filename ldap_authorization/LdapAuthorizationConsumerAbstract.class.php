@@ -190,6 +190,7 @@ class LdapAuthorizationConsumerAbstract {
    */
 
   public function authorizationGrant(&$user, &$user_auth_data, $consumers, $ldap_entry = NULL, $user_save = TRUE) {
+    $this->filterOffPastAuthorizationRecords($user, $user_auth_data);
     $this->grantsAndRevokes('grant', $user, $user_auth_data, $consumers, $ldap_entry, $user_save);
   }
 
@@ -213,7 +214,27 @@ class LdapAuthorizationConsumerAbstract {
    */
 
   public function authorizationRevoke(&$user, &$user_auth_data, $consumers, $ldap_entry, $user_save = TRUE) {
+    $this->filterOffPastAuthorizationRecords($user, $user_auth_data);
     $this->grantsAndRevokes('revoke', $user, $user_auth_data, $consumers, $ldap_entry, $user_save);
+  }
+
+  /**
+   * this is a function to clear off
+   */
+  public function filterOffPastAuthorizationRecords(&$user, &$user_auth_data, $time = NULL) {
+    if ($time != NULL || variable_get('ldap_help_user_data_clear', 0)) {
+      $clear_time = ($time) ? $time : variable_get('ldap_help_user_data_clear_set_date', 0);
+      if ($clear_time > 0 && $clear_time < time()) {
+        foreach ($user_auth_data as $consumer_id => $entry) {
+          if ($entry['date_granted'] < $clear_time) {
+            unset($user_auth_data[$consumer_id]);
+            if (isset($user->data['ldap_authorization'][$this->consumerType][$consumer_id])) {
+              unset($user->data['ldap_authorization'][$this->consumerType][$consumer_id]);
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
