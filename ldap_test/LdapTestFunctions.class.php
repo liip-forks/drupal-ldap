@@ -95,8 +95,15 @@ class LdapTestFunctions  {
       foreach ($consumer_conf as $property_name => $property_value) {
         $consumer_conf_admin->{$property_name} = $property_value;
       }
-      $consumer_conf_admin->save();
-      //debug('prepConsumerConf mappings'); debug($consumer_conf['mappings']); debug($consumer_conf_admin->mappings);
+      foreach ($consumer_conf_admin->mappings as $i => $mapping) {
+        $mappings = $consumer_obj->normalizeMappings(
+          array(
+            array($mapping['from'], $mapping['user_entered'])
+          )
+          , FALSE);
+        $consumer_conf_admin->mappings[$i] = $mappings[0];
+      }
+      $consumer_conf_admin->save(); 
     }
   }
 
@@ -145,7 +152,7 @@ public function removeRoleFromUser($user, $role_name) {
       $user = $users[$user->uid];
       return $user;
     }
-    
+
  /**
    * set variable with fake test data
    *
