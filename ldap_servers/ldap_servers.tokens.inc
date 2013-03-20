@@ -374,6 +374,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
     $parts = explode('.', $token_key);
     $attr_type = $parts[0];
     $attr_name = $parts[1];
+    $attr_conversion = (isset($parts[2])) ? $parts[1] : 'none';
     $value = FALSE;
     $skip = FALSE;
 
@@ -387,20 +388,45 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
       break;
 
       case 'password':
-        if ($attr_name == 'user-random') {
-          $pwd = ldap_user_ldap_provision_pwd('get');
-          $value = ($pwd) ? $pwd : user_password();
-        }
-        elseif ($attr_name == 'random') {
-          $value = user_password();
+
+        switch ($attr_name) {
+
+          case 'user':
+            $pwd = ldap_user_ldap_provision_pwd('get');
+            break;
+
+          case 'user-random':
+            $pwd = ldap_user_ldap_provision_pwd('get');
+            $value = ($pwd) ? $pwd : user_password();
+            break;
+
+          case 'random':
+            $value = user_password();
+            break;
+
         }
         if (empty($value)) {
           $skip = TRUE;
         }
       break;
-
     }
+
     if (!$skip) {
+
+      switch ($attr_conversion) {
+
+        case 'none':
+          break;
+
+        case 'to-md5':
+          $value = md5($value);
+          break;
+
+        case 'to-lowercase':
+          $value = drupal_strtolower($value);
+          break;
+      }
+
       $tokens[$pre . $token_key . $post] = check_plain($value);
       if ($token_key != drupal_strtolower($token_key)) {
         $tokens[$pre . drupal_strtolower($token_key) . $post] = check_plain($value);
