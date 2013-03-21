@@ -228,8 +228,8 @@ class LdapAuthorizationConsumerAbstract {
         foreach ($user_auth_data as $consumer_id => $entry) {
           if ($entry['date_granted'] < $clear_time) {
             unset($user_auth_data[$consumer_id]);
-            if (isset($user->data['ldap_authorization'][$this->consumerType][$consumer_id])) {
-              unset($user->data['ldap_authorization'][$this->consumerType][$consumer_id]);
+            if (isset($user->data['ldap_authorizations'][$this->consumerType][$consumer_id])) {
+              unset($user->data['ldap_authorizations'][$this->consumerType][$consumer_id]);
             }
           }
         }
@@ -382,7 +382,7 @@ class LdapAuthorizationConsumerAbstract {
    * @param string lower case $consumer_id $consumer_id such as drupal role name, og group name, etc.
    * @param mixed $consumer.  depends on type of consumer.  Drupal roles are strings, og groups are ??
    * @param array $user_auth_data array of $user data specific to this consumer type.
-   *   stored in $user->data['ldap_authorization'][<consumer_type>] array
+   *   stored in $user->data['ldap_authorizations'][<consumer_type>] array
    * @param boolean $reset signifying if caches associated with $consumer_id should be invalidated.
    *
    * return boolen TRUE on success, FALSE on fail.  If user save is FALSE, the user object will

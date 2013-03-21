@@ -342,7 +342,18 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
   public function flushRelatedCaches($consumers = NULL) {
     if ($this->ogVersion == 1) { // og 7.x-1.x
-      og_invalidate_cache();
+      og_group_membership_invalidate_cache();
+      if ($consumers) {
+        $gids_to_clear_cache = array();
+        foreach ($consumers as $i => $consumer_id) {
+          list($gid, $rid) = $this->og1ConsumerIdParts($consumer_id);
+          $gids_to_clear_cache[$gid] = $gid;
+        }
+        og_invalidate_cache(array_keys($gids_to_clear_cache));
+      }
+      else {
+        og_invalidate_cache();
+      }
     }
     else { // og 7.x-2.x
       og_invalidate_cache(); //gids could be passed in here, but not implemented within og
@@ -465,7 +476,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     //dpm("og_actions"); dpm($og_actions); dpm("user_auth_data"); dpm($user_auth_data);
 
     $group_audience = $user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE];
-
     // grants
     foreach ($og_actions['grants'] as $gid => $rids) {
       $existing_roles = og_get_user_roles($gid, $user->uid);
@@ -686,7 +696,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       $authorizations = array();
       foreach ($gids as $i => $gid) {
         $roles = og_get_user_roles($gid, $user->uid);
-
         if (!empty($roles[$this->defaultMembershipRid])) { // if you aren't a member, doesn't matter what roles you have in og 1.5
           if (isset($roles[$this->anonymousRid])) {
             unset($roles[$this->anonymousRid]);
