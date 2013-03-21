@@ -88,19 +88,50 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
   }
 
   public function createCustomRoles() {
-
     foreach ($this->customOgRoles as $og_role_name => $og_role) {
       $role = new stdClass;
       $role->name = $og_role_name;
       $role->gid = 0;
-    //  $role->group_type = $og_role['entity_type'];
-    //  $role->group_bundle = $og_role['bundle_type'];
-
       $status = og_role_save($role);
-
     }
     $roles = db_query("SELECT rid, name FROM {og_role}", array())->fetchAllKeyed();
-    //debug("createCustomRoles: custom roles"); debug($roles);
+  }
+
+  function deleteAndRecreateUser($cname) {
+    if ($user = user_load_by_name($cname)) {
+      user_delete($user->uid);
+    }
+    $user = $this->drupalCreateUser(array());
+    $user = $this->testFunctions->drupalLdapUpdateUser(array('name' => $cname, 'mail' =>  $cname . '@hogwarts.edu'), TRUE, $user);
+    return $user;
+  }
+
+  function testUIGroupMembership($user, $group_node, $test_id = null, $assert_true = TRUE) {
+      $this->drupalGet('user/' . $user->uid);
+      if ($assert_true) {
+        $this->assertText($group_node->title, 'User view UI shows group (' . $group_node->title . ') membership listed', $test_id);
+      }
+      else {
+        $this->assertNoText($group_node->title, 'User view UI does not show group (' . $group_node->title . ') membership listed', $test_id);
+      }
+      $this->drupalGet('node/' . $group_node->nid);
+      if ($assert_true) {
+        $this->assertText($user->name, 'Group view UI shows user name (' . $user->name . ') in group membership list',$test_id);
+      }
+      else {
+        $this->assertNoText($user->name, 'Group view UI does not show user name (' . $user->name . ') in group membership list',$test_id);
+      }
+  }
+
+  function manualOgGroup($user, $gid, $extra_rids = array()) {
+    $values = array('entity' => $user,  'entity_type' => 'user');
+    $user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE][] = array('gid' => $gid);
+    og_entity_presave($user, 'user');
+    $user = user_save($user);
+    foreach ($extra_rids as $rid) {
+      og_role_grant($gid, $user->uid, $rid);
+    }
+    return user_load($user->uid, TRUE);
   }
 
   /**
@@ -278,7 +309,7 @@ function testFlags() {
   $admin_rid =     ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
   $dungeon_master_rid =     ldap_authorization_og_rid_from_role_name('dungeon-master');
   $time_keeper =     ldap_authorization_og_rid_from_role_name('time-keeper');
-  $student_membership_consumer_id = $og_students_group->gid .'-'. $member_rid;
+  $students_membership_consumer_id = $og_students_group->gid .'-'. $member_rid;
   $gryffindor_membership_consumer_id = $og_gryffindor_group->gid .'-'. $member_rid;
 
   /**
@@ -300,9 +331,7 @@ function testFlags() {
   $this->consumerAdminConf['og_group']->status = 0;
   $this->consumerAdminConf['og_group']->save();
   $og_group_consumer = ldap_authorization_get_consumer_object('og_group');
-
-  $user = $this->drupalCreateUser(array());
-  $hpotter = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hpotter', 'mail' =>  'hpotter@hogwarts.edu'), TRUE, $user);
+  $hpotter = $this->deleteAndRecreateUser('hpotter');
 
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hpotter, 'test_query', 'og_group');  // just see if the correct ones are derived.
   $groups1 = $new_authorizations['og_group'];
@@ -319,41 +348,11 @@ function testFlags() {
   $og_group_consumer = ldap_authorization_get_consumer_object('og_group');
 
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hpotter, 'test_query', 'og_group');  // just see if the correct ones are derived.
-  $correct_groups = !empty($new_authorizations['og_group'][$student_membership_consumer_id])
+  $correct_groups = !empty($new_authorizations['og_group'][$students_membership_consumer_id])
     && !empty($new_authorizations['og_group'][$gryffindor_membership_consumer_id]);
   $this->assertTrue($correct_groups, 'enabled consumer configuration allows authorizations.', $test_id);
   if (!$correct_groups) {
-    debug($test_id . "new_authorizations $gryffindor_membership_consumer_id and $student_membership_consumer_id not found in:"); debug($new_authorizations['og_group']); debug($notifications);
-  }
-
-
-  /**
-   * LDAP_authorz.onlyLdapAuthenticated=1: create normal user and
-   * apply authorization query.  should return no roles
-   */
-  $test_id = 'LDAP_authorz.onlyLdapAuthenticated.1';
-  $this->consumerAdminConf['og_group']->onlyApplyToLdapAuthenticated = 1;
-  $this->consumerAdminConf['og_group']->status = 1;
-  $this->consumerAdminConf['og_group']->save();
-  $og_group_consumer = ldap_authorization_get_consumer_object('og_group');
-
-  $user = $this->drupalCreateUser(array());
-  $hgrainger = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hgrainger', 'mail' =>  'hgrainger@hogwarts.edu'), TRUE, $user);
-
-  // remove old authmap in case it exists so test will work
-  db_delete('authmap')
-    ->condition('uid', $user->uid)
-    ->condition('module', 'ldap_user')
-    ->execute();
-
-  list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hgrainger, 'set', 'og_group');  // just see if the correct ones are derived.
-  $success = (isset($new_authorizations['og_group']) && count($new_authorizations['og_group']) == 0);
-  $this->assertTrue($success, ' only apply to ldap authenticated grants no roles for non ldap user.', $test_id);
-  if (!$success) {
-    debug($test_id . "new_authorizations:"); debug($new_authorizations);
-    debug($this->testFunctions->ldapUserIsAuthmapped('hgrainger'));
-    debug($notifications);
-    debug($hgrainger);
+    debug($test_id . "new_authorizations $gryffindor_membership_consumer_id and $students_membership_consumer_id not found in:"); debug($new_authorizations['og_group']); debug($notifications);
   }
 
 }
@@ -376,21 +375,31 @@ function testLogons() {
     'og_group15'
     );
 
-
   $og_group_consumer = ldap_authorization_get_consumers('og_group', TRUE, TRUE);
   list($og_gryffindor_group, $og_gryffindor_node) =  ldap_authorization_og1_get_group('gryffindor', 'group_name'); //1
   list($og_students_group, $og_students_node) =  ldap_authorization_og1_get_group('students', 'group_name'); //4
   list($og_faculty_group, $og_faculty_node) =  ldap_authorization_og1_get_group('faculty', 'group_name'); // 7
   list($og_users_group, $og_users_node) =  ldap_authorization_og1_get_group('users', 'group_name'); //9
   list($og_hufflepuff_group, $og_hufflepuff_node) =  ldap_authorization_og1_get_group('hufflepuff', 'group_name');
+  list($og_slytherin_group, $og_slytherin_node) =  ldap_authorization_og1_get_group('slytherin', 'group_name');
+
 
   $anonymous_rid = ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE);
   $member_rid =    ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE);
   $admin_rid =     ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
   $dungeon_master_rid =     ldap_authorization_og_rid_from_role_name('dungeon-master');
   $time_keeper =     ldap_authorization_og_rid_from_role_name('time-keeper');
-  $student_membership_consumer_id = $og_students_group->gid .'-'. $member_rid;
+  $students_membership_consumer_id = $og_students_group->gid .'-'. $member_rid;
   $gryffindor_membership_consumer_id = $og_gryffindor_group->gid .'-'. $member_rid;
+  $slytherin_membership_consumer_id = $og_slytherin_group->gid .'-'. $member_rid;
+  $hufflepuff_membership_consumer_id = $og_hufflepuff_group->gid .'-'. $member_rid;
+
+  debug(
+    "students_membership_consumer_id = $students_membership_consumer_id
+    gryffindor_membership_consumer_id  = $gryffindor_membership_consumer_id
+    slytherin_membership_consumer_id = $slytherin_membership_consumer_id
+    hufflepuff_membership_consumer_id = = $hufflepuff_membership_consumer_id "
+  );
 
   list($props_set_display, $props_set_correctly) = $this->checkConsumerConfSetup('og_group15');
   $this->assertTrue(
@@ -402,14 +411,7 @@ function testLogons() {
     debug('LDAP_authorz.Flags.setup.0 properties not set correctly'); debug($props_set_display);
   }
 
-  $user = $this->drupalCreateUser(array());
-  $hpotter = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hpotter', 'mail' =>  'hpotter@hogwarts.edu'), TRUE, $user);
-
-  $user = $this->drupalCreateUser(array());
-  $hgrainger = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hgrainger', 'mail' =>  'hgrainger@hogwarts.edu'), TRUE, $user);
-
-  $user = $this->drupalCreateUser(array());
-  $rweasley = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'rweasley', 'mail' =>  'rweasley@hogwarts.edu'), TRUE, $user);
+  $hpotter = $this->deleteAndRecreateUser('hpotter');
 
   /**
    * LDAP_authorz.Flags.synchOnLogon - execute logon and check that no roles are applied if disabled
@@ -420,7 +422,7 @@ function testLogons() {
   $og_group_consumer = ldap_authorization_get_consumer_object('og_group');
 
   $edit = array(
-    'name' => 'hgrainger',
+    'name' => 'hpotter',
     'pass' => 'goodpwd',
   );
   $this->drupalPost('user', $edit, t('Log in'));
@@ -430,77 +432,103 @@ function testLogons() {
     $test_id
   );
   $this->assertTrue(
-    $this->testFunctions->ldapUserIsAuthmapped('hgrainger'),
+    $this->testFunctions->ldapUserIsAuthmapped('hpotter'),
     'Ldap user properly authmapped.',
     $test_id
   );
-  $hgrainger = user_load_by_name('hgrainger');
-  $authorizations = $og_group_consumer->usersAuthorizations($hgrainger);
+  $hpotter = user_load_by_name('hpotter');
+  $hpotter = user_load($hpotter->uid, TRUE);
+  $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
   $this->drupalGet('user/logout');
   $success = (count($authorizations) == 0);
   $this->assertTrue($success, 'No authorizations granted when synchOnLogon=0', $test_id);
   if (!$success) {
-    debug($test_id . "authorizations:"); debug($authorizations); debug($hgrainger);
+    debug($test_id . "authorizations:"); debug($authorizations); debug($hpotter->data);
   }
 
   $test_id = 'LDAP_authorz.og.Flags.synchOnLogon.1';
   $this->consumerAdminConf['og_group']->synchOnLogon = 1;
   $this->consumerAdminConf['og_group']->save();
   $og_group_consumer = ldap_authorization_get_consumer_object('og_group'); // flushes object static cache
+  $hpotter = $this->deleteAndRecreateUser('hpotter');
 
   $edit = array(
-    'name' => 'hgrainger',
+    'name' => 'hpotter',
     'pass' => 'goodpwd',
   );
   $this->drupalPost('user', $edit, t('Log in'));
   $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', $test_id);
-  $hgrainger = user_load_by_name('hgrainger');
-  $authorizations = $og_group_consumer->usersAuthorizations($hgrainger);
-  $success = in_array($student_membership_consumer_id, $authorizations) && in_array($gryffindor_membership_consumer_id, $authorizations);
+  $hpotter = user_load_by_name('hpotter');
+  $hpotter = user_load($hpotter->uid, TRUE);
+  $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
+  $this->testUIGroupMembership($hpotter, $og_students_node, $test_id);
+  $success = in_array($students_membership_consumer_id, $authorizations) && in_array($gryffindor_membership_consumer_id, $authorizations);
   $this->drupalGet('user/logout');
   $this->assertTrue($success, 'Correct Authorizations on user logon', $test_id);
   if (!$success) {
-    debug($test_id . "authorizations $gryffindor_membership_consumer_id and $student_membership_consumer_id not found in:");
-    debug($authorizations); debug("hgrainger->data"); debug($hgrainger->data);
+    debug($test_id . "authorizations $gryffindor_membership_consumer_id and $students_membership_consumer_id not found in:");
+    debug($authorizations); debug("hpotter->data"); debug($hpotter->data);
   }
-debug("hgrainger->data"); debug($hgrainger->data);
+
+  $user_data = $hpotter->data['ldap_authorizations']['og_group'];
+  $success = (isset($user_data[$students_membership_consumer_id]) &&
+             isset($user_data[$gryffindor_membership_consumer_id]) &&
+             isset($user_data[$students_membership_consumer_id]['date_granted']) &&
+             isset($user_data[$gryffindor_membership_consumer_id]['consumer_id_mixed_case']) &&
+             isset($user_data[$students_membership_consumer_id]['date_granted']) &&
+             isset($user_data[$gryffindor_membership_consumer_id]['consumer_id_mixed_case']) &&
+             $user_data[$gryffindor_membership_consumer_id]['consumer_id_mixed_case'] == $gryffindor_membership_consumer_id);
+  $this->assertTrue($success, 'Correct User Data Authorization Records', $test_id);
+
 
 
   /** test multiple logon scenario.  this deals with a variety of concerns such as caching of
-   * user and og data (rweasley, gryffindor)
+   * user and og data
    */
   $test_id = 'LDAP_authorz.og.mulitplelogons';
   $this->consumerAdminConf['og_group']->onlyApplyToLdapAuthenticated = 0;
   $this->consumerAdminConf['og_group']->synchOnLogon = 1;
   $this->consumerAdminConf['og_group']->status = 1;
   $this->consumerAdminConf['og_group']->save();
+  $hpotter = $this->deleteAndRecreateUser('hpotter');
   $og_group_consumer = ldap_authorization_get_consumer_object('og_group');
 
   $this->drupalGet('user/logout');
-  $rweasley = user_load_by_name('rweasley');
-  $authorizations = $og_group_consumer->usersAuthorizations($rweasley);
-  debug("$test_id, pre-test_query for rweasley"); debug($authorizations); debug($rweasley->data);
+  $pre_authorizations = $og_group_consumer->usersAuthorizations($hpotter);
+  $this->assertTrue(count($pre_authorizations) == 0, 'Setup correct for test '. $test_id, $test_id);
 
   foreach(array(1,2,3) as $i) {
     $this->drupalGet('user/logout');
     $edit = array(
-      'name' => 'rweasley',
+      'name' => 'hpotter',
       'pass' => 'goodpwd',
     );
     $this->drupalPost('user', $edit, t('Log in'));
     $this->assertText(t('Member for'), "Repeated logon grant test i=$i", $test_id);
-    $rweasley = user_load_by_name('rweasley');
-    debug("$test_id i=$i"); debug($rweasley->data); debug($og_group_consumer->usersAuthorizations($rweasley));
-    $authorizations = $og_group_consumer->usersAuthorizations($rweasley);
-    $success = in_array($student_membership_consumer_id, $authorizations) &&
+    $hpotter = user_load_by_name('hpotter');
+    $hpotter = user_load($hpotter->uid, TRUE);
+
+    $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
+    $success = in_array($students_membership_consumer_id, $authorizations) &&
       in_array($gryffindor_membership_consumer_id, $authorizations);
     $this->assertTrue($success, 'Correct Authorizations on user logon', $test_id);
     if (!$success) {
-
+      debug("$test_id i=$i"); debug($hpotter->data); debug($og_group_consumer->usersAuthorizations($hpotter));
     }
+    $this->testUIGroupMembership($hpotter, $og_gryffindor_node, $test_id);
+    $this->testUIGroupMembership($hpotter, $og_students_node, $test_id);
     // also need to assert user->data['ldap_authorizations']['og_group'] array
 
     $this->assertTrue($success, 'Correct Authorizations on user logon', $test_id);
+    $user_data = $hpotter->data['ldap_authorizations']['og_group'];
+    $success = (isset($user_data[$students_membership_consumer_id]) &&
+                 isset($user_data[$gryffindor_membership_consumer_id]) &&
+                 isset($user_data[$students_membership_consumer_id]['date_granted']) &&
+                 isset($user_data[$gryffindor_membership_consumer_id]['consumer_id_mixed_case']) &&
+                 isset($user_data[$students_membership_consumer_id]['date_granted']) &&
+                 isset($user_data[$gryffindor_membership_consumer_id]['consumer_id_mixed_case']) &&
+                 $user_data[$gryffindor_membership_consumer_id]['consumer_id_mixed_case'] == $gryffindor_membership_consumer_id);
+    $this->assertTrue($success, 'Correct User Data Authorization Records', $test_id);
     $this->drupalGet('user/logout');
   }
 
@@ -517,40 +545,50 @@ debug("hgrainger->data"); debug($hgrainger->data);
   $test_id = 'LDAP_authorz.og.Flags.revokeLdapProvisioned.1';
   $this->consumerAdminConf['og_group']->onlyApplyToLdapAuthenticated = 0;
   $this->consumerAdminConf['og_group']->revokeLdapProvisioned = 1;
+  $this->consumerAdminConf['og_group']->regrantLdapProvisioned = 1;
   $this->consumerAdminConf['og_group']->save();
   $og_group_consumer = ldap_authorization_get_consumer_object('og_group');
-
-  $hpotter = user_load_by_name('hpotter');
-  user_delete($hpotter->uid);
-  $user = $this->drupalCreateUser(array());
-  $hpotter = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hpotter', 'mail' =>  'hpotter@hogwarts.edu'), TRUE, $user);
+  $hpotter = $this->deleteAndRecreateUser('hpotter');
   $edit = array(
     'name' => 'hpotter',
     'pass' => 'goodpwd',
   );
 
   // group to 2 "undeserved" groups, but only ldap associate 1
-  $values = array('entity' => $hpotter,  'entity_type' => 'user');
-  og_group($og_slytherin_group->gid, $values);
-  og_group($og_hufflepuff_group->gid, $values);
-  debug($og_group_consumer->usersAuthorizations($hpotter));
-  
-  $undeserved_consumer_id = $og_slytherin_group->gid . '-' . $member_rid;
+  $hpotter = $this->manualOgGroup($hpotter, $og_slytherin_group->gid);
+  $hpotter = $this->manualOgGroup($hpotter, $og_hufflepuff_group->gid);
+  $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
+  $this->assertTrue(
+    in_array($slytherin_membership_consumer_id, $authorizations) &&
+    in_array($hufflepuff_membership_consumer_id, $authorizations)
+    , "prep for $test_id", $test_id);
+
+
+ // debug(); debug("4.1 hpotter->data"); debug($hpotter->data);
+ // $undeserved_consumer_id = $og_slytherin_group->gid . '-' . $member_rid;
   $user_edit['data'] = $hpotter->data;
-  $user_edit['data']['ldap_authorizations']['ldap_authorizations']['og_group'][$undeserved_consumer_id] =
+  $user_edit['data']['ldap_authorizations']['og_group'][$slytherin_membership_consumer_id] =
     array(
       array('date_granted' => 1304216778),
-      array('consumer_id_mixed_case' => $undeserved_consumer_id),
+      array('consumer_id_mixed_case' => $slytherin_membership_consumer_id),
     );
   $hpotter = user_save($hpotter, $user_edit);
 
   $this->drupalPost('user', $edit, t('Log in'));
   $this->assertText(t('Member for'),'New Ldap user with good password authenticated.',$test_id);
   $hpotter = user_load_by_name('hpotter');
+  $hpotter = user_load($hpotter->uid, TRUE);
   $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
-  debug($authorizations);
-  // assert that slytherin membership removed, but hufflepuff kept
+  $this->testUIGroupMembership($hpotter, $og_hufflepuff_node, $test_id);
+  $this->testUIGroupMembership($hpotter, $og_slytherin_node, $test_id, FALSE);
+  $this->assertTrue(
+    !in_array($slytherin_membership_consumer_id, $authorizations) &&
+    in_array($hufflepuff_membership_consumer_id, $authorizations)
+    , "Ldap granted og revoked when not deserved in ldap, manual og membership retained.", $test_id);
 
+  // assert that slytherin membership removed, but hufflepuff kept
+  debug($authorizations);
+  debug("4. hpotter->data"); debug($hpotter->data);
 
    /**
    * LDAP_authorz.Flags.regrantLdapProvisioned
@@ -565,30 +603,67 @@ debug("hgrainger->data"); debug($hgrainger->data);
   $test_id = 'LDAP_authorz.Flags.regrantLdapProvisioned=1';
   $this->drupalGet('user/logout');
   $this->consumerAdminConf['og_group']->regrantLdapProvisioned = 1;
+  $this->consumerAdminConf['og_group']->revokeLdapProvisioned = 1;
   $this->consumerAdminConf['og_group']->save();
   $og_group_consumer = ldap_authorization_get_consumer_object('og_group');
-  $hpotter = user_load($hpotter->uid, TRUE);
+  $hpotter = user_load($hpotter->uid, TRUE);  // do not recreate hpotter user because using date from last test
 
   // ungroup hpotter from students
   $hpotter = og_ungroup($og_students_group->gid, 'user', $hpotter, TRUE);
   // confirm doesn't have authorization
   $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
-  $this->assertTrue(!in_array($student_membership_consumer_id, $authorizations), 'hpotter student membership removed before testing regrant', $test_id);
+  $this->assertTrue(!in_array($students_membership_consumer_id, $authorizations), 'hpotter student membership removed before testing regrant', $test_id);
   /**
    * logon
    */
   $this->drupalPost('user', $edit, t('Log in'));
 
   // assert students membership regranted
+  $hpotter = user_load($hpotter->uid, TRUE);
   $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
-  $success = in_array($student_membership_consumer_id, $authorizations);
-
-  $this->assertTrue($success, "regrant Ldap Provisioned og groups ($student_membership_consumer_id) that were manually revoked", $test_id);
+  $success = in_array($students_membership_consumer_id, $authorizations);
+  $this->testUIGroupMembership($hpotter, $og_students_node, $test_id);
+  $this->assertTrue($success, "regrant Ldap Provisioned og groups ($students_membership_consumer_id) that were manually revoked", $test_id);
   if (!$success) {
     debug($test_id);
+    debug("students_membership_consumer_id=$students_membership_consumer_id");
     debug('hpotter->data'); debug($hpotter->data);
     debug('current authorizations'); debug($authorizations);
   }
+  debug("5. hpotter->data"); debug($hpotter->data);
+
+
+  /**
+   * LDAP_authorz.onlyLdapAuthenticated=1: create normal user and
+   * apply authorization query.  should return no og groups
+   *
+   * THIS NEEDS TO BE REWORKED.  ITS A MEANINGLESS TEST IN CURRENT STATE
+   * should
+   * A. leave on mixed mode ldap authentication
+   *   logon with non ldap password and receive no authorizations
+   *
+   * B.  leave on mixed mode authentication and logon with ldap
+   *    groups should be granted
+   *
+   */
+  //$test_id = 'LDAP_authorz.onlyLdapAuthenticated.1';
+  //$this->consumerAdminConf['og_group']->onlyApplyToLdapAuthenticated = 1;
+  //$this->consumerAdminConf['og_group']->status = 1;
+  //$this->consumerAdminConf['og_group']->save();
+  //$og_group_consumer = ldap_authorization_get_consumer_object('og_group');
+  //
+  //$hpotter = $this->deleteAndRecreateUser('hpotter');
+  //
+  //list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hpotter, 'set', 'og_group');  // just see if the correct ones are derived.
+  //$success = (isset($new_authorizations['og_group']) && count($new_authorizations['og_group']) == 0);
+  //$this->assertTrue($success, ' only apply to ldap authenticated grants no roles for non ldap user.', $test_id);
+  //$hpotter = user_load($hpotter->uid, TRUE);
+  //if (!$success) {
+  //  debug($test_id . "new_authorizations:"); debug($new_authorizations);
+  //  debug($this->testFunctions->ldapUserIsAuthmapped('hpotter'));
+  //  debug($notifications);
+  //  debug($hpotter);
+  //}
 
 }
 
