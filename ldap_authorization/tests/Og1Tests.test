@@ -106,7 +106,7 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
     return $user;
   }
 
-  function testUIGroupMembership($user, $group_node, $test_id = null, $assert_true = TRUE) {
+  function UIGroupMembershipTest($user, $group_node, $test_id = null, $assert_true = TRUE) {
       $this->drupalGet('user/' . $user->uid);
       if ($assert_true) {
         $this->assertText($group_node->title, 'User view UI shows group (' . $group_node->title . ') membership listed', $test_id);
@@ -461,7 +461,7 @@ function testLogons() {
   $hpotter = user_load_by_name('hpotter');
   $hpotter = user_load($hpotter->uid, TRUE);
   $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
-  $this->testUIGroupMembership($hpotter, $og_students_node, $test_id);
+  $this->UIGroupMembershipTest($hpotter, $og_students_node, $test_id);
   $success = in_array($students_membership_consumer_id, $authorizations) && in_array($gryffindor_membership_consumer_id, $authorizations);
   $this->drupalGet('user/logout');
   $this->assertTrue($success, 'Correct Authorizations on user logon', $test_id);
@@ -515,8 +515,8 @@ function testLogons() {
     if (!$success) {
       debug("$test_id i=$i"); debug($hpotter->data); debug($og_group_consumer->usersAuthorizations($hpotter));
     }
-    $this->testUIGroupMembership($hpotter, $og_gryffindor_node, $test_id);
-    $this->testUIGroupMembership($hpotter, $og_students_node, $test_id);
+    $this->UIGroupMembershipTest($hpotter, $og_gryffindor_node, $test_id);
+    $this->UIGroupMembershipTest($hpotter, $og_students_node, $test_id);
     // also need to assert user->data['ldap_authorizations']['og_group'] array
 
     $this->assertTrue($success, 'Correct Authorizations on user logon', $test_id);
@@ -579,8 +579,8 @@ function testLogons() {
   $hpotter = user_load_by_name('hpotter');
   $hpotter = user_load($hpotter->uid, TRUE);
   $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
-  $this->testUIGroupMembership($hpotter, $og_hufflepuff_node, $test_id);
-  $this->testUIGroupMembership($hpotter, $og_slytherin_node, $test_id, FALSE);
+  $this->UIGroupMembershipTest($hpotter, $og_hufflepuff_node, $test_id);
+  $this->UIGroupMembershipTest($hpotter, $og_slytherin_node, $test_id, FALSE);
   $this->assertTrue(
     !in_array($slytherin_membership_consumer_id, $authorizations) &&
     in_array($hufflepuff_membership_consumer_id, $authorizations)
@@ -622,7 +622,7 @@ function testLogons() {
   $hpotter = user_load($hpotter->uid, TRUE);
   $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
   $success = in_array($students_membership_consumer_id, $authorizations);
-  $this->testUIGroupMembership($hpotter, $og_students_node, $test_id);
+  $this->UIGroupMembershipTest($hpotter, $og_students_node, $test_id);
   $this->assertTrue($success, "regrant Ldap Provisioned og groups ($students_membership_consumer_id) that were manually revoked", $test_id);
   if (!$success) {
     debug($test_id);
