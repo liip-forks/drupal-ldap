@@ -11,8 +11,8 @@ function ldap_help_main() {
 
   <h3>LDAP Module Resources</h3>
   <ul>
-    <li>The <a href="http://drupal.org/node/997082">Drupal.org Documentation</a> covers basics of module.</li>
-    <li>Search <a href="http://drupal.org/project/issues/search/ldap">issue queue</a>  For best results,
+    <li>The <a href="http://drupal.org/node/997082">Drupal.org Documentation</a> covers basics of the module.</li>
+    <li>Search the <a href="http://drupal.org/project/issues/search/ldap"> issue queue</a>;  For best results,
     select version and category before searching.</li>
     <li><a href="http://drupal.org/project/issues/ldap">View all issues</a></li>
     <li><a href="http://docs.moodle.org/20/en/LDAP_authentication">Moodle LDAP module documentation</a> is
@@ -20,8 +20,9 @@ function ldap_help_main() {
   </ul>
 
   <h3>Your local LDAP Documentation and Administrators</h3>
-  <p>You would be surprised how much is documented about your local ldap.  Find your organization's LDAP documentation and
-     support staff before you stuggle blindly.  Know if ldap or ldaps is used.  Know if an odd port is used.
+  <p>You would be surprised how much is documented about your local LDAP.  Find your organization's LDAP documentation and
+     support staff before you struggle blindly.  Know whether LDAP or LDAPS is used.  Know if an odd port is used.
+     A sample email to an LDAP Administrator is available at <a href="http://drupal.org/node/1925794">http://drupal.org/node/1925794</a>
      Know how service accounts are expected to be used.
      Below are examples of ldap implementation documentation:</p>
   <ul>
