@@ -960,12 +960,15 @@ class LdapServer {
    */
   public function userUsernameFromLdapEntry($ldap_entry) {
 
-    $accountname = FALSE;
+
     if ($this->account_name_attr) {
-      $accountname = (empty($ldap_entry[$this->user_attr][0])) ? FALSE : $ldap_entry[$this->account_name_attr][0];
+      $accountname = (empty($ldap_entry[$this->account_name_attr][0])) ? FALSE : $ldap_entry[$this->account_name_attr][0];
     }
     elseif ($this->user_attr)  {
       $accountname = (empty($ldap_entry[$this->user_attr][0])) ? FALSE : $ldap_entry[$this->user_attr][0];
+    }
+    else {
+      $accountname = FALSE;
     }
 
     return $accountname;
