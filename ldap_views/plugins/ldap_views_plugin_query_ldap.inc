@@ -374,6 +374,17 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     );
   }
 
+
+  /**
+   * Let modules modify the query just prior to finalizing it.
+   */
+  function alter(&$view) {
+    foreach (module_implements('views_query_alter') as $module) {
+      $function = $module . '_views_query_alter';
+      $function($view, $this);
+    }
+  }
+
 /* Only when adding dynamic fields in ldap_views_views_data_alter()
   function options_submit(&$form, &$form_state) {
     parent::options_submit(&$form, &$form_state);
