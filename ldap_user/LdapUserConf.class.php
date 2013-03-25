@@ -794,10 +794,8 @@ class LdapUserConf {
     }
 
     if ($save) {
-     // $account = new stdClass();
       $account = user_load($drupal_user->uid);
       $result = user_save($account, $user_edit, 'ldap_user');
-
       return $result;
     }
     else {
@@ -1069,6 +1067,15 @@ class LdapUserConf {
         $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_CREATE_DRUPAL_USER));
         if ($save) {
           $watchdog_tokens = array('%drupal_username' =>  $user_edit['name']);
+          if (empty($user_edit['name'])) {
+            drupal_set_message(t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
+            watchdog('ldap_user',
+              'Failed to create Drupal account %drupal_username because drupal username could not be derived.',
+              $tokens,
+              WATCHDOG_ERROR
+            );
+            return FALSE;
+          }
           if (!isset($user_edit['mail']) || !$user_edit['mail']) {
             drupal_set_message(t('User account creation failed because of invalid, empty derived email address.'), 'error');
             watchdog('ldap_user',
@@ -1164,6 +1171,7 @@ class LdapUserConf {
    * @param object $ldap_server
    * @param enum $direction
    * @param array $prov_events
+   *
    */
 
   function entryToUserEdit($ldap_user, &$edit, $ldap_server, $direction = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_events = NULL) {
@@ -1181,7 +1189,6 @@ class LdapUserConf {
     }
 
     $drupal_username = $ldap_server->userUsernameFromLdapEntry($ldap_user['attr']);
-
 		if ($this->isSynched('[property.picture]', $prov_events, $direction)){
 
 			$picture = $ldap_server->userPictureFromLdapEntry($ldap_user['attr'], $drupal_username);
@@ -1283,6 +1290,9 @@ class LdapUserConf {
     // Allow other modules to have a say.
 
     drupal_alter('ldap_user_edit_user', $edit, $ldap_user, $ldap_server, $prov_events);
+    if (isset($edit['name']) && $edit['name'] == '') {  // don't let empty 'name' value pass for user
+      unset($edit['name']);
+    }
 
   }
   /**
