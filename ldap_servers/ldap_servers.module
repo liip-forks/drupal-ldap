@@ -387,7 +387,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
         'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
-        'config_module' => 'ldap_server',
+        'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[field.ldap_user_puid_sid]'];
 
@@ -401,7 +401,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
         'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
-        'config_module' => 'ldap_server',
+        'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[field.ldap_user_puid]'];
 
@@ -415,7 +415,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
         'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
-        'config_module' => 'ldap_server',
+        'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[field.ldap_user_puid_property]'];
     }
@@ -434,7 +434,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
       'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
-      'config_module' => 'ldap_server',
+      'config_module' => 'ldap_servers',
       'prov_module' => 'ldap_user',
     ) + $available_user_attrs[$token];
 
@@ -448,7 +448,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
         'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
-        'config_module' => 'ldap_server',
+        'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[property.name]'];
 
@@ -461,7 +461,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
         'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
-        'config_module' => 'ldap_server',
+        'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[property.mail]'];
 
@@ -475,7 +475,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
             'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
             'enabled' => TRUE,
             'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
-            'config_module' => 'ldap_server',
+            'config_module' => 'ldap_servers',
             'prov_module' => 'ldap_user',
         ) + $available_user_attrs['[property.picture]'];
       }
