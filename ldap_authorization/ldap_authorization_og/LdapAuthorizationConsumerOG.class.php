@@ -8,7 +8,12 @@
  *
  */
 
-ldap_servers_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerAbstract.class');
+if (function_exists('ldap_servers_module_load_include')) {
+  ldap_servers_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerAbstract.class');
+}
+else {
+  module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerAbstract.class');
+}
 
 class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
@@ -27,9 +32,19 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       );
 
   function __construct($consumer_type) {
-    $this->defaultMembershipRid = ldap_authorization_og1_role_name_to_role_id(OG_AUTHENTICATED_ROLE);
-    $this->anonymousRid = ldap_authorization_og1_role_name_to_role_id(OG_ANONYMOUS_ROLE);
+
     $this->ogVersion = ldap_authorization_og_og_version();
+    if ($this->ogVersion == 1) {
+      $this->defaultMembershipRid = ldap_authorization_og1_role_name_to_role_id(OG_AUTHENTICATED_ROLE);
+      $this->anonymousRid = ldap_authorization_og1_role_name_to_role_id(OG_ANONYMOUS_ROLE);
+    }
+    else {
+      //@todo these properties are not used in ldap og 2, but when they are their derivation needs to be examined and tested
+      // as they may be per entity rids, not global.
+      $this->defaultMembershipRid = NULL; // ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE);
+      $this->anonymousRid = NULL; //ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE);
+    }
+
     $params = ldap_authorization_og_ldap_authorization_consumer();
     parent::__construct('og_group', $params['og_group']);
   }
@@ -368,9 +383,36 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
    * @param array $ldap_entry, when available user's ldap entry.
    * @param boolean $user_save indicates is user data array should be saved or not.  this depends on the implementation calling this function
    */
+  public function authorizationDiff($existing, $desired) {
+    if ($this->ogVersion != 1) {
+      return parent::authorizationDiff($existing, $desired);
+    }
+
+    /**
+     * for og 1.5, goal is not to recognize X-2 consumer ids if X-N exist
+     * since X-2 consumer ids are granted as a prerequisite of X-N
+     */
+
+    $diff = array_diff($existing, $desired);
+    $desired_group_ids = array();
+    foreach ($desired as $i => $consumer_id) {
+      list($gid, $rid) = $this->og1ConsumerIdParts($consumer_id);
+      $desired_group_ids[$gid] = TRUE;
+    }
+    foreach ($diff as $i => $consumer_id) {
+      list($gid, $rid) = $this->og1ConsumerIdParts($consumer_id);
+      // if there are still roles in this group that are desired, do
+      // not remove default mambership role id
+      if ($rid == $this->defaultMembershipRid && !empty($desired_group_ids[$gid])) {
+        unset($diff[$i]);
+      }
+    }
+   // dpm("diff"); dpm($diff); dpm("existing"); dpm($existing);  dpm("desired"); dpm($desired); dpm("final diff"); dpm($diff);
+    return $diff;
+  }
 
   protected function grantsAndRevokes($op, &$user, &$user_auth_data, $consumers, &$ldap_entry = NULL, $user_save = TRUE) {
-
+    //dpm("grantsAndRevokes, op=$op, user_save=$user_save"); dpm($user_auth_data); dpm($consumers);
     if ($this->ogVersion != 1) { // only override for og 7.x-1.x
       parent::grantsAndRevokes($op, $user, $user_auth_data, $consumers, $ldap_entry, $user_save);
       return;

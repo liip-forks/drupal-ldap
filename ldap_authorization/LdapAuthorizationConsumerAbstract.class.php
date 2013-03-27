@@ -169,6 +169,10 @@ class LdapAuthorizationConsumerAbstract {
     // method must be overridden
   }
 
+  public function authorizationDiff($initial, $current) {
+    return array_diff($initial, $current);
+  }
+
 
   /**
    * grant authorizations to a user
@@ -217,6 +221,8 @@ class LdapAuthorizationConsumerAbstract {
     $this->filterOffPastAuthorizationRecords($user, $user_auth_data);
     $this->grantsAndRevokes('revoke', $user, $user_auth_data, $consumers, $ldap_entry, $user_save);
   }
+
+
 
   /**
    * this is a function to clear off

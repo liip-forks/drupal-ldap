@@ -291,7 +291,8 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $display_authorizations[] = $_consumer['map_to_string'];
       }
       $_SESSION['ldap_authorization_test_query']['post mappings'] = $display_authorizations;
-      $_SESSION['ldap_authorization_test_query']['user data'] = $user->data['ldap_authorizations'][$consumer->consumerType];
+      $data = property_exists($user, 'data') ? $user->data['ldap_authorizations'][$consumer->consumerType] : array();
+      $_SESSION['ldap_authorization_test_query']['user data'] = $data;
     }
 
     /**
@@ -393,8 +394,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
   $watchdog_tokens['%revokes'] = t('none');
 
   if ($consumer->consumerConf->revokeLdapProvisioned) {
-    $revokes_lcase = array_diff($initial_existing_ldap_authorizations, array_keys($filtered_ldap_authorizations));
-
+    $revokes_lcase = $consumer->authorizationDiff($initial_existing_ldap_authorizations, array_keys($filtered_ldap_authorizations));
     if (count($revokes_lcase)) {
       $revokes = array(); // keys are lcase, values are mixed case
       foreach ($revokes_lcase as $i => $revoke_lcase) {
