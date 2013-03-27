@@ -103,7 +103,7 @@ class LdapTestFunctions  {
           , FALSE);
         $consumer_conf_admin->mappings[$i] = $mappings[0];
       }
-      $consumer_conf_admin->save(); 
+      $consumer_conf_admin->save();
     }
   }
 

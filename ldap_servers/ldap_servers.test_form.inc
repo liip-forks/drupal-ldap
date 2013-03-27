@@ -136,6 +136,8 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
           dpm("Drupal user entity for: $user_name");
           dpm($user_entity);
         }
+       dpm("Test Group LDAP Entry");
+       dpm($test_data['group_entry'][0]);
       }
     }
   }
@@ -273,6 +275,9 @@ function ldap_servers_test_form_submit($form, &$form_state) {
 
   if (!$has_errors && isset($values['grp_test_grp_dn'])) {
     $group_dn = $values['grp_test_grp_dn'];
+
+    $result = @ldap_read($ldap_server->connection, $group_dn, 'objectClass=*');
+    $group_entry = ldap_get_entries($ldap_server->connection, $result);
     $user = isset($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
 
     foreach (array(FALSE, TRUE) as $nested) { //FALSE
@@ -333,6 +338,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
     }
     $form_state['ldap_server_test_data'] = array(
       'username' => $values['testing_drupal_username'],
+      'group_entry' => $group_entry,
       'results_tables' => $results_tables,
     );
     if (isset($ldap_user)) {

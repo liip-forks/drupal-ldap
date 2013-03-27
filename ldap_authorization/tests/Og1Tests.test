@@ -36,8 +36,17 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
     parent::__construct($test_id);
   }
 
+  //function setUp() {
+  //  parent::setUp(array(
+  //    'ldap_authentication',
+  //    'ldap_authorization',
+  //    'ldap_authorization_drupal_role',
+  //    'ldap_test')); // don't need any real servers, configured, just ldap_servers code base
+  //  variable_set('ldap_simpletest', 2);
+  //}
+
   function setUp($addl_modules = array()) {
-    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_og', 'og_ui'));
+    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role', 'ldap_authorization_og', 'ldap_test', 'og_ui'));
     variable_set('ldap_simpletest', 2);
 
     if (ldap_authorization_og_og_version() != 1) {
@@ -119,7 +128,7 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
         $this->assertText($user->name, 'Group view UI shows user name (' . $user->name . ') in group membership list',$test_id);
       }
       else {
-        $this->assertNoText($user->name, 'Group view UI does not show user name (' . $user->name . ') in group membership list',$test_id);
+        $this->assertText('Request group membership', 'Group view UI show Request Group Membership form in group membership list',$test_id);
       }
   }
 

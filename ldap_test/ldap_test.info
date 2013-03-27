@@ -1,9 +1,10 @@
 name = LDAP Test Module
 description = Module for LDAP module for testing.  Only for development and debugging purposes.
 package = Lightweight Directory Access Protocol
-dependencies[] = ldap_servers
 
+dependencies[] = ldap_servers
 dependencies[] = entity
+
 core = 7.x
 
 files[] = ldap_servers.conf.inc

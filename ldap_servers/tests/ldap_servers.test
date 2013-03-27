@@ -6,7 +6,12 @@
  */
 
 
-ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestCase.class');
+if (function_exists('ldap_servers_module_load_include')) {
+  ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestCase.class');
+}
+else {
+  module_load_include('php', 'ldap_test', 'LdapTestCase.class');
+}
 
 class LdapServersTestCase extends LdapTestCase {
   public static function getInfo() {
@@ -32,9 +37,8 @@ class LdapServersTestCase extends LdapTestCase {
    */
 
   function setUp() {
-    parent::setUp(array('ldap_servers', 'ldap_test'));
+    parent::setUp(array('ldap_test'));
     variable_set('ldap_simpletest', 2);
-    //$this->createTestUserFields();
   }
 
   function tearDown() {

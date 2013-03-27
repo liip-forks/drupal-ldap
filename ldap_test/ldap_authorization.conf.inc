@@ -4,6 +4,8 @@
  *
  */
 
+module_load_include('php', 'og', 'module');  // for og constants
+
 function ldap_test_ldap_authorization_data() {
 
 $empty_mappings = array(

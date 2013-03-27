@@ -24,7 +24,11 @@ class LdapAuthorizationBasicTests extends LdapTestCase {
   protected $ldap_test_data;
 
   function setUp() {
-    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role')); // don't need any real servers, configured, just ldap_servers code base
+    parent::setUp(array(
+      'ldap_authentication',
+      'ldap_authorization',
+      'ldap_authorization_drupal_role',
+      'ldap_test')); // don't need any real servers, configured, just ldap_servers code base
     variable_set('ldap_simpletest', 2);
   }
 
