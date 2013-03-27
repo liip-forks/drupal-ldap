@@ -186,7 +186,7 @@ function ldap_authorization_og1_has_role($gid, $uid, $rid) {
 }
 
 /** avoid excessive calls to og_roles() **/
-function ldap_authoriztion_og1_roles($reset = false) {
+function ldap_authorization_og1_roles($reset = false) {
   static $roles;
   if ($reset || !is_array($roles)) {
     $roles = og_roles();
@@ -195,7 +195,7 @@ function ldap_authoriztion_og1_roles($reset = false) {
 }
 
 function ldap_authorization_og1_role_name_to_role_id($role_name) {
-  $roles = ldap_authoriztion_og1_roles();
+  $roles = ldap_authorization_og1_roles();
   return array_search($role_name, $roles); //empty($roles[$role_name]) ? FALSE : $roles[$role_name];
 }
 
@@ -231,17 +231,7 @@ function ldap_authorization_og2_has_role($group_type, $gid, $uid, $role_name) {
   return (is_array($roles) && in_array($role_name, array_values($roles)));
 }
 
-/**
- * Derive og role id from role name
- *
- * @param string $role_name as og role name
- * @return int og role id
- */
-function ldap_authorization_og2_rid_from_role_name($entity_type, $bundle, $gid, $role_name) {
-  $roles = og_roles($entity_type, $bundle, 0, FALSE, TRUE);
-  $roles_flipped = array_flip($roles);
-  return (empty($roles_flipped[$role_name])) ? NULL : $roles_flipped[$role_name];
-}
+
 
 /**
  * Derive og role id from role name
@@ -249,6 +239,7 @@ function ldap_authorization_og2_rid_from_role_name($entity_type, $bundle, $gid, 
  * @param string $role_name as og role name
  * @return int og role id
  */
+
 function ldap_authorization_og_rid_from_role_name($role_name) {
   $roles = og_roles(0);
   $rids = array_flip($roles);
@@ -260,6 +251,11 @@ function ldap_authorization_og1_role_name_from_rid($rid) {
   return isset($roles[$rid]) ? $roles[$rid] : FALSE;
 }
 
+function ldap_authorization_og2_rid_from_role_name($entity_type, $bundle, $gid, $role_name) {
+  $roles = og_roles($entity_type, $bundle, 0, FALSE, TRUE);
+  $roles_flipped = array_flip($roles);
+  return (empty($roles_flipped[$role_name])) ? NULL : $roles_flipped[$role_name];
+}
 
 function ldap_authorization_og_get_all_group_entities() {
   $entities = array();
