@@ -16,7 +16,7 @@ $empty_mappings = array(
   'valid' => '',
   'error_message' => '',
   );
-
+$OG_AUTHENTICATED_ROLE = 'member'; // cant use constant OG_AUTHENTICATED_ROLE here
 $conf['og_group2']['og_group'] = array(
 
   'sid' => 'activedirectory1',
@@ -31,7 +31,7 @@ $conf['og_group2']['og_group'] = array(
     array(
       'from' => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
       'user_entered' => 'students',
-      'normalized' => 'node:students:' . OG_AUTHENTICATED_ROLE,
+      'normalized' => 'node:students:' . $OG_AUTHENTICATED_ROLE,
       'simplified' => '',
       'valid' => '',
       'error_message' => '',
@@ -39,7 +39,7 @@ $conf['og_group2']['og_group'] = array(
     array(
       'from' => 'cn=faculty,ou=groups,dc=hogwarts,dc=edu',
       'user_entered' => 'faculty',
-      'normalized' =>  'node:faculty:' . OG_AUTHENTICATED_ROLE,
+      'normalized' =>  'node:faculty:' . $OG_AUTHENTICATED_ROLE,
       'simplified' => '',
       'valid' => '',
       'error_message' => '',
@@ -47,7 +47,7 @@ $conf['og_group2']['og_group'] = array(
     array(
       'from' => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
       'user_entered' => 'gryffindor',
-      'normalized' => 'node:gryffindor:' . OG_AUTHENTICATED_ROLE,
+      'normalized' => 'node:gryffindor:' . $OG_AUTHENTICATED_ROLE,
       'simplified' => '',
       'valid' => '',
       'error_message' => '',
@@ -55,7 +55,7 @@ $conf['og_group2']['og_group'] = array(
     array(
       'from' => 'cn=users,ou=groups,dc=hogwarts,dc=edu',
       'user_entered' => 'users',
-      'normalized' => 'node:users:' . OG_AUTHENTICATED_ROLE,
+      'normalized' => 'node:users:' . $OG_AUTHENTICATED_ROLE,
       'simplified' => '',
       'valid' => '',
       'error_message' => '',
@@ -173,7 +173,7 @@ $conf['drupal_role_authentication_test']['drupal_role'] = array(
     array(
       'from' => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
       'user_entered' => 'students',
-      'normalized' => 'node:students:' . OG_AUTHENTICATED_ROLE,
+      'normalized' => 'node:students:' . $OG_AUTHENTICATED_ROLE,
       'simplified' => 'students',
       'valid' => TRUE,
       'error_message' => '',
@@ -181,7 +181,7 @@ $conf['drupal_role_authentication_test']['drupal_role'] = array(
     array(
       'from' => 'gryffindor',
       'user_entered' => 'gryffindor',
-      'normalized' => 'node:gryffindor:' . OG_AUTHENTICATED_ROLE,
+      'normalized' => 'node:gryffindor:' . $OG_AUTHENTICATED_ROLE,
       'simplified' => 'gryffindor',
       'valid' => TRUE,
       'error_message' => '',
@@ -189,7 +189,7 @@ $conf['drupal_role_authentication_test']['drupal_role'] = array(
     array(
       'from' => 'cn=users,ou=groups,dc=hogwarts,dc=edu',
       'user_entered' => 'users',
-      'normalized' => 'node:users:' . OG_AUTHENTICATED_ROLE,
+      'normalized' => 'node:users:' . $OG_AUTHENTICATED_ROLE,
       'simplified' => 'users',
       'valid' => TRUE,
       'error_message' => '',

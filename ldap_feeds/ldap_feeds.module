@@ -154,6 +154,9 @@ function ldap_feeds_drupal_user_legend(&$form, $importer) {
       $account = user_load_by_name($ldap_server->testingDrupalUsername);
 
       foreach ($drupal_user_attributes as $attr_name => $attr_conf) {
+        if ($attr_name == 'count') {
+          continue;
+        }
         $id = $attr_conf['token'];
         if ($account) {
           $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $account->{$attr_name}));
