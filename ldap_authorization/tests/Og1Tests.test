@@ -46,7 +46,7 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
   //}
 
   function setUp($addl_modules = array()) {
-    parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role', 'ldap_authorization_og', 'ldap_test', 'og_ui'));
+    parent::setUp(array('entity', 'ctools', 'og', 'ldap_authentication', 'ldap_authorization', 'ldap_authorization_drupal_role', 'ldap_authorization_og', 'ldap_test', 'og_ui'));
     variable_set('ldap_simpletest', 2);
 
     if (ldap_authorization_og_og_version() != 1) {

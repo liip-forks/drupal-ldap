@@ -50,6 +50,9 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
   }
 
   public function og1ConsumerIdParts($consumer_id) {
+    if (!is_scalar($consumer_id)) {
+      return array(NULL, NULL);
+    }
     $parts = explode('-', $consumer_id);
     return (count($parts) != 2) ? array(NULL, NULL) : $parts;
   }
@@ -517,7 +520,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
      */
     //dpm("og_actions"); dpm($og_actions); dpm("user_auth_data"); dpm($user_auth_data);
 
-    $group_audience = $user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE];
     // grants
     foreach ($og_actions['grants'] as $gid => $rids) {
       $existing_roles = og_get_user_roles($gid, $user->uid);
@@ -543,16 +545,15 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     }
 
     // revokes
+    $group_audience_gids = empty($user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE]['gid']) ? array() : $user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE]['gid'];
     foreach ($og_actions['revokes'] as $gid => $rids) {
       $existing_roles = og_get_user_roles($gid, $user->uid);
       if (in_array($this->defaultMembershipRid, array_values($existing_roles))) {
         // ungroup and set audience
-        if (!empty($group_audience['gid'])) {
-          foreach ($group_audience['gid'] as $i => $_audience_gid) {
-             if ($_audience_gid == $gid) {
-               unset($user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE][$i]);
-             }
-          }
+        foreach ($group_audience_gids as $i => $_audience_gid) {
+           if ($_audience_gid == $gid) {
+             unset($user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE][$i]);
+           }
         }
         og_entity_presave($user, 'user');
         $user = og_ungroup($gid, 'user', $user, TRUE);

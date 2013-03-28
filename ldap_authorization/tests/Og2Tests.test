@@ -328,13 +328,27 @@ function testFlags() {
     'LDAP_authorz.Flags.status.0'
   );
 
+  list($og_gryffindor_node, $group_entity_id) =  ldap_authorization_og2_get_group_from_name($this->groupEntityType, 'gryffindor');
+  list($og_students_node, $group_entity_id)   =  ldap_authorization_og2_get_group_from_name($this->groupEntityType, 'students');
+  list($og_faculty_node, $group_entity_id)    =  ldap_authorization_og2_get_group_from_name($this->groupEntityType, 'faculty');
+
+  $anonymous_rid = ldap_authorization_og2_rid_from_role_name($this->groupEntityType, $this->groupBundle, $og_gryffindor_node->nid, OG_ANONYMOUS_ROLE);
+  $member_rid =    ldap_authorization_og2_rid_from_role_name($this->groupEntityType, $this->groupBundle, $og_students_node->nid,   OG_AUTHENTICATED_ROLE);
+  $admin_rid =     ldap_authorization_og2_rid_from_role_name($this->groupEntityType, $this->groupBundle, $og_faculty_node->nid, OG_ADMINISTRATOR_ROLE);
+  $dungeon_master_rid =     ldap_authorization_og2_rid_from_role_name($this->groupEntityType, $this->groupBundle, $og_faculty_node->nid, 'dungeon-master');
+  $time_keeper =     ldap_authorization_og2_rid_from_role_name($this->groupEntityType, $this->groupBundle, $og_faculty_node->nid, 'time-keeper');
+  $faculty_member_consumer_id = ldap_authorization_og_authorization_id($og_faculty_node->nid, $member_rid, 'node');
+  $faculty_dungeon_master_consumer_id = ldap_authorization_og_authorization_id($og_faculty_node->nid, $dungeon_master_rid, 'node');
+  $students_member_consumer_id = ldap_authorization_og_authorization_id($og_students_node->nid, $member_rid, 'node');
+  $gryffindor_member_consumer_id = ldap_authorization_og_authorization_id($og_gryffindor_node->nid, $member_rid, 'node');
 
   $this->consumerAdminConf['og_group']->status = 1;
   $this->consumerAdminConf['og_group']->save();
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hpotter, 'query', 'og_group');  // just see if the correct ones are derived.
   //debug('ldap_authorizations_user_authorizations enabled: '); debug($new_authorizations);  debug($notifications);
 
-  $correct_groups = !empty($new_authorizations['og_group']['node:students:member']) && !empty($new_authorizations['og_group']['node:gryffindor:member']);
+  $correct_groups = !empty($new_authorizations['og_group'][$students_member_consumer_id]) &&
+    !empty($new_authorizations['og_group'][$gryffindor_member_consumer_id]);
   $this->assertTrue($correct_groups, 'enabled consumer configuration allows authorizations.', 'LDAP_authorz.Flags.status.1');
   if (!$correct_groups) {
     debug('LDAP_authorz.Flags.enable.1 roles with enabled'); debug($new_authorizations);
