@@ -20,4 +20,5 @@ files[] = LdapUserConf.class.php
 files[] = LdapUserConfAdmin.class.php
 files[] = tests/ldap_user.test
 
+stylesheets[all][] = ldap_user.css
 configure = admin/config/people/ldap/user
