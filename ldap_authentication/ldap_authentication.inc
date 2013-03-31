@@ -359,7 +359,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
  
  
   // the uid is returned so that special login modules, namely ldap sso, can manually call this function.
-  return ($return_user) ? $drupal_account : null;
+  return ($return_user) ? $drupal_account : NULL;
 }
 
 /**

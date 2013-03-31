@@ -317,8 +317,8 @@ function ldap_servers_theme() {
       if (!isset($attributes[$ldap_server->mail_attr])) {
         $attributes[$ldap_server->mail_attr] = ldap_servers_set_attribute_map();
       }
-      if(!isset($attributes[$ldap_server->picture_attr])){
-      	$attributes[$ldap_server->picture_attr] = ldap_servers_set_attribute_map();
+      if (!isset($attributes[$ldap_server->picture_attr])) {
+        $attributes[$ldap_server->picture_attr] = ldap_servers_set_attribute_map();
       }
       if ($ldap_server->unique_persistent_attr && !isset($attributes[$ldap_server->unique_persistent_attr])) {
         $attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map();
@@ -680,7 +680,7 @@ function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_contex
     $drupal_username = $authname;
   }
   else {
-    $drupal_username =  (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
+    $drupal_username = (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
   }
   // if no explicit $sid, find most appropriate one
   if (!$sid && module_exists('ldap_user')) {
@@ -780,7 +780,7 @@ function ldap_servers_convert_attribute($value, $conversion = NULL) {
             break;
 
           case 'md5':
-            $value = '{md5}'. base64_encode(pack('H*', md5($value)));
+            $value = '{md5}' . base64_encode(pack('H*', md5($value)));
             break;
         }
 
@@ -840,9 +840,9 @@ function ldap_servers_php_supports_pagination() {
 
 function ldap_servers_help($path, $arg) {
 
-  $servers_help = '<p>' . t('LDAP Servers store "LDAP server configurations" so other modules can connect to them and leverage their data. ');
-  $servers_help .= t('LDAP Authentication and LDAP Authorization are two such modules. Generally, only one LDAP Server configuration is needed. ') . '</p>';
-  $servers_help .= '<p>' . t('When multiple LDAP server configurations are needed, each is not necessarily a separate physical LDAP server; they may have different binding users or some other configuration difference. ') . '</p>';
+  $servers_help = '<p>' . t('LDAP Servers store "LDAP server configurations" so other modules can connect to them and leverage their data.') . ' ';
+  $servers_help .= t('LDAP Authentication and LDAP Authorization are two such modules. Generally, only one LDAP Server configuration is needed.') . ' ' . '</p>';
+  $servers_help .= '<p>' . t('When multiple LDAP server configurations are needed, each is not necessarily a separate physical LDAP server; they may have different binding users or some other configuration difference.') . ' </p>';
 
   switch ($path) {
     case 'admin/config/people/ldap/servers':
@@ -861,39 +861,39 @@ function ldap_servers_help($path, $arg) {
       $servers_help .= '<h3>' . t('Configuration - Servers (List)') . '</h3>';
       $servers_help .= '<dl>';
       $servers_help .= '<dt>' . t('Configuration Table') . '</dt>';
-      $servers_help .= '<dd>' . t('Provides a list of currently stored LDAP server configuratins. ') . '</dd>';
+      $servers_help .= '<dd>' . t('Provides a list of currently stored LDAP server configuratins.') . '</dd>';
       $servers_help .= '<h3>' . t('Configuration - Servers (Add LDAP Server Configuration)') . '</h3>';
       $servers_help .= '<dl>';
       $servers_help .= '<dt>' . t('CONNECTION SETTINGS') . '</dt>';
-      $servers_help .= '<dd>' . t('Machine name - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Name - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Enabled - ') . '</dd>';
-      $servers_help .= '<dd>' . t('LDAP Server Type - ') . '</dd>';
-      $servers_help .= '<dd>' . t('LDAP Server - ') . '</dd>';
-      $servers_help .= '<dd>' . t('LDAP port - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Use Start-TLS - ') . '</dd>';
+      $servers_help .= '<dd>' . t('Machine name -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Name -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Enabled -') . ' </dd>';
+      $servers_help .= '<dd>' . t('LDAP Server Type') . ' </dd>';
+      $servers_help .= '<dd>' . t('LDAP Server -') . ' </dd>';
+      $servers_help .= '<dd>' . t('LDAP port -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Use Start-TLS -') . ' </dd>';
       $servers_help .= '</dl>';
       $servers_help .= '<dl>';
       $servers_help .= '<dt>' . t('BINDING METHOD') . '</dt>';
-      $servers_help .= '<dd>' . t('Binding Method for searches - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Service Account - ') . '</dd>';
-      $servers_help .= '<dd>' . t('DN for non-anonymous search - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Password for non-anonymous search - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Clear existing password from database - ') . '</dd>';
+      $servers_help .= '<dd>' . t('Binding Method for searches -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Service Account -') . ' </dd>';
+      $servers_help .= '<dd>' . t('DN for non-anonymous search -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Password for non-anonymous search -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Clear existing password from database -') . ' </dd>';
       $servers_help .= '</dl>';
       $servers_help .= '<dl>';
       $servers_help .= '<dt>' . t('LDAP USER TO DRUPAL USER RELATIONSHIP') . '</dt>';
-      $servers_help .= '<dd>' . t('Base DNs for LDAP Users, Groups, and Other Entries - ') . '</dd>';
-      $servers_help .= '<dd>' . t('AuthName Attribute - ') . '</dd>';
-      $servers_help .= '<dd>' . t('AccountName Attribute - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Email Attribute - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Email Template - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Persistant and Unique User ID Attribute - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Does PUID hold a binary value? - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Expression for User DN - ') . '</dd>';
-      $servers_help .= '<dd>' . t('PHP to Transform Drupal Login Username to LDAP UserName Attribute - ') . '</dd>';
-      $servers_help .= '<dd>' . t('Testing Drupal Username - ') . '</dd>';
-      $servers_help .= '<dd>' . t('DN of Testing Username - ') . '</dd>';
+      $servers_help .= '<dd>' . t('Base DNs for LDAP Users, Groups, and Other Entries -') . ' </dd>';
+      $servers_help .= '<dd>' . t('AuthName Attribute -') . ' </dd>';
+      $servers_help .= '<dd>' . t('AccountName Attribute -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Email Attribute -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Email Template -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Persistant and Unique User ID Attribute -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Does PUID hold a binary value? -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Expression for User DN -') . ' </dd>';
+      $servers_help .= '<dd>' . t('PHP to Transform Drupal Login Username to LDAP UserName Attribute -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Testing Drupal Username -') . ' </dd>';
+      $servers_help .= '<dd>' . t('DN of Testing Username -') . ' </dd>';
       $servers_help .= '</dl>';
       return $servers_help;
 

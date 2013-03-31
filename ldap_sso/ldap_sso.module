@@ -111,8 +111,8 @@ function ldap_sso_path_excluded_from_sso($path = FALSE) {
 
   if (isset($ldap_authentication_conf['ssoExcludedHosts']) && is_array($ldap_authentication_conf['ssoExcludedHosts'])) {
     $host = $_SERVER['SERVER_NAME'];
-    foreach($ldap_authentication_conf['ssoExcludedHosts'] as $host_to_check) {
-      if($host_to_check == $host) {
+    foreach ($ldap_authentication_conf['ssoExcludedHosts'] as $host_to_check) {
+      if ($host_to_check == $host) {
         return TRUE;
       }
     }

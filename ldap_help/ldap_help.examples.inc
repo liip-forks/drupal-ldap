@@ -14,7 +14,7 @@
  */
 function ldap_help_examples() {
   module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
-  $testFunctions = new LdapTestFunctions();
+  $test_functions = new LdapTestFunctions();
   drupal_add_library('system', 'drupal.collapse');
   $sample_ldaps = array(
    'activedirectory' => 'activedirectory1',
@@ -26,8 +26,8 @@ function ldap_help_examples() {
   foreach ($sample_ldaps as  $ldap_type =>  $sample_ldap_id) {
 
     $sample_ldap_id = $sample_ldaps[$ldap_type];
-    $testFunctions->populateFakeLdapServerData(LDAP_TEST_LDAP_NAME, $sample_ldap_id);
-    $data = $testFunctions->data['ldap_servers'][$sample_ldap_id]['ldap'];
+    $test_functions->populateFakeLdapServerData(LDAP_TEST_LDAP_NAME, $sample_ldap_id);
+    $data = $test_functions->data['ldap_servers'][$sample_ldap_id]['ldap'];
     $form[$sample_ldap_id] =  array(
         '#type' => 'fieldset',
         '#title' => $ldap_type,
