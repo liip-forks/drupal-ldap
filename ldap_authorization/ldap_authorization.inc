@@ -125,7 +125,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     }
     if ($debug) {
       debug(t('%username : testing with consumer type %consumer_type. ldap authenticated=%ldap_authenticated'), $watchdog_tokens);
-      debug("op=$op,ldap_authenticated=$ldap_authenticated $consumer_type context=$context, consumer->consumerConf->synchOnLogon=". (int)$consumer->consumerConf->synchOnLogon); //$debug = TRUE;
+      debug("op=$op,ldap_authenticated=$ldap_authenticated $consumer_type context=$context, consumer->consumerConf->synchOnLogon=" . (int)$consumer->consumerConf->synchOnLogon); //$debug = TRUE;
     }
 
     if ($context == 'logon' && !$consumer->consumerConf->synchOnLogon) {
@@ -346,7 +346,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
   }
 
   if ($test) {
-    $_SESSION['ldap_authorization_test_query']['setting_data']['Pre Grant/Revokes $user->data[ldap_authorizations][' . $consumer->consumerType. ']'] = $user_auth_data;
+    $_SESSION['ldap_authorization_test_query']['setting_data']['Pre Grant/Revokes $user->data[ldap_authorizations][' . $consumer->consumerType . ']'] = $user_auth_data;
     $_SESSION['ldap_authorization_test_query']['setting_data']['Pre Grant/Revokes authorizations user has'] = $consumer->usersAuthorizations($user);
   }
 
@@ -455,7 +455,7 @@ function _ldap_authorizations_user_authorizations_set(&$user, $consumer, $filter
 
   if ($test) {
     $_SESSION['ldap_authorization_test_query']['setting_data']['Post Grant/Revokes authorizations user has'] = $consumer->usersAuthorizations($user);
-    $_SESSION['ldap_authorization_test_query']['setting_data']['Post Grant/Revokes $user->data[ldap_authorizations][' . $consumer->consumerType. ']'] = $user->data['ldap_authorizations'][$consumer->consumerType];
+    $_SESSION['ldap_authorization_test_query']['setting_data']['Post Grant/Revokes $user->data[ldap_authorizations][' . $consumer->consumerType . ']'] = $user->data['ldap_authorizations'][$consumer->consumerType];
   }
 
 }
