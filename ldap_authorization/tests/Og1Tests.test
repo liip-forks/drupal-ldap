@@ -115,7 +115,7 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
     return $user;
   }
 
-  function UIGroupMembershipTest($user, $group_node, $test_id = null, $assert_true = TRUE) {
+  function UIGroupMembershipTest($user, $group_node, $test_id = NULL, $assert_true = TRUE) {
       $this->drupalGet('user/' . $user->uid);
       if ($assert_true) {
         $this->assertText($group_node->title, 'User view UI shows group (' . $group_node->title . ') membership listed', $test_id);
@@ -125,10 +125,10 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
       }
       $this->drupalGet('node/' . $group_node->nid);
       if ($assert_true) {
-        $this->assertText($user->name, 'Group view UI shows user name (' . $user->name . ') in group membership list',$test_id);
+        $this->assertText($user->name, 'Group view UI shows user name (' . $user->name . ') in group membership list', $test_id);
       }
       else {
-        $this->assertText('Request group membership', 'Group view UI show Request Group Membership form in group membership list',$test_id);
+        $this->assertText('Request group membership', 'Group view UI show Request Group Membership form in group membership list', $test_id);
       }
   }
 
@@ -160,7 +160,7 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
 
     $this->ldapTestId = $this->module_name . ': cron test';
     $this->assertTrue(drupal_cron_run(), t('Cron can run with ldap authorization og enabled.'), $this->ldapTestId);
-    $this->assertTrue(ldap_authorization_og_authorization_id(2,3) == "2-3",
+    $this->assertTrue(ldap_authorization_og_authorization_id(2, 3) == "2-3",
       t('ldap_authorization_og_authorization_id() function works.'), $this->ldapTestId);
     $this->assertTrue(ldap_authorization_og_og_version() == 1,
       t('ldap_authorization_og_og_version() is 1'), $this->ldapTestId);
@@ -262,12 +262,12 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
 
 
     $mappings = array(
-      array('cn=students,ou=groups,dc=hogwarts,dc=edu','group-name=students,role-name=member'),
-      array('cn=faculty,ou=groups,dc=hogwarts,dc=edu','group-name=faculty,role-name=member'),
-      array('cn=gryffindor,ou=groups,dc=hogwarts,dc=edu','group-name=gryffindor,role-name=member'),
-      array('cn=users,ou=groups,dc=hogwarts,dc=edu','group-name=users,role-name=dungeon-master'),
-      array('cn=users,ou=groups,dc=hogwarts,dc=edu','gid=2,rid=2'),
-      array('cn=users,ou=groups,dc=hogwarts,dc=edu','gid=2,rid=4'),
+      array('cn=students,ou=groups,dc=hogwarts,dc=edu', 'group-name=students,role-name=member'),
+      array('cn=faculty,ou=groups,dc=hogwarts,dc=edu', 'group-name=faculty,role-name=member'),
+      array('cn=gryffindor,ou=groups,dc=hogwarts,dc=edu', 'group-name=gryffindor,role-name=member'),
+      array('cn=users,ou=groups,dc=hogwarts,dc=edu', 'group-name=users,role-name=dungeon-master'),
+      array('cn=users,ou=groups,dc=hogwarts,dc=edu', 'gid=2,rid=2'),
+      array('cn=users,ou=groups,dc=hogwarts,dc=edu', 'gid=2,rid=4'),
     );
 
     $normalized_mappings = $og_auth->normalizeMappings($mappings);
@@ -283,7 +283,7 @@ class LdapAuthorizationOg1Tests extends LdapTestCase {
     if (!$correct_mappings) {
       debug('normalized_mappings'); debug($normalized_mappings);
     }
-    $this->assertTrue($correct_mappings,'normalizeMappings method works', $this->ldapTestId);
+    $this->assertTrue($correct_mappings, 'normalizeMappings method works', $this->ldapTestId);
 
   }
 
@@ -318,8 +318,8 @@ function testFlags() {
   $admin_rid =     ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
   $dungeon_master_rid =     ldap_authorization_og_rid_from_role_name('dungeon-master');
   $time_keeper =     ldap_authorization_og_rid_from_role_name('time-keeper');
-  $students_membership_consumer_id = $og_students_group->gid .'-'. $member_rid;
-  $gryffindor_membership_consumer_id = $og_gryffindor_group->gid .'-'. $member_rid;
+  $students_membership_consumer_id = $og_students_group->gid . '-' . $member_rid;
+  $gryffindor_membership_consumer_id = $og_gryffindor_group->gid . '-' . $member_rid;
 
   /**
    * LDAP_authorz.Flags.status=0: Disable ldap_authorization_drupal_role configuration and make sure no authorizations performed
@@ -398,17 +398,17 @@ function testLogons() {
   $admin_rid =     ldap_authorization_og_rid_from_role_name(OG_ADMINISTRATOR_ROLE);
   $dungeon_master_rid =     ldap_authorization_og_rid_from_role_name('dungeon-master');
   $time_keeper =     ldap_authorization_og_rid_from_role_name('time-keeper');
-  $students_membership_consumer_id = $og_students_group->gid .'-'. $member_rid;
-  $gryffindor_membership_consumer_id = $og_gryffindor_group->gid .'-'. $member_rid;
-  $slytherin_membership_consumer_id = $og_slytherin_group->gid .'-'. $member_rid;
-  $hufflepuff_membership_consumer_id = $og_hufflepuff_group->gid .'-'. $member_rid;
+  $students_membership_consumer_id = $og_students_group->gid . '-' . $member_rid;
+  $gryffindor_membership_consumer_id = $og_gryffindor_group->gid . '-' . $member_rid;
+  $slytherin_membership_consumer_id = $og_slytherin_group->gid . '-' . $member_rid;
+  $hufflepuff_membership_consumer_id = $og_hufflepuff_group->gid . '-' . $member_rid;
 
-  debug(
-    "students_membership_consumer_id = $students_membership_consumer_id
-    gryffindor_membership_consumer_id  = $gryffindor_membership_consumer_id
-    slytherin_membership_consumer_id = $slytherin_membership_consumer_id
-    hufflepuff_membership_consumer_id = = $hufflepuff_membership_consumer_id "
-  );
+  //debug(
+  //  "students_membership_consumer_id = $students_membership_consumer_id
+  //  gryffindor_membership_consumer_id  = $gryffindor_membership_consumer_id
+  //  slytherin_membership_consumer_id = $slytherin_membership_consumer_id
+  //  hufflepuff_membership_consumer_id = = $hufflepuff_membership_consumer_id "
+  //);
 
   list($props_set_display, $props_set_correctly) = $this->checkConsumerConfSetup('og_group15');
   $this->assertTrue(
@@ -447,7 +447,7 @@ function testLogons() {
   );
   $hpotter = user_load_by_name('hpotter');
   $hpotter = user_load($hpotter->uid, TRUE);
-  $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
+  $authorizations = $og_group_consumer->usersAuthorizations($hpotter, TRUE);
   $this->drupalGet('user/logout');
   $success = (count($authorizations) == 0);
   $this->assertTrue($success, 'No authorizations granted when synchOnLogon=0', $test_id);
@@ -469,7 +469,7 @@ function testLogons() {
   $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', $test_id);
   $hpotter = user_load_by_name('hpotter');
   $hpotter = user_load($hpotter->uid, TRUE);
-  $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
+  $authorizations = $og_group_consumer->usersAuthorizations($hpotter, TRUE);
   $this->UIGroupMembershipTest($hpotter, $og_students_node, $test_id);
   $success = in_array($students_membership_consumer_id, $authorizations) && in_array($gryffindor_membership_consumer_id, $authorizations);
   $this->drupalGet('user/logout');
@@ -503,10 +503,10 @@ function testLogons() {
   $og_group_consumer = ldap_authorization_get_consumer_object('og_group');
 
   $this->drupalGet('user/logout');
-  $pre_authorizations = $og_group_consumer->usersAuthorizations($hpotter);
-  $this->assertTrue(count($pre_authorizations) == 0, 'Setup correct for test '. $test_id, $test_id);
+  $pre_authorizations = $og_group_consumer->usersAuthorizations($hpotter, TRUE);
+  $this->assertTrue(count($pre_authorizations) == 0, 'Setup correct for test ' . $test_id, $test_id);
 
-  foreach(array(1,2,3) as $i) {
+  foreach (array(1, 2, 3) as $i) {
     $this->drupalGet('user/logout');
     $edit = array(
       'name' => 'hpotter',
@@ -517,12 +517,12 @@ function testLogons() {
     $hpotter = user_load_by_name('hpotter');
     $hpotter = user_load($hpotter->uid, TRUE);
 
-    $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
+    $authorizations = $og_group_consumer->usersAuthorizations($hpotter, TRUE);
     $success = in_array($students_membership_consumer_id, $authorizations) &&
       in_array($gryffindor_membership_consumer_id, $authorizations);
     $this->assertTrue($success, 'Correct Authorizations on user logon', $test_id);
     if (!$success) {
-      debug("$test_id i=$i"); debug($hpotter->data); debug($og_group_consumer->usersAuthorizations($hpotter));
+      debug("$test_id i=$i"); debug($hpotter->data); debug($og_group_consumer->usersAuthorizations($hpotter), TRUE);
     }
     $this->UIGroupMembershipTest($hpotter, $og_gryffindor_node, $test_id);
     $this->UIGroupMembershipTest($hpotter, $og_students_node, $test_id);
@@ -566,7 +566,7 @@ function testLogons() {
   // group to 2 "undeserved" groups, but only ldap associate 1
   $hpotter = $this->manualOgGroup($hpotter, $og_slytherin_group->gid);
   $hpotter = $this->manualOgGroup($hpotter, $og_hufflepuff_group->gid);
-  $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
+  $authorizations = $og_group_consumer->usersAuthorizations($hpotter, TRUE);
   $this->assertTrue(
     in_array($slytherin_membership_consumer_id, $authorizations) &&
     in_array($hufflepuff_membership_consumer_id, $authorizations)
@@ -584,10 +584,10 @@ function testLogons() {
   $hpotter = user_save($hpotter, $user_edit);
 
   $this->drupalPost('user', $edit, t('Log in'));
-  $this->assertText(t('Member for'),'New Ldap user with good password authenticated.',$test_id);
+  $this->assertText(t('Member for'), 'New Ldap user with good password authenticated.', $test_id);
   $hpotter = user_load_by_name('hpotter');
   $hpotter = user_load($hpotter->uid, TRUE);
-  $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
+  $authorizations = $og_group_consumer->usersAuthorizations($hpotter, TRUE);
   $this->UIGroupMembershipTest($hpotter, $og_hufflepuff_node, $test_id);
   $this->UIGroupMembershipTest($hpotter, $og_slytherin_node, $test_id, FALSE);
   $this->assertTrue(
@@ -596,8 +596,8 @@ function testLogons() {
     , "Ldap granted og revoked when not deserved in ldap, manual og membership retained.", $test_id);
 
   // assert that slytherin membership removed, but hufflepuff kept
-  debug($authorizations);
-  debug("4. hpotter->data"); debug($hpotter->data);
+  //debug($authorizations);
+  //debug("4. hpotter->data"); debug($hpotter->data);
 
    /**
    * LDAP_authorz.Flags.regrantLdapProvisioned
@@ -620,7 +620,7 @@ function testLogons() {
   // ungroup hpotter from students
   $hpotter = og_ungroup($og_students_group->gid, 'user', $hpotter, TRUE);
   // confirm doesn't have authorization
-  $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
+  $authorizations = $og_group_consumer->usersAuthorizations($hpotter, TRUE);
   $this->assertTrue(!in_array($students_membership_consumer_id, $authorizations), 'hpotter student membership removed before testing regrant', $test_id);
   /**
    * logon
@@ -629,7 +629,19 @@ function testLogons() {
 
   // assert students membership regranted
   $hpotter = user_load($hpotter->uid, TRUE);
-  $authorizations = $og_group_consumer->usersAuthorizations($hpotter);
+  $authorizations = $og_group_consumer->usersAuthorizations($hpotter, TRUE);
+  module_load_include('php', 'og', 'module');
+  og_invalidate_cache();
+  $caches = array(
+    'og_get_entity_groups',
+    'og_get_membership',
+    'og_get_field_og_membership_properties',
+  );
+
+  foreach ($caches as $cache) {
+    drupal_static_reset($cache);
+  }
+  $authorizations = $og_group_consumer->usersAuthorizations($hpotter, TRUE);
   $success = in_array($students_membership_consumer_id, $authorizations);
   $this->UIGroupMembershipTest($hpotter, $og_students_node, $test_id);
   $this->assertTrue($success, "regrant Ldap Provisioned og groups ($students_membership_consumer_id) that were manually revoked", $test_id);
@@ -639,7 +651,7 @@ function testLogons() {
     debug('hpotter->data'); debug($hpotter->data);
     debug('current authorizations'); debug($authorizations);
   }
-  debug("5. hpotter->data"); debug($hpotter->data);
+  //debug("5. hpotter->data"); debug($hpotter->data);
 
 
   /**
