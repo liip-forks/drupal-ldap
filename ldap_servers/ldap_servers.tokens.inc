@@ -50,19 +50,18 @@ function ldap_servers_parse_user_attr_name($user_attr_key) {
 /**
  * @param array $ldap_entry
  * @param string $text such as "[dn]", "[cn]@my.org", "[displayName] [sn]", "Drupal Provisioned"
- * @return string $text with tokens replaced
+ * @return string $text with tokens replaced or NULL if replacement not available
  */
 
 function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_entry') { // user_account
 
-  $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);
+  $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);  // desired tokens are of form "cn","mail", etc.
 
   if (empty($desired_tokens)) {
-    return $text; // if no tokens exist in text, return text itself.
+    return $text; // if no tokens exist in text, return text itself.  It is literal value
   }
 
   switch ($resource_type) {
-
     case 'ldap_entry':
     $tokens = ldap_servers_token_tokenize_entry($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
     break;

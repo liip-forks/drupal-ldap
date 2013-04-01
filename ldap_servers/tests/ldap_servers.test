@@ -178,6 +178,16 @@ class LdapServersTestCase extends LdapTestCase {
     $house0 = ldap_servers_token_replace($ldap_entry, '[house:0]');
     $this->assertTrue( $house0 == $ldap_entry['house'][0], t("[house:0] token worked ($house0) on ldap_servers_token_replace()."), $this->ldapTestId);
 
+    $mixed = ldap_servers_token_replace($ldap_entry, 'thisold[house:0]');
+    $this->assertTrue( $mixed  == 'thisold' . $ldap_entry['house'][0], t("thisold[house:0] token worked ($mixed) on ldap_servers_token_replace()."), $this->ldapTestId);
+
+    $compound = ldap_servers_token_replace($ldap_entry, '[samaccountname:0][house:0]');
+    $this->assertTrue( $compound == $ldap_entry['sAMAccountName'][0] . $ldap_entry['house'][0], t("[samaccountname:0][house:0] compound token worked ($mixed) on ldap_servers_token_replace()."), $this->ldapTestId);
+
+
+    $literalvalue = ldap_servers_token_replace($ldap_entry, 'literalvalue');
+    $this->assertTrue( $literalvalue == 'literalvalue', t("'literalvalue' token worked ($literalvalue) on ldap_servers_token_replace()."), $this->ldapTestId);
+
     $house0 = ldap_servers_token_replace($ldap_entry, '[house]');
     $this->assertTrue( $house0 == $ldap_entry['house'][0], t("[house] token worked ($house0) on ldap_servers_token_replace()."), $this->ldapTestId);
 
@@ -186,6 +196,9 @@ class LdapServersTestCase extends LdapTestCase {
 
     $sAMAccountName = ldap_servers_token_replace($ldap_entry, '[samaccountname:0]');
     $this->assertTrue($sAMAccountName == $ldap_entry['sAMAccountName'][0], t('[samaccountname:0] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
+
+    $sAMAccountNameMixedCase = ldap_servers_token_replace($ldap_entry, '[sAMAccountName:0]');
+    $this->assertTrue($sAMAccountNameMixedCase == $ldap_entry['sAMAccountName'][0], t('[sAMAccountName:0] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
 
     $sAMAccountName2 = ldap_servers_token_replace($ldap_entry, '[samaccountname]');
     $this->assertTrue($sAMAccountName2 == $ldap_entry['sAMAccountName'][0], t('[samaccountname] token worked on ldap_servers_token_replace().'), $this->ldapTestId);
