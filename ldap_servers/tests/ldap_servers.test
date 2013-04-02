@@ -157,7 +157,7 @@ class LdapServersTestCase extends LdapTestCase {
       $this->assertFalse(db_table_exists($table), $table . ' table removed', $group);
     }
     $var_created = $this->assertFalse(variable_get('ldap_servers_encryption', FALSE), 'ldap_servers_encryption variable removed', $group);
-    $var_created = $this->assertFalse(variable_get('ldap_servers_encrypt_key', drupal_get_hash_salt()), 'ldap_servers_encrypt_key variable removed', $group);
+    $var_created = $this->assertFalse(variable_get('ldap_servers_encrypt_key', FALSE), 'ldap_servers_encrypt_key variable removed', $group);
 
 
     // test tokens, see http://drupal.org/node/1245736

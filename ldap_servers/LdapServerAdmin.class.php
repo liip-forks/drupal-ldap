@@ -107,12 +107,7 @@ class LdapServerAdmin extends LdapServer {
 
     foreach ($this->field_to_properties_map() as $field_name => $property_name) {
       $field_name_lcase = drupal_strtolower($field_name);
-      if (is_scalar($this->{$property_name})) {
-        $values->{$field_name_lcase} = $this->{$property_name};
-      }
-      else {
-        $values->{$field_name_lcase} = serialize($this->{$property_name});
-      }
+      $values->{$field_name_lcase} = $this->{$property_name};
     }
     if (isset($this->bindpw) && $this->bindpw) {
       $values->bindpw = ldap_servers_encrypt($this->bindpw);
