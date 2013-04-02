@@ -93,10 +93,7 @@ function _ldap_servers_encrypt($clear_txt, $enc_type = NULL) {
     return $clear_txt;
   }
 
-  if (! ($key = variable_get('ldap_servers_encrypt_key', NULL))) {
-    $key = ldap_servers_random_salt(10);
-    variable_set('ldap_servers_encrypt_key', $key);
-  }
+  $key = variable_get('ldap_servers_encrypt_key', drupal_get_hash_salt());
 
   switch ($enc_type) {
 
@@ -130,7 +127,7 @@ function _ldap_servers_encrypt($clear_txt, $enc_type = NULL) {
 
 function _ldap_servers_decrypt($cipher_txt, $enc_type = NULL) {
 
-  $key = variable_get('ldap_servers_encrypt_key', NULL);
+  $key = variable_get('ldap_servers_encrypt_key', drupal_get_hash_salt());
   if (!$enc_type) {
     $enc_type = variable_get('ldap_servers_encryption' , LDAP_SERVERS_ENC_TYPE_CLEARTEXT);
   }
