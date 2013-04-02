@@ -797,7 +797,7 @@ function ldap_servers_convert_attribute($value, $conversion = NULL) {
  */
 function ldap_servers_disable_http_check(&$form) {
 
-  if (variable_get('ldap_servers_require_ssl_for_credentails', 1) == 1 && @$_SERVER['HTTPS'] != 'on') {
+  if (variable_get('ldap_servers_require_ssl_for_credentails', 0) == 1 && @$_SERVER['HTTPS'] != 'on') {
 
     $tokens = array(
       'site_name' => variable_get('site_name', 'this site'),

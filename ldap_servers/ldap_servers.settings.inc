@@ -26,7 +26,7 @@ function ldap_servers_settings() {
       be entered on or submitted to HTTP pages, only HTTPS. This option should be used with an
       approach to get all logon forms to be https, such as:') .
       theme('item_list', array('items' => $https_approaches)),
-    '#default_value' => variable_get('ldap_servers_require_ssl_for_credentails', 1),
+    '#default_value' => variable_get('ldap_servers_require_ssl_for_credentails', 0),
   );
 
   $options = ldap_servers_encrypt_types('encrypt');

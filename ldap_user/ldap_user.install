@@ -58,17 +58,6 @@ function ldap_user_install() {
 
   db_query("UPDATE {system} SET weight = -1 WHERE name = 'ldap_user'");
 
-  // save ldap user configuration with default values and
-  // set user conf to default values and extract values moved from ldap_authentication to ldap_user module
-  $ldap_user_conf = ldap_user_conf('admin');
-  if ($ldap_authentication_conf = variable_get("ldap_authentication_conf", FALSE)) {
-    $ldap_user_conf->userConflictResolve = $ldap_authentication_conf['loginConflictResolve'];
-    $ldap_user_conf->acctCreation = $ldap_authentication_conf['acctCreation'];
-    unset($ldap_authentication_conf['loginConflictResolve']);
-    unset($ldap_authentication_conf['acctCreation']);
-    variable_set("ldap_authentication_conf", $ldap_authentication_conf);
-  }
-  $ldap_user_conf->save();
   _ldap_user_install_update_authmap();
 
 

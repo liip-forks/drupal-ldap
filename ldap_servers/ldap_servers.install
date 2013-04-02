@@ -10,8 +10,6 @@
  * Implements hook_install().
  */
 function ldap_servers_install() {
-  variable_set('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT);
-  variable_set('ldap_servers_require_ssl_for_credentails', 0);
 
   if (! ($key = variable_get('ldap_servers_encrypt_key', NULL))) {
     module_load_include('module', 'ldap_servers');
@@ -775,6 +773,24 @@ function ldap_servers_update_7204() {
       'not null' => FALSE,
     )
   );
+}
+
+
+/**
+ * fix any double serialized ldap server basedns
+ */
+function ldap_servers_update_7205() {
+
+  module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
+  $ldap_servers = ldap_servers_get_servers();
+  foreach ($ldap_servers as $sid => $ldap_server) {
+    if ($ldap_server->basedn && is_scalar($ldap_server->basedn)) {
+      // these are still serialized after being loaded from db/ctools so were double serialized
+      $ldap_server->basedn = unserialize($ldap_server->basedn);
+      $ldap_server->save();
+    }
+  }
+
 }
 
 function ldap_servers_install_update_schema($schema, &$change_log) {
