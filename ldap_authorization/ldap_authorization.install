@@ -59,7 +59,12 @@ function ldap_authorization_uninstall() {
       field_delete_field($field_conf['field']['field_name']);
     }
   }
+  module_load_include('inc', 'ldap_servers', 'ldap_servers.user_data_remove');
+  batch_set(ldap_severs_user_data_setup_batch());
+  $batch =& batch_get();
+  
 }
+
 
 function ldap_authorization_user_entity_fields() {
 
