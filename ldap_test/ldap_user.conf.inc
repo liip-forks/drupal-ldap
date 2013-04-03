@@ -25,6 +25,7 @@ $conf['default']  = array(
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
     ),
    'orphanedCheckQty' => 50,
+   'manualAccountConflict' => LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM,
   );
   /**
    *    'wsEnabled'  => 0,
@@ -47,6 +48,7 @@ $conf['ad_authentication'] = array(
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
     ),
    'orphanedCheckQty' => 50,
+   'manualAccountConflict' => LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM,
   );
 
   $conf['ad_authorization'] = array(
@@ -65,7 +67,8 @@ $conf['ad_authentication'] = array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
     ),
-   'orphanedCheckQty' => 50,
+    'orphanedCheckQty' => 50,
+    'manualAccountConflict' => LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM,
   );
 
   $conf['provisionToDrupal']  = array(
@@ -83,6 +86,7 @@ $conf['ad_authentication'] = array(
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
     ),
    'orphanedCheckQty' => 50,
+   'manualAccountConflict' => LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM,
   );
 
 
@@ -152,6 +156,7 @@ $conf['ad_authentication'] = array(
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(),
     ),
    'orphanedCheckQty' => 50,
+   'manualAccountConflict' => LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM,
   );
 
   $conf['provisionToLdap_activedirectory1']  = array(
@@ -164,6 +169,7 @@ $conf['ad_authentication'] = array(
       ),
     'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
     'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
+    'manualAccountConflict' => LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM,
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(
@@ -276,6 +282,7 @@ $conf['ad_authentication'] = array(
       ),
     'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
     'acctCreation'  => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR,
+    'manualAccountConflict' => LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM,
     'ldapUserSynchMappings' => array(
       LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => array(),
       LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(

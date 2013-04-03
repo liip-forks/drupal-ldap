@@ -535,6 +535,11 @@ class LdapUserUnitTests extends LdapTestCase {
       ),
     );
 
+    $this->privileged_user = $this->drupalCreateUser(array(
+      'administer site configuration',
+      'administer users'
+      ));
+    
     /** Tests for various synch contexts **/
     foreach ($tests as $j => $test) {
 
@@ -626,6 +631,35 @@ class LdapUserUnitTests extends LdapTestCase {
         }
         ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
       }
+      
+            /**
+        * manually create drupal user with option of not ldap associated checked
+        */
+   
+      if ($hpotter = user_load_by_name('hpotter')) {
+        user_delete($hpotter->uid);
+      }
+      $this->assertFalse(user_load_by_name('hpotter'), t('hpotter removed before manual account creation test'), $this->testId('manual non ldap account created'));
+      
+      $this->drupalLogout();
+      $this->drupalLogin($this->privileged_user);
+      $this->drupalGet('admin/people/create');
+      $edit = array(
+        'name' => 'hpotter',
+        'mail' => 'hpotter@hogwarts.edu',
+        'pass[pass1]' => 'goodpwd',
+        'pass[pass2]' => 'goodpwd',
+        'notify' => FALSE,
+        'ldap_user_association' => LDAP_USER_MANUAL_ACCT_CONFLICT_NO_LDAP_ASSOCIATE,
+      );
+      $this->drupalPost('admin/people/create', $edit, t('Create new account'));
+      
+      $hpotter = user_load_by_name('hpotter');
+      $this->assertTrue($hpotter, t('hpotter created via ui form'), $this->testId('manual non ldap account created'));
+      $this->assertTrue($hpotter && !ldap_user_is_ldap_associated($hpotter), t('hpotter not ldap associated'), $this->testId('manual non ldap account created'));
+       
+     
+     
     }
          /**
      * $entry = $servers['activedirectory1']->dnExists($desired_dn, 'ldap_entry');
@@ -1221,6 +1255,7 @@ class LdapUserUITests extends LdapTestCase {
 
     $this->privileged_user = $this->drupalCreateUser(array(
       'administer site configuration',
+      'administer users'
       ));
 
     $this->drupalLogin($this->privileged_user);
@@ -1233,8 +1268,6 @@ class LdapUserUITests extends LdapTestCase {
 
     // Populate the field settings with new settings.
     $sid = 'activedirectory1';
-   // $wsKey = 'sdafjlksjadsdafjkksdafjsdfsdjfsdf';
-   // $wsUserIps = array('1.2.3.4', '5.6.7.8');
 
     $edit_direct_map = array(
 
@@ -1337,9 +1370,13 @@ class LdapUserUITests extends LdapTestCase {
       debug('ldap_user_conf->synchMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER]['field.field_lname']);
     }
 
+
+
+    
   }
 
 
 
+  
 
 }

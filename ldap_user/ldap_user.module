@@ -943,7 +943,7 @@ function ldap_user_user_presave(&$user_edit, $account, $category) {
   if (isset($account->name)) {
     $drupal_username = $account->name;
   }
-  elseif (!!empty($user_edit['name'])) {
+  elseif (!empty($user_edit['name'])) {
     $drupal_username = $user_edit['name'];
   }
   else {
