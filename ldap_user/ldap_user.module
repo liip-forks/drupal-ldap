@@ -566,6 +566,10 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
   $user_ldap_entry = NULL;
   $drupal_username = $form_state['values']['name'];
 
+  if ($values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_NO_LDAP_ASSOCIATE) {
+    $form_state['values']['ldap_user_ldap_exclude']['und'][0]['value'] = 1;
+  }
+
   // if corresponding ldap account doesn't exist and provision not selected and make ldap associated is selected, throw error
   if (!@$values['ldap_user_create_ldap_acct'] && @$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE) {
     $ldap_user_conf = ldap_user_conf();
@@ -620,6 +624,37 @@ function ldap_user_form_register_form_submit2($form, &$form_state) {
 
 }
 
+/**
+ * @param stdClass $account as drupal user object
+ * @param array $edit is a drupal user edit array
+ * @param enum int $direction indicating which directions to test for association
+ *
+ *
+ * @return boolean TRUE if user should be excluded from ldap provision/synching
+ */
+
+function ldap_user_ldap_exclude($account = NULL, $edit = NULL, $direction = LDAP_USER_PROV_DIRECTION_ALL) {
+  // always exclude user 1
+  if (is_object($account) && isset($account->uid) && $account->uid == 1) {
+    return TRUE;
+  }
+  
+  // exclude users who have the field ldap_user_ldap_exclude set to 1
+  if (is_object($account) && isset($account->ldap_user_ldap_exclude['und'][0]['value']) 
+    && $account->ldap_user_ldap_exclude[LANGUAGE_NONE][0]['value'] == 1) {
+    return TRUE;
+  }
+
+  // exclude new users who have the value set to 1 in their $edit array
+  if (is_array($edit) && isset($edit['ldap_user_ldap_exclude']['und'][0]['value'])
+    && $edit['ldap_user_ldap_exclude'][LANGUAGE_NONE][0]['value'] == 1) {
+    return TRUE;
+  }
+
+  // everyone else is fine
+  return FALSE;
+
+}
 
 /**
  * @param stdClass $account as drupal user object
@@ -641,7 +676,7 @@ function ldap_user_is_ldap_associated($account, $direction = NULL) {
     if (property_exists($account, 'ldap_user_current_dn') && !empty($account->ldap_user_current_dn['und'][0]['value'])) {
       $to_drupal_user = TRUE;
     }
-    else {
+    elseif (isset($account->uid)) {
       $authmaps = db_query(
         "SELECT aid, uid, module, authname FROM {authmap} WHERE uid = :uid AND module = :module",
         array(
@@ -789,8 +824,8 @@ function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL, $reset 
  */
 function ldap_user_user_login(&$edit, $account) {
 
-  if ($account->uid == 1) {
-    return; // do not provision or synch user 1
+  if (ldap_user_ldap_exclude($account, $edit)) {
+    return; 
   }
   $ldap_user_conf = ldap_user_conf();
   $user_edit = array();
@@ -846,11 +881,11 @@ function ldap_user_user_login(&$edit, $account) {
 function ldap_user_user_insert(&$user_edit, $account, $category) {
 
   global $user;
-  $is_user_1 = ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1));
+  $not_associated = ldap_user_ldap_exclude($account, $user_edit);
   $new_account_request = (boolean)($user->uid == 0 && $account->access == 0 && $account->login == 0); // check for first time user
   $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'get' , $account->name);
   $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->name);
-  if ($is_user_1 || $already_synched_to_ldap || $already_synched_to_ldap || $new_account_request) {
+  if ($not_associated || $already_synched_to_ldap || $already_synched_to_ldap || $new_account_request) {
     return;
   }
 
@@ -890,8 +925,8 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
 
 function ldap_user_user_update(&$user_edit, $account, $category) {
   //debug("ldap_user_user_update, category=$category"); debug($user_edit); debug($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
-  if ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1)) {
-    return; // do not provision or synch user 1
+  if (ldap_user_ldap_exclude($account, $user_edit)) {  
+    return; 
   }
 
   $ldap_user_conf = ldap_user_conf();
@@ -937,8 +972,8 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
 function ldap_user_user_presave(&$user_edit, $account, $category) {
  //debug("ldap_user_user_presave, category=$category"); debug($user_edit); debug($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
 
-  if ($category == 'ldap_user' || (is_object($account) && property_exists($account, 'uid') && $account->uid == 1)) {
-    return; // do not provision or synch user 1
+  if (ldap_user_ldap_exclude($account, $user_edit)) {  
+    return; 
   }
   if (isset($account->name)) {
     $drupal_username = $account->name;

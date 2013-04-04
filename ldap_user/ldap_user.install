@@ -380,8 +380,50 @@ function ldap_user_user_entity_fields() {
         ),
       ));
 
-  return $fields;
+  $field_name = 'ldap_user_ldap_exclude';
+  $fields[$field_name]['field'] = array(
+    'field_name' => $field_name,
+    'type' => 'number_integer',
+    'entity_types' => array('user'),
+    'cardinality' => 1,
+    'translatable' => 0,
+    'locked' => 1,
+    'module' => 'number',
+    'no_ui' => 1,
+    'settings' => array(),
+    );
 
+  $fields[$field_name]['instance'] = array(
+      'field_name' => $field_name,
+      'entity_type' => 'user',
+      'bundle' => 'user',
+      'label' => 'Whether to exclude the user from LDAP functionality',
+      'description' => 'This field should not be edited.',
+      'required' => 0,
+      'default_value' => 0,
+      'settings' => array(
+      ),
+      'widget' => array(
+        'type' => 'ldap_user_hidden',
+        'settings' => array(),
+        'module' => 'ldap_user',
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      'full' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      'teaser' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      ));
+  
+  return $fields;
 }
 
 
@@ -447,7 +489,14 @@ function ldap_user_update_7204() {
 
 }
 
+/**
+ * make sure all user entity field instances are created
+ */
+function ldap_user_update_7205() {
 
+  return ldap_user_update_7204();
+
+}
 
 function ldap_user_update_check_user_fields($query = FALSE) {
   if (!$query) {

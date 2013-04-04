@@ -187,7 +187,17 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
-
+  $watchdog_tokens = array();
+  if (function_exists('debug_backtrace') && $backtrace = debug_backtrace()) {
+    $watchdog_tokens['%calling_function'] = $backtrace[1]['function'];
+  }
+  if (!is_array($ldap_entry)) {
+    if ($detailed_watchdog_log) {
+      watchdog('ldap_servers', 'skipped tokenization of ldap entry because no ldap entry provided when called from %calling_function.', $watchdog_tokens, WATCHDOG_DEBUG);
+    }
+    return $tokens; // empty array
+  }
+      
   // add lowercase keyed entries to ldap array
   foreach ($ldap_entry as $key => $values) {
     $ldap_entry[drupal_strtolower($key)] = $values;
@@ -206,7 +216,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
     }
     catch (Exception $e) {
       if ($detailed_watchdog_log) {
-        $watchdog_tokens = array('%attr_name' => $attr_name);
+        $watchdog_tokens['%attr_name'] = $attr_name;
         watchdog('ldap_servers', 'skipped tokenization of attribute %attr_name because the value would not pass check_plain function.', $watchdog_tokens, WATCHDOG_DEBUG);
       }
       continue; // don't tokenize data that can't pass check_plain
