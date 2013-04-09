@@ -197,7 +197,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
     }
     return $tokens; // empty array
   }
-      
+
   // add lowercase keyed entries to ldap array
   foreach ($ldap_entry as $key => $values) {
     $ldap_entry[drupal_strtolower($key)] = $values;
@@ -402,6 +402,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
 
           case 'user':
             $pwd = ldap_user_ldap_provision_pwd('get');
+            $value = ($pwd) ? $pwd : NULL;
             break;
 
           case 'user-random':
