@@ -1474,7 +1474,7 @@ class LdapServer {
           };
           $ors = array();
           foreach ($member_ids as $i => $member_id) {
-            $ors[] =  $this->groupMembershipsAttr . '=' . $member_id; // @todo this would be replaced by query template
+            $ors[] =  $this->groupMembershipsAttr . '=' . ldap_pear_escape_filter_value($member_id); // @todo this would be replaced by query template
           }
 
           if (count($ors)) {
@@ -1604,7 +1604,7 @@ class LdapServer {
         else {
           $member_value = ldap_servers_get_first_rdn_value_from_dn($member_group_dn, $this->groupMembershipsAttrMatchingUserAttr);
         }
-        $ors[] =  $this->groupMembershipsAttr . '=' . $member_value;
+        $ors[] =  $this->groupMembershipsAttr . '=' . ldap_pear_escape_filter_value($member_value);
       }
     }
 
@@ -1671,7 +1671,7 @@ class LdapServer {
       $member_value = $user_ldap_entry['attr'][$this->groupMembershipsAttrMatchingUserAttr][0];
     }
 
-    $group_query = '(&(objectClass=' . $this->groupObjectClass . ')(' . $this->groupMembershipsAttr . "=$member_value))";
+    $group_query = '(&(objectClass=' . $this->groupObjectClass . ')(' . $this->groupMembershipsAttr . "=" . ldap_pear_escape_filter_value($member_value));
 
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
       $group_entries = $this->search($base_dn, $group_query, array()); // only need dn, so empty array forces return of no attributes
@@ -1732,7 +1732,7 @@ class LdapServer {
         $tested_group_ids[] = $member_id;
         $all_group_dns[] = $group_entry['dn'];
         // add $group_id (dn, cn, uid) to query
-        $ors[] =  $this->groupMembershipsAttr . '=' . $member_id;
+        $ors[] =  $this->groupMembershipsAttr . '=' . ldap_pear_escape_filter_value($member_id);
       }
     }
 
