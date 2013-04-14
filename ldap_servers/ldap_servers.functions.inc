@@ -223,11 +223,11 @@ function ldap_server_massage_text($value, $value_type, $context) {
     function ldap_pear_escape_filter_value($values = array()) {
         // Parameter validation
         $is_scalar = is_scalar($values);
-        if (!is_array($values)) {
+        if ($is_scalar) {
             $values = array($values);
         }
 
-        foreach ($values as $key => $val) {
+       foreach ($values as $key => $val) {
             // Escaping of filter meta characters
             $val = str_replace('\\', '\5c', $val);
             $val = str_replace('*',  '\2a', $val);
@@ -237,10 +237,12 @@ function ldap_server_massage_text($value, $value_type, $context) {
             // ASCII < 32 escaping
             $val = ldap_pear_asc2hex32($val);
 
-            if (null === $val) $val = '\0';  // apply escaped "null" if string is empty
+            if (null === $val) {
+              $val = '\0';
+            }  // apply escaped "null" if string is empty
 
             $values[$key] = $val;
-        }
+       }
 
         return ($is_scalar) ? $values[0] : $values;
     }
