@@ -1676,8 +1676,15 @@ class LdapServer {
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
       $group_entries = $this->search($base_dn, $group_query, array()); // only need dn, so empty array forces return of no attributes
       if ($group_entries !== FALSE) {
-        $max_levels = ($nested) ? LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT : 0;
-        $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level, $max_levels);
+        if ($nested) {
+          $max_levels = ($nested) ? LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT : 0;
+          $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level, $max_levels);
+        }
+        else {
+          foreach($group_entries as $group_entry) {
+            $all_group_dns[] = $group_entry['dn'];
+          }
+        }
       }
     }
 
