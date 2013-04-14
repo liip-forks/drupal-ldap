@@ -712,7 +712,7 @@ public function drupalFormSubmit($op, $values) {
           '#size' => 80,
           '#states' => array(
              'enabled' => array(   // action to take.
-               ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
+               ':input[name=bind_method]' => array('value' => (string)LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
               ),
             ),
         ),
@@ -730,7 +730,7 @@ public function drupalFormSubmit($op, $values) {
           '#size' => 20,
           '#states' => array(
              'enabled' => array(   // action to take.
-               ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
+               ':input[name=bind_method]' => array('value' => (string)LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
               ),
             ),
         ),
