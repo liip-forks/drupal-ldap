@@ -205,6 +205,9 @@ class LdapServer {
 
     }
 
+    if ($this->followrefs && !function_exists('ldap_set_rebind_proc')) {
+      $this->followrefs = FALSE;
+    }
 
     if ($bindpw) {
       $this->bindpw = ldap_servers_decrypt($bindpw);
@@ -315,8 +318,10 @@ class LdapServer {
       $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
       $pass = ($pass != NULL) ? $pass : $this->bindpw;
 
-      $rebHandler = new LdapServersRebindHandler($userdn, $pass);
-      ldap_set_rebind_proc($this->connection, array($rebHandler, 'rebind_callback'));
+      if ($this->followrefs) {
+        $rebHandler = new LdapServersRebindHandler($userdn, $pass);
+        ldap_set_rebind_proc($this->connection, array($rebHandler, 'rebind_callback'));
+      }
 
       if (drupal_strlen($pass) == 0 || drupal_strlen($userdn) == 0) {
         watchdog('ldap', "LDAP bind failure for user userdn=%userdn, pass=%pass.", array('%userdn' => $userdn, '%pass' => $pass));

@@ -280,6 +280,12 @@ class LdapServerAdmin extends LdapServer {
   }
 
   $form['server']['sid']['#disabled'] = ($op == 'edit');
+
+  if (!function_exists('ldap_set_rebind_proc')) {
+    $form['server']['followrefs']['#disabled'] = TRUE;
+    $form['server']['followrefs']['#description'] =  t('This functionality is disabled because the function ldap_set_rebind_proc can not be found on this server.  Perhaps your version of php does not have this function.  See php.net/manual/en/function.ldap-set-rebind-proc.php') . $form['server']['followrefs']['#description'];
+  }
+
   $form['server']['tls']['#required'] = FALSE;
   $form['server']['followrefs']['#required'] = FALSE;
   $form['bind_method']['bind_method']['#default_value'] = ($this->bind_method) ? $this->bind_method : LDAP_SERVERS_BIND_METHOD_DEFAULT;
