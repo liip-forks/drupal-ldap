@@ -872,6 +872,7 @@ function ldap_servers_help($path, $arg) {
       $servers_help .= '<dd>' . t('LDAP Server -') . ' </dd>';
       $servers_help .= '<dd>' . t('LDAP port -') . ' </dd>';
       $servers_help .= '<dd>' . t('Use Start-TLS -') . ' </dd>';
+      $servers_help .= '<dd>' . t('Follow LDAP Referrals - ') . '</dd>';
       $servers_help .= '</dl>';
       $servers_help .= '<dl>';
       $servers_help .= '<dt>' . t('BINDING METHOD') . '</dt>';

@@ -30,6 +30,7 @@ class LdapServer {
   public $address;
   public $port = 389;
   public $tls = FALSE;
+  public $followrefs = FALSE;
   public $bind_method = 0;
   public $basedn = array();
   public $binddn = FALSE; // Default to an anonymous bind.
@@ -94,6 +95,7 @@ class LdapServer {
     'address'  => 'address',
     'port'  => 'port',
     'tls'  => 'tls',
+    'followrefs'  => 'followrefs',
     'bind_method' => 'bind_method',
     'basedn'  => 'basedn',
     'binddn'  => 'binddn',
@@ -249,7 +251,7 @@ class LdapServer {
     }
 
     ldap_set_option($con, LDAP_OPT_PROTOCOL_VERSION, 3);
-    ldap_set_option($con, LDAP_OPT_REFERRALS, 0);
+    ldap_set_option($con, LDAP_OPT_REFERRALS, (int)$this->followrefs);
 
     // Use TLS if we are configured and able to.
     if ($this->tls) {
@@ -312,6 +314,9 @@ class LdapServer {
     else {
       $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
       $pass = ($pass != NULL) ? $pass : $this->bindpw;
+
+      $rebHandler = new LdapServersRebindHandler($userdn, $pass);
+      ldap_set_rebind_proc($this->connection, array($rebHandler, 'rebind_callback'));
 
       if (drupal_strlen($pass) == 0 || drupal_strlen($userdn) == 0) {
         watchdog('ldap', "LDAP bind failure for user userdn=%userdn, pass=%pass.", array('%userdn' => $userdn, '%pass' => $pass));
@@ -1831,4 +1836,32 @@ class LdapServer {
     }
   }
 
+}
+
+/**
+ * Class for enabling rebind functionality for following referrrals.
+ */
+class LdapServersRebindHandler {
+
+  private $bind_dn = 'Anonymous';
+  private $bind_passwd = '';
+
+  public function __construct($bind_user_dn, $bind_user_passwd){
+    $this->bind_dn = $bind_user_dn;
+    $this->bind_passwd = $bind_user_passwd;
+  }
+
+  public function rebind_callback($ldap, $referral){
+    // ldap options
+    ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+    ldap_set_option($ldap, LDAP_OPT_REFERRALS, 1);
+    ldap_set_rebind_proc($ldap, array($this, 'rebind_callback'));
+
+  // Bind to new host, assumes initial bind dn has access to the referred servers.
+    if (!ldap_bind($ldap, $this->bind_dn, $this->bind_passwd)) {
+      echo "Could not bind to referral server: $referral";
+      return 1;
+    }
+    return 0;
+  }
 }

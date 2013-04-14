@@ -786,6 +786,24 @@ function ldap_servers_update_7205() {
 
 }
 
+
+
+/**
+ * Add LDAP Referrals fields in schema
+ */
+function ldap_servers_update_7206() {
+  db_add_field(
+    'ldap_servers',
+    'followrefs',
+    array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => FALSE,
+      'default' => 0,
+    )
+  );
+}
+
 function ldap_servers_install_update_schema($schema, &$change_log) {
   foreach ($schema as $table_name => $table_schema) {
     foreach ($table_schema['fields'] as $field_name => $field_schema) {
