@@ -402,6 +402,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
 
           case 'user':
             $pwd = ldap_user_ldap_provision_pwd('get');
+            $value = ($pwd) ? $pwd : NULL;
             break;
 
           case 'user-random':
