@@ -140,7 +140,7 @@ class LdapServerAdmin extends LdapServer {
         $values->export_type = EXPORT_IN_DATABASE;
         $result = ctools_export_crud_save('ldap_servers', $values);
       }
-
+      
       ctools_export_load_object_reset('ldap_servers'); // ctools_export_crud_save doesn't invalidate cache
 
     }
@@ -688,7 +688,7 @@ public function drupalFormSubmit($op, $values) {
           '#size' => 80,
           '#states' => array(
              'enabled' => array(   // action to take.
-               ':input[name=bind_method]' => array('value' => (string)LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
+               ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
               ),
             ),
         ),
@@ -706,7 +706,7 @@ public function drupalFormSubmit($op, $values) {
           '#size' => 20,
           '#states' => array(
              'enabled' => array(   // action to take.
-               ':input[name=bind_method]' => array('value' => (string)LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
+               ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
               ),
             ),
         ),
@@ -824,7 +824,7 @@ public function drupalFormSubmit($op, $values) {
       				'not null' => FALSE,
       		),
       ),
-
+  
       'unique_persistent_attr' => array(
         'form' => array(
           'fieldset' => 'users',
