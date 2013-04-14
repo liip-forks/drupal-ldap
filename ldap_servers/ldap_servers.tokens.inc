@@ -401,6 +401,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
         switch ($attr_name) {
 
           case 'user':
+          case 'user-only':
             $pwd = ldap_user_ldap_provision_pwd('get');
             $value = ($pwd) ? $pwd : NULL;
             break;
