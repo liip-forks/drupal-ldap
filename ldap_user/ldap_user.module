@@ -382,17 +382,6 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       'configurable_to_ldap' => TRUE,
     );
 
-    // use user password, do not modify if unavailable
-    $available_user_attrs['[password.user-only]'] = array(
-      'name' => 'Pwd: User Only',
-      'source' => '',
-      'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
-      'enabled' => TRUE,
-      'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
-      'config_module' => 'ldap_user',
-      'prov_module' => 'ldap_user',
-      'configurable_to_ldap' => TRUE,
-      );
   }
 
   //this is where need to be added to arrays
@@ -491,14 +480,10 @@ function ldap_user_form_password_policy_password_tab_alter(&$form, &$form_state)
  */
 function ldap_user_grab_password_validate($form, &$form_state) {
 
-  // This is not a login form but profile form and user is inserting password to update email
+  // This is not a login form but profile form and user is insertingpassword to update email
   if (!empty($form_state['values']['current_pass_required_values'])) {
     if (!empty($form_state['values']['current_pass']) && empty($form_state['values']['pass'])) {
       ldap_user_ldap_provision_pwd('set', $form_state['values']['current_pass']);
-    }
-    // Or this is a profile form where the user is updating their own password
-    elseif (!empty($form_state['values']['pass'])) {
-      ldap_user_ldap_provision_pwd('set', $form_state['values']['pass']);
     }
   }
   // otherwise a logon form
@@ -900,12 +885,7 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
   $new_account_request = (boolean)($user->uid == 0 && $account->access == 0 && $account->login == 0); // check for first time user
   $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'get' , $account->name);
   $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->name);
-  $not_ldap_associated = !ldap_user_is_ldap_associated($account);
-  $ldap_user_conf = ldap_user_conf();
-  if ($ldap_user_conf->manualAccountConflict == LDAP_USER_MANUAL_ACCT_CONFLICT_REJECT && $not_ldap_associated) {
-    drupal_set_message(t('You have attempted to add a user that is not associated with LDAP, but LDAP is configured to reject non-associated accounts.'), 'error');
-   }
-  if ($already_synched_to_ldap || $new_account_request || $not_ldap_associated) {
+  if ($not_associated || $already_synched_to_ldap || $already_synched_to_ldap || $new_account_request) {
     return;
   }
 

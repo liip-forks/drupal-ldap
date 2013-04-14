@@ -1,9 +1,7 @@
 openLdap
 *.patch
 *.zip
-.idea*
 Thumbs.db
 Desktop.ini
 .DS_Store
-.gitignore
 

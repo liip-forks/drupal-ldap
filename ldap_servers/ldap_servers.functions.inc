@@ -49,7 +49,7 @@ function ldap_password_modify($userdn, $new_password, $ldap_server) {
 
 /**
  *
- *  this attempts to find bad dns, but should only be used as warnings
+ *  this attempts to find bad dns, but should only be used as warningswe
  *  as the ldap spec allows for any old character to be escaped and ldap
  *  implementations may not follow the spec.
  *
