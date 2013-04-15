@@ -241,8 +241,9 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
         $num_entries += array_shift($result);
       }
     }
-
-    $limit       = $view->query->limit;
+    if (property_exists($view->query, 'limit')) {
+      $limit     = $view->query->limit;
+    }
     $offset      = $view->query->offset;
     $result      = array();
     $sort_fields = array();
