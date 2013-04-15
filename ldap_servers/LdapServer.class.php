@@ -1032,7 +1032,7 @@ class LdapServer {
 
 			$thumb = isset($ldap_entry[$this->picture_attr][0]) ? $ldap_entry[$this->picture_attr][0] : FALSE;
 			if(!$thumb){
-				return false;
+				return FALSE;
 			}
 
 			//Create md5 check.
@@ -1044,7 +1044,7 @@ class LdapServer {
 			 */
 			if ($drupal_username && $account = user_load_by_name($drupal_username)) {
         if ($account->uid == 0 || $account->uid == 1){
-          return false;
+          return FALSE;
         }
         if (isset($account->picture)){
           // Check if image has changed
@@ -1065,7 +1065,7 @@ class LdapServer {
         }
         elseif (isset($account->data['ldap_user']['init']['thumb5md'])) {
           watchdog('ldap_server', "Some error happened during thumbnailPhoto sync");
-          return false;
+          return FALSE;
         }
       }
 			//Create tmp file to get image format.
@@ -1629,7 +1629,7 @@ class LdapServer {
           // debug("query for parent groups, base_dn=$base_dn, $query_for_parent_groups");
           $group_entries = $this->search($base_dn, $query_for_parent_groups);  // no attributes, just dns needed
           if ($group_entries !== FALSE  && $level < LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT) {
-            $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level + 1, LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
+            $this->groupMembershipsFromEntryRecursive($group_entries, $all_group_dns, $tested_group_ids, $level + 1, LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
           }
         }
       }
@@ -1687,7 +1687,7 @@ class LdapServer {
       $group_entries = $this->search($base_dn, $group_query, array()); // only need dn, so empty array forces return of no attributes
       if ($group_entries !== FALSE) {
         $max_levels = ($nested) ? LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT : 0;
-        $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level, $max_levels);
+        $this->groupMembershipsFromEntryRecursive($group_entries, $all_group_dns, $tested_group_ids, $level, $max_levels);
       }
     }
 
@@ -1713,7 +1713,7 @@ class LdapServer {
    * @return FALSE for error or misconfiguration, otherwise TRUE.  results are passed by reference.
    */
 
-  public function groupMembershipsFromEntryResursive($current_group_entries, &$all_group_dns, &$tested_group_ids, $level, $max_levels) {
+  public function groupMembershipsFromEntryRecursive($current_group_entries, &$all_group_dns, &$tested_group_ids, $level, $max_levels) {
 
     if (!$this->groupGroupEntryMembershipsConfigured || !is_array($current_group_entries) || count($current_group_entries) == 0) {
       return FALSE;
@@ -1739,7 +1739,7 @@ class LdapServer {
       }
     }
 
-    if (count($ors)) {
+    if ($level < $max_levels && count($ors)) {
       $count = count($ors);
       for ($i=0; $i < $count; $i=$i+LDAP_SERVER_LDAP_QUERY_CHUNK) { // only 50 or so per query
         $current_ors = array_slice($ors, $i, LDAP_SERVER_LDAP_QUERY_CHUNK);
@@ -1748,8 +1748,8 @@ class LdapServer {
 
         foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
           $group_entries = $this->search($base_dn, $query_for_parent_groups);  // no attributes, just dns needed
-          if ($group_entries !== FALSE  && $level < $max_levels) {
-            $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level + 1, $max_levels);
+          if ($group_entries !== FALSE) {
+            $this->groupMembershipsFromEntryRecursive($group_entries, $all_group_dns, $tested_group_ids, $level + 1, $max_levels);
           }
         }
       }
