@@ -126,7 +126,6 @@ class LdapAuthenticationConf {
   public $seamlessLogin = FALSE;
   public $ldapImplementation = FALSE;
   public $cookieExpire = LDAP_AUTHENTICATION_COOKIE_EXPIRE;
-
   public $apiPrefs = array();
 
   /**

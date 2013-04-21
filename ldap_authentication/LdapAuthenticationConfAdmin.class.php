@@ -134,7 +134,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       $values['seamlessLogInDescription'] = t('This requires that you ' .
         'have operational NTLM or Kerberos authentication turned on for at least ' .
         'the path user/login/sso, or for the whole domain.');
-      $values['cookieExpireDescription'] = t('If using the seamless login, a ' .
+      $values['cookieExpireDescription'] = t('If using the automated/seamless login, a ' .
         'cookie is necessary to prevent automatic login after a user ' .
         'manually logs out. Select the lifetime of the cookie.');
       $values['ldapImplementationDescription'] = t('Select the type of ' .
@@ -440,7 +440,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
     $form['sso']['seamlessLogin'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Turn on automated single sign-on'),
+      '#title' => t('Turn on automated/seamless single sign-on'),
       '#description' => t($this->seamlessLogInDescription),
       '#default_value' => $this->seamlessLogin,
       '#disabled' => (boolean)(!$this->ssoEnabled),
