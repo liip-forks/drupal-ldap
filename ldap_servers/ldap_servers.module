@@ -527,55 +527,6 @@ function ldap_servers_get_servers($sid = NULL, $type = NULL, $flatten = FALSE, $
   }
 }
 
-/**
- * used to mock $_SERVER, $_SESSION, etc globals for simpletests
- * @param string $global_type = _SERVER, _ENV, _COOKIE, _GET, _POST, _REQUEST
- * @param string $key such as 'SERVER_ADDR', 'SERVER_PROTOCAL', etc.
- * @param boolean $only_mock_values signifying, don't get actual values when mock values don't exist
- *
- * @return mixed value of ldap_simpletest_globals variable for global and key
- *     or  $_SERVER[][], $_ENV[][], etv value if not in a simpletes or mock variable not available
- *
- * */
-
-function ldap_servers_get_globals($global_type, $key, $only_mock_values = FALSE) {
-  $simpletest_globals = variable_get('ldap_simpletest_globals', array());
-  $simpletest = variable_get('ldap_simpletest', FALSE);
-
-  if ($simpletest && (isset($simpletest_globals[$global_type][$key]) || $only_mock_values)) {
-    return ($simpletest_globals[$global_type][$key]) ? $simpletest_globals[$global_type][$key] : NULL;
-  }
-  else  {
-    return (isset($GLOBALS[$global_type][$key]) && !$only_mock_values) ? $GLOBALS[$global_type][$key] : NULL;
-  }
-
-}
-
-function ldap_servers_set_globals($global_type, $key, $value) {
-  $simpletest_globals = variable_get('ldap_simpletest_globals', array());
-  $simpletest = variable_get('ldap_simpletest', FALSE);
-  if ($simpletest) {
-    $simpletest_globals[$global_type][$key] = $value;
-    variable_set('ldap_simpletest_globals', $simpletest_globals);
-  }
-  else {
-    $GLOBALS[$global_type][$key] = $value;
-  }
-
-}
-
-function ldap_servers_delete_globals($global_type, $key, $only_mock_values = FALSE) {
-  $simpletest_globals = variable_get('ldap_simpletest_globals', array());
-  $simpletest = variable_get('ldap_simpletest', FALSE);
-  if ($simpletest && isset($simpletest_globals[$global_type][$key])) {
-      unset($simpletest_globals[$global_type][$key]);
-      variable_set('ldap_simpletest_globals', $simpletest_globals);
-  }
-  elseif (!$only_mock_values && isset($GLOBALS[$global_type][$key])) {
-    unset($GLOBALS[$global_type][$key]);
-  }
-
-}
 
 /**
  * see ldap_servers_get_servers()
