@@ -638,10 +638,9 @@ class LdapServer {
         foreach ($entries as $i => $entry) {
           $all_entries[$existing_count + $i] = $entry;
         }
-        $all_entries['count'] = count($all_entries);
       }
     }
-
+    $all_entries['count'] = count($all_entries);
     return $all_entries;
 
   }
