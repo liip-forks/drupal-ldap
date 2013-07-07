@@ -284,8 +284,10 @@ function ldap_sso_user_login_sso() {
 
       }
       user_login_finalize();
-      drupal_set_message(theme('ldap_authentication_login_message',
-        array('message' => t('You have been successfully authenticated'))));
+      if($auth_conf->ssoNotifyAuthentication) {
+        drupal_set_message(theme('ldap_authentication_login_message',
+          array('message' => t('You have been successfully authenticated'))));
+      }
       if ($detailed_watchdog_log) {
         watchdog('ldap_authentication', 'ldap_sso_user_login_sso.remote_user.user_success.drupal_goto front', $watchdog_tokens, WATCHDOG_DEBUG);
       }
