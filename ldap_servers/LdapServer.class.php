@@ -1554,7 +1554,10 @@ class LdapServer {
     elseif ($this->groupGroupEntryMembershipsConfigured) {
       $group_dns = $this->groupUserMembershipsFromEntry($user_ldap_entry, $nested);
     }
-
+    else {
+      watchdog('ldap_servers', 'groupMembershipsFromUser: Group memberships for server have not been configured.', array(), WATCHDOG_WARNING);
+      return FALSE;
+    }
     if ($return == 'group_dns') {
       return $group_dns;
     }
