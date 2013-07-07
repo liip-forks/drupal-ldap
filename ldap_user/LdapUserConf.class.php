@@ -99,6 +99,8 @@ class LdapUserConf {
   public $setsLdapPassword = TRUE; // @todo default to FALSE and check for mapping to set to true
 
   public $loginConflictResolve = FALSE;
+
+  public $disableAdminPasswordField = FALSE;
   /**
    * array of field synch mappings provided by all modules (via hook_ldap_user_attrs_list_alter())
    * array of the form: array(
@@ -182,6 +184,7 @@ class LdapUserConf {
     'manualAccountConflict',
     'acctCreation',
     'ldapUserSynchMappings',
+    'disableAdminPasswordField',
   );
 // 'wsKey','wsEnabled','wsUserIps',
   function __construct() {
@@ -1207,7 +1210,10 @@ class LdapUserConf {
 
     if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER && in_array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, $prov_events)) {
       $edit['mail'] = isset($edit['mail']) ? $edit['mail'] : $ldap_user['mail'];
-      $edit['pass'] = isset($edit['pass']) ? $edit['pass'] : user_password(20);
+      if (!isset($edit['pass'])) {
+        $edit['pass'] = user_password(20);
+        watchdog('ldap_user', '20 character random password generated for the %username account that has been created.', array('%username' => $drupal_username), WATCHDOG_INFO);
+      }
       $edit['init'] = isset($edit['init']) ? $edit['init'] : $edit['mail'];
       $edit['status'] = isset($edit['status']) ? $edit['status'] : 1;
       $edit['signature'] = isset($edit['signature']) ? $edit['signature'] : '';
