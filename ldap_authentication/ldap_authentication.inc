@@ -89,14 +89,27 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
     }
 
     if (!ldap_authentication_show_reset_pwd($form['#user'])) {
-      $form['account']['current_pass']['#disabled'] = TRUE;
-      if ($auth_conf->ldapUserHelpLinkUrl) {
-        $form['account']['current_pass']['#description'] = l(t($auth_conf->ldapUserHelpLinkText), $auth_conf->ldapUserHelpLinkUrl);
-      }
-      else {
-        $form['account']['current_pass']['#description'] = t('The password cannot be changed using this website');
-      }
-      $form['account']['pass']['#disabled'] = TRUE;
+      /**  If passwordOption = LDAP_AUTHENTICATION_PASSWORD_FIELD_HIDE then don't show the password fields,
+        otherwise show the fields but in a disabled state.
+       */
+        switch ($auth_conf->passwordOption) {
+
+          case LDAP_AUTHENTICATION_PASSWORD_FIELD_HIDE:
+            $form['account']['current_pass']['#access'] = FALSE;
+            $form['account']['pass']['#access'] = FALSE;
+            break;
+
+          case LDAP_AUTHENTICATION_PASSWORD_FIELD_SHOW:
+                    // Show in a disabled state since ldap_authentication_show_reset_pwd() has returned FALSE
+            $form['account']['current_pass']['#disabled'] = TRUE;
+            if ($auth_conf->ldapUserHelpLinkUrl) {
+              $form['account']['current_pass']['#description'] = l(t($auth_conf->ldapUserHelpLinkText), $auth_conf->ldapUserHelpLinkUrl);
+            }
+            else {
+              $form['account']['current_pass']['#description'] = t('The password cannot be changed using this website');
+            }
+            $form['account']['pass']['#disabled'] = TRUE;
+            break;
     }
   }
 }
