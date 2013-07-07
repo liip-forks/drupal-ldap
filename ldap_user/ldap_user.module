@@ -878,18 +878,21 @@ function ldap_user_user_login(&$edit, $account) {
 
   $prov_enabled = $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE);
 
-  if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
-    $ldap_user = ldap_servers_get_user_ldap_data($account->name, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
-    if ($ldap_user) {
-      $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE);
-      $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
-    }
+  // Provision from LDAP if a new account was not just provisioned from LDAP
+  if (ldap_user_ldap_provision_semaphore('drupal_created', 'get', $account->name) === FALSE) {
+    if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
+      $ldap_user = ldap_servers_get_user_ldap_data($account->name, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
+      if ($ldap_user) {
+        $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE);
+        $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
+      }
 
-    if (empty($account->picture->fid)) { // see #1973352 and #935592
-      $account2 = user_load($account->uid);
-      $account->picture = $account2->picture;
+      if (empty($account->picture->fid)) { // see #1973352 and #935592
+        $account2 = user_load($account->uid);
+        $account->picture = $account2->picture;
+      }
+      $account = user_save($account, $user_edit, 'ldap_user');
     }
-    $account = user_save($account, $user_edit, 'ldap_user');
   }
 
 }
@@ -1008,11 +1011,16 @@ function ldap_user_user_presave(&$user_edit, $account, $category) {
   $ldap_user_conf = ldap_user_conf();
 
   // check for provisioning to drupal and override synched user fields/props
-  if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
-    if (ldap_user_is_ldap_associated($account, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER)) {
-      $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
-      $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE);
-      $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
+  // Provision from LDAP if a new account was not just provisioned from LDAP
+  if (ldap_user_ldap_provision_semaphore('drupal_created', 'get', $drupal_username) === FALSE) {
+    if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
+      if ($ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE)) {
+        if (ldap_user_is_ldap_associated($account, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER)) {
+          $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
+          $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE);
+          $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
+        }
+      }
     }
   }
 

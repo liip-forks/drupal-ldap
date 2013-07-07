@@ -1101,7 +1101,8 @@ class LdapUserConf {
             drupal_set_message(t('User account creation failed because of system problems.'), 'error');
           }
           else {
-            user_set_authmaps($account, array('authname_ldap_user' => $user_edit['name']));
+            user_set_authmaps($account, array('authname_ldap_user' => $account->name));
+            ldap_user_ldap_provision_semaphore('drupal_created', 'set', $account->name);
           }
           return $account;
         }
