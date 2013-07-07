@@ -76,6 +76,12 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
     $tokens[drupal_strtolower($attribute)] = $value;
   }
 
+  // If $text is not present as an attribute key, insert it and set the key's value to an empty string.
+  if (!array_key_exists(drupal_strtolower($text), $tokens)) {
+    $tokens[$text] = '';
+    $tokens[drupal_strtolower($text)] = '';
+  }
+
   $attributes = array_keys($tokens); //array of attributes (sn, givenname, etc)
   $values = array_values($tokens); //array of attribute values (Lincoln, Abe, etc)
   $result = str_replace($attributes, $values, $text);
