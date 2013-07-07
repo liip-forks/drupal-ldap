@@ -958,6 +958,12 @@ class LdapServer {
       $ldap_username = $drupal_username;
     }
 
+    // Let other modules alter the ldap name
+    $context = array(
+      'ldap_server' => $this,
+    );
+    drupal_alter('ldap_servers_username_to_ldapname', $ldap_username, $drupal_username, $context);
+
     return $ldap_username;
 
   }

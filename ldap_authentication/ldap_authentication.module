@@ -187,8 +187,8 @@ function ldap_authentication_ldap_authenticated($user) {
     return FALSE;
   }
 
-  $authmaps = db_query("SELECT module, authname FROM {authmap} WHERE uid = :uid", array(':uid' => $user->uid))->fetchAllKeyed();
-  return isset($authmaps['ldap_user']);
+  $authname = ldap_user_get_authname($user);
+  return !empty($authname);
 
 }
 

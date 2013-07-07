@@ -677,7 +677,8 @@ function ldap_servers_binary($value) {
 
 function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_context = NULL) {
 
-  if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = db_query("SELECT authname FROM {authmap} WHERE uid = :uid AND module = 'ldap_user'", array(':uid' => $drupal_user->uid))->fetchColumn()) {
+  if (is_object($drupal_user) && property_exists($drupal_user, 'uid') &&
+      function_exists('ldap_user_get_authname') && ($authname = ldap_user_get_authname($drupal_user))) {
     $drupal_username = $authname;
   }
   else {
