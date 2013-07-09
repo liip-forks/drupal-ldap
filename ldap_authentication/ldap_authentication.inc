@@ -110,6 +110,7 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
             }
             $form['account']['pass']['#disabled'] = TRUE;
             break;
+      }
     }
   }
 }
@@ -661,3 +662,4 @@ function _ldap_authentication_err_text($error) {
 
   return $msg;
 }
+
