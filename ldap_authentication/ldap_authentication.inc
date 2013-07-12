@@ -127,6 +127,11 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
   */
 function _ldap_authentication_user_login_authenticate_validate(&$form_state, $return_user) {
 
+  // Check if Flood control was triggered; if so, don't authenticate
+  if (isset($form_state['flood_control_triggered'])) {
+    return;
+  }
+
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
 
   // Default to name
