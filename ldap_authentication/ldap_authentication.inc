@@ -359,6 +359,16 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
      *       for external authentication modules
      */
 
+      $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
+      if ($auth_conf->ldapUser->acctCreation == LDAP_USER_ACCT_CREATION_USER_SETTINGS_FOR_LDAP &&
+            $user_register == USER_REGISTER_ADMINISTRATORS_ONLY) {
+          watchdog('ldap_user', 'Failed to create account for %drupal_accountname. Administrative user must create user.',
+              $watchdog_tokens, WATCHDOG_ERROR);
+          form_set_error('name', t('Server Error: Attempt to create account for %drupal_accountname failed. Administrative user must create user.',
+              $watchdog_tokens));
+          return;
+    }
+
     if ($auth_conf->ldapUser->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP &&
         variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
       $user_edit = array('name' => $drupal_accountname, 'status' => 0); // if admin approval required, set status to 0.
