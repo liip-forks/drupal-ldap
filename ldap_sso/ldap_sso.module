@@ -84,7 +84,14 @@ function ldap_sso_boot() {
           if (ldap_sso_path_excluded_from_sso()) { // seems redundant, but need to check this again after additional bootstrap
             return;
           }
-          drupal_goto('user/login/sso', array('query' => drupal_get_destination()));
+          // Add the query key to the drupal_goto() options array only if there
+          // is a destination set. This prevents infinite redirect loops.
+          $options = array();
+          $destination = drupal_get_destination();
+          if (!empty($destination['destination'])) {
+              $options['query'] = $destination;
+            }
+          drupal_goto('user/login/sso', $options);
         }
         else {
           return;
