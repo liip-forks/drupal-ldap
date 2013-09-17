@@ -635,6 +635,7 @@ class LdapServer {
       }
       else {
         $existing_count = count($all_entries);
+        unset($entries['count']);
         foreach ($entries as $i => $entry) {
           $all_entries[$existing_count + $i] = $entry;
         }

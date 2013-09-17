@@ -471,7 +471,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
         watchdog('ldap_authorization', "consumer_id=$consumer_id, user_save=$user_save, op=$op", $watchdog_tokens, WATCHDOG_DEBUG);
       }
       $log = "consumer_id=$consumer_id, op=$op,";
-      
+
       $user_has_authorization = in_array($consumer_id, $users_authorization_consumer_ids); // does user already have authorization ?
       $user_has_authorization_recorded = isset($user_auth_data[$consumer_id]);  // is authorization attribute to ldap_authorization_og in $user->data ?
       
