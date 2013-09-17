@@ -736,7 +736,7 @@ class LdapUserConf {
     }
 
     $tokens = array(
-      '%dn' => isset($result['proposed']['dn']) ? $result['proposed']['dn'] : NULL,
+      '%dn' => isset($proposed_ldap_entry['dn']) ? $proposed_ldap_entry['dn'] : NULL,
       '%sid' => $this->ldapEntryProvisionServer,
       '%username' => $account->name,
       '%uid' => ($test_query || !property_exists($account, 'uid')) ? '' : $account->uid,
