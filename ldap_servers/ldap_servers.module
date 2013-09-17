@@ -1009,7 +1009,6 @@ function ldap_servers_get_all_rdn_values_from_dn($dn, $rdn) {
     $pair = explode('=', $p);
     if (drupal_strtolower(trim($pair[0])) == $rdn) {
       $rdn_values[] = ldap_pear_unescape_dn_value(trim($pair[1]));
-      break;
     }
   }
   return $rdn_values;
