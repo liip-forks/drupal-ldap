@@ -1074,7 +1074,7 @@ class LdapUserConf {
             drupal_set_message(t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
             watchdog('ldap_user',
               'Failed to create Drupal account %drupal_username because drupal username could not be derived.',
-              $tokens,
+              $watchdog_tokens,
               WATCHDOG_ERROR
             );
             return FALSE;
@@ -1083,7 +1083,7 @@ class LdapUserConf {
             drupal_set_message(t('User account creation failed because of invalid, empty derived email address.'), 'error');
             watchdog('ldap_user',
               'Failed to create Drupal account %drupal_username because email address could not be derived by LDAP User module',
-              $tokens,
+              $watchdog_tokens,
               WATCHDOG_ERROR
             );
             return FALSE;
