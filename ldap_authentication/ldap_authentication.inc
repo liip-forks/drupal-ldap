@@ -218,6 +218,14 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
     return;
   }
 
+  /*
+   * IV.a Workaround for the provisioning server not always getting saved in
+   *      the user object.  So we save it in a session variable as a backup.
+   */
+  if ($ldap_server_authenticated_on) {
+    $_SESSION[LDAP_USER_SESSION_PROV_SID] = $ldap_server_authenticated_on->sid;
+  }
+
   /**
    * V. if account_name_attr is set, drupal username is different than authname
    */
@@ -593,6 +601,11 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
       if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
           $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
           $ldap_server->disconnect();
+      }
+      // Update ldapUser with the sid of the server that the user authenticated
+      // on if that option was enabled in the LDAP user configuration.
+      if ($auth_conf->ldapUser->drupalAcctProvisionServer == LDAP_USER_AUTH_SERVER_SID) {
+        $auth_conf->ldapUser->drupalAcctProvisionServer = $ldap_server->sid;
       }
       break; //success
     }

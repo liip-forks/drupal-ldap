@@ -1226,6 +1226,18 @@ class LdapUserConf {
       );
     }
 
+    /*
+     * Make sure the user account has the latest ldap_user settings
+     * when syncing the profile.
+     */
+    if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER && in_array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $prov_events)) {
+       $edit['data']['ldap_user']['init'] = array(
+        'sid'  => $ldap_user['sid'],
+        'dn'   => $ldap_user['dn'],
+        'mail' => isset($edit['mail']) && !empty($edit['mail']) ? $edit['mail'] : $ldap_user['mail'],
+      );
+    }
+
     /**
      * basic $user ldap fields
      */

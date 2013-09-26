@@ -65,6 +65,7 @@ class LdapUserConfAdmin extends LdapUserConf {
     $this->setTranslatableProperties();
 
     if ($servers = ldap_servers_get_servers(NULL, 'enabled')) {
+      $this->drupalAcctProvisionServerOptions[LDAP_USER_AUTH_SERVER_SID] = t('Use server which performed the authentication. Useful for multi-domain environments.');
       foreach ($servers as $sid => $ldap_server) {
         $enabled = ($ldap_server->status) ? 'Enabled' : 'Disabled';
         $this->drupalAcctProvisionServerOptions[$sid] = $ldap_server->name . ' (' . $ldap_server->address . ') Status: ' . $enabled;

@@ -60,6 +60,10 @@ define('LDAP_USER_NO_SERVER_SID', 0); // need to avoid conflicting with server i
 define('LDAP_USER_TEST_FORM_PATH', 'admin/config/people/ldap/user/test');
 define('LDAP_USER_WS_USER_PATH', 'ldap/user/ws');
 
+// Machine name for the setting to provision from last authentication server.
+define('LDAP_USER_AUTH_SERVER_SID', 'ldap_last_authserv');
+define('LDAP_USER_SESSION_PROV_SID', 'ldap_user_session_prov_sid');
+
 /**
  * Implements hook_menu().
  */
@@ -846,6 +850,8 @@ function ldap_user_user_login(&$edit, $account) {
   $ldap_user_conf = ldap_user_conf();
   $user_edit = array();
 
+  ldap_user_reset_provision_server($ldap_user_conf, $account);
+
    // provision or synch to ldap, not both
   $provision_result = array('status' => 'none');
 
@@ -1009,6 +1015,8 @@ function ldap_user_user_presave(&$user_edit, $account, $category) {
     return;
   }
   $ldap_user_conf = ldap_user_conf();
+
+  ldap_user_reset_provision_server($ldap_user_conf, $account);
 
   // check for provisioning to drupal and override synched user fields/props
   // Provision from LDAP if a new account was not just provisioned from LDAP
@@ -1289,4 +1297,34 @@ function ldap_user_get_authname($data) {
   }
 
   return $cache[$uid];
+}
+
+/**
+ * Resets the drupalAcctProvisionServer if needed.
+ *
+ * Used when handling multi-domain authentication to set the provisioning
+ * server to be the server that last successfully authenticated the user.
+ *
+ * @param LdapUserConf $ldap_user_conf
+ *   The LDAP User Configuration object.
+ *
+ * @param object $account
+ *   The Drupal user account.
+ */
+function ldap_user_reset_provision_server($ldap_user_conf, $account) {
+  // Reset the Provision Server sid to the server that last authenticated the user.
+  if ($ldap_user_conf->drupalAcctProvisionServer == LDAP_USER_AUTH_SERVER_SID) {
+    $sid = FALSE;
+    if (isset($account->data['ldap_user']['init']['sid'])) {
+      $sid = $account->data['ldap_user']['init']['sid'];
+    }
+    else {
+      // Provisioning Server sid is not in the account object,
+      // see if we have a session variable with it.
+      $sid = isset($_SESSION[LDAP_USER_SESSION_PROV_SID]) ? $_SESSION[LDAP_USER_SESSION_PROV_SID] : FALSE;
+    }
+    if ($sid) {
+      $ldap_user_conf->drupalAcctProvisionServer = $sid;
+    }
+  }
 }
