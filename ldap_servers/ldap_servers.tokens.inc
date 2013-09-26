@@ -324,9 +324,9 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
       }
 
 
-      $tokens[$pre . $full_token_key . $post] = check_plain($value);
+      $tokens[$pre . $full_token_key . $post] = $value;
       if ($full_token_key != drupal_strtolower($full_token_key)) {
-        $tokens[$pre . drupal_strtolower($full_token_key) . $post] = check_plain($value);
+        $tokens[$pre . drupal_strtolower($full_token_key) . $post] = $value;
       }
     }
   }
