@@ -51,10 +51,12 @@ function _ldap_servers_encrypt_types($type = 'all') {
     ); */
 
     $encrypts = array(
-      LDAP_SERVERS_ENC_TYPE_CLEARTEXT => 'No Encyption',
-      LDAP_SERVERS_ENC_TYPE_BLOWFISH => 'Blowfish'
-
+      LDAP_SERVERS_ENC_TYPE_CLEARTEXT => 'No Encyption'
     );
+    if (function_exists('mcrypt_module_open')) {
+      $encrypts[LDAP_SERVERS_ENC_TYPE_BLOWFISH] = 'Blowfish';
+    }
+
   }
 
  // $hashes[LDAP_SERVERS_ENC_TYPE_MD5] = 'MD5';
@@ -83,6 +85,15 @@ function _ldap_servers_encrypt_types($type = 'all') {
  *
  * @link http://php.net/manual/en/function.mcrypt-generic-init.php
  */
+function _ldap_servers_encrypt_has_mcrypt_and_warn() {
+  if (!function_exists('mcrypt_module_open')) {
+    watchdog('ldap_servers', 'Encryption is set to blowfish, but mcrypt module in not installed', array(), WATCHDOG_ERROR);
+    return FALSE;
+  }
+  else {
+    return TRUE;
+  }
+}
 
 function _ldap_servers_encrypt($clear_txt, $enc_type = NULL) {
 
@@ -100,6 +111,7 @@ function _ldap_servers_encrypt($clear_txt, $enc_type = NULL) {
 
     case LDAP_SERVERS_ENC_TYPE_BLOWFISH: // Blowfish
         // Open mcrypt module.
+      if (_ldap_servers_encrypt_has_mcrypt_and_warn()) {
         $td = mcrypt_module_open('blowfish', '', LDAP_SERVERS_CYPHER_MODE, '');
         // Determine maximum mycrypt key length.
         $key_length = mcrypt_enc_get_key_size($td);
@@ -115,6 +127,7 @@ function _ldap_servers_encrypt($clear_txt, $enc_type = NULL) {
         $cipher_txt = $iv . $crypttext;
         // Close the module.
         mcrypt_module_close($td);
+      }
       break;
 
     default: // Cleartext
@@ -150,26 +163,28 @@ function _ldap_servers_decrypt($cipher_txt, $enc_type = NULL) {
   switch ($enc_type) {
 
     case LDAP_SERVERS_ENC_TYPE_BLOWFISH: // Blowfish
-      $clear_txt = "";
-      // Open mcrypt module.
-      $td = mcrypt_module_open('blowfish', '', LDAP_SERVERS_CYPHER_MODE, '');
-      // Determine maximum mycrypt key length.
-      $key_length = mcrypt_enc_get_key_size($td);
-      // Shorten key to allowed length.
-      $key = substr($key, 0, $key_length);
-      // Determine the algorithm IV.
-      $ivsize = mcrypt_enc_get_iv_size($td);
-      // Split apart IV and text.
-      $iv = substr($cipher_txt, 0, $ivsize);
-      $cipher_txt = substr($cipher_txt, $ivsize);
-      // If the IV exists, decrypt the text.
-      if ($iv) {
-        mcrypt_generic_init($td, $key, $iv);
-        $clear_txt = mdecrypt_generic($td, $cipher_txt);
-        mcrypt_generic_deinit($td);
+      if (_ldap_servers_encrypt_has_mcrypt_and_warn()) {
+        $clear_txt = "";
+        // Open mcrypt module.
+        $td = mcrypt_module_open('blowfish', '', LDAP_SERVERS_CYPHER_MODE, '');
+        // Determine maximum mycrypt key length.
+        $key_length = mcrypt_enc_get_key_size($td);
+        // Shorten key to allowed length.
+        $key = substr($key, 0, $key_length);
+        // Determine the algorithm IV.
+        $ivsize = mcrypt_enc_get_iv_size($td);
+        // Split apart IV and text.
+        $iv = substr($cipher_txt, 0, $ivsize);
+        $cipher_txt = substr($cipher_txt, $ivsize);
+        // If the IV exists, decrypt the text.
+        if ($iv) {
+          mcrypt_generic_init($td, $key, $iv);
+          $clear_txt = mdecrypt_generic($td, $cipher_txt);
+          mcrypt_generic_deinit($td);
+        }
+        // Close the module.
+        mcrypt_module_close($td);
       }
-      // Close the module.
-      mcrypt_module_close($td);
       break;
 
     default: // Cleartext
