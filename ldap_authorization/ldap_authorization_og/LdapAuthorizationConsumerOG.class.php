@@ -465,6 +465,8 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
      *  based on all consumer ids granted and revokes
      */
     $og_actions = array('grants' => array(), 'revokes' => array());
+    $consumer_ids_log = "";
+
     //dpm('consumers');dpm($consumers); dpm('users_authorization_consumer_ids'); dpm($users_authorization_consumer_ids);
     foreach ($consumers as $consumer_id => $consumer) {
       if ($detailed_watchdog_log) {
@@ -484,8 +486,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       else {
         list($entity_type, $gid, $rid) = $this->og2ConsumerIdParts($consumer_id);
       }
-      
-      $consumer_ids_log = "";
       
       /** grants **/
       if ($op == 'grant') {
