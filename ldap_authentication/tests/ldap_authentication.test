@@ -309,8 +309,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   ) {
 
     // clear past environment
-    ldap_servers_delete_globals('_SERVER','REMOTE_USER', TRUE);
-    ldap_servers_delete_globals('_SERVER','REDIRECT_REMOTE_USER', TRUE);
+    ldap_servers_delete_globals('_SERVER', 'REMOTE_USER', TRUE);
+    ldap_servers_delete_globals('_SERVER', 'REDIRECT_REMOTE_USER', TRUE);
 
     $authenticationConf = new LdapAuthenticationConfAdmin();
 
@@ -357,7 +357,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     // just test that the setup works
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $this->assertTrue(ldap_servers_get_globals('_SERVER', 'REMOTE_USER', TRUE) == 'hpotter',
-       '$_SERVER[REMOTE_USER] and $_SERVER[REDIRECT_REMOTE_USER] set properly for test with remote server '. ldap_servers_get_globals('_SERVER', 'REMOTE_ADDR'), $testid);
+       '$_SERVER[REMOTE_USER] and $_SERVER[REDIRECT_REMOTE_USER] set properly for test with remote server ' . ldap_servers_get_globals('_SERVER', 'REMOTE_ADDR'), $testid);
 
     $setup_success = ($authenticationConf->ssoEnabled == TRUE &&
       $authenticationConf->ssoRemoteUserStripDomainName == FALSE &&

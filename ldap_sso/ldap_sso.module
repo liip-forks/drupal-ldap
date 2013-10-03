@@ -299,7 +299,7 @@ function ldap_sso_user_login_sso() {
 
       }
       user_login_finalize();
-      if($auth_conf->ssoNotifyAuthentication) {
+      if ($auth_conf->ssoNotifyAuthentication) {
         drupal_set_message(theme('ldap_authentication_login_message',
           array('message' => t('You have been successfully authenticated'))));
       }

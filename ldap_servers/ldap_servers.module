@@ -26,7 +26,6 @@ define('LDAP_SERVERS_ENC_TYPE_CRYPT', 2);
 define('LDAP_SERVERS_ENC_TYPE_SALTED_CRYPT', 3);
 define('LDAP_SERVERS_ENC_TYPE_EXTENDED_DES', 4);
 define('LDAP_SERVERS_ENC_TYPE_MD5C', 5);
-define('LDAP_SERVERS_ENC_TYPE_BLOWFISH', 6);
 define('LDAP_SERVERS_ENC_TYPE_SALTED_MD5', 7);
 define('LDAP_SERVERS_ENC_TYPE_SHA', 8);
 define('LDAP_SERVERS_ENC_TYPE_SALTED_SHA', 9);
@@ -874,7 +873,7 @@ function ldap_servers_help($path, $arg) {
       $servers_help .= '<dd>' . t('LDAP Server -') . ' </dd>';
       $servers_help .= '<dd>' . t('LDAP port -') . ' </dd>';
       $servers_help .= '<dd>' . t('Use Start-TLS -') . ' </dd>';
-      $servers_help .= '<dd>' . t('Follow LDAP Referrals - ') . '</dd>';
+      $servers_help .= '<dd>' . t('Follow LDAP Referrals -') . ' </dd>';
       $servers_help .= '</dl>';
       $servers_help .= '<dl>';
       $servers_help .= '<dt>' . t('BINDING METHOD') . '</dt>';
