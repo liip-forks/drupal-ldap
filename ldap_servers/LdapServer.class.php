@@ -1690,7 +1690,12 @@ class LdapServer {
       $member_value = $user_ldap_entry['attr'][$this->groupMembershipsAttrMatchingUserAttr][0];
     }
     $member_value = ldap_pear_escape_filter_value($member_value);
-    $group_query = '(&(objectClass=' . $this->groupObjectClass . ')(' . $this->groupMembershipsAttr . "=$member_value))";
+    if ($this->groupObjectClass == '') {
+      $group_query = '(' . $this->groupMembershipsAttr . "=$member_value)";
+    }
+    else {
+      $group_query = '(&(objectClass=' . $this->groupObjectClass . ')(' . $this->groupMembershipsAttr . "=$member_value))";
+    }
 
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
       $group_entries = $this->search($base_dn, $group_query, array()); // only need dn, so empty array forces return of no attributes
