@@ -436,7 +436,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
           break;
 
         case 'to-md5':
-          $value = md5($value);
+          $value = "{MD5}" . base64_encode( pack( "H*", md5( $value ) ) );
           break;
 
         case 'to-lowercase':
