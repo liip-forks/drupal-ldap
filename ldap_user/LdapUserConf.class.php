@@ -767,7 +767,7 @@ class LdapUserConf {
    *
    */
   public function synchToDrupalAccount($drupal_user, &$user_edit, $prov_event = LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user = NULL,  $save = FALSE) {
-
+    
     $debug = array(
       'account' => $drupal_user,
       'user_edit' => $user_edit,
