@@ -738,7 +738,7 @@ function ldap_user_synch_to_drupal($username, $prov_event = LDAP_USER_EVENT_SYNC
   $ldap_user_conf = ldap_user_conf();
   $account = user_load_by_name($username);
   $user_edit = array();
-  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $prov_event, $ldap_user, FALSE);
+  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $prov_event, $ldap_user, TRUE);
 
 }
 
