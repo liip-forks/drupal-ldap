@@ -15,7 +15,7 @@ class LdapAuthenticationConf {
    *
    * @var array
    *
-   * @see LdapServer::sid()
+   * @see LdapServer->sid()
    */
   public $sids = array();
 
@@ -24,7 +24,7 @@ class LdapAuthenticationConf {
    *
    * @var associative array of LdapServer objects keyed on sids
    *
-   * @see LdapServer::sid
+   * @see LdapServer->sid()
    * @see LdapServer
    */
   public $enabledAuthenticationServers = array();
