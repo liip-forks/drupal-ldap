@@ -335,7 +335,9 @@ function ldap_sso_user_login_sso() {
     }
   }
   else {
-    watchdog('ldap_authentication', '$_SERVER[\'REMOTE_USER\'] not found', array(), WATCHDOG_DEBUG);
+    if ($detailed_watchdog_log) {
+      watchdog('ldap_authentication', '$_SERVER[\'REMOTE_USER\'] not found', array(), WATCHDOG_DEBUG);
+    }
     if ($auth_conf->seamlessLogin == 1) {
       setcookie("seamless_login", 'do not auto login', time() + $auth_conf->cookieExpire, base_path(), "");
       ldap_servers_set_globals('_SESSION', 'seamless_login', 'do not auto login');
