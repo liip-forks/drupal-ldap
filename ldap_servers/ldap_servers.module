@@ -684,6 +684,15 @@ function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_contex
   else {
     $drupal_username = (is_object($drupal_user)) ? $drupal_user->name : $drupal_user;
   }
+  //Sometimes we have username instead of a drupal user object
+  //For example, when using LDAP user test form (admin/config/people/ldap/user/test)
+  //But we can still load the user by using $drupal_username  if $drupal_user is not an object
+  if ( !(is_object($drupal_user)) ) {
+    $user_object = user_load_by_name($drupal_username);
+    if (is_object($user_object) && property_exists($user_object, 'uid')) {
+      $drupal_user = $user_object;
+    }
+  }
   // if no explicit $sid, find most appropriate one
   if (module_exists('ldap_user') && (!$sid || $sid == LDAP_USER_AUTH_SERVER_SID)) {
     if (property_exists($drupal_user, 'ldap_user_puid_sid') &&
