@@ -311,7 +311,7 @@ function ldap_servers_update_7108() {
     }
   }
   foreach (array('groupUserMembershipsAttr', 'groupMembershipsAttr', 'groupTestGroupDn', 'groupUserMembershipsAttr', 'groupMembershipsAttrMatchingUserAttr') as $varchar255field_name) {
-    if (!ldap_servers_db_field_exists('ldap_servers', $varchar255field_name) && !ldap_servers_db_field_exists('ldap_servers', drupal_strtolower($varchar255field_name)) {
+    if (!ldap_servers_db_field_exists('ldap_servers', $varchar255field_name) && !ldap_servers_db_field_exists('ldap_servers', drupal_strtolower($varchar255field_name))) {
       db_add_field('ldap_servers', $varchar255field_name, array(
         'type' => 'varchar',
         'length' => '255',
