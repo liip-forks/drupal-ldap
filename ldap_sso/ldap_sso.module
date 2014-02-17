@@ -247,9 +247,9 @@ function ldap_sso_user_login_sso() {
 
   if ($remote_user) {
     if ($auth_conf->ssoRemoteUserStripDomainName) {
-      // Might be in form <remote_user>@<domain> or <domain>\<remote_user>.
+      // Might be in form <remote_user>@<domain> <domain>+<remote_user>, or <domain>\<remote_user>.
       $domain = NULL;
-      $exploded = preg_split('/[\@\\\\]/', $remote_user);
+      $exploded = preg_split('/[\+\@\\\\]/', $remote_user);
       if (count($exploded) == 2) {
         if (strpos($remote_user, '@') !== FALSE) {
           $remote_user = $exploded[0];
