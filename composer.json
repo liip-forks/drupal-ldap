@@ -1,0 +1,9 @@
+{
+  "name": "drupal/ldap",
+  "type": "drupal-module",
+  "description": "",
+  "license": "",
+  "require": {
+  },
+  "minimum-stability": "stable"
+}
