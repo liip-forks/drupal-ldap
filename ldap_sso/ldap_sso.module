@@ -190,11 +190,6 @@ function ldap_sso_user_login_sso() {
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $auth_conf = ldap_authentication_get_valid_conf();
 
-  //This fixes the wrong redirect to the profile instead of the front page
-  if (isset($_GET['destination'])) {
-    unset($_GET['destination']);
-  }
-
   if ($detailed_watchdog_log) {
     $watchdog_tokens = array(
       '!implementation' => $auth_conf->ldapImplementation,
