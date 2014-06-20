@@ -805,10 +805,10 @@ function ldap_user_ldap_provision_pwd($action, $value = NULL, $reset = FALSE) {
 
 function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL, $reset = FALSE) {
 
-  $calling_function = FALSE;
-  if (function_exists('debug_backtrace') && $backtrace = debug_backtrace()) { //   {
-    $calling_function = $backtrace[1]['function'];
-  }
+  // $calling_function = FALSE;
+  // if (function_exists('debug_backtrace') && $backtrace = debug_backtrace()) { //   {
+  //   $calling_function = $backtrace[1]['function'];
+  // }
 
   static $ldap_accts;
   static $intialized;
